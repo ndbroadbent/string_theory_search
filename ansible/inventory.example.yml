@@ -1,0 +1,6 @@
+---
+all:
+  hosts:
+    string_theory:
+      ansible_host: *.*.*.*
+      ansible_user: youruser

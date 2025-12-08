@@ -6,3 +6,4 @@ __pycache__/
 results/
 logs/
 polytope_data/
+ansible/inventory.yml

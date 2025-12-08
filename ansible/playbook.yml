@@ -1,0 +1,135 @@
+---
+- name: Setup String Theory Landscape Explorer
+  hosts: string_theory
+  become: yes
+  vars:
+    project_dir: /root/string_theory
+    data_dir: /data/polytopes
+    palp_dir: /root/palp_source
+    repo_url: https://github.com/ndbroadbent/string_theory_compactions.git
+    num_workers: 12
+
+  tasks:
+    - name: Install system dependencies
+      apt:
+        name:
+          - build-essential
+          - pkg-config
+          - python3-venv
+          - python3-dev
+          - python3-pip
+          - git
+          - curl
+        state: present
+        update_cache: yes
+
+    - name: Check if Rust is installed
+      command: /root/.cargo/bin/cargo --version
+      register: rust_check
+      ignore_errors: yes
+      changed_when: false
+
+    - name: Install Rust
+      shell: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+      when: rust_check.rc != 0
+
+    - name: Clone string_theory repository
+      git:
+        repo: "{{ repo_url }}"
+        dest: "{{ project_dir }}"
+        version: main
+        force: no
+      register: git_clone
+
+    - name: Create results directory
+      file:
+        path: "{{ project_dir }}/results"
+        state: directory
+        mode: '0755'
+
+    - name: Create logs directory
+      file:
+        path: "{{ project_dir }}/logs"
+        state: directory
+        mode: '0755'
+
+    - name: Create Python venv
+      command: python3 -m venv venv
+      args:
+        chdir: "{{ project_dir }}"
+        creates: "{{ project_dir }}/venv/bin/python"
+
+    - name: Install Python dependencies
+      pip:
+        name:
+          - numpy
+          - jax
+          - jaxlib
+          - pyarrow
+          - requests
+        virtualenv: "{{ project_dir }}/venv"
+        state: present
+
+    - name: Check if PALP is installed
+      stat:
+        path: "{{ palp_dir }}/poly.x"
+      register: palp_check
+
+    - name: Clone PALP
+      git:
+        repo: https://gitlab.com/stringstuwien/PALP.git
+        dest: "{{ palp_dir }}"
+        version: master
+      when: not palp_check.stat.exists
+
+    - name: Build PALP
+      make:
+        chdir: "{{ palp_dir }}"
+        params:
+          NUM_THREADS: 8
+      when: not palp_check.stat.exists
+
+    - name: Check if polytopes exist
+      stat:
+        path: "{{ data_dir }}/polytopes_medium.json"
+      register: polytopes_check
+
+    - name: Download polytopes
+      shell: |
+        source venv/bin/activate
+        python3 download_all_polytopes.py \
+          --output-dir {{ data_dir }}/parquet \
+          --min-vertices 5 \
+          --max-vertices 8 \
+          --convert \
+          --max-polytopes 2000000
+        mv polytopes_full.json {{ data_dir }}/polytopes_medium.json
+      args:
+        chdir: "{{ project_dir }}"
+        executable: /bin/bash
+      when: not polytopes_check.stat.exists
+
+    - name: Symlink polytopes to project dir
+      file:
+        src: "{{ data_dir }}/polytopes_medium.json"
+        dest: "{{ project_dir }}/polytopes_medium.json"
+        state: link
+        force: yes
+
+    - name: Build Rust project
+      shell: source /root/.cargo/env && cargo build --release --bin real_physics
+      args:
+        chdir: "{{ project_dir }}"
+        executable: /bin/bash
+      register: cargo_build
+      changed_when: "'Compiling' in cargo_build.stdout"
+
+    - name: Copy run_workers.sh
+      copy:
+        src: ../run_workers.sh
+        dest: "{{ project_dir }}/run_workers.sh"
+        mode: '0755'
+
+  handlers:
+    - name: restart workers
+      shell: pkill -f real_physics || true
