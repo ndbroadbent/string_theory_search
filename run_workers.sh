@@ -18,16 +18,20 @@ echo ""
 # Kill any existing workers
 pkill -f "real_physics" 2>/dev/null && echo "Stopped existing workers" && sleep 2
 
-# Activate venv if it exists
+# Activate venv and export for subprocesses
 if [ -f "$SCRIPT_DIR/venv/bin/activate" ]; then
     source "$SCRIPT_DIR/venv/bin/activate"
+    export VIRTUAL_ENV="$SCRIPT_DIR/venv"
+    export PATH="$SCRIPT_DIR/venv/bin:$PATH"
+    export PYTHONHOME="$SCRIPT_DIR/venv"
 fi
 
-# Start workers
+# Start workers with venv environment
 for i in $(seq 0 $((NUM_WORKERS - 1))); do
     LOG_FILE="$LOG_DIR/worker_$(printf '%02d' $i).log"
     echo "Starting worker $i -> $LOG_FILE"
-    nohup "$SCRIPT_DIR/target/release/real_physics" "$i" > "$LOG_FILE" 2>&1 &
+    nohup env VIRTUAL_ENV="$VIRTUAL_ENV" PATH="$PATH" PYTHONHOME="$PYTHONHOME" \
+        "$SCRIPT_DIR/target/release/real_physics" "$i" > "$LOG_FILE" 2>&1 &
     sleep 0.5  # Stagger starts slightly
 done
 

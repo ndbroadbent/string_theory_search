@@ -5,8 +5,9 @@
 
 set -e
 
-SERVER="${1:-root@10.5.7.10}"
+SERVER="${1:-root@10.5.7.33}"
 REMOTE_DIR="/root/string_theory"
+DATA_DIR="/data/polytopes"
 REPO_URL="https://github.com/ndbroadbent/string_theory_compactions.git"
 NUM_WORKERS=12
 
@@ -49,20 +50,35 @@ ssh "$SERVER" "cd $REMOTE_DIR && {
     pip install numpy jax jaxlib pyarrow requests
 }"
 
-# Step 5: Download polytopes if not present
-log "Step 5: Downloading polytope data..."
+# Step 5: Install PALP
+log "Step 5: Installing PALP..."
+ssh "$SERVER" "
+    if [ ! -f /root/palp_source/poly.x ]; then
+        echo 'Cloning and building PALP...'
+        cd /root && rm -rf palp_source
+        git clone https://gitlab.com/stringstuwien/PALP.git palp_source
+        cd palp_source && make -j8
+    else
+        echo 'PALP already installed.'
+    fi
+"
+
+# Step 6: Download polytopes if not present
+log "Step 6: Downloading polytope data..."
 ssh "$SERVER" "cd $REMOTE_DIR && source venv/bin/activate && {
-    if [ ! -f polytopes_medium.json ]; then
+    if [ ! -f $DATA_DIR/polytopes_medium.json ]; then
         echo 'Downloading polytopes (vertices 5-8)...'
-        python3 download_all_polytopes.py --output-dir polytope_data --min-vertices 5 --max-vertices 8 --convert --max-polytopes 2000000
-        mv polytopes_full.json polytopes_medium.json 2>/dev/null || true
+        python3 download_all_polytopes.py --output-dir $DATA_DIR/parquet --min-vertices 5 --max-vertices 8 --convert --max-polytopes 2000000
+        mv polytopes_full.json $DATA_DIR/polytopes_medium.json 2>/dev/null || true
     else
         echo 'Polytopes already downloaded.'
     fi
+    # Symlink to project dir
+    ln -sf $DATA_DIR/polytopes_medium.json polytopes_medium.json 2>/dev/null || true
 }"
 
-# Step 6: Build the project
-log "Step 6: Building project..."
+# Step 7: Build the project
+log "Step 7: Building project..."
 ssh "$SERVER" "source \$HOME/.cargo/env && cd $REMOTE_DIR && cargo build --release --bin real_physics"
 
 log ""
