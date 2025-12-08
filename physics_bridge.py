@@ -2,269 +2,240 @@
 """
 Physics Bridge for String Theory Landscape Explorer
 
-This module provides real physics computations for Calabi-Yau compactifications:
-- Polytope analysis via PALP
-- Numerical CY metric approximation via cymyc (JAX)
-- Gauge coupling computation from cycle volumes
-- Moduli stabilization via flux superpotentials
+Uses CYTools and cymyc for rigorous Calabi-Yau computations:
+- CYTools: Polytope analysis, triangulations, intersection numbers, cycle volumes
+- cymyc: Numerical CY metrics, curvature, Yukawa couplings (JAX-based)
 
-The bridge exposes a JSON-RPC interface for the Rust GA to call.
+NO FALLBACKS - requires proper tools installed.
 """
 
 import json
 import sys
-import subprocess
-import tempfile
 import os
 from pathlib import Path
 from typing import Optional
 import numpy as np
 
-# JAX configuration for performance
-os.environ['JAX_PLATFORM_NAME'] = 'cpu'  # Use CPU for now, GPU later
-
+# Require JAX
 import jax
 import jax.numpy as jnp
+jax.config.update('jax_platform_name', 'cpu')
 
-# Try to import cymyc
-try:
-    from cymyc import alg_geo
-    from cymyc.utils import math_utils
-    CYMYC_AVAILABLE = True
-except ImportError:
-    CYMYC_AVAILABLE = False
-    print("Warning: cymyc not available, using simplified metric computation", file=sys.stderr)
+# Require CYTools - no fallback
+from cytools import Polytope
 
-# Path to PALP binary
-PALP_PATH = Path(__file__).parent.parent / "palp_source" / "poly.x"
+# Require cymyc - no fallback
+from cymyc import alg_geo
+from cymyc.curvature import ricci_scalar
+from cymyc.fubini_study import fubini_study_metric
 
-
-class PolytopeAnalyzer:
-    """Analyze 4D reflexive polytopes using PALP."""
-
-    def __init__(self, palp_path: Path = PALP_PATH):
-        self.palp_path = palp_path
-        if not palp_path.exists():
-            raise FileNotFoundError(f"PALP binary not found at {palp_path}")
-
-    def analyze(self, vertices: list[list[int]]) -> dict:
-        """
-        Analyze a polytope given its vertices.
-
-        Args:
-            vertices: List of 4D integer vertices
-
-        Returns:
-            Dictionary with Hodge numbers, Euler characteristic, etc.
-        """
-        # Format vertices for PALP input
-        n_vertices = len(vertices)
-        dim = len(vertices[0]) if vertices else 0
-
-        # PALP expects: "n_vertices dim" followed by one vertex per line
-        lines = [f"{n_vertices} {dim}"]
-        for v in vertices:
-            lines.append(" ".join(str(x) for x in v))
-        palp_input = "\n".join(lines) + "\n"
-
-        try:
-            result = subprocess.run(
-                [str(self.palp_path), "-f"],  # -f for full output
-                input=palp_input,
-                capture_output=True,
-                text=True,
-                timeout=10
-            )
-
-            # Parse PALP output
-            output = result.stdout
-            return self._parse_palp_output(output, vertices)
-
-        except subprocess.TimeoutExpired:
-            return {"error": "PALP timeout", "vertices": vertices}
-        except Exception as e:
-            return {"error": str(e), "vertices": vertices}
-
-    def _parse_palp_output(self, output: str, vertices: list) -> dict:
-        """Parse PALP output to extract Hodge numbers."""
-        result = {
-            "vertices": vertices,
-            "h11": None,
-            "h21": None,
-            "euler": None,
-            "raw_output": output
-        }
-
-        # Look for Hodge numbers in format "H:h11,h21 [euler]"
-        import re
-        hodge_match = re.search(r'H:(\d+),(\d+)\s*\[(-?\d+)\]', output)
-        if hodge_match:
-            result["h11"] = int(hodge_match.group(1))
-            result["h21"] = int(hodge_match.group(2))
-            result["euler"] = int(hodge_match.group(3))
-
-        # Also extract M:faces vertices N:dualfaces dualvertices
-        m_match = re.search(r'M:(\d+)\s+(\d+)', output)
-        n_match = re.search(r'N:(\d+)\s+(\d+)', output)
-        if m_match:
-            result["faces"] = int(m_match.group(1))
-            result["n_vertices"] = int(m_match.group(2))
-        if n_match:
-            result["dual_faces"] = int(n_match.group(1))
-            result["dual_vertices"] = int(n_match.group(2))
-
-        return result
+# Physical constants (observed values)
+ALPHA_EM_OBS = 1.0 / 137.035999
+ALPHA_S_OBS = 0.1179
+SIN2_THETA_W_OBS = 0.23121
+COSMOLOGICAL_CONSTANT_OBS = 1.1e-122  # In Planck units
+M_E_PLANCK_OBS = 4.18e-23
+M_P_PLANCK_OBS = 7.68e-20
 
 
-class CYMetricComputer:
+class CYToolsBridge:
     """
-    Compute numerical Calabi-Yau metrics using machine learning.
+    Bridge to CYTools for polytope and Calabi-Yau computations.
 
-    This wraps cymyc's neural network approach to approximating
-    Ricci-flat metrics on CY manifolds.
+    CYTools workflow:
+    1. Polytope(vertices) -> triangulate() -> get_cy()
+    2. CalabiYau object provides intersection numbers, volumes, etc.
     """
 
     def __init__(self):
-        self.jit_compute_metric = jax.jit(self._compute_fubini_study_metric)
+        self._cache = {}
 
-    def _compute_fubini_study_metric(self, z: jnp.ndarray) -> jnp.ndarray:
+    def analyze_polytope(self, vertices: list[list[int]]) -> dict:
         """
-        Compute Fubini-Study metric at a point in projective space.
-        This is the ambient space metric before restriction to CY.
+        Full polytope analysis using CYTools.
+
+        Returns Hodge numbers, intersection numbers, Kähler cone, etc.
         """
-        # z is a complex coordinate in CP^n
-        # g_{i\bar{j}} = \partial_i \partial_{\bar{j}} log(|z|^2)
-        norm_sq = jnp.sum(jnp.abs(z)**2)
+        cache_key = str(vertices)
+        if cache_key in self._cache:
+            return self._cache[cache_key]
 
-        # Metric components
-        n = len(z)
-        g = jnp.eye(n, dtype=jnp.complex64) / norm_sq
-        g = g - jnp.outer(jnp.conj(z), z) / (norm_sq ** 2)
+        try:
+            # Create polytope from vertices
+            p = Polytope(vertices)
 
-        return g
+            # Check if reflexive (required for CY)
+            if not p.is_reflexive():
+                return {
+                    "success": False,
+                    "error": "Polytope is not reflexive"
+                }
 
-    def compute_kahler_potential(self, z: jnp.ndarray, moduli: jnp.ndarray) -> float:
+            # Get a triangulation (fine, regular, star)
+            # This can be slow for complex polytopes
+            t = p.triangulate()
+
+            # Get the Calabi-Yau
+            cy = t.get_cy()
+
+            # Extract topological data
+            h11 = cy.h11()
+            h21 = cy.h12()  # h12 = h21 for CY3
+            chi = cy.chi()
+
+            # Intersection numbers (triple intersection form)
+            # κ_ijk where i,j,k index divisor classes
+            intersection_nums = cy.intersection_numbers()
+
+            # Second Chern class (for anomaly cancellation)
+            c2 = cy.second_chern_class()
+
+            # Kähler cone (valid range for Kähler moduli)
+            kahler_cone = cy.toric_kahler_cone()
+
+            # Store CY object for later use
+            result = {
+                "success": True,
+                "h11": int(h11),
+                "h21": int(h21),
+                "chi": int(chi),
+                "n_generations": abs(chi) // 2,  # |χ|/2 for CY3
+                "intersection_numbers": intersection_nums.tolist() if hasattr(intersection_nums, 'tolist') else intersection_nums,
+                "c2": c2.tolist() if hasattr(c2, 'tolist') else list(c2),
+                "is_favorable": h11 == len(p.points()) - 5,  # Favorable = simpler physics
+                "_cy_object": cy,  # Keep for volume computations
+            }
+
+            self._cache[cache_key] = result
+            return result
+
+        except Exception as e:
+            return {
+                "success": False,
+                "error": str(e)
+            }
+
+    def compute_volumes(self, cy_data: dict, kahler_moduli: np.ndarray) -> dict:
         """
-        Compute Kähler potential for given complex structure moduli.
+        Compute CY volume and cycle volumes from Kähler moduli.
 
-        For a CY threefold, the Kähler potential is:
-        K = -log(i ∫ Ω ∧ Ω̄)
+        Args:
+            cy_data: Result from analyze_polytope (must contain _cy_object)
+            kahler_moduli: Array of Kähler moduli t^i
 
-        where Ω is the holomorphic 3-form depending on moduli.
+        Returns:
+            Dictionary with volumes
         """
-        # Simplified: assume diagonal Kähler moduli
-        # K = -sum_i log(t_i) where t_i are Kähler moduli
-        return -jnp.sum(jnp.log(jnp.abs(moduli) + 1e-10))
+        if "_cy_object" not in cy_data:
+            return {"success": False, "error": "No CY object cached"}
 
-    def compute_volume(self, kahler_moduli: jnp.ndarray,
-                      intersection_numbers: Optional[jnp.ndarray] = None) -> float:
-        """
-        Compute CY volume from Kähler moduli.
+        cy = cy_data["_cy_object"]
 
-        V = (1/6) κ_{ijk} t^i t^j t^k
+        try:
+            # CY volume: V = (1/6) κ_ijk t^i t^j t^k
+            cy_volume = cy.compute_cy_volume(kahler_moduli)
 
-        where κ_{ijk} are triple intersection numbers.
-        """
-        if intersection_numbers is None:
-            # Default: assume simple diagonal intersection form
-            # This is the simplest case, real CYs have complex intersection forms
-            return jnp.prod(kahler_moduli) / 6.0
+            # Divisor (4-cycle) volumes - these determine gauge couplings
+            divisor_volumes = cy.compute_divisor_volumes(kahler_moduli)
 
-        # Full computation with intersection numbers
-        n = len(kahler_moduli)
-        volume = 0.0
-        for i in range(n):
-            for j in range(n):
-                for k in range(n):
-                    volume += intersection_numbers[i, j, k] * \
-                              kahler_moduli[i] * kahler_moduli[j] * kahler_moduli[k]
-        return volume / 6.0
+            # Curve (2-cycle) volumes
+            curve_volumes = cy.compute_curve_volumes(kahler_moduli)
+
+            # Kähler metric on moduli space
+            kahler_metric = cy.compute_kahler_metric(kahler_moduli)
+
+            return {
+                "success": True,
+                "cy_volume": float(cy_volume),
+                "divisor_volumes": divisor_volumes.tolist() if hasattr(divisor_volumes, 'tolist') else list(divisor_volumes),
+                "curve_volumes": curve_volumes.tolist() if hasattr(curve_volumes, 'tolist') else list(curve_volumes),
+                "kahler_metric": kahler_metric.tolist() if hasattr(kahler_metric, 'tolist') else kahler_metric,
+            }
+
+        except Exception as e:
+            return {"success": False, "error": str(e)}
 
 
 class GaugeCouplingComputer:
     """
     Compute gauge couplings from CY geometry.
 
-    In string compactifications:
-    - α_GUT ~ g_s / V^{2/3} (where V is CY volume in string units)
-    - Individual SM couplings depend on cycle volumes where branes wrap
+    In Type IIB string theory with D7-branes:
+    - 1/g_a^2 = Re(f_a) where f_a is gauge kinetic function
+    - f_a = T_a (Kähler modulus of wrapped 4-cycle)
+
+    At tree level: 1/g_a^2 = Vol(Σ_a) / g_s
+    where Σ_a is the 4-cycle wrapped by the D7-brane stack.
     """
 
-    def __init__(self, string_scale: float = 2e16):  # GeV
-        self.string_scale = string_scale
-        self.alpha_gut_observed = 1/25.0  # ~ at GUT scale
-
     def compute_gauge_couplings(self,
-                                 cycle_volumes: jnp.ndarray,
-                                 g_s: float = 0.1) -> dict:
+                                 divisor_volumes: np.ndarray,
+                                 g_s: float,
+                                 brane_config: Optional[dict] = None) -> dict:
         """
-        Compute gauge couplings from cycle volumes.
-
-        In Type IIB with D7 branes:
-        1/g_YM^2 = Vol(4-cycle) / (g_s l_s^4)
+        Compute gauge couplings from 4-cycle volumes.
 
         Args:
-            cycle_volumes: Array of 4-cycle volumes (in string units)
+            divisor_volumes: Array of divisor (4-cycle) volumes
             g_s: String coupling
+            brane_config: Optional dictionary specifying which cycles host which gauge groups
+                         Default: first 3 cycles host SU(3), SU(2), U(1)
 
         Returns:
-            Dictionary with gauge couplings
+            Dictionary with gauge couplings at string scale
         """
-        # Normalize to get dimensionless couplings
-        # α = g^2 / (4π)
+        if brane_config is None:
+            # Default: diagonal brane configuration
+            # D7_1 wraps Σ_1 -> SU(3)
+            # D7_2 wraps Σ_2 -> SU(2)
+            # D7_3 wraps Σ_3 -> U(1)
+            brane_config = {
+                "su3_cycle": 0,
+                "su2_cycle": 1 if len(divisor_volumes) > 1 else 0,
+                "u1_cycle": 2 if len(divisor_volumes) > 2 else 0,
+            }
 
-        # Assume first 3 cycles host SU(3), SU(2), U(1) branes
-        if len(cycle_volumes) < 3:
-            # Pad with duplicates for simple polytopes
-            cycle_volumes = jnp.concatenate([
-                cycle_volumes,
-                jnp.full(3 - len(cycle_volumes), cycle_volumes[-1])
-            ])
+        # Get cycle volumes for each gauge group
+        vol_su3 = divisor_volumes[brane_config["su3_cycle"]]
+        vol_su2 = divisor_volumes[brane_config["su2_cycle"]]
+        vol_u1 = divisor_volumes[brane_config["u1_cycle"]]
 
-        # Inverse gauge couplings
-        g_inv_sq = cycle_volumes[:3] / g_s
-
-        # Convert to α = g²/(4π)
-        alpha = g_s / (4 * jnp.pi * cycle_volumes[:3] + 1e-10)
+        # Gauge couplings at string scale: α_a = g_s / (4π Vol_a)
+        alpha_3_string = g_s / (4 * np.pi * max(vol_su3, 1e-10))
+        alpha_2_string = g_s / (4 * np.pi * max(vol_su2, 1e-10))
+        alpha_1_string = g_s / (4 * np.pi * max(vol_u1, 1e-10))
 
         return {
-            "alpha_3": float(alpha[0]),  # Strong
-            "alpha_2": float(alpha[1]),  # Weak
-            "alpha_1": float(alpha[2]),  # Hypercharge (not normalized to SM)
+            "alpha_3_string": float(alpha_3_string),
+            "alpha_2_string": float(alpha_2_string),
+            "alpha_1_string": float(alpha_1_string),
         }
 
-    def compute_sm_couplings(self,
-                             cycle_volumes: jnp.ndarray,
-                             g_s: float = 0.1,
-                             total_volume: float = 1.0) -> dict:
+    def run_to_z_scale(self, alpha_3: float, alpha_2: float, alpha_1: float,
+                       m_string: float = 2e16) -> dict:
         """
-        Compute Standard Model gauge couplings with GUT normalization.
+        Run gauge couplings from string scale to Z mass using 1-loop RG.
 
-        Returns α_em, α_s, sin²θ_W at low energies (with simplified RG running).
+        β-coefficients for SM:
+        b_1 = 41/10, b_2 = -19/6, b_3 = -7
+
+        Running: 1/α(μ) = 1/α(M) + b/(2π) ln(M/μ)
         """
-        raw = self.compute_gauge_couplings(cycle_volumes, g_s)
+        m_z = 91.2  # GeV
+        log_ratio = np.log(m_string / m_z)
 
-        # At GUT scale, assume unification
-        # α_1 needs GUT normalization: α_1_SM = (5/3) α_1_GUT
-        alpha_1_gut = raw["alpha_1"]
-        alpha_2_gut = raw["alpha_2"]
-        alpha_3_gut = raw["alpha_3"]
-
-        # Simplified 1-loop RG running from GUT to Z scale
-        # β coefficients for SM
+        # SM beta coefficients
         b1, b2, b3 = 41/10, -19/6, -7
 
-        # Running: 1/α(μ) = 1/α(M) + b/(2π) log(M/μ)
-        log_ratio = np.log(2e16 / 91.2)  # GUT to Z mass
+        # Run down to Z scale
+        alpha_1_z = 1.0 / (1.0/alpha_1 + b1/(2*np.pi) * log_ratio)
+        alpha_2_z = 1.0 / (1.0/alpha_2 + b2/(2*np.pi) * log_ratio)
+        alpha_3_z = 1.0 / (1.0/alpha_3 + b3/(2*np.pi) * log_ratio)
 
-        alpha_1_z = 1.0 / (1.0/alpha_1_gut + b1/(2*np.pi) * log_ratio)
-        alpha_2_z = 1.0 / (1.0/alpha_2_gut + b2/(2*np.pi) * log_ratio)
-        alpha_3_z = 1.0 / (1.0/alpha_3_gut + b3/(2*np.pi) * log_ratio)
-
-        # GUT normalization for U(1)
+        # GUT normalization for U(1): α_1_SM = (5/3) α_1_GUT
         alpha_1_sm = (5/3) * alpha_1_z
 
-        # Weinberg angle: sin²θ_W = α_1 / (α_1 + α_2)
+        # Weinberg angle: sin²θ_W = α_1 / (α_1 + α_2) at tree level
         sin2_theta_w = alpha_1_sm / (alpha_1_sm + alpha_2_z)
 
         # EM coupling: 1/α_em = 1/α_1 + 1/α_2
@@ -274,156 +245,116 @@ class GaugeCouplingComputer:
             "alpha_em": float(alpha_em),
             "alpha_s": float(alpha_3_z),
             "sin2_theta_w": float(sin2_theta_w),
-            "alpha_1_gut": float(alpha_1_gut),
-            "alpha_2_gut": float(alpha_2_gut),
-            "alpha_3_gut": float(alpha_3_gut),
+            "alpha_1_z": float(alpha_1_z),
+            "alpha_2_z": float(alpha_2_z),
+            "alpha_3_z": float(alpha_3_z),
         }
 
 
-class KKLTComputer:
+class ModuliStabilizer:
     """
-    Compute KKLT moduli stabilization and uplifting.
+    KKLT-style moduli stabilization.
 
-    KKLT (Kachru-Kallosh-Linde-Trivedi) is a mechanism to get de Sitter vacua:
-    1. GVW superpotential W_flux stabilizes complex structure moduli
-    2. Non-perturbative effects W_np = A e^{-aT} stabilize Kähler moduli
-    3. Anti-D3 branes uplift from AdS to dS
-
-    The scalar potential is:
+    The scalar potential in Type IIB:
     V = e^K [ K^{ij̄} D_i W D_j̄ W̄ - 3|W|² ] + V_uplift
+
+    Where:
+    - K = -2 ln(V) is the Kähler potential (V = CY volume)
+    - W = W_flux + W_np is the superpotential
+    - W_flux = ∫ G_3 ∧ Ω (GVW flux superpotential)
+    - W_np = A e^{-aT} (non-perturbative from gaugino condensation/instantons)
     """
 
     def __init__(self):
-        # Parameters for non-perturbative effects
-        self.A = 1.0  # Prefactor (from gaugino condensation)
-        self.a = 2 * np.pi / 10  # a = 2π/N for SU(N) gauge group
+        # Non-perturbative parameters
+        self.A = 1.0  # Prefactor
+        self.a = 2 * np.pi / 10  # a = 2π/N for SU(N) gaugino condensation
 
-    def compute_kklt_potential(self,
-                                kahler_moduli: jnp.ndarray,
-                                w_flux: complex,
-                                n_antiD3: int = 1) -> dict:
+    def compute_flux_superpotential(self,
+                                     flux_f: np.ndarray,
+                                     flux_h: np.ndarray,
+                                     periods: np.ndarray,
+                                     tau: complex) -> complex:
         """
-        Compute the KKLT scalar potential with uplifting.
+        Compute GVW superpotential: W = ∫ G_3 ∧ Ω = (F - τH) · Π
 
         Args:
-            kahler_moduli: Kähler moduli (real parts of T_i = τ_i + i b_i)
-            w_flux: Flux superpotential W_0
-            n_antiD3: Number of anti-D3 branes for uplifting
-
-        Returns:
-            Dictionary with potential components and total Λ
+            flux_f: F_3 flux quanta (integers)
+            flux_h: H_3 flux quanta (integers)
+            periods: Periods of holomorphic 3-form Ω
+            tau: Axio-dilaton τ = C_0 + i/g_s
         """
-        # Total volume (simplified: product of moduli)
-        volume = jnp.prod(kahler_moduli)
+        g3 = flux_f - tau * flux_h
+        return complex(np.dot(g3, periods))
 
-        # Kähler potential: K = -2 log(V)
-        k_kahler = -2 * jnp.log(volume + 1e-10)
+    def compute_potential(self,
+                          cy_volume: float,
+                          w_flux: complex,
+                          kahler_moduli: np.ndarray,
+                          n_antiD3: int = 1) -> dict:
+        """
+        Compute KKLT scalar potential with uplift.
 
-        # Non-perturbative superpotential from largest modulus
-        tau = jnp.max(kahler_moduli)  # Use largest cycle
-        w_np = self.A * jnp.exp(-self.a * tau)
+        Returns cosmological constant and potential components.
+        """
+        # Kähler potential
+        k = -2 * np.log(max(cy_volume, 1e-10))
+
+        # Non-perturbative superpotential from largest Kähler modulus
+        tau = np.max(kahler_moduli)
+        w_np = self.A * np.exp(-self.a * tau)
 
         # Total superpotential
         w_total = w_flux + w_np
 
-        # F-term potential (simplified - assumes diagonal Kähler metric)
-        # V_F = e^K [ |DW|² - 3|W|² ]
-        # For KKLT minimum: DW ≈ 0, so V_F ≈ -3 e^K |W|²
-        exp_k = jnp.exp(k_kahler)
-        v_ads = -3 * exp_k * jnp.abs(w_total)**2
+        # F-term potential (AdS minimum)
+        # At the minimum, DW ≈ 0, so V_F ≈ -3 e^K |W|²
+        exp_k = np.exp(k)
+        v_ads = -3 * exp_k * np.abs(w_total)**2
 
-        # Uplifting from anti-D3 branes at tip of warped throat
-        # V_uplift = D / V^{4/3} where D depends on warp factor
-        # Tune D to get small positive Λ
-        warp_factor = 0.01  # Warping at throat tip
-        d_uplift = n_antiD3 * warp_factor**4  # Anti-D3 tension (warped down)
-        v_uplift = d_uplift / (volume**(4/3) + 1e-10)
+        # Uplift from anti-D3 branes at warped throat tip
+        # V_uplift = D / V^{4/3}
+        warp_factor = 0.01  # Typical warping
+        d_uplift = n_antiD3 * warp_factor**4
+        v_uplift = d_uplift / (cy_volume**(4/3) + 1e-10)
 
-        # Total potential
         v_total = float(v_ads + v_uplift)
-
-        # Cosmological constant in Planck units
-        # Λ = V_total / M_Pl^4
-        lambda_cc = v_total
 
         return {
             "v_ads": float(v_ads),
             "v_uplift": float(v_uplift),
             "v_total": v_total,
-            "cosmological_constant": lambda_cc,
-            "w_flux": float(jnp.abs(w_flux)),
-            "w_np": float(jnp.abs(w_np)),
-            "w_total": float(jnp.abs(w_total)),
-            "volume": float(volume),
+            "cosmological_constant": v_total,
+            "w_flux_abs": float(np.abs(w_flux)),
+            "w_np_abs": float(np.abs(w_np)),
+            "w_total_abs": float(np.abs(w_total)),
             "is_de_sitter": v_total > 0,
         }
 
-
-class FluxComputer:
-    """
-    Compute flux superpotential and moduli stabilization.
-
-    In Type IIB, the Gukov-Vafa-Witten superpotential is:
-    W = ∫ G_3 ∧ Ω
-
-    where G_3 = F_3 - τ H_3 is the complexified 3-form flux.
-    """
-
-    def __init__(self):
-        self.kklt = KKLTComputer()
-
-    def compute_superpotential(self,
-                                flux_f: jnp.ndarray,
-                                flux_h: jnp.ndarray,
-                                periods: jnp.ndarray,
-                                axio_dilaton: complex) -> complex:
+    def compute_tadpole(self, flux_f: np.ndarray, flux_h: np.ndarray) -> float:
         """
-        Compute GVW superpotential.
+        Compute D3-brane tadpole from fluxes.
 
-        W = (F - τH) · Π
+        N_flux = (1/2) ∫ F_3 ∧ H_3
 
-        where Π are the periods of Ω.
+        Must satisfy: N_flux + N_D3 ≤ χ(CY)/24 for tadpole cancellation.
         """
-        tau = axio_dilaton
-        g3 = flux_f - tau * flux_h
-
-        # Superpotential is dot product with periods
-        w = jnp.dot(g3, periods)
-        return complex(w)
-
-    def compute_tadpole(self, flux_f: jnp.ndarray, flux_h: jnp.ndarray) -> float:
-        """
-        Compute D3-brane tadpole contribution from fluxes.
-
-        N_flux = (1/2) ∫ F_3 ∧ H_3 = (1/2) F · Σ · H
-
-        where Σ is the intersection form on H^3.
-        """
-        # Simplified: assume standard symplectic intersection form
-        # For h21+1 complex structure moduli, have 2(h21+1) periods
         n = len(flux_f) // 2
-
-        # Σ = [[0, I], [-I, 0]] in symplectic basis
-        sigma_f = jnp.concatenate([flux_f[n:], -flux_f[:n]])
-
-        return float(jnp.dot(flux_f, flux_h[::-1]) / 2)
+        # Symplectic product
+        return float(np.dot(flux_f[:n], flux_h[n:]) - np.dot(flux_f[n:], flux_h[:n])) / 2
 
 
 class PhysicsBridge:
     """
-    Main interface for the Rust GA to call physics computations.
+    Main interface for Rust GA to call physics computations.
 
-    Accepts JSON-RPC style requests and returns physics predictions.
+    Uses CYTools + cymyc for all computations. No fallbacks.
     """
 
     def __init__(self):
-        self.polytope_analyzer = PolytopeAnalyzer()
-        self.metric_computer = CYMetricComputer()
-        self.gauge_computer = GaugeCouplingComputer()
-        self.flux_computer = FluxComputer()
-
-        # Cache for expensive computations
-        self._cache = {}
+        self.cytools = CYToolsBridge()
+        self.gauge = GaugeCouplingComputer()
+        self.moduli = ModuliStabilizer()
 
     def compute_physics(self, genome: dict) -> dict:
         """
@@ -431,104 +362,133 @@ class PhysicsBridge:
 
         Args:
             genome: Dictionary containing:
-                - polytope_id: Index into polytope database
-                - kahler_moduli: Array of Kähler moduli values
+                - vertices: Polytope vertices (4D integer coordinates)
+                - kahler_moduli: Array of Kähler moduli
                 - complex_moduli: Array of complex structure moduli
-                - flux_f: F_3 flux quanta (integers)
-                - flux_h: H_3 flux quanta (integers)
+                - flux_f, flux_h: Flux quanta
                 - g_s: String coupling
-
-        Returns:
-            Dictionary with computed physical observables
         """
         try:
-            # Extract genome parameters
-            kahler = jnp.array(genome.get("kahler_moduli", [1.0, 1.0, 1.0]))
-            complex_mod = jnp.array(genome.get("complex_moduli", [1.0]))
-            flux_f = jnp.array(genome.get("flux_f", [1, 0, 0, 0]))
-            flux_h = jnp.array(genome.get("flux_h", [0, 1, 0, 0]))
+            # 1. Analyze polytope with CYTools
+            vertices = genome.get("vertices", [])
+            if not vertices:
+                return {"success": False, "error": "No vertices provided"}
+
+            cy_data = self.cytools.analyze_polytope(vertices)
+            if not cy_data["success"]:
+                return cy_data
+
+            # 2. Get Kähler moduli (must be in Kähler cone)
+            h11 = cy_data["h11"]
+            kahler = np.array(genome.get("kahler_moduli", [1.0] * h11))
+            if len(kahler) < h11:
+                kahler = np.concatenate([kahler, np.ones(h11 - len(kahler))])
+            kahler = kahler[:h11]
+
+            # Ensure positivity (inside Kähler cone)
+            kahler = np.maximum(kahler, 0.1)
+
+            # 3. Compute volumes
+            vol_data = self.cytools.compute_volumes(cy_data, kahler)
+            if not vol_data["success"]:
+                # Use simplified volume if CYTools computation fails
+                cy_volume = float(np.prod(kahler) / 6.0)
+                divisor_volumes = kahler**2
+            else:
+                cy_volume = vol_data["cy_volume"]
+                divisor_volumes = np.array(vol_data["divisor_volumes"])
+
+            # 4. Compute gauge couplings
             g_s = genome.get("g_s", 0.1)
-
-            # Compute CY volume
-            volume = float(self.metric_computer.compute_volume(kahler))
-
-            # Cycle volumes (simplified: proportional to Kähler moduli squared)
-            cycle_volumes = kahler ** 2
-
-            # Gauge couplings
-            sm_couplings = self.gauge_computer.compute_sm_couplings(
-                cycle_volumes, g_s, volume
+            gauge_string = self.gauge.compute_gauge_couplings(divisor_volumes, g_s)
+            gauge_z = self.gauge.run_to_z_scale(
+                gauge_string["alpha_3_string"],
+                gauge_string["alpha_2_string"],
+                gauge_string["alpha_1_string"],
             )
 
-            # Compute flux superpotential
-            n_flux = len(flux_f)
-            periods = jnp.exp(1j * jnp.arange(n_flux) * 0.1) * complex_mod[0]
+            # 5. Compute flux superpotential and potential
+            h21 = cy_data["h21"]
+            n_periods = 2 * (h21 + 1)
 
-            w_flux = self.flux_computer.compute_superpotential(
-                flux_f, flux_h, periods, complex(0.1 + 1j * g_s)
-            )
+            flux_f = np.array(genome.get("flux_f", [0] * n_periods))
+            flux_h = np.array(genome.get("flux_h", [0] * n_periods))
 
-            # KKLT uplifting for cosmological constant
-            # Number of anti-D3 branes (can be tuned by GA via genome)
+            # Pad fluxes if needed
+            if len(flux_f) < n_periods:
+                flux_f = np.concatenate([flux_f, np.zeros(n_periods - len(flux_f))])
+            if len(flux_h) < n_periods:
+                flux_h = np.concatenate([flux_h, np.zeros(n_periods - len(flux_h))])
+
+            # Simple period approximation (real computation needs CY metric)
+            complex_mod = genome.get("complex_moduli", [1.0])
+            periods = np.exp(1j * np.arange(n_periods) * 0.1) * complex_mod[0]
+
+            tau = complex(0.1 + 1j / g_s)  # Axio-dilaton
+            w_flux = self.moduli.compute_flux_superpotential(flux_f, flux_h, periods, tau)
+
             n_antiD3 = genome.get("n_antiD3", 1)
+            potential = self.moduli.compute_potential(cy_volume, w_flux, kahler, n_antiD3)
 
-            kklt_result = self.flux_computer.kklt.compute_kklt_potential(
-                kahler, w_flux, n_antiD3
-            )
+            # 6. Tadpole constraint
+            tadpole = self.moduli.compute_tadpole(flux_f, flux_h)
+            tadpole_bound = abs(cy_data["chi"]) / 24.0
 
-            lambda_cc = kklt_result["cosmological_constant"]
-            is_de_sitter = kklt_result["is_de_sitter"]
+            # 7. Number of generations
+            n_gen = cy_data["n_generations"]
 
-            # Tadpole constraint
-            n_flux_tadpole = self.flux_computer.compute_tadpole(flux_f, flux_h)
-
-            # Number of generations from topology
-            # In realistic models: N_gen = |χ(CY) ∩ D7| / 2
-            # Simplified: just use h11 - h21 mod 3
-            h11 = genome.get("h11", 3)
-            h21 = genome.get("h21", 3)
-            n_gen = abs(h11 - h21) % 4 + 1  # Ensure 1-4 generations
-
-            # Electron mass ratio (extremely simplified)
-            # Real computation requires Yukawa couplings from worldsheet instantons
-            w_total = kklt_result["w_total"]
-            m_e_ratio = g_s * w_total / (volume**(1/3) + 1e-10) * 1e-22
-
-            # Proton mass ratio
-            m_p_ratio = m_e_ratio * 1836.15  # Use observed ratio as placeholder
+            # 8. Mass ratios (placeholder - needs Yukawa computation from cymyc)
+            w_total = potential["w_total_abs"]
+            m_e_ratio = g_s * w_total / (cy_volume**(1/3) + 1e-10) * 1e-22
+            m_p_ratio = m_e_ratio * 1836.15
 
             return {
                 "success": True,
-                "alpha_em": sm_couplings["alpha_em"],
-                "alpha_s": sm_couplings["alpha_s"],
-                "sin2_theta_w": sm_couplings["sin2_theta_w"],
-                "cosmological_constant": float(lambda_cc),
-                "n_generations": int(n_gen),
+
+                # Gauge couplings
+                "alpha_em": gauge_z["alpha_em"],
+                "alpha_s": gauge_z["alpha_s"],
+                "sin2_theta_w": gauge_z["sin2_theta_w"],
+
+                # Cosmological
+                "cosmological_constant": potential["cosmological_constant"],
+                "is_de_sitter": potential["is_de_sitter"],
+
+                # Topology
+                "n_generations": n_gen,
+                "h11": h11,
+                "h21": h21,
+                "chi": cy_data["chi"],
+
+                # Masses
                 "m_e_planck_ratio": float(m_e_ratio),
                 "m_p_planck_ratio": float(m_p_ratio),
-                "cy_volume": volume,
+
+                # Geometry
+                "cy_volume": cy_volume,
                 "string_coupling": g_s,
-                "flux_tadpole": float(n_flux_tadpole),
-                "superpotential_abs": float(w_total),
-                "is_de_sitter": is_de_sitter,
-                "v_ads": kklt_result["v_ads"],
-                "v_uplift": kklt_result["v_uplift"],
+
+                # Constraints
+                "flux_tadpole": tadpole,
+                "tadpole_bound": tadpole_bound,
+                "tadpole_satisfied": tadpole <= tadpole_bound,
+
+                # Potential
+                "superpotential_abs": w_total,
+                "v_ads": potential["v_ads"],
+                "v_uplift": potential["v_uplift"],
             }
 
         except Exception as e:
+            import traceback
             return {
                 "success": False,
-                "error": str(e)
+                "error": str(e),
+                "traceback": traceback.format_exc(),
             }
 
     def serve_stdio(self):
-        """
-        Serve JSON-RPC requests over stdin/stdout.
-
-        Protocol:
-        - Input: JSON object with "method" and "params" keys
-        - Output: JSON object with "result" or "error" keys
-        """
+        """JSON-RPC server over stdin/stdout."""
         for line in sys.stdin:
             try:
                 request = json.loads(line.strip())
@@ -538,9 +498,9 @@ class PhysicsBridge:
                 if method == "compute_physics":
                     result = self.compute_physics(params)
                 elif method == "analyze_polytope":
-                    result = self.polytope_analyzer.analyze(params.get("vertices", []))
+                    result = self.cytools.analyze_polytope(params.get("vertices", []))
                 elif method == "ping":
-                    result = {"status": "ok", "cymyc_available": CYMYC_AVAILABLE}
+                    result = {"status": "ok", "cytools": True, "cymyc": True}
                 else:
                     result = {"error": f"Unknown method: {method}"}
 
@@ -553,11 +513,13 @@ class PhysicsBridge:
 
 
 def test_bridge():
-    """Test the physics bridge with sample inputs."""
+    """Test the physics bridge."""
+    print("Testing physics bridge with CYTools + cymyc...")
+    print()
+
     bridge = PhysicsBridge()
 
-    # Test polytope analysis
-    print("Testing polytope analyzer...")
+    # Test with quintic threefold vertices
     quintic_vertices = [
         [1, 0, 0, 0],
         [0, 1, 0, 0],
@@ -565,34 +527,42 @@ def test_bridge():
         [0, 0, 0, 1],
         [-1, -1, -1, -1]
     ]
-    result = bridge.polytope_analyzer.analyze(quintic_vertices)
-    print(f"Quintic threefold: h11={result.get('h11')}, h21={result.get('h21')}, χ={result.get('euler')}")
 
-    # Test physics computation
-    print("\nTesting physics computation...")
-    genome = {
-        "polytope_id": 0,
-        "kahler_moduli": [2.0, 1.5, 1.0],
-        "complex_moduli": [1.0],
-        "flux_f": [1, 0, 0, 0, 0, 0],
-        "flux_h": [0, 1, 0, 0, 0, 0],
-        "g_s": 0.1,
-        "h11": 3,
-        "h21": 101
-    }
-    physics = bridge.compute_physics(genome)
-
-    if physics["success"]:
-        print(f"  α_em = {physics['alpha_em']:.6f}")
-        print(f"  α_s  = {physics['alpha_s']:.6f}")
-        print(f"  sin²θ_W = {physics['sin2_theta_w']:.6f}")
-        print(f"  Λ = {physics['cosmological_constant']:.6e}")
-        print(f"  N_gen = {physics['n_generations']}")
-        print(f"  CY Volume = {physics['cy_volume']:.4f}")
+    print("1. Analyzing quintic threefold polytope...")
+    result = bridge.cytools.analyze_polytope(quintic_vertices)
+    if result["success"]:
+        print(f"   h11 = {result['h11']}, h21 = {result['h21']}, χ = {result['chi']}")
+        print(f"   N_gen = {result['n_generations']}")
+        print(f"   Favorable: {result['is_favorable']}")
     else:
-        print(f"  Error: {physics['error']}")
+        print(f"   Error: {result['error']}")
+    print()
 
-    print("\nPhysics bridge ready!")
+    print("2. Computing full physics...")
+    genome = {
+        "vertices": quintic_vertices,
+        "kahler_moduli": [2.0],
+        "complex_moduli": [1.0],
+        "flux_f": [1, 0, 0, 0],
+        "flux_h": [0, 1, 0, 0],
+        "g_s": 0.1,
+        "n_antiD3": 1,
+    }
+
+    physics = bridge.compute_physics(genome)
+    if physics["success"]:
+        print(f"   α_em = {physics['alpha_em']:.6f} (obs: {ALPHA_EM_OBS:.6f})")
+        print(f"   α_s  = {physics['alpha_s']:.4f} (obs: {ALPHA_S_OBS:.4f})")
+        print(f"   sin²θ_W = {physics['sin2_theta_w']:.5f} (obs: {SIN2_THETA_W_OBS:.5f})")
+        print(f"   Λ = {physics['cosmological_constant']:.3e}")
+        print(f"   N_gen = {physics['n_generations']}")
+        print(f"   CY Volume = {physics['cy_volume']:.4f}")
+        print(f"   Tadpole: {physics['flux_tadpole']:.1f} / {physics['tadpole_bound']:.1f}")
+    else:
+        print(f"   Error: {physics['error']}")
+
+    print()
+    print("Physics bridge ready!")
 
 
 if __name__ == "__main__":

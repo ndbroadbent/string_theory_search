@@ -13,6 +13,11 @@ Find Calabi-Yau manifolds whose compactification gives:
 - Correct particle masses and mixing angles
 - Small cosmological constant
 
+### String Theory Dimensions
+String theory requires 10D (Type IIA/IIB, Heterotic) or 11D (M-theory). To get our 4D spacetime:
+- **10D = 4D spacetime + 6D Calabi-Yau (CY3)**
+- The "4D polytopes" in Kreuzer-Skarke define 6D CY3 manifolds via toric geometry
+
 ### Key Constraints
 
 **3-Generation Constraint:**
@@ -30,6 +35,50 @@ Find Calabi-Yau manifolds whose compactification gives:
 - h21: Number of complex structure moduli
 - These determine many physical properties of the compactification
 
+## Physics Tools
+
+### CYTools (Cornell/McAllister Group)
+Primary tool for polytope analysis and CY computations.
+
+**Repository:** https://github.com/LiamMcAllisterGroup/cytools
+
+**Key Features:**
+- `Polytope(vertices)` - Create polytope from vertices
+- `p.triangulate()` - Get triangulation
+- `cy.h11()`, `cy.h21()`, `cy.chi()` - Hodge numbers
+- `cy.intersection_numbers()` - Triple intersection numbers κᵢⱼₖ
+- `cy.compute_cy_volume(t)` - CY volume from Kähler moduli
+- `cy.compute_divisor_volumes(t)` - 4-cycle volumes (for gauge couplings)
+- `cy.second_chern_class()` - c₂ for anomaly cancellation
+- `cy.toric_kahler_cone()` - Valid Kähler moduli range
+
+**Dependencies:**
+- pplpy, python-flint, pypalp, cygv, ortools
+
+### cymyc (JAX-based CY Metrics)
+Numerical differential geometry on CY manifolds.
+
+**Repository:** https://github.com/Justin-Tan/cymyc
+
+**Key Features:**
+- Neural network approximation of Ricci-flat metrics
+- Curvature computations (Riemann, Ricci, scalar)
+- Yukawa coupling calculations
+- Complex structure moduli space investigations
+
+**Dependencies:**
+- JAX, equinox, optax, sympy
+
+### PALP (Polytope Analysis Lattice Package)
+Classic tool for toric geometry computations.
+
+**Repository:** https://gitlab.com/stringstuwien/PALP
+
+**Used for:**
+- Hodge number computation
+- Triangulation algorithms
+- Point counting
+
 ## Data Pipeline
 
 ### 1. Download (download_all_polytopes.py)
@@ -46,121 +95,89 @@ Find Calabi-Yau manifolds whose compactification gives:
 
 ### 3. GA Search (real_physics binary)
 - Loads filtered polytopes
-- Runs genetic algorithm with PALP physics evaluation
+- Runs genetic algorithm with CYTools/cymyc physics evaluation
 - Persists state for resume capability
+
+## Physics Computations (physics_bridge.py)
+
+### Architecture
+```
+real_physics.rs (Rust binary)
+       │
+       ▼
+physics.rs (PyO3 bridge)
+       │
+       ▼
+physics_bridge.py
+       │
+       ├─► CYTools: Polytope analysis, volumes, intersection numbers
+       ├─► cymyc: Numerical metrics, curvature (when trained)
+       └─► KKLT: Moduli stabilization, cosmological constant
+```
+
+### Gauge Coupling Computation
+In Type IIB with D7-branes:
+```
+1/g_a² = Vol(Σ_a) / g_s
+```
+Where Σ_a is the 4-cycle wrapped by the D7-brane stack.
+
+At tree level:
+- `α_a = g_s / (4π Vol_a)` at string scale
+- Run to Z scale using 1-loop SM β-functions: b₁=41/10, b₂=-19/6, b₃=-7
+
+### KKLT Moduli Stabilization
+Scalar potential:
+```
+V = e^K [ K^{ij̄} D_i W D_j̄ W̄ - 3|W|² ] + V_uplift
+```
+- W = W_flux + W_np (flux + non-perturbative superpotential)
+- W_flux = ∫ G₃ ∧ Ω (Gukov-Vafa-Witten)
+- V_uplift = D/V^{4/3} (anti-D3 brane at warped throat)
+
+### Tadpole Constraint
+```
+N_flux + N_D3 ≤ χ(CY)/24
+```
 
 ## Genetic Algorithm Design
 
-### Current Implementation
-- Population of candidate compactifications
-- Each individual: polytope + moduli parameters
-- Fitness: combination of physics scores (gauge group, generations, masses, etc.)
-- Selection: tournament selection
-- Crossover: parameter blending
-- Mutation: polytope swap, parameter perturbation
+### Genome
+Each individual encodes:
+- `polytope_id` - Index into polytope database
+- `kahler_moduli` - Array of h11 Kähler parameters
+- `complex_moduli` - Array of h21 complex structure parameters
+- `flux_f`, `flux_h` - Integer flux quanta
+- `g_s` - String coupling
+- `n_antiD3` - Number of anti-D3 branes for uplift
 
 ### Fitness Components
-1. **Gauge group score**: How close to SU(3)×SU(2)×U(1)
-2. **Generation score**: Penalize deviation from 3
-3. **Mass hierarchy score**: Correct fermion mass ratios
-4. **Mixing angle score**: CKM/PMNS matrix elements
-5. **Cosmological constant**: Should be tiny positive
+1. **Generation score**: |N_gen - 3| (should be 0)
+2. **Gauge coupling scores**: Log-error from observed α_em, α_s, sin²θ_W
+3. **Cosmological constant**: Log-error from observed Λ
+4. **Tadpole**: Penalty if constraint violated
 
-## Adaptive Polytope Selection (TODO)
+### Polytope Feature Vectors (Embeddings)
+Each polytope has a feature vector for clustering:
 
-### Problem
-Random polytope selection wastes evaluations on unpromising regions of the search space.
+**Geometric Features:**
+- h11, h21, Euler characteristic
+- Vertex count, coordinate statistics
+- Shape characteristics (aspect ratio, spread)
 
-### Solution: Learned Prior via Clustering
+**Physics Features (after evaluation):**
+- α_em error, α_s error, sin²θ_W error
+- N_gen error, Λ error
+- CY volume, flux tadpole
+- Overall fitness
 
-**Architecture:**
-```
-┌─────────────────────────────────────────────────────────┐
-│                   Polytope Clustering                    │
-├─────────────────────────────────────────────────────────┤
-│  Features for clustering:                                │
-│  - h11, h21 (Hodge numbers)                             │
-│  - vertex_count                                          │
-│  - vertex coordinate statistics (mean, variance, etc)    │
-│  - facet structure hash                                  │
-│                                                          │
-│  Cluster → fitness history → selection weight            │
-├─────────────────────────────────────────────────────────┤
-│                                                          │
-│   Cluster A (h11~1-5)     ──► avg_fitness: 0.82  ──► 40% │
-│   Cluster B (h11~6-10)    ──► avg_fitness: 0.45  ──► 15% │
-│   Cluster C (h11~11-20)   ──► avg_fitness: 0.31  ──► 10% │
-│   Cluster D (small vertex)──► avg_fitness: 0.71  ──► 35% │
-│                                                          │
-└─────────────────────────────────────────────────────────┘
-```
-
-**State to Persist (cluster_state.json):**
-```json
-{
-  "clusters": {
-    "cluster_0": {
-      "centroid": {"h11": 2.3, "h21": 5.3, "vertex_count": 8.1},
-      "polytope_ids": [123, 456, 789, ...],
-      "evaluations": 1542,
-      "fitness_sum": 847.3,
-      "fitness_best": 0.92,
-      "selection_weight": 0.35
-    },
-    ...
-  },
-  "hot_polytopes": [
-    {"id": 456, "fitness": 0.92, "offspring_success_rate": 0.73},
-    ...
-  ],
-  "mutation_patterns": {
-    "toward_small_h11": {"attempts": 234, "improvements": 89},
-    "toward_small_vertex": {"attempts": 156, "improvements": 67}
-  },
-  "total_evaluations": 50000,
-  "last_updated": "2024-12-08T13:45:00Z"
-}
-```
-
-**Selection Algorithm:**
-1. With probability p_exploit (e.g., 0.7): sample from weighted clusters
-2. With probability p_explore (e.g., 0.2): sample uniformly (explore)
-3. With probability p_hot (e.g., 0.1): sample from hot polytopes
-
-**Weight Update (after each evaluation):**
+### Cluster-Based Selection
+Use UCB (Upper Confidence Bound) for exploration/exploitation:
 ```python
-def update_cluster_weight(cluster, fitness):
-    cluster.evaluations += 1
-    cluster.fitness_sum += fitness
-    avg = cluster.fitness_sum / cluster.evaluations
-
-    # UCB-like exploration bonus
-    exploration_bonus = sqrt(log(total_evals) / cluster.evaluations)
-
-    cluster.selection_weight = avg + 0.1 * exploration_bonus
+weight = avg_fitness + c * sqrt(log(total_evals) / cluster_evals)
 ```
 
-**Mutation Guidance:**
-Track which mutations improve fitness:
-- "Move toward cluster X" → record success/failure
-- After enough data, bias mutations toward successful patterns
-
-### Implementation Plan
-
-**Phase 1: Basic Clustering**
-- Cluster polytopes by (h11, h21, vertex_count)
-- Simple k-means or binning
-- Track per-cluster fitness statistics
-
-**Phase 2: Adaptive Selection**
-- Implement weighted sampling
-- UCB exploration bonus
-- Persist and resume cluster state
-
-**Phase 3: Mutation Learning**
-- Track mutation directions that improve fitness
-- Learn which transformations help
-- Guide mutations toward promising regions
+Track "hot polytopes" - those that consistently produce high-fitness offspring.
 
 ## Infrastructure
 
@@ -168,15 +185,20 @@ Track which mutations improve fitness:
 - LXC container at 10.5.7.33
 - 32 cores, 8GB RAM
 - ZFS mount at /data/polytopes (6.1 TB)
-- PALP installed from GitLab
+
+**Installed Tools:**
+- PALP from GitLab
+- CYTools from GitHub (LiamMcAllisterGroup)
+- cymyc from GitHub (Justin-Tan)
 - Rust toolchain with Python 3.10
 
 ### File Locations on Server
 ```
 /root/string_theory/           # Project root
 /root/palp_source/             # PALP installation
+/root/cytools_source/          # CYTools source
+/root/cymyc_source/            # cymyc source
 /data/polytopes/parquet/       # Raw parquet files
-/data/polytopes/download.log   # Download progress
 /data/polytopes/polytopes_three_gen.json  # Filtered data
 ```
 
@@ -190,12 +212,12 @@ source venv/bin/activate
 
 ### Monitoring
 ```bash
-# Check download progress
-tail -f /data/polytopes/download.log
-
 # Check GA progress
 ls -la results/
 cat results/best_*.json | jq .fitness
+
+# Check cluster state
+cat cluster_state.json | jq '.clusters | length'
 ```
 
 ## Key Files
@@ -204,25 +226,43 @@ cat results/best_*.json | jq .fitness
 |------|---------|
 | `download_all_polytopes.py` | Download parquet files from HuggingFace |
 | `filter_three_gen.py` | Filter to 3-generation candidates |
+| `physics_bridge.py` | CYTools + cymyc physics computations |
 | `src/bin/real_physics.rs` | Main GA binary |
-| `src/real_genetic.rs` | GA implementation |
-| `src/physics.rs` | Physics calculations via PALP |
+| `src/real_genetic.rs` | GA implementation with clustering |
+| `src/physics.rs` | Rust-Python bridge via PyO3 |
 | `ansible/playbook.yml` | Server setup automation |
 
 ## References
 
+### Data Sources
 - Kreuzer-Skarke database: https://huggingface.co/datasets/calabi-yau-data/polytopes-4d
+
+### Physics Tools
 - PALP: https://gitlab.com/stringstuwien/PALP
-- Three-generation CY: https://arxiv.org/abs/0909.3947
-- CY Landscape ML: https://arxiv.org/abs/1812.02893
+- CYTools: https://github.com/LiamMcAllisterGroup/cytools
+- cymyc: https://github.com/Justin-Tan/cymyc
 
-## TODO
+### Papers
+- Kreuzer & Skarke, "Complete classification of reflexive polyhedra in four dimensions" [arXiv:hep-th/0002240](https://arxiv.org/abs/hep-th/0002240)
+- Braun et al., "A three-generation Calabi-Yau manifold with small Hodge numbers" [arXiv:0909.3947](https://arxiv.org/abs/0909.3947)
+- He, "The Calabi-Yau Landscape" [arXiv:1812.02893](https://arxiv.org/abs/1812.02893)
+- cymyc paper: [arXiv:2410.19728](https://arxiv.org/abs/2410.19728)
 
-- [ ] Finish downloading all 32 parquet files
-- [ ] Run filter_three_gen.py to create filtered dataset
-- [ ] Update real_physics to use polytopes_three_gen.json
-- [ ] Implement cluster-based adaptive selection
-- [ ] Add mutation pattern learning
-- [ ] Persist cluster state to disk
-- [ ] Add monitoring/visualization for cluster weights
+## Progress
+
+### Completed
+- [x] Download pipeline for polytope data
+- [x] Filter script for 3-generation candidates
+- [x] Update real_physics to use polytopes_three_gen.json
+- [x] Implement cluster-based adaptive selection with UCB
+- [x] Add mutation pattern tracking
+- [x] Persist cluster state to disk
+- [x] Add polytope feature vectors (embeddings)
+- [x] Rewrite physics_bridge.py to use CYTools + cymyc
+- [x] Update ansible to install CYTools and cymyc
+
+### TODO
+- [ ] Create visualization tool for cluster data
+- [ ] Add monitoring dashboard
 - [ ] Consider ensemble of GAs exploring different regions
+- [ ] Integrate cymyc trained metric models for better accuracy

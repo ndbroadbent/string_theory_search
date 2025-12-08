@@ -9,8 +9,8 @@ use crate::physics::{
     PhysicsOutput, PolytopeData, RealCompactification,
 };
 use rand::prelude::*;
-use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::sync::Arc;
 
 /// Configuration for the real physics GA
@@ -38,6 +38,574 @@ impl Default for RealGaConfig {
             collapse_threshold: 2000,
             hall_of_fame_size: 50,
         }
+    }
+}
+
+/// Feature vector for a polytope - like an embedding
+/// Combines geometric features with physics evaluation results
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PolytopeFeatures {
+    // === GEOMETRIC FEATURES ===
+
+    // Hodge numbers (most important for physics)
+    pub h11: f64,
+    pub h21: f64,
+    pub euler_char: f64,  // 2*(h11 - h21)
+
+    // Vertex statistics
+    pub vertex_count: f64,
+    pub vertex_mean: [f64; 4],      // Mean of each coordinate
+    pub vertex_std: [f64; 4],       // Std dev of each coordinate
+    pub vertex_min: [f64; 4],
+    pub vertex_max: [f64; 4],
+    pub vertex_spread: f64,         // Max - min across all coords
+
+    // Shape characteristics
+    pub centroid_dist: f64,         // Avg distance from centroid
+    pub max_vertex_norm: f64,       // Largest vertex magnitude
+    pub min_vertex_norm: f64,
+    pub aspect_ratio: f64,          // Elongation measure
+
+    // Combinatorial
+    pub coord_sum: f64,             // Sum of all vertex coordinates
+    pub coord_abs_sum: f64,         // Sum of absolute values
+    pub zero_count: f64,            // Number of zero coordinates
+    pub negative_count: f64,        // Number of negative coordinates
+
+    // === PHYSICS FEATURES (from PALP evaluation) ===
+
+    // How close to universal constants (log-ratio, 0 = perfect match)
+    pub alpha_em_error: f64,        // Fine structure constant error
+    pub alpha_s_error: f64,         // Strong coupling error
+    pub sin2_theta_w_error: f64,    // Weinberg angle error
+    pub n_gen_error: f64,           // Generation count error (should be 0 for 3-gen)
+    pub lambda_error: f64,          // Cosmological constant error
+
+    // Mass ratios
+    pub m_e_planck_error: f64,      // Electron mass ratio error
+
+    // Geometry quality
+    pub cy_volume: f64,             // Calabi-Yau volume
+    pub flux_tadpole: f64,          // Flux tadpole (constraint)
+
+    // Overall fitness
+    pub fitness: f64,
+    pub physics_success: bool,
+}
+
+impl PolytopeFeatures {
+    /// Compute geometric features from a polytope's vertices (physics features set to default)
+    pub fn from_polytope(vertices: &[Vec<i32>], h11: i32, h21: i32) -> Self {
+        let n_vertices = vertices.len();
+        let mut vertex_mean = [0.0f64; 4];
+        let mut vertex_min = [f64::MAX; 4];
+        let mut vertex_max = [f64::MIN; 4];
+        let mut coord_sum = 0.0f64;
+        let mut coord_abs_sum = 0.0f64;
+        let mut zero_count = 0.0f64;
+        let mut negative_count = 0.0f64;
+
+        // First pass: compute means, mins, maxs
+        for vertex in vertices {
+            for (j, &coord) in vertex.iter().enumerate().take(4) {
+                let v = coord as f64;
+                vertex_mean[j] += v;
+                vertex_min[j] = vertex_min[j].min(v);
+                vertex_max[j] = vertex_max[j].max(v);
+                coord_sum += v;
+                coord_abs_sum += v.abs();
+                if v == 0.0 { zero_count += 1.0; }
+                if v < 0.0 { negative_count += 1.0; }
+            }
+        }
+
+        if n_vertices > 0 {
+            for j in 0..4 {
+                vertex_mean[j] /= n_vertices as f64;
+            }
+        }
+
+        // Second pass: compute std devs and distances
+        let mut vertex_std = [0.0f64; 4];
+        let mut centroid_dist_sum = 0.0f64;
+        let mut max_vertex_norm = 0.0f64;
+        let mut min_vertex_norm = f64::MAX;
+
+        for vertex in vertices {
+            let mut dist_sq = 0.0f64;
+            let mut norm_sq = 0.0f64;
+            for (j, &coord) in vertex.iter().enumerate().take(4) {
+                let v = coord as f64;
+                let diff = v - vertex_mean[j];
+                vertex_std[j] += diff * diff;
+                dist_sq += diff * diff;
+                norm_sq += v * v;
+            }
+            centroid_dist_sum += dist_sq.sqrt();
+            let norm = norm_sq.sqrt();
+            max_vertex_norm = max_vertex_norm.max(norm);
+            min_vertex_norm = min_vertex_norm.min(norm);
+        }
+
+        if n_vertices > 0 {
+            for j in 0..4 {
+                vertex_std[j] = (vertex_std[j] / n_vertices as f64).sqrt();
+            }
+        }
+
+        let vertex_spread = (0..4)
+            .map(|j| vertex_max[j] - vertex_min[j])
+            .fold(0.0f64, |a, b| a.max(b));
+
+        let aspect_ratio = if min_vertex_norm > 0.0 {
+            max_vertex_norm / min_vertex_norm
+        } else {
+            max_vertex_norm
+        };
+
+        Self {
+            // Geometric features
+            h11: h11 as f64,
+            h21: h21 as f64,
+            euler_char: 2.0 * (h11 as f64 - h21 as f64),
+            vertex_count: n_vertices as f64,
+            vertex_mean,
+            vertex_std,
+            vertex_min,
+            vertex_max,
+            vertex_spread,
+            centroid_dist: centroid_dist_sum / n_vertices.max(1) as f64,
+            max_vertex_norm,
+            min_vertex_norm,
+            aspect_ratio,
+            coord_sum,
+            coord_abs_sum,
+            zero_count,
+            negative_count,
+            // Physics features (set after evaluation)
+            alpha_em_error: f64::MAX,
+            alpha_s_error: f64::MAX,
+            sin2_theta_w_error: f64::MAX,
+            n_gen_error: f64::MAX,
+            lambda_error: f64::MAX,
+            m_e_planck_error: f64::MAX,
+            cy_volume: 0.0,
+            flux_tadpole: f64::MAX,
+            fitness: 0.0,
+            physics_success: false,
+        }
+    }
+
+    /// Update physics features after PALP evaluation
+    pub fn update_physics(&mut self, physics: &crate::physics::PhysicsOutput, fitness: f64) {
+        use crate::constants;
+
+        self.physics_success = physics.success;
+        self.fitness = fitness;
+
+        if physics.success {
+            // Compute log-ratio errors (0 = perfect, higher = worse)
+            self.alpha_em_error = if physics.alpha_em > 0.0 && constants::ALPHA_EM > 0.0 {
+                (physics.alpha_em / constants::ALPHA_EM).ln().abs()
+            } else {
+                10.0
+            };
+
+            self.alpha_s_error = if physics.alpha_s > 0.0 && constants::ALPHA_STRONG > 0.0 {
+                (physics.alpha_s / constants::ALPHA_STRONG).ln().abs()
+            } else {
+                10.0
+            };
+
+            self.sin2_theta_w_error = if physics.sin2_theta_w > 0.0 && constants::SIN2_THETA_W > 0.0 {
+                (physics.sin2_theta_w / constants::SIN2_THETA_W).ln().abs()
+            } else {
+                10.0
+            };
+
+            // Generation error: |computed - 3|
+            self.n_gen_error = (physics.n_generations as f64 - 3.0).abs();
+
+            // Cosmological constant is tricky (target is tiny)
+            self.lambda_error = if physics.cosmological_constant.abs() > 0.0 {
+                (physics.cosmological_constant.abs() / constants::COSMOLOGICAL_CONSTANT.abs()).ln().abs() / 100.0
+            } else {
+                3.0  // Better than huge values
+            };
+
+            self.m_e_planck_error = if physics.m_e_planck_ratio > 0.0 && constants::ELECTRON_PLANCK_RATIO > 0.0 {
+                (physics.m_e_planck_ratio / constants::ELECTRON_PLANCK_RATIO).ln().abs()
+            } else {
+                50.0
+            };
+
+            self.cy_volume = physics.cy_volume;
+            self.flux_tadpole = physics.flux_tadpole;
+        }
+    }
+
+    /// Convert to a flat vector for similarity computations
+    /// Includes both geometric and physics features
+    pub fn to_vector(&self) -> Vec<f64> {
+        let mut v = vec![
+            // Geometric features (normalized where possible)
+            self.h11 / 100.0,           // Scale Hodge numbers
+            self.h21 / 100.0,
+            self.euler_char / 10.0,
+            self.vertex_count / 50.0,
+            self.vertex_spread / 10.0,
+            self.centroid_dist / 10.0,
+            self.max_vertex_norm / 10.0,
+            self.min_vertex_norm / 10.0,
+            self.aspect_ratio / 10.0,
+            self.coord_sum / 100.0,
+            self.coord_abs_sum / 100.0,
+            self.zero_count / 50.0,
+            self.negative_count / 50.0,
+        ];
+        // Vertex statistics (already reasonably scaled)
+        for &m in &self.vertex_mean { v.push(m / 5.0); }
+        for &s in &self.vertex_std { v.push(s / 5.0); }
+
+        // Physics features (errors - already log-scale, lower = better)
+        // Clamp to reasonable range for similarity computation
+        v.push(self.alpha_em_error.min(10.0) / 10.0);
+        v.push(self.alpha_s_error.min(10.0) / 10.0);
+        v.push(self.sin2_theta_w_error.min(10.0) / 10.0);
+        v.push(self.n_gen_error.min(10.0) / 10.0);
+        v.push(self.lambda_error.min(10.0) / 10.0);
+        v.push(self.m_e_planck_error.min(50.0) / 50.0);
+        v.push(self.cy_volume.min(100.0) / 100.0);
+        v.push(self.flux_tadpole.abs().min(100.0) / 100.0);
+        v.push(self.fitness);  // 0-1 already
+
+        v
+    }
+
+    /// Number of features in the vector
+    pub const FEATURE_COUNT: usize = 13 + 8 + 9;  // geo + vertex_stats + physics
+
+    /// Cosine similarity between two feature vectors
+    pub fn cosine_similarity(&self, other: &Self) -> f64 {
+        let v1 = self.to_vector();
+        let v2 = other.to_vector();
+
+        let dot: f64 = v1.iter().zip(v2.iter()).map(|(a, b)| a * b).sum();
+        let norm1: f64 = v1.iter().map(|x| x * x).sum::<f64>().sqrt();
+        let norm2: f64 = v2.iter().map(|x| x * x).sum::<f64>().sqrt();
+
+        if norm1 > 0.0 && norm2 > 0.0 {
+            dot / (norm1 * norm2)
+        } else {
+            0.0
+        }
+    }
+
+    /// Euclidean distance (normalized)
+    pub fn distance(&self, other: &Self) -> f64 {
+        let v1 = self.to_vector();
+        let v2 = other.to_vector();
+
+        v1.iter().zip(v2.iter())
+            .map(|(a, b)| (a - b).powi(2))
+            .sum::<f64>()
+            .sqrt()
+    }
+}
+
+/// Statistics for a cluster of polytopes
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ClusterStats {
+    pub centroid: Vec<f64>,         // Cluster centroid in feature space
+    pub evaluations: u64,
+    pub fitness_sum: f64,
+    pub fitness_best: f64,
+    pub polytope_ids: Vec<usize>,
+    pub feature_sum: Vec<f64>,      // Running sum for centroid update
+}
+
+impl ClusterStats {
+    pub fn new(n_features: usize) -> Self {
+        Self {
+            centroid: vec![0.0; n_features],
+            evaluations: 0,
+            fitness_sum: 0.0,
+            fitness_best: 0.0,
+            polytope_ids: Vec::new(),
+            feature_sum: vec![0.0; n_features],
+        }
+    }
+
+    pub fn avg_fitness(&self) -> f64 {
+        if self.evaluations > 0 {
+            self.fitness_sum / self.evaluations as f64
+        } else {
+            0.0
+        }
+    }
+
+    /// Update centroid with new features
+    pub fn update_centroid(&mut self, features: &[f64]) {
+        for (i, &f) in features.iter().enumerate() {
+            if i < self.feature_sum.len() {
+                self.feature_sum[i] += f;
+            }
+        }
+        if self.evaluations > 0 {
+            for (i, c) in self.centroid.iter_mut().enumerate() {
+                *c = self.feature_sum[i] / self.evaluations as f64;
+            }
+        }
+    }
+
+    /// UCB-style selection weight: exploitation + exploration bonus
+    pub fn selection_weight(&self, total_evals: u64, exploration_factor: f64) -> f64 {
+        if self.evaluations == 0 {
+            return f64::MAX; // Unexplored clusters get priority
+        }
+        let exploitation = self.avg_fitness();
+        let exploration = exploration_factor * ((total_evals as f64).ln() / self.evaluations as f64).sqrt();
+        exploitation + exploration
+    }
+}
+
+/// Mutation pattern tracking
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MutationPattern {
+    pub attempts: u64,
+    pub improvements: u64,
+}
+
+impl MutationPattern {
+    pub fn new() -> Self {
+        Self { attempts: 0, improvements: 0 }
+    }
+
+    pub fn success_rate(&self) -> f64 {
+        if self.attempts > 0 {
+            self.improvements as f64 / self.attempts as f64
+        } else {
+            0.5 // Prior: 50% success rate
+        }
+    }
+}
+
+/// Hot polytope - one that has shown good results
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct HotPolytope {
+    pub id: usize,
+    pub fitness: f64,
+    pub offspring_success_rate: f64,
+}
+
+/// Persistent cluster state for adaptive polytope selection
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ClusterState {
+    /// Clusters keyed by (h11, h21, vertex_bucket)
+    pub clusters: HashMap<String, ClusterStats>,
+    /// Polytopes that have produced good results
+    pub hot_polytopes: Vec<HotPolytope>,
+    /// Track which mutations work
+    pub mutation_patterns: HashMap<String, MutationPattern>,
+    /// Total evaluations across all clusters
+    pub total_evaluations: u64,
+    /// Last update timestamp
+    pub last_updated: String,
+}
+
+impl ClusterState {
+    pub fn new() -> Self {
+        Self {
+            clusters: HashMap::new(),
+            hot_polytopes: Vec::new(),
+            mutation_patterns: HashMap::new(),
+            total_evaluations: 0,
+            last_updated: chrono::Utc::now().to_rfc3339(),
+        }
+    }
+
+    /// Load from file or create new
+    pub fn load_or_new(path: &str) -> Self {
+        if let Ok(data) = std::fs::read_to_string(path) {
+            if let Ok(state) = serde_json::from_str(&data) {
+                println!("Loaded cluster state from {}", path);
+                return state;
+            }
+        }
+        println!("Creating new cluster state");
+        Self::new()
+    }
+
+    /// Save to file
+    pub fn save(&self, path: &str) -> std::io::Result<()> {
+        let json = serde_json::to_string_pretty(self)?;
+        std::fs::write(path, json)
+    }
+
+    /// Get cluster key for a polytope (based on Hodge numbers and vertex bucket)
+    pub fn cluster_key(h11: u32, h21: u32, vertex_count: usize) -> String {
+        // Bucket vertex count into ranges
+        let vertex_bucket = match vertex_count {
+            0..=7 => "v5-7",
+            8..=10 => "v8-10",
+            11..=15 => "v11-15",
+            16..=20 => "v16-20",
+            21..=25 => "v21-25",
+            _ => "v26+",
+        };
+        format!("h{}_{}__{}", h11, h21, vertex_bucket)
+    }
+
+    /// Update cluster stats after evaluation with full feature vector
+    pub fn update_with_features(&mut self, features: &PolytopeFeatures, polytope_id: usize) {
+        let key = Self::cluster_key(
+            features.h11 as u32,
+            features.h21 as u32,
+            features.vertex_count as usize,
+        );
+
+        let n_features = PolytopeFeatures::FEATURE_COUNT;
+        let cluster = self.clusters.entry(key).or_insert_with(|| ClusterStats::new(n_features));
+
+        cluster.evaluations += 1;
+        cluster.fitness_sum += features.fitness;
+        if features.fitness > cluster.fitness_best {
+            cluster.fitness_best = features.fitness;
+        }
+
+        // Update centroid with new feature vector
+        let fv = features.to_vector();
+        cluster.update_centroid(&fv);
+
+        if !cluster.polytope_ids.contains(&polytope_id) && cluster.polytope_ids.len() < 1000 {
+            cluster.polytope_ids.push(polytope_id);
+        }
+
+        self.total_evaluations += 1;
+        self.last_updated = chrono::Utc::now().to_rfc3339();
+
+        // Track hot polytopes (good fitness)
+        if features.fitness > 0.4 {
+            self.add_hot_polytope(polytope_id, features.fitness);
+        }
+    }
+
+    /// Legacy update without features (for compatibility)
+    pub fn update(&mut self, h11: u32, h21: u32, vertex_count: usize, polytope_id: usize, fitness: f64) {
+        let key = Self::cluster_key(h11, h21, vertex_count);
+        let n_features = PolytopeFeatures::FEATURE_COUNT;
+        let cluster = self.clusters.entry(key).or_insert_with(|| ClusterStats::new(n_features));
+
+        cluster.evaluations += 1;
+        cluster.fitness_sum += fitness;
+        if fitness > cluster.fitness_best {
+            cluster.fitness_best = fitness;
+        }
+        if !cluster.polytope_ids.contains(&polytope_id) && cluster.polytope_ids.len() < 1000 {
+            cluster.polytope_ids.push(polytope_id);
+        }
+
+        self.total_evaluations += 1;
+        self.last_updated = chrono::Utc::now().to_rfc3339();
+
+        if fitness > 0.4 {
+            self.add_hot_polytope(polytope_id, fitness);
+        }
+    }
+
+    /// Find the nearest cluster to a feature vector
+    pub fn find_nearest_cluster(&self, features: &PolytopeFeatures) -> Option<&str> {
+        let fv = features.to_vector();
+        let mut best_key: Option<&str> = None;
+        let mut best_dist = f64::MAX;
+
+        for (key, cluster) in &self.clusters {
+            if cluster.centroid.len() == fv.len() {
+                let dist: f64 = fv.iter()
+                    .zip(cluster.centroid.iter())
+                    .map(|(a, b)| (a - b).powi(2))
+                    .sum::<f64>()
+                    .sqrt();
+                if dist < best_dist {
+                    best_dist = dist;
+                    best_key = Some(key.as_str());
+                }
+            }
+        }
+        best_key
+    }
+
+    /// Add or update a hot polytope
+    fn add_hot_polytope(&mut self, id: usize, fitness: f64) {
+        if let Some(existing) = self.hot_polytopes.iter_mut().find(|p| p.id == id) {
+            if fitness > existing.fitness {
+                existing.fitness = fitness;
+            }
+        } else {
+            self.hot_polytopes.push(HotPolytope {
+                id,
+                fitness,
+                offspring_success_rate: 0.5,
+            });
+            // Keep top 100
+            self.hot_polytopes.sort_by(|a, b| b.fitness.partial_cmp(&a.fitness).unwrap());
+            self.hot_polytopes.truncate(100);
+        }
+    }
+
+    /// Track mutation outcome
+    pub fn record_mutation(&mut self, pattern_name: &str, improved: bool) {
+        let pattern = self.mutation_patterns.entry(pattern_name.to_string())
+            .or_insert_with(MutationPattern::new);
+        pattern.attempts += 1;
+        if improved {
+            pattern.improvements += 1;
+        }
+    }
+
+    /// Select a cluster using UCB
+    pub fn select_cluster<R: Rng>(&self, rng: &mut R, exploration_factor: f64) -> Option<&str> {
+        if self.clusters.is_empty() {
+            return None;
+        }
+
+        let weights: Vec<(f64, &str)> = self.clusters.iter()
+            .map(|(k, v)| (v.selection_weight(self.total_evaluations, exploration_factor), k.as_str()))
+            .collect();
+
+        let total_weight: f64 = weights.iter().map(|(w, _)| *w).sum();
+        if total_weight <= 0.0 {
+            return None;
+        }
+
+        let mut r = rng.gen::<f64>() * total_weight;
+        for (weight, key) in weights {
+            r -= weight;
+            if r <= 0.0 {
+                return Some(key);
+            }
+        }
+
+        self.clusters.keys().next().map(|s| s.as_str())
+    }
+
+    /// Get a random polytope ID from a cluster
+    pub fn random_from_cluster<R: Rng>(&self, cluster_key: &str, rng: &mut R) -> Option<usize> {
+        self.clusters.get(cluster_key)
+            .and_then(|c| {
+                if c.polytope_ids.is_empty() {
+                    None
+                } else {
+                    Some(c.polytope_ids[rng.gen_range(0..c.polytope_ids.len())])
+                }
+            })
+    }
+
+    /// Get mutation guidance - which patterns have worked
+    pub fn get_mutation_bias(&self) -> HashMap<String, f64> {
+        self.mutation_patterns.iter()
+            .map(|(k, v)| (k.clone(), v.success_rate()))
+            .collect()
     }
 }
 
@@ -182,6 +750,8 @@ pub struct RealLandscapeSearcher {
     pub total_evaluated: u64,
     pub stagnation_count: usize,
     pub collapse_count: usize,
+    pub cluster_state: ClusterState,
+    cluster_state_path: String,
     rng: StdRng,
 }
 
@@ -197,6 +767,12 @@ impl RealLandscapeSearcher {
         // Load polytope data
         let polytope_data = Arc::new(PolytopeData::load_or_default(polytope_path));
         println!("Using {} polytopes from Kreuzer-Skarke database", polytope_data.polytopes.len());
+
+        // Load or create cluster state
+        let cluster_state_path = "cluster_state.json".to_string();
+        let cluster_state = ClusterState::load_or_new(&cluster_state_path);
+        println!("Cluster state: {} clusters, {} total evaluations",
+            cluster_state.clusters.len(), cluster_state.total_evaluations);
 
         let mut rng = StdRng::from_entropy();
 
@@ -216,6 +792,8 @@ impl RealLandscapeSearcher {
             total_evaluated: 0,
             stagnation_count: 0,
             collapse_count: 0,
+            cluster_state,
+            cluster_state_path,
             rng,
         }
     }
@@ -224,11 +802,34 @@ impl RealLandscapeSearcher {
     pub fn step(&mut self) {
         self.generation += 1;
 
-        // Evaluate population (can be parallelized, but Python GIL limits this)
+        // Evaluate population and update cluster state with full feature vectors
         for individual in &mut self.population {
             if individual.physics.is_none() {
                 individual.evaluate();
                 self.total_evaluated += 1;
+
+                // Compute full feature vector (geometric + physics)
+                let polytope = &self.polytope_data.polytopes[individual.genome.polytope_id];
+                let mut features = PolytopeFeatures::from_polytope(
+                    &polytope.vertices,
+                    polytope.h11,
+                    polytope.h12,  // h12 = h21 for CY3
+                );
+
+                // Add physics features from evaluation
+                if let Some(ref physics) = individual.physics {
+                    features.update_physics(physics, individual.fitness);
+                }
+
+                // Update cluster state with full feature vector
+                self.cluster_state.update_with_features(&features, individual.genome.polytope_id);
+            }
+        }
+
+        // Periodically save cluster state (every 100 generations)
+        if self.generation % 100 == 0 {
+            if let Err(e) = self.cluster_state.save(&self.cluster_state_path) {
+                eprintln!("Warning: Failed to save cluster state: {}", e);
             }
         }
 
@@ -319,13 +920,16 @@ impl RealLandscapeSearcher {
         self.collapse_count += 1;
         self.stagnation_count = 0;
 
+        // Save cluster state before collapse
+        let _ = self.cluster_state.save(&self.cluster_state_path);
+
         // Keep elites
         let elite_count = self.config.elite_count;
 
-        // Replace half with completely fresh random individuals
+        // Replace half with cluster-guided random individuals
         let fresh_count = self.population.len() / 2;
         for i in elite_count..(elite_count + fresh_count) {
-            self.population[i] = RealIndividual::random(&mut self.rng, &self.polytope_data);
+            self.population[i] = self.create_cluster_guided_individual();
         }
 
         // Inject some from hall of fame (with heavy mutation)
@@ -340,11 +944,65 @@ impl RealLandscapeSearcher {
             }
         }
 
+        // Inject from hot polytopes if available
+        let hot_inject = self.cluster_state.hot_polytopes.len().min(self.population.len() / 20);
+        for i in 0..hot_inject {
+            let idx = elite_count + fresh_count + hof_inject + i;
+            if idx < self.population.len() && i < self.cluster_state.hot_polytopes.len() {
+                let hot_id = self.cluster_state.hot_polytopes[i].id;
+                if hot_id < self.polytope_data.polytopes.len() {
+                    let mut individual = RealIndividual::random(&mut self.rng, &self.polytope_data);
+                    individual.genome.polytope_id = hot_id;
+                    individual.physics = None;
+                    self.population[idx] = individual;
+                }
+            }
+        }
+
         // Rest: heavily mutated current population
-        for i in (elite_count + fresh_count + hof_inject)..self.population.len() {
+        for i in (elite_count + fresh_count + hof_inject + hot_inject)..self.population.len() {
             self.population[i].genome.mutate(&mut self.rng, 1.0, &self.polytope_data);
             self.population[i].physics = None;
         }
+    }
+
+    /// Create an individual using cluster-guided selection
+    fn create_cluster_guided_individual(&mut self) -> RealIndividual {
+        let r = self.rng.gen::<f64>();
+
+        // 70% exploit (use high-performing clusters), 20% explore, 10% hot polytopes
+        if r < 0.7 && !self.cluster_state.clusters.is_empty() {
+            // Exploit: select from promising cluster
+            if let Some(cluster_key) = self.cluster_state.select_cluster(&mut self.rng, 0.1) {
+                if let Some(polytope_id) = self.cluster_state.random_from_cluster(cluster_key, &mut self.rng) {
+                    if polytope_id < self.polytope_data.polytopes.len() {
+                        let mut individual = RealIndividual::random(&mut self.rng, &self.polytope_data);
+                        individual.genome.polytope_id = polytope_id;
+                        return individual;
+                    }
+                }
+            }
+        } else if r < 0.9 {
+            // Explore: random selection
+            return RealIndividual::random(&mut self.rng, &self.polytope_data);
+        } else if !self.cluster_state.hot_polytopes.is_empty() {
+            // Hot polytope selection
+            let idx = self.rng.gen_range(0..self.cluster_state.hot_polytopes.len());
+            let hot_id = self.cluster_state.hot_polytopes[idx].id;
+            if hot_id < self.polytope_data.polytopes.len() {
+                let mut individual = RealIndividual::random(&mut self.rng, &self.polytope_data);
+                individual.genome.polytope_id = hot_id;
+                return individual;
+            }
+        }
+
+        // Fallback to random
+        RealIndividual::random(&mut self.rng, &self.polytope_data)
+    }
+
+    /// Save cluster state
+    pub fn save_cluster_state(&self) -> std::io::Result<()> {
+        self.cluster_state.save(&self.cluster_state_path)
     }
 
     fn evolve(&mut self) {

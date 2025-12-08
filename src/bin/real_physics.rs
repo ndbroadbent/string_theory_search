@@ -50,8 +50,12 @@ fn main() {
     }
     println!();
 
-    // Load polytope data - use medium dataset if available, fall back to small
-    let polytope_path = if std::path::Path::new("polytopes_medium.json").exists() {
+    // Load polytope data - prioritize 3-generation filtered dataset
+    let polytope_path = if std::path::Path::new("/data/polytopes/polytopes_three_gen.json").exists() {
+        "/data/polytopes/polytopes_three_gen.json"
+    } else if std::path::Path::new("polytopes_three_gen.json").exists() {
+        "polytopes_three_gen.json"
+    } else if std::path::Path::new("polytopes_medium.json").exists() {
         "polytopes_medium.json"
     } else {
         "polytopes_small.json"
@@ -180,6 +184,12 @@ fn main() {
     match searcher.save_best_with_fitness(&output_dir) {
         Ok(filename) => println!("💾 Best individual saved to {}", filename),
         Err(e) => eprintln!("⚠️  Failed to save best: {}", e),
+    }
+    match searcher.save_cluster_state() {
+        Ok(()) => println!("💾 Cluster state saved ({} clusters, {} hot polytopes)",
+            searcher.cluster_state.clusters.len(),
+            searcher.cluster_state.hot_polytopes.len()),
+        Err(e) => eprintln!("⚠️  Failed to save cluster state: {}", e),
     }
 
     // Final report

@@ -6,6 +6,8 @@
     project_dir: /root/string_theory
     data_dir: /data/polytopes
     palp_dir: /root/palp_source
+    cytools_dir: /root/cytools_source
+    cymyc_dir: /root/cymyc_source
     repo_url: https://github.com/ndbroadbent/string_theory_search.git
     num_workers: 12
 
@@ -20,6 +22,14 @@
           - python3-pip
           - git
           - curl
+          - cmake
+          - libgmp-dev
+          - libmpfr-dev
+          - libflint-dev
+          - libppl-dev
+          - m4
+          - libtool
+          - autoconf
         state: present
         update_cache: yes
 
@@ -59,12 +69,85 @@
         chdir: "{{ project_dir }}"
         creates: "{{ project_dir }}/venv/bin/python"
 
-    - name: Install Python dependencies
+    # ============================================
+    # CYTools Installation (from source)
+    # ============================================
+    - name: Check if CYTools is installed
+      stat:
+        path: "{{ cytools_dir }}/src/cytools"
+      register: cytools_check
+
+    - name: Clone CYTools
+      git:
+        repo: https://github.com/LiamMcAllisterGroup/cytools.git
+        dest: "{{ cytools_dir }}"
+        version: main
+      when: not cytools_check.stat.exists
+
+    - name: Install CYTools dependencies
       pip:
         name:
           - numpy
+          - scipy
+          - pplpy
+          - python-flint
+          - ortools
+          - tqdm
+          - cygv
+          - pypalp
+        virtualenv: "{{ project_dir }}/venv"
+        state: present
+
+    - name: Install CYTools from source
+      shell: |
+        source {{ project_dir }}/venv/bin/activate
+        pip install -e .
+      args:
+        chdir: "{{ cytools_dir }}"
+        executable: /bin/bash
+      when: not cytools_check.stat.exists
+
+    # ============================================
+    # cymyc Installation (JAX-based CY metrics)
+    # ============================================
+    - name: Check if cymyc is installed
+      stat:
+        path: "{{ cymyc_dir }}/cymyc"
+      register: cymyc_check
+
+    - name: Clone cymyc
+      git:
+        repo: https://github.com/Justin-Tan/cymyc.git
+        dest: "{{ cymyc_dir }}"
+        version: main
+      when: not cymyc_check.stat.exists
+
+    - name: Install cymyc dependencies (JAX ecosystem)
+      pip:
+        name:
           - jax
           - jaxlib
+          - equinox
+          - optax
+          - sympy
+        virtualenv: "{{ project_dir }}/venv"
+        state: present
+
+    - name: Install cymyc from source
+      shell: |
+        source {{ project_dir }}/venv/bin/activate
+        pip install -e .
+      args:
+        chdir: "{{ cymyc_dir }}"
+        executable: /bin/bash
+      when: not cymyc_check.stat.exists
+
+    # ============================================
+    # Other Python dependencies
+    # ============================================
+    - name: Install remaining Python dependencies
+      pip:
+        name:
           - pyarrow
           - requests
           - datasets
@@ -72,6 +155,9 @@
         virtualenv: "{{ project_dir }}/venv"
         state: present
 
+    # ============================================
+    # PALP Installation
+    # ============================================
     - name: Check if PALP is installed
       stat:
         path: "{{ palp_dir }}/poly.x"
@@ -91,6 +177,9 @@
           NUM_THREADS: 8
       when: not palp_check.stat.exists
 
+    # ============================================
+    # Polytope Data
+    # ============================================
     - name: Create parquet directory
       file:
         path: "{{ data_dir }}/parquet"
@@ -117,6 +206,9 @@
       async: 10
       poll: 0
 
+    # ============================================
+    # Build Rust Project
+    # ============================================
     - name: Build Rust project
       shell: source /root/.cargo/env && cargo build --release --bin real_physics
       args:
@@ -130,6 +222,33 @@
         src: ../run_workers.sh
         dest: "{{ project_dir }}/run_workers.sh"
         mode: '0755'
+
+    # ============================================
+    # Verify Installation
+    # ============================================
+    - name: Verify CYTools import
+      shell: |
+        source {{ project_dir }}/venv/bin/activate
+        python3 -c "from cytools import Polytope; print('CYTools OK')"
+      args:
+        executable: /bin/bash
+      register: cytools_verify
+      changed_when: false
+
+    - name: Verify cymyc import
+      shell: |
+        source {{ project_dir }}/venv/bin/activate
+        python3 -c "from cymyc import alg_geo; print('cymyc OK')"
+      args:
+        executable: /bin/bash
+      register: cymyc_verify
+      changed_when: false
+
+    - name: Print verification results
+      debug:
+        msg: |
+          CYTools: {{ cytools_verify.stdout }}
+          cymyc: {{ cymyc_verify.stdout }}
 
   handlers:
     - name: restart workers
