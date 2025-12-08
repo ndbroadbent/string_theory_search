@@ -33,12 +33,12 @@
       shell: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
       when: rust_check.rc != 0
 
-    - name: Clone string_theory repository
+    - name: Clone/update string_theory repository
       git:
         repo: "{{ repo_url }}"
         dest: "{{ project_dir }}"
         version: main
-        force: no
+        force: yes
       register: git_clone
 
     - name: Create results directory
@@ -67,6 +67,8 @@
           - jaxlib
           - pyarrow
           - requests
+          - datasets
+          - huggingface_hub
         virtualenv: "{{ project_dir }}/venv"
         state: present
 
@@ -79,7 +81,7 @@
       git:
         repo: https://gitlab.com/stringstuwien/PALP.git
         dest: "{{ palp_dir }}"
-        version: master
+        version: main
       when: not palp_check.stat.exists
 
     - name: Build PALP
@@ -94,20 +96,21 @@
         path: "{{ data_dir }}/polytopes_medium.json"
       register: polytopes_check
 
-    - name: Download polytopes
+    - name: Start polytope download in background
       shell: |
         source venv/bin/activate
-        python3 download_all_polytopes.py \
-          --output-dir {{ data_dir }}/parquet \
-          --min-vertices 5 \
-          --max-vertices 8 \
-          --convert \
-          --max-polytopes 2000000
-        mv polytopes_full.json {{ data_dir }}/polytopes_medium.json
+        nohup python3 download_all_polytopes.py \
+          --output-dir {{ data_dir }} \
+          --output-file polytopes_full.json \
+          > {{ data_dir }}/download.log 2>&1 &
+        echo $! > {{ data_dir }}/download.pid
+        echo "Download started in background (PID: $(cat {{ data_dir }}/download.pid))"
       args:
         chdir: "{{ project_dir }}"
         executable: /bin/bash
       when: not polytopes_check.stat.exists
+      async: 10
+      poll: 0
 
     - name: Symlink polytopes to project dir
       file:
