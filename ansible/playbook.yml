@@ -6,7 +6,7 @@
     project_dir: /root/string_theory
     data_dir: /data/polytopes
     palp_dir: /root/palp_source
-    repo_url: https://github.com/ndbroadbent/string_theory_compactions.git
+    repo_url: https://github.com/ndbroadbent/string_theory_search.git
     num_workers: 12
 
   tasks:
