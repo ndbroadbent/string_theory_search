@@ -14,6 +14,7 @@
 //! - Cosmological constant: KKLT-style flux contributions with uplift
 
 use rand::Rng;
+use serde::{Deserialize, Serialize};
 use std::f64::consts::PI;
 
 /// Number of compactified dimensions (10D string theory → 4D spacetime)
@@ -42,7 +43,7 @@ pub const MAX_FLUX: i32 = 50;
 
 /// A point in the string theory landscape.
 /// This represents one possible compactification of the extra dimensions.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Compactification {
     /// Hodge numbers characterizing topology: (h^{1,1}, h^{2,1})
     /// These determine the number of moduli
@@ -323,7 +324,7 @@ impl Compactification {
 }
 
 /// Output physics from a compactification
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct PhysicsOutput {
     pub alpha_em: f64,
     pub alpha_strong: f64,

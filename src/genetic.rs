@@ -2,9 +2,13 @@
 //!
 //! Techniques from physics_simulations/genetic_logic_shapes:
 //! - Adaptive mutation rate based on stagnation
-//! - Asteroid impact (catastrophic reset with Hall of Fame)
+//! - Landscape collapse (catastrophic reset with Hall of Fame)
 //! - Multi-objective fitness (physics match + simplicity)
 //! - Stagnation tracking per individual
+
+use serde::{Deserialize, Serialize};
+use std::fs;
+use std::path::Path;
 
 use crate::compactification::{
     Compactification, MAX_FLUX, NUM_BRANE_STACKS, NUM_COMPLEX, NUM_FLUXES, NUM_KAHLER,
@@ -13,8 +17,11 @@ use crate::fitness::Individual;
 use rand::Rng;
 use rayon::prelude::*;
 
+/// Default state file path
+const STATE_FILE: &str = "string_theory_state.json";
+
 /// Configuration for the genetic algorithm
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct GaConfig {
     pub population_size: usize,
     pub elite_count: usize,
@@ -22,8 +29,8 @@ pub struct GaConfig {
     pub crossover_rate: f64,
     pub base_mutation_rate: f64,
     pub base_mutation_strength: f64,
-    /// Generations without improvement before asteroid impact
-    pub asteroid_threshold: usize,
+    /// Generations without improvement before landscape collapse
+    pub collapse_threshold: usize,
     /// Hall of fame size
     pub hall_of_fame_size: usize,
 }
@@ -37,7 +44,7 @@ impl Default for GaConfig {
             crossover_rate: 0.85,
             base_mutation_rate: 0.15,
             base_mutation_strength: 0.15,
-            asteroid_threshold: 50,
+            collapse_threshold: 50,
             hall_of_fame_size: 100,
         }
     }
@@ -54,15 +61,26 @@ pub struct GenerationStats {
     pub total_evaluated: u64,
     pub best_n_generations: u8,
     pub stagnation_generations: usize,
-    pub asteroid_impacts: usize,
+    pub landscape_collapses: usize,
 }
 
 /// Hall of Fame entry - stores compactified best solutions
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 struct HallOfFameEntry {
     genome: Compactification,
     fitness: f64,
     generation_found: usize,
+}
+
+/// Saved state for persistence
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct SavedState {
+    pub config: GaConfig,
+    pub best_ever: Option<Individual>,
+    pub hall_of_fame: Vec<HallOfFameEntry>,
+    pub generation: usize,
+    pub total_evaluated: u64,
+    pub collapse_count: usize,
 }
 
 /// The genetic algorithm searcher
@@ -79,8 +97,8 @@ pub struct LandscapeSearcher {
     generations_since_improvement: usize,
     /// Hall of Fame - archive of best solutions
     hall_of_fame: Vec<HallOfFameEntry>,
-    /// Total asteroid impacts
-    asteroid_count: usize,
+    /// Total landscape collapses
+    collapse_count: usize,
 }
 
 impl LandscapeSearcher {
@@ -112,7 +130,7 @@ impl LandscapeSearcher {
             stagnation_ages,
             generations_since_improvement: 0,
             hall_of_fame: Vec::new(),
-            asteroid_count: 0,
+            collapse_count: 0,
         }
     }
 
@@ -143,9 +161,9 @@ impl LandscapeSearcher {
             self.generations_since_improvement += 1;
         }
 
-        // Check for asteroid impact
-        if self.generations_since_improvement >= self.config.asteroid_threshold {
-            self.asteroid_impact();
+        // Check for landscape collapse
+        if self.generations_since_improvement >= self.config.collapse_threshold {
+            self.landscape_collapse();
         }
 
         // Collect statistics
@@ -233,14 +251,16 @@ impl LandscapeSearcher {
         self.stagnation_ages = next_stagnation;
     }
 
-    /// ASTEROID IMPACT: Catastrophic reset with Hall of Fame preservation
-    fn asteroid_impact(&mut self) {
-        self.asteroid_count += 1;
+    /// LANDSCAPE COLLAPSE: Catastrophic reset with Hall of Fame preservation
+    /// When the search stagnates, we collapse the current population and rebuild
+    /// from the archived best solutions, exploring new regions of moduli space.
+    fn landscape_collapse(&mut self) {
+        self.collapse_count += 1;
         self.generations_since_improvement = 0;
 
         eprintln!(
-            "\n🌠 ASTEROID IMPACT #{} at generation {} - Rebuilding population from Hall of Fame...\n",
-            self.asteroid_count, self.generation
+            "\n⚛ LANDSCAPE COLLAPSE #{} at generation {} - Rebuilding from Hall of Fame...\n",
+            self.collapse_count, self.generation
         );
 
         // Save current best to Hall of Fame if not already there
@@ -258,15 +278,15 @@ impl LandscapeSearcher {
             new_stagnation.push(0);
         }
 
-        // 20% fresh random (exploration)
-        let fresh_count = self.config.population_size / 5;
+        // 50% fresh random (massive exploration injection!)
+        let fresh_count = self.config.population_size / 2;
         for _ in 0..fresh_count {
             let genome = Compactification::random(&mut rng);
             new_population.push(Individual::new(genome));
             new_stagnation.push(0);
         }
 
-        // 80% recombinations from Hall of Fame (genetic blender)
+        // 50% heavily mutated recombinations from Hall of Fame
         let recomb_count = self.config.population_size - new_population.len();
 
         if self.hall_of_fame.len() >= 2 {
@@ -278,9 +298,9 @@ impl LandscapeSearcher {
                 let parent1 = &self.hall_of_fame[idx1].genome;
                 let parent2 = &self.hall_of_fame[idx2].genome;
 
-                // Aggressive crossover + mutation
+                // VERY aggressive crossover + mutation for maximum exploration
                 let mut child = crossover(parent1, parent2, &mut rng);
-                mutate(&mut child, 0.5, 0.3, &mut rng); // High mutation for exploration
+                mutate(&mut child, 0.8, 0.6, &mut rng); // Very high mutation!
 
                 new_population.push(Individual::new(child));
                 new_stagnation.push(0);
@@ -356,7 +376,7 @@ impl LandscapeSearcher {
             total_evaluated: self.total_evaluated,
             best_n_generations: best_n_gen,
             stagnation_generations: self.generations_since_improvement,
-            asteroid_impacts: self.asteroid_count,
+            landscape_collapses: self.collapse_count,
         }
     }
 
@@ -364,9 +384,113 @@ impl LandscapeSearcher {
     pub fn best(&self) -> Option<&Individual> {
         self.population.first()
     }
+
+    /// Save state to file
+    pub fn save_state(&self) -> Result<(), Box<dyn std::error::Error>> {
+        let state = SavedState {
+            config: self.config.clone(),
+            best_ever: self.best_ever.clone(),
+            hall_of_fame: self.hall_of_fame.clone(),
+            generation: self.generation,
+            total_evaluated: self.total_evaluated,
+            collapse_count: self.collapse_count,
+        };
+
+        let json = serde_json::to_string_pretty(&state)?;
+        fs::write(STATE_FILE, json)?;
+        Ok(())
+    }
+
+    /// Load state from file and create a searcher with it
+    pub fn load_or_new(config: GaConfig) -> Self {
+        if Path::new(STATE_FILE).exists() {
+            match fs::read_to_string(STATE_FILE) {
+                Ok(json) => {
+                    match serde_json::from_str::<SavedState>(&json) {
+                        Ok(state) => {
+                            eprintln!("═══════════════════════════════════════════════════════════════");
+                            eprintln!("  LOADED SAVED STATE");
+                            eprintln!("═══════════════════════════════════════════════════════════════");
+                            eprintln!("  Previous generation: {}", state.generation);
+                            eprintln!("  Total evaluated: {}", state.total_evaluated);
+                            eprintln!("  Hall of Fame size: {}", state.hall_of_fame.len());
+                            eprintln!("  Landscape collapses: {}", state.collapse_count);
+                            if let Some(best) = &state.best_ever {
+                                eprintln!("  Best ever fitness: {:.6e}", best.fitness);
+                            }
+                            eprintln!();
+
+                            return Self::from_saved_state(state, config);
+                        }
+                        Err(e) => {
+                            eprintln!("Warning: Failed to parse state file: {}", e);
+                            eprintln!("Starting fresh...\n");
+                        }
+                    }
+                }
+                Err(e) => {
+                    eprintln!("Warning: Failed to read state file: {}", e);
+                    eprintln!("Starting fresh...\n");
+                }
+            }
+        }
+
+        Self::new(config)
+    }
+
+    /// Create a searcher from saved state
+    fn from_saved_state(state: SavedState, config: GaConfig) -> Self {
+        // Generate fresh population but seed with Hall of Fame individuals
+        let mut rng = rand::thread_rng();
+        let mut population: Vec<Individual> = Vec::with_capacity(config.population_size);
+
+        // Start with best_ever if available
+        if let Some(best) = &state.best_ever {
+            population.push(best.clone());
+        }
+
+        // Add Hall of Fame members and their mutations
+        for hof_entry in &state.hall_of_fame {
+            if population.len() >= config.population_size {
+                break;
+            }
+            // Add the original
+            population.push(Individual::new(hof_entry.genome.clone()));
+
+            // Add some mutated variants
+            for _ in 0..3 {
+                if population.len() >= config.population_size {
+                    break;
+                }
+                let mut variant = hof_entry.genome.clone();
+                mutate(&mut variant, 0.3, 0.2, &mut rng);
+                population.push(Individual::new(variant));
+            }
+        }
+
+        // Fill rest with random individuals
+        while population.len() < config.population_size {
+            population.push(Individual::new(Compactification::random(&mut rng)));
+        }
+
+        let stagnation_ages = vec![0; config.population_size];
+
+        Self {
+            config,
+            population,
+            best_ever: state.best_ever,
+            generation: state.generation,
+            total_evaluated: state.total_evaluated,
+            history: Vec::new(),
+            stagnation_ages,
+            generations_since_improvement: 0,
+            hall_of_fame: state.hall_of_fame,
+            collapse_count: state.collapse_count,
+        }
+    }
 }
 
-/// Adaptive mutation based on stagnation (from genetic_logic_shapes)
+/// Adaptive mutation based on stagnation - AGGRESSIVE version
 fn adaptive_mutation<R: Rng>(
     stagnation: usize,
     base_rate: f64,
@@ -375,26 +499,26 @@ fn adaptive_mutation<R: Rng>(
 ) -> (f64, f64) {
     let roll: f64 = rng.gen();
 
-    let (rate, strength) = if stagnation < 3 {
-        // Fresh - gentle mutations
-        if roll < 0.6 { (base_rate * 0.5, base_strength * 0.5) }
-        else if roll < 0.9 { (base_rate, base_strength) }
-        else { (base_rate * 2.0, base_strength * 1.5) }
-    } else if stagnation < 7 {
-        // Getting stale - moderate mutations
-        if roll < 0.3 { (base_rate, base_strength) }
-        else if roll < 0.7 { (base_rate * 2.0, base_strength * 1.5) }
-        else { (base_rate * 3.0, base_strength * 2.0) }
-    } else if stagnation < 15 {
-        // Stagnant - aggressive mutations
-        if roll < 0.2 { (base_rate * 2.0, base_strength * 1.5) }
-        else if roll < 0.6 { (base_rate * 4.0, base_strength * 2.5) }
-        else { (base_rate * 6.0, base_strength * 3.0) }
-    } else {
-        // Very stagnant - desperate mutations
-        if roll < 0.3 { (base_rate * 4.0, base_strength * 2.0) }
-        else if roll < 0.7 { (base_rate * 8.0, base_strength * 4.0) }
+    let (rate, strength) = if stagnation < 2 {
+        // Very fresh - still mutate reasonably
+        if roll < 0.5 { (base_rate, base_strength) }
+        else if roll < 0.8 { (base_rate * 1.5, base_strength * 1.5) }
+        else { (base_rate * 2.5, base_strength * 2.0) }
+    } else if stagnation < 5 {
+        // Getting stale - ramp up fast
+        if roll < 0.3 { (base_rate * 1.5, base_strength * 1.5) }
+        else if roll < 0.6 { (base_rate * 3.0, base_strength * 2.5) }
+        else { (base_rate * 5.0, base_strength * 3.5) }
+    } else if stagnation < 10 {
+        // Stagnant - very aggressive
+        if roll < 0.2 { (base_rate * 3.0, base_strength * 2.5) }
+        else if roll < 0.5 { (base_rate * 6.0, base_strength * 4.0) }
         else { (1.0, base_strength * 5.0) } // Hypermutation!
+    } else {
+        // Very stagnant - chaos mode, explore wildly
+        if roll < 0.3 { (base_rate * 5.0, base_strength * 4.0) }
+        else if roll < 0.6 { (1.0, base_strength * 6.0) }
+        else { (1.0, 1.0) } // Maximum chaos - mutate everything!
     };
 
     (rate.min(1.0), strength.min(1.0))
@@ -492,12 +616,12 @@ fn crossover<R: Rng>(
 
 /// Mutate a compactification with adaptive rate and strength
 fn mutate<R: Rng>(genome: &mut Compactification, rate: f64, strength: f64, rng: &mut R) {
-    // Topology mutation (more likely with high strength)
-    if rng.gen::<f64>() < 0.02 * strength * 5.0 {
-        let delta_h11: i16 = rng.gen_range(-20..=20);
-        let delta_h21: i16 = rng.gen_range(-20..=20);
-        genome.hodge_numbers.0 = (genome.hodge_numbers.0 as i16 + delta_h11).clamp(2, 200) as u16;
-        genome.hodge_numbers.1 = (genome.hodge_numbers.1 as i16 + delta_h21).clamp(0, 200) as u16;
+    // Topology mutation - much more likely now!
+    if rng.gen::<f64>() < 0.15 * strength * 3.0 {
+        let delta_h11: i16 = rng.gen_range(-30..=30);
+        let delta_h21: i16 = rng.gen_range(-30..=30);
+        genome.hodge_numbers.0 = (genome.hodge_numbers.0 as i16 + delta_h11).clamp(2, 500) as u16;
+        genome.hodge_numbers.1 = (genome.hodge_numbers.1 as i16 + delta_h21).clamp(0, 500) as u16;
         genome.euler_char = 2 * (genome.hodge_numbers.0 as i32 - genome.hodge_numbers.1 as i32);
     }
 

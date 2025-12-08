@@ -3,12 +3,14 @@
 //! A genetic algorithm searching for the compactification parameters
 //! that reproduce our universe's physical constants.
 //!
-//! "Like mining bitcoin on a 486 laptop" - but we might learn something.
+//! Now with REAL physics via JAX/cymyc!
 
 mod compactification;
 mod constants;
 mod fitness;
 mod genetic;
+mod physics;
+mod real_genetic;
 mod renderer;
 
 use std::sync::Arc;
@@ -22,15 +24,19 @@ use winit::event::WindowEvent;
 use winit::event_loop::{ActiveEventLoop, ControlFlow, EventLoop};
 use winit::window::{Window, WindowId};
 
+/// Auto-save interval in seconds
+const AUTO_SAVE_INTERVAL: u64 = 30;
+
 /// Application state
 struct App {
     window: Option<Arc<Window>>,
     renderer: Option<renderer::Renderer>,
     searcher: LandscapeSearcher,
-    last_update: Instant,
     last_report: Instant,
+    last_save: Instant,
     generations_per_frame: usize,
     paused: bool,
+    last_reported_fitness: f64,
 }
 
 impl App {
@@ -41,9 +47,9 @@ impl App {
             elite_count: 20,
             tournament_size: 5,
             crossover_rate: 0.85,
-            base_mutation_rate: 0.15,
-            base_mutation_strength: 0.15,
-            asteroid_threshold: 50,  // Asteroid impact after 50 stagnant generations
+            base_mutation_rate: 0.4,
+            base_mutation_strength: 0.35,
+            collapse_threshold: 5000,  // Landscape collapse after 5000 stagnant generations
             hall_of_fame_size: 100,  // Keep 100 best solutions in archive
         };
 
@@ -67,10 +73,11 @@ impl App {
         println!("    SPACE - pause/resume");
         println!("    +/-   - adjust speed");
         println!("    R     - print detailed report");
-        println!("    Q/ESC - quit");
+        println!("    S     - save state");
+        println!("    Q/ESC - quit (auto-saves)");
         println!();
 
-        let searcher = LandscapeSearcher::new(config);
+        let searcher = LandscapeSearcher::load_or_new(config);
 
         // Print initial best
         if let Some(best) = searcher.best() {
@@ -82,11 +89,20 @@ impl App {
             window: None,
             renderer: None,
             searcher,
-            last_update: Instant::now(),
             last_report: Instant::now(),
+            last_save: Instant::now(),
             generations_per_frame: 5,
             paused: false,
+            last_reported_fitness: 0.0,
         }
+    }
+
+    fn save_state(&mut self) {
+        match self.searcher.save_state() {
+            Ok(()) => println!("💾 State saved to string_theory_state.json"),
+            Err(e) => eprintln!("Failed to save state: {}", e),
+        }
+        self.last_save = Instant::now();
     }
 
     fn run_generations(&mut self) {
@@ -98,23 +114,41 @@ impl App {
             self.searcher.step();
         }
 
-        // Periodic console output
-        if self.last_report.elapsed() > Duration::from_secs(2) {
-            self.last_report = Instant::now();
-            if let Some(best) = self.searcher.best() {
+        // Console output only when fitness improves
+        if let Some(best) = self.searcher.best() {
+            if best.fitness > self.last_reported_fitness * 1.0001 {
+                // New best found!
+                self.last_reported_fitness = best.fitness;
+                let gen = self.searcher.generation;
+                let total = self.searcher.total_evaluated;
+                let collapses = self.searcher.history.last()
+                    .map(|s| s.landscape_collapses)
+                    .unwrap_or(0);
+                println!(
+                    "🎯 Gen {:6} | Eval: {:>10} | 🌠:{} | {}",
+                    gen, total, collapses, format_fitness_line(best)
+                );
+            } else if self.last_report.elapsed() > Duration::from_secs(10) {
+                // Periodic status update (less frequent when stagnant)
+                self.last_report = Instant::now();
                 let gen = self.searcher.generation;
                 let total = self.searcher.total_evaluated;
                 let stag = self.searcher.history.last()
                     .map(|s| s.stagnation_generations)
                     .unwrap_or(0);
-                let impacts = self.searcher.history.last()
-                    .map(|s| s.asteroid_impacts)
+                let collapses = self.searcher.history.last()
+                    .map(|s| s.landscape_collapses)
                     .unwrap_or(0);
                 println!(
-                    "Gen {:6} | Eval: {:>10} | stag:{:3} | 🌠:{} | {}",
-                    gen, total, stag, impacts, format_fitness_line(best)
+                    "   Gen {:6} | Eval: {:>10} | stag:{:4} | 🌠:{}",
+                    gen, total, stag, collapses
                 );
             }
+        }
+
+        // Auto-save periodically
+        if self.last_save.elapsed() > Duration::from_secs(AUTO_SAVE_INTERVAL) {
+            self.save_state();
         }
     }
 }
@@ -138,6 +172,9 @@ impl ApplicationHandler for App {
     fn window_event(&mut self, event_loop: &ActiveEventLoop, _id: WindowId, event: WindowEvent) {
         match event {
             WindowEvent::CloseRequested => {
+                // Save state before exiting
+                self.save_state();
+
                 println!();
                 println!("═══════════════════════════════════════════════════════════════");
                 println!("  FINAL REPORT");
@@ -175,15 +212,22 @@ impl ApplicationHandler for App {
                             );
                         }
                         winit::keyboard::Key::Named(winit::keyboard::NamedKey::Escape) => {
+                            self.save_state();
                             event_loop.exit();
                         }
                         winit::keyboard::Key::Character(c) => match c.to_string().as_str() {
-                            "q" | "Q" => event_loop.exit(),
+                            "q" | "Q" => {
+                                self.save_state();
+                                event_loop.exit();
+                            }
                             "r" | "R" => {
                                 if let Some(best) = self.searcher.best() {
                                     println!();
                                     println!("{}", format_fitness_report(best));
                                 }
+                            }
+                            "s" | "S" => {
+                                self.save_state();
                             }
                             "+" | "=" => {
                                 self.generations_per_frame =
@@ -214,7 +258,13 @@ impl ApplicationHandler for App {
 
                 // Update and render
                 if let Some(renderer) = &mut self.renderer {
-                    renderer.update(&self.searcher.population, &self.searcher.history);
+                    renderer.update(
+                        &self.searcher.population,
+                        &self.searcher.history,
+                        self.searcher.best_ever.as_ref(),
+                        self.searcher.generation,
+                        self.searcher.total_evaluated,
+                    );
 
                     match renderer.render() {
                         Ok(_) => {}

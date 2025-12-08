@@ -3,13 +3,15 @@
 //! We measure how close a compactification's predicted physics
 //! matches our universe's observed constants.
 
+use serde::{Deserialize, Serialize};
+
 use crate::compactification::{Compactification, PhysicsOutput};
 use crate::constants::{
     GENERATION_BONUS, GENERATION_PENALTY, NUM_GENERATIONS, TARGETS, TARGET_NAMES, WEIGHTS,
 };
 
 /// Evaluated individual in the population
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Individual {
     pub genome: Compactification,
     pub physics: PhysicsOutput,
