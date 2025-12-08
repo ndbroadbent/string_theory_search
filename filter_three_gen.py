@@ -62,15 +62,10 @@ def filter_polytopes(parquet_dir: Path, output_file: Path, prioritize_small: boo
                         hodge_key = f"({h11},{h21})"
                         stats["by_hodge_pair"][hodge_key] = stats["by_hodge_pair"].get(hodge_key, 0) + 1
 
-                        # Handle numpy arrays - convert to flat list of ints
+                        # Handle numpy arrays - vertices is array of arrays, need to vstack
                         vertices_raw = row["vertices"]
-                        if isinstance(vertices_raw, np.ndarray):
-                            vertices = vertices_raw.flatten().tolist()
-                        elif hasattr(vertices_raw, 'to_numpy'):
-                            vertices = vertices_raw.to_numpy().flatten().tolist()
-                        else:
-                            # Try to flatten any nested structure
-                            vertices = np.array(vertices_raw).flatten().tolist()
+                        # Stack nested arrays and flatten to single list of ints
+                        vertices = np.vstack(vertices_raw).flatten().tolist()
 
                         polytope = {
                             "vertices": vertices,
