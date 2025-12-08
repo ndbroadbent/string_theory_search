@@ -91,33 +91,31 @@
           NUM_THREADS: 8
       when: not palp_check.stat.exists
 
-    - name: Check if polytopes exist
-      stat:
-        path: "{{ data_dir }}/polytopes_medium.json"
-      register: polytopes_check
+    - name: Create parquet directory
+      file:
+        path: "{{ data_dir }}/parquet"
+        state: directory
+        mode: '0755'
+
+    - name: Check if download is complete
+      shell: ls -1 {{ data_dir }}/parquet/*.parquet 2>/dev/null | wc -l
+      register: parquet_count
+      changed_when: false
 
     - name: Start polytope download in background
       shell: |
         source venv/bin/activate
         nohup python3 download_all_polytopes.py \
-          --output-dir {{ data_dir }} \
-          --output-file polytopes_full.json \
+          --output-dir {{ data_dir }}/parquet \
           > {{ data_dir }}/download.log 2>&1 &
         echo $! > {{ data_dir }}/download.pid
         echo "Download started in background (PID: $(cat {{ data_dir }}/download.pid))"
       args:
         chdir: "{{ project_dir }}"
         executable: /bin/bash
-      when: not polytopes_check.stat.exists
+      when: parquet_count.stdout | int < 32
       async: 10
       poll: 0
-
-    - name: Symlink polytopes to project dir
-      file:
-        src: "{{ data_dir }}/polytopes_medium.json"
-        dest: "{{ project_dir }}/polytopes_medium.json"
-        state: link
-        force: yes
 
     - name: Build Rust project
       shell: source /root/.cargo/env && cargo build --release --bin real_physics
