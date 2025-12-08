@@ -13,6 +13,7 @@ import json
 import argparse
 import sys
 from pathlib import Path
+import numpy as np
 
 
 def filter_polytopes(parquet_dir: Path, output_file: Path, prioritize_small: bool = True):
@@ -61,25 +62,21 @@ def filter_polytopes(parquet_dir: Path, output_file: Path, prioritize_small: boo
                         hodge_key = f"({h11},{h21})"
                         stats["by_hodge_pair"][hodge_key] = stats["by_hodge_pair"].get(hodge_key, 0) + 1
 
-                        # Handle nested numpy arrays properly
-                        vertices = row["vertices"]
-                        if hasattr(vertices, 'tolist'):
-                            vertices = vertices.tolist()
-                        elif hasattr(vertices, '__iter__'):
-                            # Recursively convert any nested ndarrays
-                            def to_native(obj):
-                                if hasattr(obj, 'tolist'):
-                                    return obj.tolist()
-                                elif isinstance(obj, (list, tuple)):
-                                    return [to_native(x) for x in obj]
-                                return obj
-                            vertices = to_native(list(vertices))
+                        # Handle numpy arrays - convert to flat list of ints
+                        vertices_raw = row["vertices"]
+                        if isinstance(vertices_raw, np.ndarray):
+                            vertices = vertices_raw.flatten().tolist()
+                        elif hasattr(vertices_raw, 'to_numpy'):
+                            vertices = vertices_raw.to_numpy().flatten().tolist()
+                        else:
+                            # Try to flatten any nested structure
+                            vertices = np.array(vertices_raw).flatten().tolist()
 
                         polytope = {
                             "vertices": vertices,
                             "h11": h11,
                             "h21": h21,
-                            "vertex_count": int(row.get("vertex_count", len(vertices) if isinstance(vertices, list) else len(row["vertices"]) // 4)),
+                            "vertex_count": int(row.get("vertex_count", len(vertices) // 4)),
                         }
                         # Write one JSON object per line
                         out.write(json.dumps(polytope) + '\n')
