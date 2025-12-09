@@ -278,8 +278,31 @@ export interface MetaRun {
   best_cc_log_error: number;
   physics_success_rate: number;
   unique_polytopes_tried: number;
+  best_evaluation_id: number | null;
   started_at: string | null;
   ended_at: string | null;
+}
+
+/** Evaluation record (single physics evaluation) */
+export interface Evaluation {
+  id: number;
+  polytope_id: number;
+  run_id: number | null;
+  generation: number | null;
+  g_s: number | null;
+  kahler_moduli: number[] | null;
+  complex_moduli: number[] | null;
+  flux_f: number[] | null;
+  flux_h: number[] | null;
+  fitness: number;
+  alpha_em: number | null;
+  alpha_s: number | null;
+  sin2_theta_w: number | null;
+  n_generations: number | null;
+  cosmological_constant: number | null;
+  success: boolean;
+  error: string | null;
+  created_at: string;
 }
 
 /** Global meta-state */

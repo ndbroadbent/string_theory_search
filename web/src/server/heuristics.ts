@@ -316,3 +316,59 @@ export const getRunStats = createServerFn({ method: 'GET' }).handler(
     }
   }
 );
+
+/**
+ * Get polytope count and first N polytopes
+ */
+export const getPolytopes = createServerFn({ method: 'GET' })
+  .inputValidator((data: { limit?: number; offset?: number }) => data)
+  .handler(async ({ data: { limit = 100, offset = 0 } }): Promise<{
+    total: number;
+    polytopes: Array<{
+      id: number;
+      h11: number;
+      h21: number;
+      vertex_count: number;
+      eval_count: number;
+      fitness_mean: number | null;
+    }>;
+  }> => {
+    const dbPath = getDbPath();
+
+    if (!existsSync(dbPath)) {
+      return { total: 0, polytopes: [] };
+    }
+
+    try {
+      const db = new Database(dbPath, { readonly: true });
+
+      const countRow = db.prepare('SELECT COUNT(*) as count FROM polytopes').get() as { count: number };
+      const total = countRow.count;
+
+      const rows = db.prepare(`
+        SELECT
+          id,
+          h11,
+          h21,
+          vertex_count,
+          eval_count,
+          CASE WHEN eval_count > 0 THEN fitness_sum / eval_count ELSE NULL END as fitness_mean
+        FROM polytopes
+        ORDER BY id
+        LIMIT ? OFFSET ?
+      `).all(limit, offset) as Array<{
+        id: number;
+        h11: number;
+        h21: number;
+        vertex_count: number;
+        eval_count: number;
+        fitness_mean: number | null;
+      }>;
+
+      db.close();
+      return { total, polytopes: rows };
+    } catch (error) {
+      console.error('Error loading polytopes:', error);
+      return { total: 0, polytopes: [] };
+    }
+  });

@@ -77,7 +77,7 @@ function PolytopeExplorer() {
           <h1 className="text-2xl font-bold text-white">
             Polytope #{polytopeId}
           </h1>
-          {heuristics && (
+          {heuristics?.outlier_score != null && (
             <span className={`font-mono text-sm px-2 py-1 rounded ${
               heuristics.outlier_score > 2 ? 'bg-red-900/50 text-red-300' :
               heuristics.outlier_score > 1 ? 'bg-yellow-900/50 text-yellow-300' :

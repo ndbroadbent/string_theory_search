@@ -9,15 +9,20 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as PolytopesRouteImport } from './routes/polytopes'
 import { Route as HeuristicsRouteImport } from './routes/heuristics'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as MetaIndexRouteImport } from './routes/meta/index'
 import { Route as PolytopeIdRouteImport } from './routes/polytope.$id'
-import { Route as GenomePolytopeIdRouteImport } from './routes/genome.$polytopeId'
 import { Route as MetaGenGenIndexRouteImport } from './routes/meta/gen.$gen/index'
 import { Route as MetaGenGenAlgoAlgoIndexRouteImport } from './routes/meta/gen.$gen/algo.$algo/index'
 import { Route as MetaGenGenAlgoAlgoRunRunRouteImport } from './routes/meta/gen.$gen/algo.$algo/run.$run'
 
+const PolytopesRoute = PolytopesRouteImport.update({
+  id: '/polytopes',
+  path: '/polytopes',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const HeuristicsRoute = HeuristicsRouteImport.update({
   id: '/heuristics',
   path: '/heuristics',
@@ -36,11 +41,6 @@ const MetaIndexRoute = MetaIndexRouteImport.update({
 const PolytopeIdRoute = PolytopeIdRouteImport.update({
   id: '/polytope/$id',
   path: '/polytope/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const GenomePolytopeIdRoute = GenomePolytopeIdRouteImport.update({
-  id: '/genome/$polytopeId',
-  path: '/genome/$polytopeId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MetaGenGenIndexRoute = MetaGenGenIndexRouteImport.update({
@@ -63,7 +63,7 @@ const MetaGenGenAlgoAlgoRunRunRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/heuristics': typeof HeuristicsRoute
-  '/genome/$polytopeId': typeof GenomePolytopeIdRoute
+  '/polytopes': typeof PolytopesRoute
   '/polytope/$id': typeof PolytopeIdRoute
   '/meta': typeof MetaIndexRoute
   '/meta/gen/$gen': typeof MetaGenGenIndexRoute
@@ -73,7 +73,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/heuristics': typeof HeuristicsRoute
-  '/genome/$polytopeId': typeof GenomePolytopeIdRoute
+  '/polytopes': typeof PolytopesRoute
   '/polytope/$id': typeof PolytopeIdRoute
   '/meta': typeof MetaIndexRoute
   '/meta/gen/$gen': typeof MetaGenGenIndexRoute
@@ -84,7 +84,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/heuristics': typeof HeuristicsRoute
-  '/genome/$polytopeId': typeof GenomePolytopeIdRoute
+  '/polytopes': typeof PolytopesRoute
   '/polytope/$id': typeof PolytopeIdRoute
   '/meta/': typeof MetaIndexRoute
   '/meta/gen/$gen/': typeof MetaGenGenIndexRoute
@@ -96,7 +96,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/heuristics'
-    | '/genome/$polytopeId'
+    | '/polytopes'
     | '/polytope/$id'
     | '/meta'
     | '/meta/gen/$gen'
@@ -106,7 +106,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/heuristics'
-    | '/genome/$polytopeId'
+    | '/polytopes'
     | '/polytope/$id'
     | '/meta'
     | '/meta/gen/$gen'
@@ -116,7 +116,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/heuristics'
-    | '/genome/$polytopeId'
+    | '/polytopes'
     | '/polytope/$id'
     | '/meta/'
     | '/meta/gen/$gen/'
@@ -127,7 +127,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   HeuristicsRoute: typeof HeuristicsRoute
-  GenomePolytopeIdRoute: typeof GenomePolytopeIdRoute
+  PolytopesRoute: typeof PolytopesRoute
   PolytopeIdRoute: typeof PolytopeIdRoute
   MetaIndexRoute: typeof MetaIndexRoute
   MetaGenGenIndexRoute: typeof MetaGenGenIndexRoute
@@ -137,6 +137,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/polytopes': {
+      id: '/polytopes'
+      path: '/polytopes'
+      fullPath: '/polytopes'
+      preLoaderRoute: typeof PolytopesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/heuristics': {
       id: '/heuristics'
       path: '/heuristics'
@@ -163,13 +170,6 @@ declare module '@tanstack/react-router' {
       path: '/polytope/$id'
       fullPath: '/polytope/$id'
       preLoaderRoute: typeof PolytopeIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/genome/$polytopeId': {
-      id: '/genome/$polytopeId'
-      path: '/genome/$polytopeId'
-      fullPath: '/genome/$polytopeId'
-      preLoaderRoute: typeof GenomePolytopeIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/meta/gen/$gen/': {
@@ -199,7 +199,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   HeuristicsRoute: HeuristicsRoute,
-  GenomePolytopeIdRoute: GenomePolytopeIdRoute,
+  PolytopesRoute: PolytopesRoute,
   PolytopeIdRoute: PolytopeIdRoute,
   MetaIndexRoute: MetaIndexRoute,
   MetaGenGenIndexRoute: MetaGenGenIndexRoute,

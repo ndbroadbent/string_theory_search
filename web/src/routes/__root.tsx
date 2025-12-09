@@ -37,6 +37,12 @@ function RootDocument() {
               Overview
             </Link>
             <Link
+              to="/polytopes"
+              className="text-gray-300 hover:text-white text-sm font-medium transition-colors [&.active]:text-cyan-400"
+            >
+              Polytopes
+            </Link>
+            <Link
               to="/heuristics"
               className="text-gray-300 hover:text-white text-sm font-medium transition-colors [&.active]:text-cyan-400"
             >

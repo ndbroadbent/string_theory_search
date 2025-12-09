@@ -122,36 +122,28 @@ export function PolytopeControls() {
           />
         </div>
 
-        <div>
-          <label className="flex justify-between text-xs text-gray-400 mb-1">
-            <span>XW Rotation Speed</span>
-            <span>{rotationSpeeds.xw.toFixed(2)}</span>
-          </label>
-          <input
-            type="range"
-            min="0"
-            max="1"
-            step="0.02"
-            value={rotationSpeeds.xw}
-            onChange={(e) => setRotationSpeeds({ xw: parseFloat(e.target.value) })}
-            className="w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-500"
-          />
-        </div>
-
-        <div>
-          <label className="flex justify-between text-xs text-gray-400 mb-1">
-            <span>YW Rotation Speed</span>
-            <span>{rotationSpeeds.yw.toFixed(2)}</span>
-          </label>
-          <input
-            type="range"
-            min="0"
-            max="1"
-            step="0.02"
-            value={rotationSpeeds.yw}
-            onChange={(e) => setRotationSpeeds({ yw: parseFloat(e.target.value) })}
-            className="w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-500"
-          />
+        {/* 4D Rotation speeds - all 6 planes */}
+        <div className="pt-2 border-t border-slate-700">
+          <p className="text-xs text-gray-400 mb-2">4D Rotation Speeds:</p>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+            {(['xy', 'xz', 'xw', 'yz', 'yw', 'zw'] as const).map((plane) => (
+              <div key={plane}>
+                <label className="flex justify-between text-xs text-gray-400 mb-1">
+                  <span>{plane.toUpperCase()}</span>
+                  <span>{rotationSpeeds[plane].toFixed(2)}</span>
+                </label>
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.02"
+                  value={rotationSpeeds[plane]}
+                  onChange={(e) => setRotationSpeeds({ [plane]: parseFloat(e.target.value) })}
+                  className="w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+                />
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 

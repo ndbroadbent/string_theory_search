@@ -11,6 +11,12 @@ use string_theory::constants;
 use string_theory::db::{self, MetaAlgorithm, Run};
 use string_theory::searcher::{format_fitness_line, GaConfig, LandscapeSearcher, SearchStrategy};
 
+/// Result of running a trial - includes run metrics and best evaluation ID
+pub struct TrialResult {
+    pub run: Run,
+    pub best_evaluation_id: Option<i64>,
+}
+
 /// Convert MetaAlgorithm to GaConfig for the inner GA
 pub fn algorithm_to_ga_config(algo: &MetaAlgorithm) -> GaConfig {
     GaConfig {
@@ -35,25 +41,31 @@ pub fn run_trial(
     verbose: bool,
     output_dir: &str,
     interrupt_flag: &Arc<AtomicBool>,
-) -> Run {
+) -> TrialResult {
     let ga_config = algorithm_to_ga_config(algo);
     let search_strategy = SearchStrategy::from_meta_algorithm(algo);
     let max_generations = algo.max_generations as usize;
+    let algorithm_id = algo.id.unwrap_or(0);
+
+    // Create run record first so evaluations can reference it
+    let run_id = {
+        let conn = db_conn.lock().unwrap();
+        db::create_run(&conn, algorithm_id, run_number).expect("Failed to create run")
+    };
+    println!("  Created run {} for algorithm {}", run_id, algorithm_id);
 
     // Derive deterministic run seed from algorithm seed and run number
     let run_seed = db::derive_run_seed(algo.rng_seed, run_number);
     println!("  Run seed: {} (derived from algo_seed={}, run={})",
              run_seed, algo.rng_seed, run_number);
 
-    // Note: run_id is None here - evaluations won't be linked to a run record
-    // The Run record is created after the trial completes with all the metrics
     let mut searcher = LandscapeSearcher::new_with_seed(
         ga_config.clone(),
         search_strategy,
         polytope_path,
         polytope_filter,
         Some(db_conn.clone()),
-        None,  // No run_id yet - will be set after insert_run
+        Some(run_id),
         Some(run_seed),
     );
     searcher.verbose = verbose;
@@ -128,9 +140,20 @@ pub fn run_trial(
         }
     }
 
+    // Get best evaluation ID for this run
+    let best_evaluation_id = {
+        let conn = db_conn.lock().unwrap();
+        conn.query_row(
+            "SELECT id FROM evaluations WHERE run_id = ?1 ORDER BY fitness DESC LIMIT 1",
+            rusqlite::params![run_id],
+            |row| row.get::<_, i64>(0),
+        ).ok()
+    };
+
     // Compute run metrics
-    compute_run_metrics(
-        algo.id.unwrap_or(0),
+    let run = compute_run_metrics(
+        run_id,
+        algorithm_id,
         run_number,
         &fitness_history,
         initial_fitness,
@@ -138,10 +161,13 @@ pub fn run_trial(
         physics_successes,
         physics_failures,
         unique_polytopes.len(),
-    )
+    );
+
+    TrialResult { run, best_evaluation_id }
 }
 
 fn compute_run_metrics(
+    run_id: i64,
     algorithm_id: i64,
     run_number: i32,
     fitness_history: &[f64],
@@ -189,7 +215,7 @@ fn compute_run_metrics(
     };
 
     Run {
-        id: None,
+        id: Some(run_id),
         algorithm_id,
         run_number,
         generations_run,

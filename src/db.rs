@@ -95,6 +95,7 @@ fn get_migrations() -> Vec<(i32, &'static str, &'static str)> {
         (4, "RNG seed for reproducibility", include_str!("../migrations/004_rng_seed.sql")),
         (5, "Unify runs and trials", include_str!("../migrations/005_unify_runs.sql")),
         (6, "Workers table", include_str!("../migrations/006_workers.sql")),
+        (7, "Best evaluation cache", include_str!("../migrations/007_run_best_evaluation.sql")),
     ]
 }
 
@@ -743,18 +744,33 @@ pub struct Run {
     pub unique_polytopes_tried: i32,
 }
 
-/// Insert a run result
-pub fn insert_run(conn: &Connection, run: &Run) -> Result<i64> {
+/// Create a run record before starting (so evaluations can reference it)
+pub fn create_run(conn: &Connection, algorithm_id: i64, run_number: i32) -> Result<i64> {
     conn.execute(
-        "INSERT INTO runs (
-            algorithm_id, run_number, generations_run,
-            initial_fitness, final_fitness, fitness_improvement, improvement_rate,
-            fitness_auc, best_cc_log_error, physics_success_rate, unique_polytopes_tried,
-            started_at, ended_at
-        ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, datetime('now'), datetime('now'))",
+        "INSERT INTO runs (algorithm_id, run_number, started_at) VALUES (?1, ?2, datetime('now'))",
+        params![algorithm_id, run_number],
+    )?;
+    Ok(conn.last_insert_rowid())
+}
+
+/// Update a run with final metrics after completion
+pub fn complete_run(conn: &Connection, run: &Run, best_evaluation_id: Option<i64>) -> Result<()> {
+    conn.execute(
+        "UPDATE runs SET
+            generations_run = ?2,
+            initial_fitness = ?3,
+            final_fitness = ?4,
+            fitness_improvement = ?5,
+            improvement_rate = ?6,
+            fitness_auc = ?7,
+            best_cc_log_error = ?8,
+            physics_success_rate = ?9,
+            unique_polytopes_tried = ?10,
+            best_evaluation_id = ?11,
+            ended_at = datetime('now')
+        WHERE id = ?1",
         params![
-            run.algorithm_id,
-            run.run_number,
+            run.id,
             run.generations_run,
             run.initial_fitness,
             run.final_fitness,
@@ -764,13 +780,14 @@ pub fn insert_run(conn: &Connection, run: &Run) -> Result<i64> {
             run.best_cc_log_error,
             run.physics_success_rate,
             run.unique_polytopes_tried,
+            best_evaluation_id,
         ],
     )?;
 
     // Update aggregate meta_fitness
     update_meta_fitness(conn, run.algorithm_id)?;
 
-    Ok(conn.last_insert_rowid())
+    Ok(())
 }
 
 /// Update aggregate meta-fitness for an algorithm
@@ -1419,7 +1436,7 @@ mod tests {
     // =========================================================================
 
     #[test]
-    fn test_insert_run_updates_fitness() {
+    fn test_create_and_complete_run_updates_fitness() {
         let (_dir, conn) = test_db();
         let locked = conn.lock().unwrap();
 
@@ -1427,9 +1444,12 @@ mod tests {
         let algo = MetaAlgorithm::default();
         let algo_id = insert_meta_algorithm(&locked, &algo).unwrap();
 
-        // Insert a trial (run_id=None to avoid foreign key constraint on runs table)
-        let trial = Run {
-            id: None,
+        // Create run first, then complete it
+        let run_id = create_run(&locked, algo_id, 1).unwrap();
+        assert!(run_id > 0);
+
+        let run = Run {
+            id: Some(run_id),
             algorithm_id: algo_id,
             run_number: 1,
             generations_run: 10,
@@ -1443,8 +1463,7 @@ mod tests {
             unique_polytopes_tried: 100,
         };
 
-        let trial_id = insert_run(&locked, &trial).unwrap();
-        assert!(trial_id > 0);
+        complete_run(&locked, &run, None).unwrap();
 
         // Check that meta_fitness was updated
         let (count, fitness): (i32, f64) = locked
@@ -1460,19 +1479,20 @@ mod tests {
     }
 
     #[test]
-    fn test_multiple_trials_aggregate_correctly() {
+    fn test_multiple_runs_aggregate_correctly() {
         let (_dir, conn) = test_db();
         let locked = conn.lock().unwrap();
 
         let algo = MetaAlgorithm::default();
         let algo_id = insert_meta_algorithm(&locked, &algo).unwrap();
 
-        // Insert multiple trials (run_id=None to avoid foreign key constraint)
+        // Insert multiple runs
         for i in 1..=3 {
-            let trial = Run {
-                id: None,
+            let run_id = create_run(&locked, algo_id, i).unwrap();
+            let run = Run {
+                id: Some(run_id),
                 algorithm_id: algo_id,
-                run_number: 1,
+                run_number: i,
                 generations_run: 10,
                 initial_fitness: 0.1,
                 final_fitness: 0.3 + (i as f64 * 0.1),
@@ -1483,7 +1503,7 @@ mod tests {
                 physics_success_rate: 0.7 + (i as f64 * 0.05),
                 unique_polytopes_tried: 50 + (i as i32 * 10),
             };
-            insert_run(&locked, &trial).unwrap();
+            complete_run(&locked, &run, None).unwrap();
         }
 
         let (count, best_final): (i32, f64) = locked
@@ -1727,7 +1747,7 @@ mod tests {
         let (_dir, conn) = test_db();
         let locked = conn.lock().unwrap();
 
-        // Create algorithms and trials
+        // Create algorithms and runs
         // Set status directly to avoid try_acquire_algorithm's non-deterministic behavior
         for i in 1..=3 {
             let algo = MetaAlgorithm::default();
@@ -1741,9 +1761,10 @@ mod tests {
                 )
                 .unwrap();
 
-            // Insert trial (run_id=None to avoid foreign key constraint)
-            let trial = Run {
-                id: None,
+            // Create and complete run
+            let run_id = create_run(&locked, algo_id, 1).unwrap();
+            let run = Run {
+                id: Some(run_id),
                 algorithm_id: algo_id,
                 run_number: 1,
                 generations_run: 10,
@@ -1756,7 +1777,7 @@ mod tests {
                 physics_success_rate: 0.8,
                 unique_polytopes_tried: 100,
             };
-            insert_run(&locked, &trial).unwrap();
+            complete_run(&locked, &run, None).unwrap();
         }
 
         let top = get_top_meta_algorithms(&locked, 0, 2).unwrap();

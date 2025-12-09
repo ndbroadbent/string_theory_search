@@ -12,6 +12,7 @@ import type {
   MetaRun,
   MetaState,
   GenerationStatus,
+  Evaluation,
 } from '../types';
 
 function getProjectRoot(): string {
@@ -102,8 +103,46 @@ function rowToRun(row: Record<string, unknown>): MetaRun {
     best_cc_log_error: row.best_cc_log_error as number,
     physics_success_rate: row.physics_success_rate as number,
     unique_polytopes_tried: row.unique_polytopes_tried as number,
+    best_evaluation_id: row.best_evaluation_id as number | null,
     started_at: row.started_at as string | null,
     ended_at: row.ended_at as string | null,
+  };
+}
+
+/** Parse JSON array from database */
+function parseJsonArray(json: unknown): number[] | null {
+  if (json === null || json === undefined) return null;
+  if (typeof json === 'string') {
+    try {
+      return JSON.parse(json);
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+
+/** Convert database row to Evaluation */
+function rowToEvaluation(row: Record<string, unknown>): Evaluation {
+  return {
+    id: row.id as number,
+    polytope_id: row.polytope_id as number,
+    run_id: row.run_id as number | null,
+    generation: row.generation as number | null,
+    g_s: row.g_s as number | null,
+    kahler_moduli: parseJsonArray(row.kahler_moduli),
+    complex_moduli: parseJsonArray(row.complex_moduli),
+    flux_f: parseJsonArray(row.flux_f),
+    flux_h: parseJsonArray(row.flux_h),
+    fitness: row.fitness as number,
+    alpha_em: row.alpha_em as number | null,
+    alpha_s: row.alpha_s as number | null,
+    sin2_theta_w: row.sin2_theta_w as number | null,
+    n_generations: row.n_generations as number | null,
+    cosmological_constant: row.cosmological_constant as number | null,
+    success: Boolean(row.success),
+    error: row.error as string | null,
+    created_at: row.created_at as string,
   };
 }
 
@@ -389,5 +428,33 @@ export const getAlgorithmLineage = createServerFn({ method: 'GET' })
     } catch (error) {
       console.error('Error loading algorithm lineage:', error);
       return [];
+    }
+  });
+
+/**
+ * Get a single evaluation by ID
+ */
+export const getEvaluation = createServerFn({ method: 'GET' })
+  .inputValidator((data: { id: number }) => data)
+  .handler(async ({ data: { id } }): Promise<Evaluation | null> => {
+    const dbPath = getDbPath();
+    if (!existsSync(dbPath)) {
+      return null;
+    }
+
+    try {
+      const db = new Database(dbPath, { readonly: true });
+
+      const row = db.prepare(`
+        SELECT * FROM evaluations WHERE id = ?
+      `).get(id) as Record<string, unknown> | undefined;
+
+      db.close();
+
+      if (!row) return null;
+      return rowToEvaluation(row);
+    } catch (error) {
+      console.error('Error loading evaluation:', error);
+      return null;
     }
   });

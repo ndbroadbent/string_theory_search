@@ -984,12 +984,13 @@ mod tests {
         let algo = random_algorithm(&mut rng, 0, 10);
         let algo_id = crate::db::insert_meta_algorithm(&conn, &algo).unwrap();
 
-        // Insert trials
+        // Insert runs
         for i in 0..3 {
-            let trial = crate::db::Run {
-                id: None,
+            let run_id = crate::db::create_run(&conn, algo_id, (i + 1) as i32).unwrap();
+            let run = crate::db::Run {
+                id: Some(run_id),
                 algorithm_id: algo_id,
-                run_number: 1,
+                run_number: (i + 1) as i32,
                 generations_run: 10,
                 initial_fitness: 0.1,
                 final_fitness: 0.5,
@@ -1000,7 +1001,7 @@ mod tests {
                 physics_success_rate: 0.8,
                 unique_polytopes_tried: 100,
             };
-            crate::db::insert_run(&conn, &trial).unwrap();
+            crate::db::complete_run(&conn, &run, None).unwrap();
             assert_eq!(get_trial_count(&conn, algo_id).unwrap(), i + 1);
         }
     }
@@ -1016,12 +1017,13 @@ mod tests {
         // Not complete with 0 trials
         assert!(!is_algorithm_complete(&conn, algo_id, 3).unwrap());
 
-        // Add trials
-        for _ in 0..2 {
-            let trial = crate::db::Run {
-                id: None,
+        // Add runs
+        for i in 0..2 {
+            let run_id = crate::db::create_run(&conn, algo_id, i + 1).unwrap();
+            let run = crate::db::Run {
+                id: Some(run_id),
                 algorithm_id: algo_id,
-                run_number: 1,
+                run_number: i + 1,
                 generations_run: 10,
                 initial_fitness: 0.1,
                 final_fitness: 0.5,
@@ -1032,15 +1034,16 @@ mod tests {
                 physics_success_rate: 0.8,
                 unique_polytopes_tried: 100,
             };
-            crate::db::insert_run(&conn, &trial).unwrap();
+            crate::db::complete_run(&conn, &run, None).unwrap();
         }
         assert!(!is_algorithm_complete(&conn, algo_id, 3).unwrap());
 
         // Add one more - now complete
-        let trial = crate::db::Run {
-            id: None,
+        let run_id = crate::db::create_run(&conn, algo_id, 3).unwrap();
+        let run = crate::db::Run {
+            id: Some(run_id),
             algorithm_id: algo_id,
-            run_number: 1,
+            run_number: 3,
             generations_run: 10,
             initial_fitness: 0.1,
             final_fitness: 0.5,
@@ -1051,7 +1054,7 @@ mod tests {
             physics_success_rate: 0.8,
             unique_polytopes_tried: 100,
         };
-        crate::db::insert_run(&conn, &trial).unwrap();
+        crate::db::complete_run(&conn, &run, None).unwrap();
         assert!(is_algorithm_complete(&conn, algo_id, 3).unwrap());
     }
 
@@ -1084,9 +1087,10 @@ mod tests {
                 params![algo_id],
             ).unwrap();
 
-            // Add a trial with varying fitness
-            let trial = crate::db::Run {
-                id: None,
+            // Add a run with varying fitness
+            let run_id = crate::db::create_run(&conn, algo_id, 1).unwrap();
+            let run = crate::db::Run {
+                id: Some(run_id),
                 algorithm_id: algo_id,
                 run_number: 1,
                 generations_run: 10,
@@ -1099,7 +1103,7 @@ mod tests {
                 physics_success_rate: 0.8,
                 unique_polytopes_tried: 100,
             };
-            crate::db::insert_run(&conn, &trial).unwrap();
+            crate::db::complete_run(&conn, &run, None).unwrap();
         }
 
         // Evolve to generation 1

@@ -77,7 +77,7 @@ pub fn run_worker_loop(
 
         // Run the trial
         let run_start = Instant::now();
-        let run_result = run_trial(
+        let trial_result = run_trial(
             &algo,
             run_number,
             polytope_path,
@@ -89,10 +89,10 @@ pub fn run_worker_loop(
         );
         let run_elapsed = run_start.elapsed();
 
-        print_run_summary(&run_result, run_number, run_elapsed.as_secs_f64());
+        print_run_summary(&trial_result.run, run_number, run_elapsed.as_secs_f64());
 
         // Record run result and check completion
-        record_run_and_check_completion(&db_conn, &run_result, algo_id, &algo, my_pid);
+        record_run_and_check_completion(&db_conn, &trial_result, algo_id, &algo, my_pid);
 
         // Clear the algo ID for heartbeat
         heartbeat.clear_algorithm();
@@ -199,27 +199,27 @@ fn print_algorithm_header(algo: &db::MetaAlgorithm, algo_id: i64, run_number: i3
     println!();
 }
 
-fn print_run_summary(trial: &db::Run, run_number: i32, elapsed_secs: f64) {
+fn print_run_summary(run: &db::Run, run_number: i32, elapsed_secs: f64) {
     println!();
     println!("Trial {} completed in {:.1}s", run_number, elapsed_secs);
-    println!("  Initial fitness: {:.4}", trial.initial_fitness);
-    println!("  Final fitness: {:.4}", trial.final_fitness);
-    println!("  Improvement rate: {:.6}", trial.improvement_rate);
-    println!("  CC log error: {:.1}", trial.best_cc_log_error);
+    println!("  Initial fitness: {:.4}", run.initial_fitness);
+    println!("  Final fitness: {:.4}", run.final_fitness);
+    println!("  Improvement rate: {:.6}", run.improvement_rate);
+    println!("  CC log error: {:.1}", run.best_cc_log_error);
     println!();
 }
 
 fn record_run_and_check_completion(
     db_conn: &Arc<Mutex<Connection>>,
-    trial: &db::Run,
+    result: &crate::trial::TrialResult,
     algo_id: i64,
     algo: &db::MetaAlgorithm,
     my_pid: i32,
 ) {
     let conn = db_conn.lock().unwrap();
 
-    if let Err(e) = db::insert_run(&conn, trial) {
-        eprintln!("Failed to insert trial result: {}", e);
+    if let Err(e) = db::complete_run(&conn, &result.run, result.best_evaluation_id) {
+        eprintln!("Failed to complete run: {}", e);
     }
 
     // Check if algorithm is complete
