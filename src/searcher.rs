@@ -4,17 +4,19 @@
 //! from the Python/JAX bridge instead of toy approximations.
 
 use crate::constants;
+use crate::db;
 use crate::physics::{
     compute_physics, is_physics_available,
     PhysicsOutput, PolytopeData, Compactification,
 };
 use rand::prelude::*;
+use rusqlite::Connection;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 /// Configuration for the real physics GA
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct GaConfig {
     pub population_size: usize,
     pub elite_count: usize,
@@ -786,6 +788,10 @@ pub struct LandscapeSearcher {
     pub verbose: bool,
     cluster_state_path: String,
     rng: StdRng,
+    /// Database connection for persistent storage
+    db_conn: Option<Arc<Mutex<Connection>>>,
+    /// Run ID for tracking evaluations
+    run_id: Option<String>,
 }
 
 impl LandscapeSearcher {
@@ -796,6 +802,17 @@ impl LandscapeSearcher {
 
     /// Create a new searcher with an optional polytope filter
     pub fn new_with_filter(config: GaConfig, polytope_path: &str, polytope_filter: Option<Vec<usize>>) -> Self {
+        Self::new_with_db(config, polytope_path, polytope_filter, None, None)
+    }
+
+    /// Create a new searcher with database connection and run ID
+    pub fn new_with_db(
+        config: GaConfig,
+        polytope_path: &str,
+        polytope_filter: Option<Vec<usize>>,
+        db_conn: Option<Arc<Mutex<Connection>>>,
+        run_id: Option<String>,
+    ) -> Self {
         // Physics bridge must be initialized by caller (search.rs)
         assert!(is_physics_available(), "Physics bridge REQUIRED but not initialized");
 
@@ -823,6 +840,16 @@ impl LandscapeSearcher {
         println!("Cluster state: {} clusters, {} total evaluations",
             cluster_state.clusters.len(), cluster_state.total_evaluations);
 
+        // Register run in database
+        if let (Some(ref conn), Some(ref rid)) = (&db_conn, &run_id) {
+            let config_json = serde_json::to_string(&config).unwrap_or_default();
+            let filter_json = polytope_filter.as_ref()
+                .map(|f| serde_json::to_string(f).unwrap_or_default());
+            if let Ok(locked) = conn.lock() {
+                let _ = db::insert_run(&locked, rid, &config_json, filter_json.as_deref());
+            }
+        }
+
         let mut rng = StdRng::from_entropy();
 
         // Initialize population
@@ -846,6 +873,8 @@ impl LandscapeSearcher {
             verbose: false,
             cluster_state_path,
             rng,
+            db_conn,
+            run_id,
         }
     }
 
@@ -869,6 +898,35 @@ impl LandscapeSearcher {
                         } else {
                             eprintln!("FAIL: {}", p.error.as_deref().unwrap_or("?"));
                         }
+                    }
+                }
+
+                // Record evaluation to database
+                if let (Some(ref conn), Some(ref physics)) = (&self.db_conn, &individual.physics) {
+                    if let Ok(locked) = conn.lock() {
+                        // Ensure polytope exists in db
+                        if let Some(polytope) = self.polytope_data.get(individual.genome.polytope_id) {
+                            let vertices_json = serde_json::to_string(&polytope.vertices).unwrap_or_default();
+                            let _ = db::upsert_polytope(
+                                &locked,
+                                individual.genome.polytope_id as i64,
+                                polytope.h11,
+                                polytope.h12,
+                                polytope.vertices.len() as i32,
+                                &vertices_json,
+                            );
+                        }
+
+                        // Record evaluation
+                        let _ = db::insert_evaluation(
+                            &locked,
+                            individual.genome.polytope_id as i64,
+                            self.run_id.as_deref(),
+                            Some(self.generation as i32),
+                            &individual.genome,
+                            physics,
+                            individual.fitness,
+                        );
                     }
                 }
 
@@ -1073,6 +1131,27 @@ impl LandscapeSearcher {
     /// Save cluster state
     pub fn save_cluster_state(&self) -> std::io::Result<()> {
         self.cluster_state.save(&self.cluster_state_path)
+    }
+
+    /// Update run statistics in the database on completion
+    pub fn finalize_run(&self) {
+        if let (Some(ref conn), Some(ref rid)) = (&self.db_conn, &self.run_id) {
+            if let Ok(locked) = conn.lock() {
+                let best_polytope_id = self.best_ever.as_ref()
+                    .map(|b| b.genome.polytope_id as i64);
+                let best_fitness = self.best_ever.as_ref()
+                    .map(|b| b.fitness)
+                    .unwrap_or(0.0);
+                let _ = db::update_run_stats(
+                    &locked,
+                    rid,
+                    self.generation as i32,
+                    self.total_evaluated as i64,
+                    best_fitness,
+                    best_polytope_id,
+                );
+            }
+        }
     }
 
     fn evolve(&mut self) {

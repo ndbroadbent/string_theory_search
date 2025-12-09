@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Compute heuristics for polytopes and store in JSON + ChromaDB.
+Compute heuristics for polytopes and store in SQLite + JSON + ChromaDB.
 
 Usage:
     # Compute for N random polytopes (adds to existing)
@@ -15,6 +15,7 @@ Usage:
 
 import argparse
 import json
+import sqlite3
 import struct
 import sys
 from pathlib import Path
@@ -32,6 +33,7 @@ JSONL_PATH = Path("polytopes_three_gen.jsonl")
 IDX_PATH = Path("polytopes_three_gen.jsonl.idx")
 HEURISTICS_PATH = Path("heuristics_sample.json")
 CHROMA_PATH = Path("chroma_heuristics")
+DB_PATH = Path("data/string_theory.db")
 
 
 def load_index() -> list[int]:
@@ -68,6 +70,92 @@ def save_heuristics(heuristics: list[dict]):
     with open(HEURISTICS_PATH, "w") as f:
         json.dump(heuristics, f, indent=2)
     print(f"Saved {len(heuristics)} heuristics to {HEURISTICS_PATH}")
+
+
+def save_to_sqlite(heuristics: list[dict]):
+    """Save heuristics to SQLite database."""
+    if not DB_PATH.exists():
+        print(f"Warning: Database not found at {DB_PATH}. Run the search binary first to create schema.")
+        return
+
+    conn = sqlite3.connect(DB_PATH)
+
+    # Column mapping from JSON to SQLite
+    column_mapping = {
+        'polytope_id': 'polytope_id',
+        'sphericity': 'sphericity',
+        'inertia_isotropy': 'inertia_isotropy',
+        'chirality_optimal': 'chirality_optimal',
+        'chirality_x': 'chirality_x',
+        'chirality_y': 'chirality_y',
+        'chirality_z': 'chirality_z',
+        'chirality_w': 'chirality_w',
+        'handedness_det': 'handedness_det',
+        'symmetry_x': 'symmetry_x',
+        'symmetry_y': 'symmetry_y',
+        'symmetry_z': 'symmetry_z',
+        'symmetry_w': 'symmetry_w',
+        'flatness_3d': 'flatness_3d',
+        'flatness_2d': 'flatness_2d',
+        'intrinsic_dim_estimate': 'intrinsic_dim_estimate',
+        'spikiness': 'spikiness',
+        'max_exposure': 'max_exposure',
+        'conformity_ratio': 'conformity_ratio',
+        'distance_kurtosis': 'distance_kurtosis',
+        'loner_score': 'loner_score',
+        'coord_mean': 'coord_mean',
+        'coord_median': 'coord_median',
+        'coord_std': 'coord_std',
+        'coord_skewness': 'coord_skewness',
+        'coord_kurtosis': 'coord_kurtosis',
+        'shannon_entropy': 'shannon_entropy',
+        'joint_entropy': 'joint_entropy',
+        'compression_ratio': 'compression_ratio',
+        'sorted_compression_ratio': 'sorted_compression_ratio',
+        'sort_compression_gain': 'sort_compression_gain',
+        'phi_ratio_count': 'phi_ratio_count',
+        'fibonacci_count': 'fibonacci_count',
+        'zero_count': 'zero_count',
+        'one_count': 'one_count',
+        'prime_count': 'prime_count',
+        'outlier_score': 'outlier_score',
+        'outlier_max_zscore': 'outlier_max_zscore',
+        'outlier_max_dim': 'outlier_max_dim',
+        'outlier_count_2sigma': 'outlier_count_2sigma',
+        'outlier_count_3sigma': 'outlier_count_3sigma',
+    }
+
+    inserted = 0
+    for record in heuristics:
+        polytope_id = record.get('polytope_id')
+        if polytope_id is None:
+            continue
+
+        columns = ['polytope_id']
+        values = [polytope_id]
+
+        for json_key, db_col in column_mapping.items():
+            if json_key == 'polytope_id':
+                continue
+            if json_key in record:
+                columns.append(db_col)
+                values.append(record[json_key])
+
+        placeholders = ','.join(['?' for _ in values])
+        col_str = ','.join(columns)
+
+        try:
+            conn.execute(
+                f"INSERT OR REPLACE INTO heuristics ({col_str}) VALUES ({placeholders})",
+                values
+            )
+            inserted += 1
+        except sqlite3.Error as e:
+            print(f"Error inserting polytope {polytope_id}: {e}")
+
+    conn.commit()
+    conn.close()
+    print(f"Saved {inserted} heuristics to {DB_PATH}")
 
 
 def compute_outlier_scores(heuristics: list[dict]) -> list[dict]:
@@ -252,6 +340,7 @@ def compute_random(count: int):
     all_heuristics = existing + new_heuristics
     all_heuristics = compute_outlier_scores(all_heuristics)
     save_heuristics(all_heuristics)
+    save_to_sqlite(all_heuristics)
     update_chromadb(all_heuristics)
 
 
@@ -279,6 +368,7 @@ def compute_specific(ids: list[int]):
     all_heuristics = list(existing_by_id.values())
     all_heuristics = compute_outlier_scores(all_heuristics)
     save_heuristics(all_heuristics)
+    save_to_sqlite(all_heuristics)
     update_chromadb(all_heuristics)
 
 

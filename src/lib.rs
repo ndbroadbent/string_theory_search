@@ -4,5 +4,6 @@
 //! to find Calabi-Yau compactifications that reproduce Standard Model physics.
 
 pub mod constants;
+pub mod db;
 pub mod physics;
 pub mod searcher;

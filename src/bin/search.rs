@@ -8,6 +8,7 @@ use std::time::{Duration, Instant};
 use clap::Parser;
 use serde::Deserialize;
 use string_theory::constants;
+use string_theory::db;
 use string_theory::physics::init_physics_bridge;
 use string_theory::searcher::{format_fitness_line, format_fitness_report, GaConfig, LandscapeSearcher};
 
@@ -65,16 +66,20 @@ struct PathsConfig {
     polytopes: String,
     #[serde(default = "default_output_dir")]
     output_dir: String,
+    #[serde(default = "default_database")]
+    database: String,
 }
 
 fn default_polytopes() -> String { "polytopes_three_gen.jsonl".to_string() }
 fn default_output_dir() -> String { "results".to_string() }
+fn default_database() -> String { "data/string_theory.db".to_string() }
 
 impl Default for PathsConfig {
     fn default() -> Self {
         Self {
             polytopes: default_polytopes(),
             output_dir: default_output_dir(),
+            database: default_database(),
         }
     }
 }
@@ -229,6 +234,12 @@ fn main() {
     println!("Initializing physics bridge (CYTools + cymyc)...");
     init_physics_bridge().expect("Physics bridge REQUIRED. Install CYTools and cymyc.");
     println!("  Physics bridge ready");
+
+    // Initialize database
+    println!("Initializing database at {}...", config.paths.database);
+    let db_conn = db::init_database(&config.paths.database)
+        .expect("Failed to initialize database");
+    println!("  Database ready");
     println!();
 
     println!("Loading polytopes from {}...", polytope_path);
@@ -244,7 +255,14 @@ fn main() {
         hall_of_fame_size: config.search.hall_of_fame_size,
     };
 
-    let mut searcher = LandscapeSearcher::new_with_filter(ga_config.clone(), &polytope_path, polytope_filter.clone());
+    let run_id_str = format!("run_{:02}", run_id);
+    let mut searcher = LandscapeSearcher::new_with_db(
+        ga_config.clone(),
+        &polytope_path,
+        polytope_filter.clone(),
+        Some(db_conn.clone()),
+        Some(run_id_str.clone()),
+    );
     searcher.verbose = args.verbose;
 
     println!("Population size: {}", ga_config.population_size);
@@ -353,6 +371,10 @@ fn main() {
     println!("═══════════════════════════════════════════════════════════════");
     println!("  SAVING");
     println!("═══════════════════════════════════════════════════════════════");
+
+    // Update run stats in database
+    searcher.finalize_run();
+    println!("Database updated for run {}", run_id_str);
 
     if let Ok(f) = searcher.save_state(&output_dir) {
         println!("State saved to {}", f);
