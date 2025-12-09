@@ -5,6 +5,7 @@
 
 pub mod constants;
 pub mod db;
+pub mod heuristics;
 pub mod meta_ga;
 pub mod physics;
 pub mod searcher;

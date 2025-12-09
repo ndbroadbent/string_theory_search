@@ -4,14 +4,18 @@
   become: yes
   vars:
     project_dir: /root/string_theory
-    data_dir: /data/polytopes
+    data_dir: "{{ project_dir }}/data"
+    raw_polytopes_dir: /data/polytopes
     palp_dir: /root/palp_source
     cytools_dir: /root/cytools_source
     cymyc_dir: /root/cymyc_source
     repo_url: https://github.com/ndbroadbent/string_theory_search.git
-    num_workers: 12
+    web_port: 3000
 
   tasks:
+    # ============================================
+    # System Dependencies
+    # ============================================
     - name: Install system dependencies
       apt:
         name:
@@ -30,9 +34,16 @@
           - m4
           - libtool
           - autoconf
+          - unzip
+          # SQLite (for better-sqlite3 native module and general use)
+          - sqlite3
+          - libsqlite3-dev
         state: present
         update_cache: yes
 
+    # ============================================
+    # Rust Installation
+    # ============================================
     - name: Check if Rust is installed
       command: /root/.cargo/bin/cargo --version
       register: rust_check
@@ -43,6 +54,22 @@
       shell: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
       when: rust_check.rc != 0
 
+    # ============================================
+    # Bun Installation
+    # ============================================
+    - name: Check if Bun is installed
+      command: /root/.bun/bin/bun --version
+      register: bun_check
+      ignore_errors: yes
+      changed_when: false
+
+    - name: Install Bun
+      shell: curl -fsSL https://bun.sh/install | bash
+      when: bun_check.rc != 0
+
+    # ============================================
+    # Project Setup
+    # ============================================
     - name: Clone/update string_theory repository
       git:
         repo: "{{ repo_url }}"
@@ -50,6 +77,12 @@
         version: main
         force: yes
       register: git_clone
+
+    - name: Create data directory (NVMe)
+      file:
+        path: "{{ data_dir }}"
+        state: directory
+        mode: '0755'
 
     - name: Create results directory
       file:
@@ -63,6 +96,9 @@
         state: directory
         mode: '0755'
 
+    # ============================================
+    # Python Virtual Environment
+    # ============================================
     - name: Create Python venv
       command: python3 -m venv venv
       args:
@@ -70,7 +106,7 @@
         creates: "{{ project_dir }}/venv/bin/python"
 
     # ============================================
-    # CYTools Installation (from source)
+    # CYTools Installation
     # ============================================
     - name: Check if CYTools is installed
       stat:
@@ -108,7 +144,7 @@
       when: not cytools_check.stat.exists
 
     # ============================================
-    # cymyc Installation (JAX-based CY metrics)
+    # cymyc Installation
     # ============================================
     - name: Check if cymyc is installed
       stat:
@@ -122,7 +158,7 @@
         version: main
       when: not cymyc_check.stat.exists
 
-    - name: Install cymyc dependencies (JAX ecosystem)
+    - name: Install cymyc dependencies
       pip:
         name:
           - jax
@@ -143,7 +179,7 @@
       when: not cymyc_check.stat.exists
 
     # ============================================
-    # Other Python dependencies
+    # Other Python Dependencies
     # ============================================
     - name: Install remaining Python dependencies
       pip:
@@ -152,6 +188,7 @@
           - requests
           - datasets
           - huggingface_hub
+          - chromadb
         virtualenv: "{{ project_dir }}/venv"
         state: present
 
@@ -180,25 +217,25 @@
     # ============================================
     # Polytope Data
     # ============================================
-    - name: Create parquet directory
+    - name: Create raw polytopes parquet directory
       file:
-        path: "{{ data_dir }}/parquet"
+        path: "{{ raw_polytopes_dir }}/parquet"
         state: directory
         mode: '0755'
 
-    - name: Check if download is complete
-      shell: ls -1 {{ data_dir }}/parquet/*.parquet 2>/dev/null | wc -l
+    - name: Check if raw polytope download is complete
+      shell: ls -1 {{ raw_polytopes_dir }}/parquet/*.parquet 2>/dev/null | wc -l
       register: parquet_count
       changed_when: false
 
-    - name: Start polytope download in background
+    - name: Start raw polytope download in background (if needed)
       shell: |
         source venv/bin/activate
         nohup python3 download_all_polytopes.py \
-          --output-dir {{ data_dir }}/parquet \
-          > {{ data_dir }}/download.log 2>&1 &
-        echo $! > {{ data_dir }}/download.pid
-        echo "Download started in background (PID: $(cat {{ data_dir }}/download.pid))"
+          --output-dir {{ raw_polytopes_dir }}/parquet \
+          > {{ project_dir }}/logs/download.log 2>&1 &
+        echo $! > {{ project_dir }}/logs/download.pid
+        echo "Download started in background (PID: $(cat {{ project_dir }}/logs/download.pid))"
       args:
         chdir: "{{ project_dir }}"
         executable: /bin/bash
@@ -206,25 +243,185 @@
       async: 10
       poll: 0
 
+    - name: Check if filtered polytopes exist
+      stat:
+        path: "{{ data_dir }}/polytopes_three_gen.jsonl"
+      register: filtered_polytopes
+
+    - name: Copy filtered polytopes from spinning disk if they exist there
+      shell: |
+        if [ -f "{{ raw_polytopes_dir }}/polytopes_three_gen.jsonl" ]; then
+          mv {{ raw_polytopes_dir }}/polytopes_three_gen.jsonl {{ data_dir }}/
+          echo "Moved filtered polytopes to NVMe"
+        else
+          echo "No filtered polytopes to move"
+        fi
+      when: not filtered_polytopes.stat.exists
+      args:
+        executable: /bin/bash
+
+    - name: Move SQLite database from spinning disk if it exists there
+      shell: |
+        if [ -f "{{ raw_polytopes_dir }}/string_theory.db" ]; then
+          mv {{ raw_polytopes_dir }}/string_theory.db {{ data_dir }}/
+          echo "Moved database to NVMe"
+        else
+          echo "No database to move"
+        fi
+      args:
+        executable: /bin/bash
+
     # ============================================
     # Build Rust Project
     # ============================================
-    - name: Build Rust project
-      shell: source /root/.cargo/env && cargo build --release --bin real_physics
+    - name: Build Rust project (search)
+      shell: source /root/.cargo/env && cargo build --release --bin search
       args:
         chdir: "{{ project_dir }}"
         executable: /bin/bash
-      register: cargo_build
-      changed_when: "'Compiling' in cargo_build.stdout"
+      register: cargo_build_search
+      changed_when: "'Compiling' in cargo_build_search.stdout"
 
-    - name: Copy run_workers.sh
-      copy:
-        src: ../run_workers.sh
-        dest: "{{ project_dir }}/run_workers.sh"
-        mode: '0755'
+    - name: Build Rust project (heuristics)
+      shell: source /root/.cargo/env && cargo build --release --bin heuristics
+      args:
+        chdir: "{{ project_dir }}"
+        executable: /bin/bash
+      register: cargo_build_heuristics
+      changed_when: "'Compiling' in cargo_build_heuristics.stdout"
 
     # ============================================
-    # Verify Installation
+    # Web Dashboard Setup
+    # ============================================
+    - name: Install web dependencies with Bun
+      shell: /root/.bun/bin/bun install
+      args:
+        chdir: "{{ project_dir }}/web"
+        executable: /bin/bash
+      register: bun_install
+      changed_when: "'install' in bun_install.stdout"
+
+    - name: Build web dashboard
+      shell: /root/.bun/bin/bun run build
+      args:
+        chdir: "{{ project_dir }}/web"
+        executable: /bin/bash
+      register: bun_build
+
+    - name: Create systemd service for web dashboard
+      copy:
+        dest: /etc/systemd/system/string-theory-web.service
+        content: |
+          [Unit]
+          Description=String Theory Web Dashboard
+          After=network.target
+
+          [Service]
+          Type=simple
+          User=root
+          WorkingDirectory={{ project_dir }}/web
+          Environment=NODE_ENV=production
+          Environment=PORT={{ web_port }}
+          ExecStart=/root/.bun/bin/bun run .output/server/index.mjs
+          Restart=on-failure
+          RestartSec=10
+          StandardOutput=append:{{ project_dir }}/logs/web.log
+          StandardError=append:{{ project_dir }}/logs/web.log
+
+          [Install]
+          WantedBy=multi-user.target
+        mode: '0644'
+      notify: restart web service
+
+    - name: Enable and start web dashboard service
+      systemd:
+        name: string-theory-web
+        enabled: yes
+        state: started
+        daemon_reload: yes
+
+    # ============================================
+    # Search Worker Service
+    # ============================================
+    - name: Create systemd service for search worker
+      copy:
+        dest: /etc/systemd/system/string-theory-search@.service
+        content: |
+          [Unit]
+          Description=String Theory Search Worker %i
+          After=network.target
+
+          [Service]
+          Type=simple
+          User=root
+          WorkingDirectory={{ project_dir }}
+          Environment=VIRTUAL_ENV={{ project_dir }}/venv
+          ExecStart={{ project_dir }}/target/release/search -c config.server.toml
+          Restart=on-failure
+          RestartSec=30
+          StandardOutput=append:{{ project_dir }}/logs/search-%i.log
+          StandardError=append:{{ project_dir }}/logs/search-%i.log
+
+          [Install]
+          WantedBy=multi-user.target
+        mode: '0644'
+
+    - name: Create search worker target for managing all instances
+      copy:
+        dest: /etc/systemd/system/string-theory-search.target
+        content: |
+          [Unit]
+          Description=String Theory Search Workers
+          Wants=string-theory-search@1.service string-theory-search@2.service
+
+          [Install]
+          WantedBy=multi-user.target
+        mode: '0644'
+
+    - name: Reload systemd daemon
+      systemd:
+        daemon_reload: yes
+
+    - name: Ensure search workers are stopped by default (start manually)
+      systemd:
+        name: string-theory-search.target
+        enabled: no
+        state: stopped
+
+    # ============================================
+    # Heuristics Worker Service
+    # ============================================
+    - name: Create systemd service for heuristics worker
+      copy:
+        dest: /etc/systemd/system/string-theory-heuristics.service
+        content: |
+          [Unit]
+          Description=String Theory Heuristics Worker
+          After=network.target
+
+          [Service]
+          Type=simple
+          User=root
+          WorkingDirectory={{ project_dir }}
+          ExecStart={{ project_dir }}/target/release/heuristics -c config.server.toml --progress-interval 60
+          Restart=on-failure
+          RestartSec=60
+          StandardOutput=append:{{ project_dir }}/logs/heuristics.log
+          StandardError=append:{{ project_dir }}/logs/heuristics.log
+
+          [Install]
+          WantedBy=multi-user.target
+        mode: '0644'
+
+    - name: Ensure heuristics worker is stopped by default (start manually)
+      systemd:
+        name: string-theory-heuristics
+        enabled: no
+        state: stopped
+        daemon_reload: yes
+
+    # ============================================
+    # Verification
     # ============================================
     - name: Verify CYTools import
       shell: |
@@ -244,12 +441,43 @@
       register: cymyc_verify
       changed_when: false
 
+    - name: Check web dashboard status
+      shell: systemctl is-active string-theory-web
+      register: web_status
+      changed_when: false
+
     - name: Print verification results
       debug:
         msg: |
           CYTools: {{ cytools_verify.stdout }}
           cymyc: {{ cymyc_verify.stdout }}
+          Web Dashboard: {{ web_status.stdout }} (http://server:{{ web_port }})
+          Data directory: {{ data_dir }}
+          SQLite DB: {{ data_dir }}/string_theory.db
+
+          === Service Management ===
+          Web dashboard (always running):
+            systemctl status string-theory-web
+            systemctl restart string-theory-web
+
+          Search workers (stopped by default, start manually):
+            systemctl start string-theory-search.target   # Start 2 workers
+            systemctl stop string-theory-search.target    # Stop all workers
+            systemctl start string-theory-search@3        # Start worker 3
+            journalctl -u string-theory-search@1 -f       # Follow worker 1 logs
+
+          Heuristics worker (stopped by default, runs continuously):
+            systemctl start string-theory-heuristics      # Start worker
+            systemctl enable string-theory-heuristics     # Enable on boot
+            journalctl -u string-theory-heuristics -f     # Follow logs
+            tail -f {{ project_dir }}/logs/heuristics.log # View log file
 
   handlers:
+    - name: restart web service
+      systemd:
+        name: string-theory-web
+        state: restarted
+        daemon_reload: yes
+
     - name: restart workers
-      shell: pkill -f real_physics || true
+      shell: pkill -f search || true
