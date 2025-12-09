@@ -248,7 +248,7 @@
       args:
         chdir: "{{ project_dir }}"
         executable: /bin/bash
-      when: parquet_count.stdout | int < 32
+      when: parquet_count.stdout | int < 30
       async: 10
       poll: 0
 
