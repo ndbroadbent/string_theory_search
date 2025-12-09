@@ -80,6 +80,7 @@ pub fn run_worker_loop(
         let trial_start = Instant::now();
         let trial = run_trial(
             &algo,
+            trial_number,
             polytope_path,
             polytope_filter.clone(),
             db_conn.clone(),
@@ -121,10 +122,12 @@ fn acquire_algorithm(
     let algo_count = db::count_algorithms_in_generation(&conn, 0).unwrap_or(0);
     if algo_count == 0 {
         println!("No algorithms in database, initializing generation 0...");
+        println!("  Master seed: {}", config.meta_ga.master_seed);
         if let Err(e) = meta_ga::init_generation_zero(
             &conn,
             config.meta_ga.algorithms_per_generation,
             config.meta_ga.trials_required,
+            config.meta_ga.master_seed,
         ) {
             return AcquisitionResult::Fatal(format!("Failed to initialize generation 0: {}", e));
         }

@@ -869,12 +869,12 @@ pub struct LandscapeSearcher {
 impl LandscapeSearcher {
     /// Create a new searcher with default strategy
     pub fn new(config: GaConfig, polytope_path: &str) -> Self {
-        Self::new_with_strategy(config, SearchStrategy::default(), polytope_path, None, None, None)
+        Self::new_with_seed(config, SearchStrategy::default(), polytope_path, None, None, None, None)
     }
 
     /// Create a new searcher with an optional polytope filter
     pub fn new_with_filter(config: GaConfig, polytope_path: &str, polytope_filter: Option<Vec<usize>>) -> Self {
-        Self::new_with_strategy(config, SearchStrategy::default(), polytope_path, polytope_filter, None, None)
+        Self::new_with_seed(config, SearchStrategy::default(), polytope_path, polytope_filter, None, None, None)
     }
 
     /// Create a new searcher with database connection and run ID (legacy, uses default strategy)
@@ -885,10 +885,11 @@ impl LandscapeSearcher {
         db_conn: Option<Arc<Mutex<Connection>>>,
         run_id: Option<String>,
     ) -> Self {
-        Self::new_with_strategy(config, SearchStrategy::default(), polytope_path, polytope_filter, db_conn, run_id)
+        Self::new_with_seed(config, SearchStrategy::default(), polytope_path, polytope_filter, db_conn, run_id, None)
     }
 
     /// Create a new searcher with full configuration including meta-GA search strategy
+    /// Uses entropy-based RNG (non-deterministic)
     pub fn new_with_strategy(
         config: GaConfig,
         strategy: SearchStrategy,
@@ -896,6 +897,20 @@ impl LandscapeSearcher {
         polytope_filter: Option<Vec<usize>>,
         db_conn: Option<Arc<Mutex<Connection>>>,
         run_id: Option<String>,
+    ) -> Self {
+        Self::new_with_seed(config, strategy, polytope_path, polytope_filter, db_conn, run_id, None)
+    }
+
+    /// Create a new searcher with full configuration and deterministic seed
+    /// If seed is None, uses entropy (non-deterministic). If seed is Some(u64), results are reproducible.
+    pub fn new_with_seed(
+        config: GaConfig,
+        strategy: SearchStrategy,
+        polytope_path: &str,
+        polytope_filter: Option<Vec<usize>>,
+        db_conn: Option<Arc<Mutex<Connection>>>,
+        run_id: Option<String>,
+        seed: Option<u64>,
     ) -> Self {
         // Physics bridge must be initialized by caller (search.rs)
         assert!(is_physics_available(), "Physics bridge REQUIRED but not initialized");
@@ -944,7 +959,14 @@ impl LandscapeSearcher {
             }
         }
 
-        let mut rng = StdRng::from_entropy();
+        // Use deterministic seed if provided, otherwise entropy
+        let mut rng = match seed {
+            Some(s) => {
+                println!("Using deterministic seed: {}", s);
+                StdRng::seed_from_u64(s)
+            }
+            None => StdRng::from_entropy(),
+        };
 
         // Initialize population
         let population: Vec<Individual> = (0..config.population_size)
@@ -1673,6 +1695,7 @@ mod tests {
             parent_id: None,
             meta_generation: 0,
             trials_required: 10,
+            rng_seed: 54321,
         };
 
         let strategy = SearchStrategy::from_meta_algorithm(&algo);

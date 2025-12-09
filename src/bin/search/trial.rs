@@ -8,7 +8,7 @@ use std::time::Instant;
 use rusqlite::Connection;
 
 use string_theory::constants;
-use string_theory::db::{MetaAlgorithm, MetaTrial};
+use string_theory::db::{self, MetaAlgorithm, MetaTrial};
 use string_theory::searcher::{format_fitness_line, GaConfig, LandscapeSearcher, SearchStrategy};
 
 /// Convert MetaAlgorithm to GaConfig for the inner GA
@@ -28,6 +28,7 @@ pub fn algorithm_to_ga_config(algo: &MetaAlgorithm) -> GaConfig {
 /// Run one trial of an algorithm and return the results
 pub fn run_trial(
     algo: &MetaAlgorithm,
+    trial_number: i32,
     polytope_path: &str,
     polytope_filter: Option<Vec<usize>>,
     db_conn: Arc<Mutex<Connection>>,
@@ -40,13 +41,19 @@ pub fn run_trial(
     let search_strategy = SearchStrategy::from_meta_algorithm(algo);
     let max_generations = algo.max_generations as usize;
 
-    let mut searcher = LandscapeSearcher::new_with_strategy(
+    // Derive deterministic trial seed from algorithm seed and trial number
+    let trial_seed = db::derive_trial_seed(algo.rng_seed, trial_number);
+    println!("  Trial seed: {} (derived from algo_seed={}, trial={})",
+             trial_seed, algo.rng_seed, trial_number);
+
+    let mut searcher = LandscapeSearcher::new_with_seed(
         ga_config.clone(),
         search_strategy,
         polytope_path,
         polytope_filter,
         Some(db_conn.clone()),
         Some(run_id.clone()),
+        Some(trial_seed),
     );
     searcher.verbose = verbose;
 

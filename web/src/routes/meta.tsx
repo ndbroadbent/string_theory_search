@@ -3,7 +3,7 @@
  * Shows algorithms, generations, and global meta-state
  */
 
-import { createFileRoute, Link } from '@tanstack/react-router';
+import { createFileRoute, Link, Outlet, useMatch } from '@tanstack/react-router';
 import { getMetaState, getAlgorithms, getAllGenerations } from '../server/meta';
 import type { MetaAlgorithmWithFitness, MetaState, GenerationStatus } from '../types';
 
@@ -21,6 +21,13 @@ export const Route = createFileRoute('/meta')({
 
 function MetaDashboard() {
   const { metaState, algorithms, generations } = Route.useLoaderData();
+  // Check if we're on a child route (e.g., /meta/1)
+  const childMatch = useMatch({ from: '/meta/$id', shouldThrow: false });
+
+  // If child route is active, render only the Outlet (child component)
+  if (childMatch) {
+    return <Outlet />;
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">

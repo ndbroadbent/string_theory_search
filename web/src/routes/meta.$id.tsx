@@ -64,15 +64,15 @@ function AlgorithmDetail() {
               <TrialsTable trials={trials} />
             )}
           </section>
+
+          {/* Feature Weights - Full Width under trials */}
+          <FeatureWeightsCard weights={algorithm.feature_weights} />
         </div>
 
         {/* Sidebar */}
         <div className="space-y-6">
           {/* Parameters */}
           <ParametersCard algorithm={algorithm} />
-
-          {/* Feature Weights */}
-          <FeatureWeightsCard weights={algorithm.feature_weights} />
 
           {/* Lineage */}
           {lineage.length > 1 && <LineageCard lineage={lineage} currentId={algorithm.id} />}
@@ -221,14 +221,11 @@ function FeatureWeightsCard({ weights }: { weights: Record<string, number> }) {
     );
   }
 
-  // Show top 15 by absolute value
-  const topEntries = entries.slice(0, 15);
-
   return (
     <div className="bg-slate-800 rounded-lg p-6">
-      <h2 className="text-lg font-semibold mb-4">Feature Weights</h2>
-      <div className="space-y-1 text-sm max-h-80 overflow-y-auto">
-        {topEntries.map(([key, value]) => (
+      <h2 className="text-lg font-semibold mb-4">Feature Weights ({entries.length})</h2>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-1 text-sm">
+        {entries.map(([key, value]) => (
           <div key={key} className="flex justify-between items-center">
             <span className="text-gray-400 truncate mr-2" title={key}>
               {key}
@@ -238,11 +235,6 @@ function FeatureWeightsCard({ weights }: { weights: Record<string, number> }) {
             </span>
           </div>
         ))}
-        {entries.length > 15 && (
-          <div className="text-gray-500 text-xs pt-2">
-            +{entries.length - 15} more features
-          </div>
-        )}
       </div>
     </div>
   );

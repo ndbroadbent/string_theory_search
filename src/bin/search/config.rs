@@ -74,6 +74,8 @@ pub struct MetaGaConfig {
     pub algorithms_per_generation: i32,
     #[serde(default = "default_trials_required")]
     pub trials_required: i32,
+    #[serde(default = "default_master_seed")]
+    pub master_seed: u64,
 }
 
 fn default_algorithms_per_gen() -> i32 {
@@ -82,12 +84,18 @@ fn default_algorithms_per_gen() -> i32 {
 fn default_trials_required() -> i32 {
     DEFAULT_TRIALS_REQUIRED
 }
+fn default_master_seed() -> u64 {
+    // Use a fixed default seed for reproducibility
+    // This is the answer to life, the universe, and everything, shifted
+    42_424_242_424_242
+}
 
 impl Default for MetaGaConfig {
     fn default() -> Self {
         Self {
             algorithms_per_generation: default_algorithms_per_gen(),
             trials_required: default_trials_required(),
+            master_seed: default_master_seed(),
         }
     }
 }

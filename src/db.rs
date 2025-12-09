@@ -92,6 +92,7 @@ fn get_migrations() -> Vec<(i32, &'static str, &'static str)> {
         (1, "Initial schema", include_str!("../migrations/001_initial_schema.sql")),
         (2, "Meta-GA schema", include_str!("../migrations/002_meta_ga_schema.sql")),
         (3, "Heuristics Hodge numbers", include_str!("../migrations/003_heuristics_hodge_numbers.sql")),
+        (4, "RNG seed for reproducibility", include_str!("../migrations/004_rng_seed.sql")),
     ]
 }
 
@@ -632,6 +633,9 @@ pub struct MetaAlgorithm {
 
     // === Trials ===
     pub trials_required: i32,
+
+    // === RNG seed for reproducibility ===
+    pub rng_seed: u64,
 }
 
 impl Default for MetaAlgorithm {
@@ -657,8 +661,16 @@ impl Default for MetaAlgorithm {
             parent_id: None,
             meta_generation: 0,
             trials_required: 10,
+            rng_seed: 0, // Will be set when creating algorithm
         }
     }
+}
+
+/// Derive a trial seed from algorithm seed and trial number
+/// This ensures each trial is reproducible given the algorithm seed
+pub fn derive_trial_seed(algo_seed: u64, trial_number: i32) -> u64 {
+    // Use a simple but deterministic combination
+    algo_seed.wrapping_add(trial_number as u64).wrapping_mul(2654435761)
 }
 
 /// Insert a new meta-algorithm
@@ -671,8 +683,8 @@ pub fn insert_meta_algorithm(conn: &Connection, algo: &MetaAlgorithm) -> Result<
             mutation_rate, mutation_strength, crossover_rate,
             tournament_size, elite_count,
             polytope_patience, switch_threshold, switch_probability,
-            cc_weight, parent_id, meta_generation, trials_required
-        ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19)",
+            cc_weight, parent_id, meta_generation, trials_required, rng_seed
+        ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20)",
         params![
             algo.name,
             algo.version,
@@ -693,6 +705,7 @@ pub fn insert_meta_algorithm(conn: &Connection, algo: &MetaAlgorithm) -> Result<
             algo.parent_id,
             algo.meta_generation,
             algo.trials_required,
+            algo.rng_seed as i64,
         ],
     )?;
     Ok(conn.last_insert_rowid())
@@ -707,7 +720,7 @@ pub fn get_meta_algorithm(conn: &Connection, id: i64) -> Result<Option<MetaAlgor
                 mutation_rate, mutation_strength, crossover_rate,
                 tournament_size, elite_count,
                 polytope_patience, switch_threshold, switch_probability,
-                cc_weight, parent_id, meta_generation, trials_required
+                cc_weight, parent_id, meta_generation, trials_required, rng_seed
          FROM meta_algorithms WHERE id = ?1",
         params![id],
         |row| {
@@ -732,6 +745,7 @@ pub fn get_meta_algorithm(conn: &Connection, id: i64) -> Result<Option<MetaAlgor
                 parent_id: row.get(17)?,
                 meta_generation: row.get(18)?,
                 trials_required: row.get(19)?,
+                rng_seed: row.get::<_, Option<i64>>(20)?.unwrap_or(0) as u64,
             })
         },
     );
@@ -833,7 +847,7 @@ pub fn get_top_meta_algorithms(conn: &Connection, generation: i32, limit: i32) -
                 a.mutation_rate, a.mutation_strength, a.crossover_rate,
                 a.tournament_size, a.elite_count,
                 a.polytope_patience, a.switch_threshold, a.switch_probability,
-                a.cc_weight, a.parent_id, a.meta_generation, a.trials_required,
+                a.cc_weight, a.parent_id, a.meta_generation, a.trials_required, a.rng_seed,
                 COALESCE(f.meta_fitness, 0) as meta_fitness
          FROM meta_algorithms a
          LEFT JOIN meta_fitness f ON f.algorithm_id = a.id
@@ -864,8 +878,9 @@ pub fn get_top_meta_algorithms(conn: &Connection, generation: i32, limit: i32) -
             parent_id: row.get(17)?,
             meta_generation: row.get(18)?,
             trials_required: row.get(19)?,
+            rng_seed: row.get::<_, Option<i64>>(20)?.unwrap_or(0) as u64,
         };
-        let fitness: f64 = row.get(20)?;
+        let fitness: f64 = row.get(21)?;
         Ok((algo, fitness))
     })?;
 
@@ -900,13 +915,14 @@ pub fn try_acquire_algorithm(conn: &Connection, my_pid: i32) -> Result<Option<i6
     let stale_cutoff = (chrono::Utc::now() - chrono::Duration::seconds(HEARTBEAT_STALE_SECONDS))
         .format("%Y-%m-%d %H:%M:%S").to_string();
 
-    // Find candidate: pending, or running with stale heartbeat
+    // Find candidate: running with stale heartbeat (resume), or pending
+    // Prioritize stale running algorithms so we resume interrupted work
     let candidate: Option<i64> = conn.query_row(
         "SELECT id FROM meta_algorithms
          WHERE status = 'pending'
             OR (status = 'running' AND (last_heartbeat_at IS NULL OR last_heartbeat_at < ?1))
          ORDER BY
-            CASE WHEN status = 'pending' THEN 0 ELSE 1 END,  -- prefer pending
+            CASE WHEN status = 'running' THEN 0 ELSE 1 END,  -- prefer resuming stale running
             meta_generation ASC,  -- oldest generation first
             id ASC
          LIMIT 1",
@@ -1247,6 +1263,7 @@ mod tests {
             parent_id: None,
             meta_generation: 0,
             trials_required: 10,
+            rng_seed: 12345,
         };
 
         let id = insert_meta_algorithm(&locked, &algo).unwrap();

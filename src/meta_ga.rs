@@ -136,6 +136,9 @@ pub fn weighted_distance(
 
 /// Create a random algorithm for initial population
 pub fn random_algorithm<R: Rng>(rng: &mut R, meta_generation: i32, trials_required: i32) -> MetaAlgorithm {
+    // Generate a seed for this algorithm from the rng
+    let algo_seed: u64 = rng.gen();
+
     MetaAlgorithm {
         id: None,
         name: None,
@@ -157,6 +160,7 @@ pub fn random_algorithm<R: Rng>(rng: &mut R, meta_generation: i32, trials_requir
         parent_id: None,
         meta_generation,
         trials_required,
+        rng_seed: algo_seed,
     }
 }
 
@@ -239,6 +243,9 @@ pub fn mutate_algorithm<R: Rng>(algo: &MetaAlgorithm, rng: &mut R, strength: f64
             .clamp(1.0, 20.0);
     }
 
+    // Generate new seed for this child
+    child.rng_seed = rng.gen();
+
     child
 }
 
@@ -278,6 +285,9 @@ pub fn crossover_algorithms<R: Rng>(
     if rng.gen::<bool>() { child.switch_probability = parent2.switch_probability; }
     if rng.gen::<bool>() { child.cc_weight = parent2.cc_weight; }
 
+    // Generate new seed for this child
+    child.rng_seed = rng.gen();
+
     child
 }
 
@@ -286,12 +296,17 @@ pub fn crossover_algorithms<R: Rng>(
 // =============================================================================
 
 /// Initialize first generation with random algorithms
+/// Uses master_seed to derive all algorithm seeds deterministically
 pub fn init_generation_zero(
     conn: &Connection,
     population_size: i32,
     trials_required: i32,
+    master_seed: u64,
 ) -> rusqlite::Result<()> {
-    let mut rng = rand::thread_rng();
+    use rand::SeedableRng;
+    use rand::rngs::StdRng;
+
+    let mut rng = StdRng::seed_from_u64(master_seed);
 
     for i in 0..population_size {
         let mut algo = random_algorithm(&mut rng, 0, trials_required);
@@ -299,10 +314,17 @@ pub fn init_generation_zero(
         crate::db::insert_meta_algorithm(conn, &algo)?;
     }
 
+    // Store master seed in meta_state
+    conn.execute(
+        "UPDATE meta_state SET master_seed = ?1 WHERE id = 1",
+        params![master_seed as i64],
+    )?;
+
     Ok(())
 }
 
 /// Create next generation from top performers
+/// Derives RNG seed from master_seed and generation number for reproducibility
 pub fn evolve_next_generation(
     conn: &Connection,
     current_gen: i32,
@@ -312,8 +334,23 @@ pub fn evolve_next_generation(
     mutation_rate: f64,
     mutation_strength: f64,
 ) -> rusqlite::Result<()> {
-    let mut rng = rand::thread_rng();
+    use rand::SeedableRng;
+    use rand::rngs::StdRng;
+
     let next_gen = current_gen + 1;
+
+    // Get master seed from meta_state
+    let master_seed: i64 = conn.query_row(
+        "SELECT COALESCE(master_seed, 42) FROM meta_state WHERE id = 1",
+        [],
+        |row| row.get(0),
+    )?;
+
+    // Derive generation-specific seed from master_seed and generation number
+    let gen_seed = (master_seed as u64)
+        .wrapping_add(next_gen as u64)
+        .wrapping_mul(6364136223846793005);
+    let mut rng = StdRng::seed_from_u64(gen_seed);
 
     // Get top performers from current generation
     let top = crate::db::get_top_meta_algorithms(conn, current_gen, population_size)?;
@@ -713,6 +750,7 @@ mod tests {
             parent_id: None,
             meta_generation: 0,
             trials_required: 10,
+            rng_seed: 99999,
         };
 
         // Mutate many times and check bounds
@@ -794,6 +832,7 @@ mod tests {
             parent_id: None,
             meta_generation: 0,
             trials_required: 10,
+            rng_seed: 11111,
         };
 
         let p2 = MetaAlgorithm {
@@ -817,6 +856,7 @@ mod tests {
             parent_id: None,
             meta_generation: 0,
             trials_required: 10,
+            rng_seed: 22222,
         };
 
         // Run crossover many times and verify mixing
@@ -881,7 +921,7 @@ mod tests {
     fn test_init_generation_zero() {
         let (_dir, conn) = test_db();
 
-        init_generation_zero(&conn, 5, 10).unwrap();
+        init_generation_zero(&conn, 5, 10, 12345).unwrap();
 
         let count: i32 = conn
             .query_row("SELECT COUNT(*) FROM meta_algorithms WHERE meta_generation = 0", [], |row| row.get(0))
@@ -897,6 +937,31 @@ mod tests {
             .map(|r| r.unwrap())
             .collect();
         assert!(trials.iter().all(|&t| t == 10));
+    }
+
+    #[test]
+    fn test_init_generation_zero_deterministic() {
+        // With same seed, should produce identical algorithms
+        let (_dir1, conn1) = test_db();
+        let (_dir2, conn2) = test_db();
+
+        init_generation_zero(&conn1, 5, 10, 99999).unwrap();
+        init_generation_zero(&conn2, 5, 10, 99999).unwrap();
+
+        // Fetch algorithm parameters from both
+        let get_algo_params = |conn: &Connection| -> Vec<(f64, f64, i32)> {
+            conn.prepare("SELECT similarity_radius, mutation_rate, population_size FROM meta_algorithms ORDER BY id")
+                .unwrap()
+                .query_map([], |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)))
+                .unwrap()
+                .map(|r| r.unwrap())
+                .collect()
+        };
+
+        let params1 = get_algo_params(&conn1);
+        let params2 = get_algo_params(&conn2);
+
+        assert_eq!(params1, params2, "Same seed should produce identical algorithms");
     }
 
     #[test]
