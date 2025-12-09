@@ -140,6 +140,108 @@ V = e^K [ K^{ij̄} D_i W D_j̄ W̄ - 3|W|² ] + V_uplift
 N_flux + N_D3 ≤ χ(CY)/24
 ```
 
+## Search Architecture
+
+### The Problem
+- 12M+ candidate polytopes (filtered for 3 generations)
+- Each physics evaluation takes ~100ms (CYTools + KKLT)
+- Random search is useless at this scale
+- Need to learn which geometric features predict good physics
+
+### Multi-Level Learning System
+
+The search is **iterative** - we learn as we go:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    EVALUATION LOOP                          │
+│                                                             │
+│   GA selects polytope → Run physics → Record result         │
+│         ▲                                    │              │
+│         │                                    ▼              │
+│   ┌─────┴─────┐                    ┌─────────────────┐     │
+│   │  Ranker   │◄───── train ──────│ Evaluation Log  │     │
+│   │  Model    │                    │ (geometry,fit)  │     │
+│   └─────┬─────┘                    └─────────────────┘     │
+│         │                                    │              │
+│         │ score                              │ cluster      │
+│         ▼                                    ▼              │
+│   ┌───────────┐                    ┌─────────────────┐     │
+│   │ Candidate │                    │ Feature Space   │     │
+│   │ Ranking   │                    │ Clusters        │     │
+│   └───────────┘                    └─────────────────┘     │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Layer 1: Evaluation Recording
+
+Every physics evaluation records:
+```json
+{
+  "polytope_id": 12345,
+  "geometry_features": [h11, h21, vertex_stats...],
+  "physics_result": {fitness, alpha_em, alpha_s, ...},
+  "timestamp": "..."
+}
+```
+
+Persisted to `evaluations.jsonl` - accumulates across runs.
+
+### Layer 2: Feature Clustering
+
+Cluster polytopes in **geometry feature space** (not just h11/h21):
+- Vertex coordinate statistics
+- Shape characteristics (spread, aspect ratio)
+- Combinatorial properties
+
+Track per-cluster:
+- Number of evaluations
+- Average/best fitness
+- UCB score for exploration/exploitation balance
+
+### Layer 3: Learned Ranker
+
+After N evaluations (e.g., 1000+), train a simple model:
+- Input: geometry features (cheap to compute)
+- Output: predicted fitness
+- Model: small feedforward NN or gradient boosting
+
+Use ranker to:
+- Score unevaluated polytopes
+- Bias selection toward predicted-good candidates
+- Still explore (don't trust model completely)
+
+### Layer 4: Active Learning
+
+Select polytopes that would most improve the model:
+- High uncertainty (model unsure)
+- Near decision boundary
+- In under-explored clusters
+
+Balance: exploit (high predicted score) vs explore (high uncertainty)
+
+### Feedback Loop
+
+```
+Run N generations of GA
+        │
+        ▼
+Train/update ranker on all evaluations
+        │
+        ▼
+Score candidate polytopes with ranker
+        │
+        ▼
+Update cluster statistics
+        │
+        ▼
+Adjust selection probabilities
+        │
+        └──► Repeat
+```
+
+The ranker gets better over time → smarter selection → faster convergence.
+
 ## Genetic Algorithm Design
 
 ### Genome
@@ -157,27 +259,35 @@ Each individual encodes:
 3. **Cosmological constant**: Log-error from observed Λ
 4. **Tadpole**: Penalty if constraint violated
 
-### Polytope Feature Vectors (Embeddings)
-Each polytope has a feature vector for clustering:
+### Polytope Feature Vectors
 
-**Geometric Features:**
+**Geometric Features (cheap - from vertices only):**
 - h11, h21, Euler characteristic
-- Vertex count, coordinate statistics
-- Shape characteristics (aspect ratio, spread)
+- Vertex count, coordinate statistics (mean, std, min, max)
+- Shape characteristics (aspect ratio, spread, centroid distance)
+- Combinatorial (zero count, negative count, coord sums)
 
-**Physics Features (after evaluation):**
+**Physics Features (expensive - requires evaluation):**
 - α_em error, α_s error, sin²θ_W error
 - N_gen error, Λ error
 - CY volume, flux tadpole
 - Overall fitness
 
-### Cluster-Based Selection
-Use UCB (Upper Confidence Bound) for exploration/exploitation:
-```python
-weight = avg_fitness + c * sqrt(log(total_evals) / cluster_evals)
-```
+### Selection Strategy
 
-Track "hot polytopes" - those that consistently produce high-fitness offspring.
+1. **Cluster-weighted**: UCB score per cluster
+   ```
+   weight = avg_fitness + c * sqrt(log(total_evals) / cluster_evals)
+   ```
+
+2. **Ranker-guided**: Bias toward high predicted fitness
+   ```
+   P(select) ∝ exp(ranker_score / temperature)
+   ```
+
+3. **Hot polytope reuse**: Polytopes with good offspring get resampled
+
+4. **Exploration floor**: Always sample some random polytopes
 
 ## Infrastructure
 
@@ -262,7 +372,32 @@ cat cluster_state.json | jq '.clusters | length'
 - [x] Update ansible to install CYTools and cymyc
 
 ### TODO
-- [ ] Create visualization tool for cluster data
+
+**Layer 1: Evaluation Recording**
+- [ ] Persist every evaluation to `evaluations.jsonl`
+- [ ] Include full geometry features + physics results
+- [ ] Load history on startup to resume learning
+
+**Layer 2: Feature Clustering**
+- [ ] Cluster by full geometry features (not just h11/h21)
+- [ ] Use k-means or HDBSCAN in feature space
+- [ ] Track cluster statistics (evals, avg fitness, best fitness)
+- [ ] UCB-based cluster selection
+
+**Layer 3: Learned Ranker**
+- [ ] Train simple NN: geometry → predicted fitness
+- [ ] Trigger training after N evaluations (e.g., 1000)
+- [ ] Use ranker scores to bias polytope selection
+- [ ] Retrain periodically as more data accumulates
+
+**Layer 4: Active Learning**
+- [ ] Track model uncertainty per polytope
+- [ ] Balance exploit (high score) vs explore (high uncertainty)
+- [ ] Prioritize under-explored clusters
+
+**Infrastructure**
+- [ ] Add `-v` verbose logging (DONE)
+- [ ] Double Ctrl+C force quit (DONE)
+- [ ] Create visualization for cluster/ranker data
 - [ ] Add monitoring dashboard
-- [ ] Consider ensemble of GAs exploring different regions
-- [ ] Integrate cymyc trained metric models for better accuracy
+- [ ] Integrate cymyc trained metric models

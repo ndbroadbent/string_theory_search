@@ -482,10 +482,8 @@ pub fn compute_physics(genome: &Compactification, vertices: &[Vec<i32>]) -> Phys
         }
     });
 
-    result.unwrap_or_else(|e| PhysicsOutput {
-        success: false,
-        error: Some(format!("Python error: {}", e)),
-        ..Default::default()
+    result.unwrap_or_else(|e| {
+        panic!("Python error - this is a bug, fix it!\n{}", e);
     })
 }
 

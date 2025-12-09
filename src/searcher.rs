@@ -659,33 +659,53 @@ pub fn compute_fitness(physics: &PhysicsOutput) -> f64 {
         return 0.0;
     }
 
-    // Target values (observed physics)
-    let targets = [
-        (physics.alpha_em, constants::ALPHA_EM, 1.0, "α_em"),
-        (physics.alpha_s, constants::ALPHA_STRONG, 1.0, "α_s"),
-        (physics.sin2_theta_w, constants::SIN2_THETA_W, 1.0, "sin²θ_W"),
-        (physics.n_generations as f64, constants::NUM_GENERATIONS as f64, 2.0, "N_gen"),
-    ];
-
     let mut total_score = 0.0;
     let mut total_weight = 0.0;
 
-    for (computed, target, weight, _name) in targets {
+    // Helper: score a value against target, with physical validity check
+    // Returns (score, is_valid) where score is 0 if value is physically impossible
+    let score_value = |computed: f64, target: f64, must_be_positive: bool| -> f64 {
+        // Physical validity: if must be positive and isn't, score is 0
+        if must_be_positive && computed <= 0.0 {
+            return 0.0;
+        }
+
         // Log-ratio scoring: how close are we on a log scale?
         let ratio = if target.abs() > 1e-30 && computed.abs() > 1e-30 {
             (computed / target).abs()
         } else {
-            0.0
+            return 0.0;
         };
 
         // Score: 1.0 when ratio = 1, decreasing as ratio deviates
-        // Use log to handle wide range of values
-        let log_ratio = if ratio > 0.0 { ratio.ln().abs() } else { 10.0 };
-        let score = (-log_ratio).exp();
+        let log_ratio = ratio.ln().abs();
+        (-log_ratio).exp()
+    };
 
-        total_score += weight * score;
-        total_weight += weight;
-    }
+    // Gauge couplings - MUST be positive (they come from 4-cycle volumes)
+    // Negative values are physically impossible, so they score 0
+    let alpha_em_score = score_value(physics.alpha_em, constants::ALPHA_EM, true);
+    total_score += 1.0 * alpha_em_score;
+    total_weight += 1.0;
+
+    let alpha_s_score = score_value(physics.alpha_s, constants::ALPHA_STRONG, true);
+    total_score += 1.0 * alpha_s_score;
+    total_weight += 1.0;
+
+    // sin²θ_W - must be in [0, 1] (it's sin² of an angle)
+    // Values outside this range are physically impossible
+    let sin2_score = if physics.sin2_theta_w >= 0.0 && physics.sin2_theta_w <= 1.0 {
+        score_value(physics.sin2_theta_w, constants::SIN2_THETA_W, false)
+    } else {
+        0.0
+    };
+    total_score += 1.0 * sin2_score;
+    total_weight += 1.0;
+
+    // Number of generations - discrete value, exact match preferred
+    let n_gen_score = score_value(physics.n_generations as f64, constants::NUM_GENERATIONS as f64, false);
+    total_score += 2.0 * n_gen_score;
+    total_weight += 2.0;
 
     // Cosmological constant needs special handling (tiny target)
     let cc_ratio = if constants::COSMOLOGICAL_CONSTANT.abs() > 1e-150 {

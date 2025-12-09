@@ -225,7 +225,7 @@ fn main() {
             eprintln!("\nInterrupt received, will exit after current evaluation...");
         } else {
             eprintln!("\nForce quit.");
-            std::process::exit(1);
+            std::process::abort();
         }
     }).expect("Error setting Ctrl-C handler");
 

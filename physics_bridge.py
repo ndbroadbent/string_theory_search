@@ -22,7 +22,8 @@ import jax.numpy as jnp
 jax.config.update('jax_platform_name', 'cpu')
 
 # Require CYTools - no fallback
-from cytools import Polytope
+from cytools import Polytope, config as cytools_config
+cytools_config.enable_experimental_features()
 
 # Require cymyc - no fallback
 from cymyc import alg_geo
@@ -60,60 +61,57 @@ class CYToolsBridge:
         if cache_key in self._cache:
             return self._cache[cache_key]
 
-        try:
-            # Create polytope from vertices
-            p = Polytope(vertices)
+        # Create polytope from vertices
+        p = Polytope(vertices)
 
-            # Check if reflexive (required for CY)
-            if not p.is_reflexive():
-                return {
-                    "success": False,
-                    "error": "Polytope is not reflexive"
-                }
-
-            # Get a triangulation (fine, regular, star)
-            # This can be slow for complex polytopes
-            t = p.triangulate()
-
-            # Get the Calabi-Yau
-            cy = t.get_cy()
-
-            # Extract topological data
-            h11 = cy.h11()
-            h21 = cy.h12()  # h12 = h21 for CY3
-            chi = cy.chi()
-
-            # Intersection numbers (triple intersection form)
-            # κ_ijk where i,j,k index divisor classes
-            intersection_nums = cy.intersection_numbers()
-
-            # Second Chern class (for anomaly cancellation)
-            c2 = cy.second_chern_class()
-
-            # Kähler cone (valid range for Kähler moduli)
-            kahler_cone = cy.toric_kahler_cone()
-
-            # Store CY object for later use
-            result = {
-                "success": True,
-                "h11": int(h11),
-                "h21": int(h21),
-                "chi": int(chi),
-                "n_generations": abs(chi) // 2,  # |χ|/2 for CY3
-                "intersection_numbers": intersection_nums.tolist() if hasattr(intersection_nums, 'tolist') else intersection_nums,
-                "c2": c2.tolist() if hasattr(c2, 'tolist') else list(c2),
-                "is_favorable": h11 == len(p.points()) - 5,  # Favorable = simpler physics
-                "_cy_object": cy,  # Keep for volume computations
-            }
-
-            self._cache[cache_key] = result
-            return result
-
-        except Exception as e:
+        # Check if reflexive (required for CY)
+        if not p.is_reflexive():
             return {
                 "success": False,
-                "error": str(e)
+                "error": "Polytope is not reflexive"
             }
+
+        # Get a triangulation (fine, regular, star)
+        # This can be slow for complex polytopes
+        t = p.triangulate()
+
+        # Get the Calabi-Yau
+        cy = t.get_cy()
+
+        # Extract topological data
+        h11 = cy.h11()
+        h21 = cy.h12()  # h12 = h21 for CY3
+        chi = cy.chi()
+
+        # Intersection numbers (triple intersection form)
+        # κ_ijk where i,j,k index divisor classes
+        intersection_nums = cy.intersection_numbers()
+
+        # Second Chern class (for anomaly cancellation)
+        c2 = cy.second_chern_class()
+
+        # Kähler cone (valid range for Kähler moduli)
+        kahler_cone = cy.toric_kahler_cone()
+
+        # Get a valid point in Kähler cone for initialization
+        kahler_cone_tip = kahler_cone.tip_of_stretched_cone(1.0)
+
+        # Store CY object for later use
+        result = {
+            "success": True,
+            "h11": int(h11),
+            "h21": int(h21),
+            "chi": int(chi),
+            "n_generations": abs(chi) // 2,  # |χ|/2 for CY3
+            "intersection_numbers": intersection_nums.tolist() if hasattr(intersection_nums, 'tolist') else intersection_nums,
+            "c2": c2.tolist() if hasattr(c2, 'tolist') else list(c2),
+            "is_favorable": h11 == len(p.points()) - 5,  # Favorable = simpler physics
+            "kahler_cone_tip": kahler_cone_tip.tolist() if hasattr(kahler_cone_tip, 'tolist') else list(kahler_cone_tip),
+            "_cy_object": cy,  # Keep for volume computations
+        }
+
+        self._cache[cache_key] = result
+        return result
 
     def compute_volumes(self, cy_data: dict, kahler_moduli: np.ndarray) -> dict:
         """
@@ -131,29 +129,32 @@ class CYToolsBridge:
 
         cy = cy_data["_cy_object"]
 
-        try:
-            # CY volume: V = (1/6) κ_ijk t^i t^j t^k
-            cy_volume = cy.compute_cy_volume(kahler_moduli)
+        # Resize kahler_moduli to match CY's actual h11 (can differ from polytope file)
+        h11 = cy.h11()
+        if len(kahler_moduli) > h11:
+            kahler_moduli = kahler_moduli[:h11]
+        elif len(kahler_moduli) < h11:
+            kahler_moduli = np.concatenate([kahler_moduli, np.ones(h11 - len(kahler_moduli))])
 
-            # Divisor (4-cycle) volumes - these determine gauge couplings
-            divisor_volumes = cy.compute_divisor_volumes(kahler_moduli)
+        # CY volume: V = (1/6) κ_ijk t^i t^j t^k
+        cy_volume = cy.compute_cy_volume(kahler_moduli)
 
-            # Curve (2-cycle) volumes
-            curve_volumes = cy.compute_curve_volumes(kahler_moduli)
+        # Divisor (4-cycle) volumes - these determine gauge couplings
+        divisor_volumes = cy.compute_divisor_volumes(kahler_moduli)
 
-            # Kähler metric on moduli space
-            kahler_metric = cy.compute_kahler_metric(kahler_moduli)
+        # Curve (2-cycle) volumes
+        curve_volumes = cy.compute_curve_volumes(kahler_moduli)
 
-            return {
-                "success": True,
-                "cy_volume": float(cy_volume),
-                "divisor_volumes": divisor_volumes.tolist() if hasattr(divisor_volumes, 'tolist') else list(divisor_volumes),
-                "curve_volumes": curve_volumes.tolist() if hasattr(curve_volumes, 'tolist') else list(curve_volumes),
-                "kahler_metric": kahler_metric.tolist() if hasattr(kahler_metric, 'tolist') else kahler_metric,
-            }
+        # Kähler metric on moduli space
+        kahler_metric = cy.compute_kahler_metric(kahler_moduli)
 
-        except Exception as e:
-            return {"success": False, "error": str(e)}
+        return {
+            "success": True,
+            "cy_volume": float(cy_volume),
+            "divisor_volumes": divisor_volumes.tolist() if hasattr(divisor_volumes, 'tolist') else list(divisor_volumes),
+            "curve_volumes": curve_volumes.tolist() if hasattr(curve_volumes, 'tolist') else list(curve_volumes),
+            "kahler_metric": kahler_metric.tolist() if hasattr(kahler_metric, 'tolist') else kahler_metric,
+        }
 
 
 class GaugeCouplingComputer:
@@ -370,123 +371,140 @@ class PhysicsBridge:
                 - g_s: String coupling
         """
         try:
-            # 1. Analyze polytope with CYTools
-            vertices = genome.get("vertices", [])
-            if not vertices:
-                return {"success": False, "error": "No vertices provided"}
-
-            cy_data = self.cytools.analyze_polytope(vertices)
-            if not cy_data["success"]:
-                return cy_data
-
-            # 2. Get Kähler moduli (must be in Kähler cone)
-            h11 = cy_data["h11"]
-            kahler = np.array(genome.get("kahler_moduli", [1.0] * h11))
-            if len(kahler) < h11:
-                kahler = np.concatenate([kahler, np.ones(h11 - len(kahler))])
-            kahler = kahler[:h11]
-
-            # Ensure positivity (inside Kähler cone)
-            kahler = np.maximum(kahler, 0.1)
-
-            # 3. Compute volumes
-            vol_data = self.cytools.compute_volumes(cy_data, kahler)
-            if not vol_data["success"]:
-                # Use simplified volume if CYTools computation fails
-                cy_volume = float(np.prod(kahler) / 6.0)
-                divisor_volumes = kahler**2
-            else:
-                cy_volume = vol_data["cy_volume"]
-                divisor_volumes = np.array(vol_data["divisor_volumes"])
-
-            # 4. Compute gauge couplings
-            g_s = genome.get("g_s", 0.1)
-            gauge_string = self.gauge.compute_gauge_couplings(divisor_volumes, g_s)
-            gauge_z = self.gauge.run_to_z_scale(
-                gauge_string["alpha_3_string"],
-                gauge_string["alpha_2_string"],
-                gauge_string["alpha_1_string"],
-            )
-
-            # 5. Compute flux superpotential and potential
-            h21 = cy_data["h21"]
-            n_periods = 2 * (h21 + 1)
-
-            flux_f = np.array(genome.get("flux_f", [0] * n_periods))
-            flux_h = np.array(genome.get("flux_h", [0] * n_periods))
-
-            # Pad fluxes if needed
-            if len(flux_f) < n_periods:
-                flux_f = np.concatenate([flux_f, np.zeros(n_periods - len(flux_f))])
-            if len(flux_h) < n_periods:
-                flux_h = np.concatenate([flux_h, np.zeros(n_periods - len(flux_h))])
-
-            # Simple period approximation (real computation needs CY metric)
-            complex_mod = genome.get("complex_moduli", [1.0])
-            periods = np.exp(1j * np.arange(n_periods) * 0.1) * complex_mod[0]
-
-            tau = complex(0.1 + 1j / g_s)  # Axio-dilaton
-            w_flux = self.moduli.compute_flux_superpotential(flux_f, flux_h, periods, tau)
-
-            n_antiD3 = genome.get("n_antiD3", 1)
-            potential = self.moduli.compute_potential(cy_volume, w_flux, kahler, n_antiD3)
-
-            # 6. Tadpole constraint
-            tadpole = self.moduli.compute_tadpole(flux_f, flux_h)
-            tadpole_bound = abs(cy_data["chi"]) / 24.0
-
-            # 7. Number of generations
-            n_gen = cy_data["n_generations"]
-
-            # 8. Mass ratios (placeholder - needs Yukawa computation from cymyc)
-            w_total = potential["w_total_abs"]
-            m_e_ratio = g_s * w_total / (cy_volume**(1/3) + 1e-10) * 1e-22
-            m_p_ratio = m_e_ratio * 1836.15
-
-            return {
-                "success": True,
-
-                # Gauge couplings
-                "alpha_em": gauge_z["alpha_em"],
-                "alpha_s": gauge_z["alpha_s"],
-                "sin2_theta_w": gauge_z["sin2_theta_w"],
-
-                # Cosmological
-                "cosmological_constant": potential["cosmological_constant"],
-                "is_de_sitter": potential["is_de_sitter"],
-
-                # Topology
-                "n_generations": n_gen,
-                "h11": h11,
-                "h21": h21,
-                "chi": cy_data["chi"],
-
-                # Masses
-                "m_e_planck_ratio": float(m_e_ratio),
-                "m_p_planck_ratio": float(m_p_ratio),
-
-                # Geometry
-                "cy_volume": cy_volume,
-                "string_coupling": g_s,
-
-                # Constraints
-                "flux_tadpole": tadpole,
-                "tadpole_bound": tadpole_bound,
-                "tadpole_satisfied": tadpole <= tadpole_bound,
-
-                # Potential
-                "superpotential_abs": w_total,
-                "v_ads": potential["v_ads"],
-                "v_uplift": potential["v_uplift"],
-            }
-
-        except Exception as e:
+            return self._compute_physics_impl(genome)
+        except Exception:
             import traceback
-            return {
-                "success": False,
-                "error": str(e),
-                "traceback": traceback.format_exc(),
-            }
+            traceback.print_exc()
+            raise
+
+    def _compute_physics_impl(self, genome: dict) -> dict:
+        """Actual implementation - exceptions will print traceback then propagate."""
+        # 1. Analyze polytope with CYTools
+        vertices = genome.get("vertices", [])
+        if not vertices:
+            return {"success": False, "error": "No vertices provided"}
+
+        cy_data = self.cytools.analyze_polytope(vertices)
+        if not cy_data["success"]:
+            return cy_data
+
+        # 2. Get Kähler moduli (must be in Kähler cone)
+        # Use cone tip as base, then scale by genome's moduli
+        h11 = cy_data["h11"]
+        cone_tip = np.array(cy_data.get("kahler_cone_tip", [1.0] * h11))
+
+        # Genome provides scaling factors around the cone tip
+        genome_kahler = np.array(genome.get("kahler_moduli", [1.0] * h11))
+        if len(genome_kahler) < h11:
+            genome_kahler = np.concatenate([genome_kahler, np.ones(h11 - len(genome_kahler))])
+        genome_kahler = genome_kahler[:h11]
+
+        # Scale cone tip by genome values (keeps us in cone direction)
+        kahler = cone_tip * np.maximum(genome_kahler, 0.1)
+
+        # 3. Compute volumes
+        vol_data = self.cytools.compute_volumes(cy_data, kahler)
+        if not vol_data["success"]:
+            # Use simplified volume if CYTools computation fails
+            cy_volume = float(np.prod(kahler) / 6.0)
+            divisor_volumes = kahler**2
+        else:
+            cy_volume = vol_data["cy_volume"]
+            divisor_volumes = np.array(vol_data["divisor_volumes"])
+
+        # Validate volumes - CYTools returns complex/negative for invalid geometry
+        if np.iscomplex(cy_volume) or np.real(cy_volume) <= 0:
+            return {"success": False, "error": "Invalid geometry: CY volume not positive real"}
+        cy_volume = float(np.real(cy_volume))
+
+        divisor_volumes = np.real(divisor_volumes)
+        if np.any(divisor_volumes <= 0):
+            return {"success": False, "error": "Invalid geometry: divisor volumes not positive"}
+
+        # 4. Compute gauge couplings
+        g_s = genome.get("g_s", 0.1)
+        gauge_string = self.gauge.compute_gauge_couplings(divisor_volumes, g_s)
+        gauge_z = self.gauge.run_to_z_scale(
+            gauge_string["alpha_3_string"],
+            gauge_string["alpha_2_string"],
+            gauge_string["alpha_1_string"],
+        )
+
+        # 5. Compute flux superpotential and potential
+        h21 = cy_data["h21"]
+        n_periods = 2 * (h21 + 1)
+
+        flux_f = np.array(genome.get("flux_f", [0] * n_periods))
+        flux_h = np.array(genome.get("flux_h", [0] * n_periods))
+
+        # Truncate fluxes if too long (genome may have more than needed)
+        flux_f = flux_f[:n_periods]
+        flux_h = flux_h[:n_periods]
+
+        # Pad fluxes if too short
+        if len(flux_f) < n_periods:
+            flux_f = np.concatenate([flux_f, np.zeros(n_periods - len(flux_f))])
+        if len(flux_h) < n_periods:
+            flux_h = np.concatenate([flux_h, np.zeros(n_periods - len(flux_h))])
+
+        # Simple period approximation (real computation needs CY metric)
+        complex_mod = genome.get("complex_moduli", [1.0])
+        periods = np.exp(1j * np.arange(n_periods) * 0.1) * complex_mod[0]
+
+        tau = complex(0.1 + 1j / g_s)  # Axio-dilaton
+        w_flux = self.moduli.compute_flux_superpotential(flux_f, flux_h, periods, tau)
+
+        n_antiD3 = genome.get("n_antiD3", 1)
+        potential = self.moduli.compute_potential(cy_volume, w_flux, kahler, n_antiD3)
+
+        # 6. Tadpole constraint
+        tadpole = self.moduli.compute_tadpole(flux_f, flux_h)
+        tadpole_bound = abs(cy_data["chi"]) / 24.0
+
+        # 7. Number of generations
+        n_gen = cy_data["n_generations"]
+
+        # 8. Mass ratios (placeholder - needs Yukawa computation from cymyc)
+        w_total = potential["w_total_abs"]
+        m_e_ratio = g_s * w_total / (cy_volume**(1/3) + 1e-10) * 1e-22
+        m_p_ratio = m_e_ratio * 1836.15
+
+        return {
+            "success": True,
+
+            # Gauge couplings
+            "alpha_em": gauge_z["alpha_em"],
+            "alpha_s": gauge_z["alpha_s"],
+            "sin2_theta_w": gauge_z["sin2_theta_w"],
+
+            # Cosmological
+            "cosmological_constant": potential["cosmological_constant"],
+            "is_de_sitter": potential["is_de_sitter"],
+
+            # Topology
+            "n_generations": n_gen,
+            "h11": h11,
+            "h21": h21,
+            "chi": cy_data["chi"],
+
+            # Masses
+            "m_e_planck_ratio": float(m_e_ratio),
+            "m_p_planck_ratio": float(m_p_ratio),
+
+            # Geometry
+            "cy_volume": cy_volume,
+            "string_coupling": g_s,
+
+            # Constraints
+            "flux_tadpole": tadpole,
+            "tadpole_bound": tadpole_bound,
+            "tadpole_satisfied": tadpole <= tadpole_bound,
+
+            # Potential
+            "superpotential_abs": w_total,
+            "v_ads": potential["v_ads"],
+            "v_uplift": potential["v_uplift"],
+        }
 
     def serve_stdio(self):
         """JSON-RPC server over stdin/stdout."""
