@@ -95,9 +95,11 @@ async function loadHeuristics(): Promise<PolytopeHeuristics[]> {
     const db = new Database(dbPath, { readonly: true });
 
     // Read directly from heuristics table (h11, h21, vertex_count are stored there)
+    // Limit to 500 for performance
     const rows = db.prepare(`
       SELECT * FROM heuristics
       ORDER BY outlier_score DESC
+      LIMIT 500
     `).all() as Record<string, unknown>[];
 
     db.close();
