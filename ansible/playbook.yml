@@ -269,17 +269,6 @@
       args:
         executable: /bin/bash
 
-    - name: Move SQLite database from spinning disk if it exists there
-      shell: |
-        if [ -f "{{ raw_polytopes_dir }}/string_theory.db" ]; then
-          mv {{ raw_polytopes_dir }}/string_theory.db {{ data_dir }}/
-          echo "Moved database to NVMe"
-        else
-          echo "No database to move"
-        fi
-      args:
-        executable: /bin/bash
-
     # ============================================
     # Build Rust Project
     # ============================================
