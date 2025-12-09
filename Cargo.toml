@@ -23,6 +23,8 @@ toml = "0.8"
 rusqlite = { version = "0.32", features = ["bundled"] }
 nalgebra = "0.33"
 flate2 = "1.0"
+usearch = "2"
+memmap2 = "0.9"
 
 [[bin]]
 name = "heuristics"

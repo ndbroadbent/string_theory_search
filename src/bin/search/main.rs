@@ -32,6 +32,7 @@ fn main() {
     let config = Config::load(&args.config);
     let polytope_path = args.polytopes.unwrap_or(config.paths.polytopes.clone());
     let polytope_filter = parse_polytope_ids(args.ids);
+    let index_path = config.paths.get_index_path();
 
     let my_pid = std::process::id() as i32;
 
@@ -68,6 +69,7 @@ fn main() {
         interrupt_flag,
         &heartbeat,
         my_pid,
+        Some(&index_path),
     );
 
     // Clean shutdown

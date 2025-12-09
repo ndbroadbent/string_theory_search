@@ -41,6 +41,7 @@ pub fn run_trial(
     verbose: bool,
     output_dir: &str,
     interrupt_flag: &Arc<AtomicBool>,
+    index_path: Option<&str>,
 ) -> TrialResult {
     let ga_config = algorithm_to_ga_config(algo);
     let search_strategy = SearchStrategy::from_meta_algorithm(algo);
@@ -67,6 +68,7 @@ pub fn run_trial(
         Some(db_conn.clone()),
         Some(run_id),
         Some(run_seed),
+        index_path,
     );
     searcher.verbose = verbose;
 

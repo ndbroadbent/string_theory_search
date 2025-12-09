@@ -424,6 +424,35 @@
         daemon_reload: yes
 
     # ============================================
+    # Index Builder Service
+    # ============================================
+    - name: Create systemd service for index builder
+      copy:
+        dest: /etc/systemd/system/string-theory-build-index.service
+        content: |
+          [Unit]
+          Description=String Theory HNSW Index Builder
+          After=network.target
+
+          [Service]
+          Type=oneshot
+          User=root
+          WorkingDirectory={{ project_dir }}
+          ExecStart={{ project_dir }}/target/release/heuristics build-index -c config.server.toml
+          StandardOutput=append:{{ project_dir }}/logs/build-index.log
+          StandardError=append:{{ project_dir }}/logs/build-index.log
+          # Allow long running time for index build
+          TimeoutStartSec=3600
+
+          [Install]
+          WantedBy=multi-user.target
+        mode: '0644'
+
+    - name: Reload systemd for index builder
+      systemd:
+        daemon_reload: yes
+
+    # ============================================
     # Verification
     # ============================================
     - name: Verify CYTools import

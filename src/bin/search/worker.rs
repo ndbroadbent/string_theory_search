@@ -30,6 +30,7 @@ pub fn run_worker_loop(
     interrupt_flag: Arc<AtomicBool>,
     heartbeat: &HeartbeatThread,
     my_pid: i32,
+    index_path: Option<&str>,
 ) {
     println!("Starting meta-GA worker loop...");
     println!();
@@ -104,6 +105,7 @@ pub fn run_worker_loop(
                 verbose,
                 &output_dir,
                 &interrupt_flag,
+                index_path,
             );
             let run_elapsed = run_start.elapsed();
 

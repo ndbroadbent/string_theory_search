@@ -6,25 +6,31 @@
 //! Usage:
 //!     ./target/release/heuristics -c config.server.toml
 //!     ./target/release/heuristics --batch-size 1000 --resume
+//!     ./target/release/heuristics build-index -c config.server.toml
 
-use clap::Parser;
+use clap::{Parser, Subcommand};
 use serde::Deserialize;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
+use std::path::Path;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use string_theory::db::{init_database, upsert_heuristics, upsert_polytope};
 use string_theory::heuristics::compute_heuristics;
+use string_theory::vector_index::HeuristicsIndex;
 
 #[derive(Parser)]
 #[command(name = "heuristics")]
 #[command(about = "Compute heuristics for all polytopes")]
 struct Args {
     /// Config file path
-    #[arg(short, long, default_value = "config.toml")]
+    #[arg(short, long, default_value = "config.toml", global = true)]
     config: String,
+
+    #[command(subcommand)]
+    command: Option<Command>,
 
     /// Batch size for commits
     #[arg(short, long, default_value = "100")]
@@ -45,6 +51,16 @@ struct Args {
     /// Progress reporting interval (seconds)
     #[arg(long, default_value = "30")]
     progress_interval: u64,
+}
+
+#[derive(Subcommand)]
+enum Command {
+    /// Build HNSW vector index from existing heuristics
+    BuildIndex {
+        /// Output index path (default: data/heuristics.usearch)
+        #[arg(short, long)]
+        output: Option<String>,
+    },
 }
 
 #[derive(Deserialize)]
@@ -82,6 +98,62 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let config_str = std::fs::read_to_string(&args.config)?;
     let config: Config = toml::from_str(&config_str)?;
 
+    // Handle subcommands
+    if let Some(command) = args.command {
+        return match command {
+            Command::BuildIndex { output } => {
+                build_index(&config.paths.database, output)
+            }
+        };
+    }
+
+    // Default: run heuristics computation
+    run_heuristics_worker(args, config)
+}
+
+fn build_index(db_path: &str, output: Option<String>) -> Result<(), Box<dyn std::error::Error>> {
+    let output_path = output.unwrap_or_else(|| {
+        // Default: same directory as database
+        let db_dir = Path::new(db_path).parent().unwrap_or(Path::new("data"));
+        db_dir.join("heuristics.usearch").to_string_lossy().to_string()
+    });
+
+    log::info!("Building HNSW index");
+    log::info!("  Database: {}", db_path);
+    log::info!("  Output: {}", output_path);
+
+    let conn = rusqlite::Connection::open(db_path)?;
+    let start = Instant::now();
+
+    let index = HeuristicsIndex::build_from_db(&conn, Path::new(&output_path))?;
+
+    let elapsed = start.elapsed();
+    log::info!("Index built successfully!");
+    log::info!("  Polytopes: {}", index.len());
+    log::info!("  Time: {:.1}s", elapsed.as_secs_f64());
+
+    // List output files
+    let index_path = Path::new(&output_path);
+    let ids_path = index_path.with_extension("ids");
+    let raw_path = index_path.with_extension("raw");
+
+    if index_path.exists() {
+        let size = std::fs::metadata(index_path)?.len();
+        log::info!("  Index file: {} ({:.1} MB)", index_path.display(), size as f64 / 1_000_000.0);
+    }
+    if ids_path.exists() {
+        let size = std::fs::metadata(&ids_path)?.len();
+        log::info!("  IDs file: {} ({:.1} MB)", ids_path.display(), size as f64 / 1_000_000.0);
+    }
+    if raw_path.exists() {
+        let size = std::fs::metadata(&raw_path)?.len();
+        log::info!("  Raw vectors: {} ({:.1} MB)", raw_path.display(), size as f64 / 1_000_000.0);
+    }
+
+    Ok(())
+}
+
+fn run_heuristics_worker(args: Args, config: Config) -> Result<(), Box<dyn std::error::Error>> {
     log::info!("Heuristics Worker");
     log::info!("  Polytopes: {}", config.paths.polytopes);
     log::info!("  Database: {}", config.paths.database);

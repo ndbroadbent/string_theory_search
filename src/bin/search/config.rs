@@ -46,6 +46,9 @@ pub struct PathsConfig {
     pub output_dir: String,
     #[serde(default = "default_database")]
     pub database: String,
+    /// Optional: path to HNSW heuristics index (default: derived from database path)
+    #[serde(default)]
+    pub heuristics_index: Option<String>,
 }
 
 fn default_polytopes() -> String {
@@ -64,7 +67,20 @@ impl Default for PathsConfig {
             polytopes: default_polytopes(),
             output_dir: default_output_dir(),
             database: default_database(),
+            heuristics_index: None,
         }
+    }
+}
+
+impl PathsConfig {
+    /// Get the heuristics index path, deriving from database path if not explicitly set
+    pub fn get_index_path(&self) -> String {
+        self.heuristics_index.clone().unwrap_or_else(|| {
+            // Derive from database path: data/string_theory.db -> data/heuristics.usearch
+            let db_path = std::path::Path::new(&self.database);
+            let db_dir = db_path.parent().unwrap_or(std::path::Path::new("data"));
+            db_dir.join("heuristics.usearch").to_string_lossy().to_string()
+        })
     }
 }
 

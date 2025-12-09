@@ -10,10 +10,12 @@ use crate::physics::{
     compute_physics, is_physics_available,
     PhysicsOutput, PolytopeData, Compactification,
 };
+use crate::vector_index::HeuristicsIndex;
 use rand::prelude::*;
 use rusqlite::Connection;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::path::Path;
 use std::sync::{Arc, Mutex};
 
 /// Configuration for the real physics GA
@@ -864,17 +866,19 @@ pub struct LandscapeSearcher {
     gens_on_current_polytope: usize,
     /// Best fitness achieved on current polytope (for switch_threshold)
     best_fitness_on_current_polytope: f64,
+    /// HNSW vector index for fast similarity search across all polytopes
+    heuristics_index: Option<HeuristicsIndex>,
 }
 
 impl LandscapeSearcher {
     /// Create a new searcher with default strategy
     pub fn new(config: GaConfig, polytope_path: &str) -> Self {
-        Self::new_with_seed(config, SearchStrategy::default(), polytope_path, None, None, None, None)
+        Self::new_with_seed(config, SearchStrategy::default(), polytope_path, None, None, None, None, None)
     }
 
     /// Create a new searcher with an optional polytope filter
     pub fn new_with_filter(config: GaConfig, polytope_path: &str, polytope_filter: Option<Vec<usize>>) -> Self {
-        Self::new_with_seed(config, SearchStrategy::default(), polytope_path, polytope_filter, None, None, None)
+        Self::new_with_seed(config, SearchStrategy::default(), polytope_path, polytope_filter, None, None, None, None)
     }
 
     /// Create a new searcher with database connection and run ID (legacy, uses default strategy)
@@ -885,7 +889,7 @@ impl LandscapeSearcher {
         db_conn: Option<Arc<Mutex<Connection>>>,
         run_id: Option<i64>,
     ) -> Self {
-        Self::new_with_seed(config, SearchStrategy::default(), polytope_path, polytope_filter, db_conn, run_id, None)
+        Self::new_with_seed(config, SearchStrategy::default(), polytope_path, polytope_filter, db_conn, run_id, None, None)
     }
 
     /// Create a new searcher with full configuration including meta-GA search strategy
@@ -898,11 +902,12 @@ impl LandscapeSearcher {
         db_conn: Option<Arc<Mutex<Connection>>>,
         run_id: Option<i64>,
     ) -> Self {
-        Self::new_with_seed(config, strategy, polytope_path, polytope_filter, db_conn, run_id, None)
+        Self::new_with_seed(config, strategy, polytope_path, polytope_filter, db_conn, run_id, None, None)
     }
 
     /// Create a new searcher with full configuration and deterministic seed
     /// If seed is None, uses entropy (non-deterministic). If seed is Some(u64), results are reproducible.
+    /// If index_path is provided, loads the HNSW heuristics index for fast similarity search.
     pub fn new_with_seed(
         config: GaConfig,
         strategy: SearchStrategy,
@@ -911,6 +916,7 @@ impl LandscapeSearcher {
         db_conn: Option<Arc<Mutex<Connection>>>,
         run_id: Option<i64>,
         seed: Option<u64>,
+        index_path: Option<&str>,
     ) -> Self {
         // Physics bridge must be initialized by caller (search.rs)
         assert!(is_physics_available(), "Physics bridge REQUIRED but not initialized");
@@ -948,6 +954,28 @@ impl LandscapeSearcher {
         let cluster_state = ClusterState::load_or_new(&cluster_state_path);
         println!("Cluster state: {} clusters, {} total evaluations",
             cluster_state.clusters.len(), cluster_state.total_evaluations);
+
+        // Load HNSW heuristics index if path provided and file exists
+        let heuristics_index = if let Some(path) = index_path {
+            let index_file = Path::new(path);
+            if index_file.exists() {
+                match HeuristicsIndex::load(index_file) {
+                    Ok(idx) => {
+                        println!("Loaded heuristics index with {} polytopes", idx.len());
+                        Some(idx)
+                    }
+                    Err(e) => {
+                        eprintln!("Warning: Failed to load heuristics index: {}", e);
+                        None
+                    }
+                }
+            } else {
+                println!("Heuristics index not found at {}, similarity search will use fallback", path);
+                None
+            }
+        } else {
+            None
+        };
 
         // Note: Run registration now happens via insert_run() with a Run struct
         // For meta-GA runs, this is done in run_trial() which creates the Run record
@@ -989,6 +1017,7 @@ impl LandscapeSearcher {
             heuristics_cache: HashMap::new(),
             gens_on_current_polytope: 0,
             best_fitness_on_current_polytope: 0.0,
+            heuristics_index,
         }
     }
 
@@ -1227,12 +1256,45 @@ impl LandscapeSearcher {
 
     /// Find polytopes similar to a reference polytope using weighted distance
     /// Returns up to `limit` polytope IDs sorted by similarity (closest first)
+    ///
+    /// If HNSW index is available: queries top 10K candidates via ANN, reranks by weighted distance
+    /// Otherwise: falls back to searching only hot polytopes and clusters (limited coverage)
     fn find_similar_polytopes(&mut self, reference_id: usize, limit: usize) -> Vec<usize> {
         // Need feature weights to do weighted search
         if !self.strategy.has_feature_weights() {
             return Vec::new();
         }
 
+        // Try to use vector index for fast search across all polytopes
+        if self.heuristics_index.is_some() {
+            // Get reference heuristics from index (fast, memory-mapped)
+            let ref_heuristics = self.heuristics_index.as_ref()
+                .and_then(|idx| idx.get_heuristics(reference_id as i64))
+                .or_else(|| self.get_polytope_heuristics(reference_id));
+
+            let ref_heuristics = match ref_heuristics {
+                Some(h) => h,
+                None => return Vec::new(),
+            };
+
+            // Query index: gets top candidates by ANN, reranks by weighted distance
+            let index = self.heuristics_index.as_ref().unwrap();
+            let results = index.find_similar(&ref_heuristics, &self.strategy.feature_weights, limit + 1);
+
+            // Filter out the reference itself and apply polytope filter
+            let filter = &self.polytope_filter;
+            return results
+                .into_iter()
+                .filter(|(id, _)| *id != reference_id as i64)
+                .filter(|(id, _)| {
+                    filter.is_none() || filter.as_ref().unwrap().contains(&(*id as usize))
+                })
+                .take(limit)
+                .map(|(id, _)| id as usize)
+                .collect();
+        }
+
+        // Fallback: search only hot polytopes and clusters (limited coverage)
         let ref_heuristics = match self.get_polytope_heuristics(reference_id) {
             Some(h) => h,
             None => return Vec::new(),
@@ -1246,7 +1308,6 @@ impl LandscapeSearcher {
         let hot_poly_ids: Vec<usize> = self.cluster_state.hot_polytopes.iter().map(|h| h.id).collect();
 
         // Search through cached heuristics or hot polytopes
-        // (We can't search all 12M polytopes efficiently here)
         for &hot_poly in &hot_poly_ids {
             if hot_poly == reference_id {
                 continue;

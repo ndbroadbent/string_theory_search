@@ -83,8 +83,8 @@ pub fn default_feature_weights_json() -> String {
     serde_json::to_string(&weights).unwrap_or_else(|_| "{}".to_string())
 }
 
-/// Generate random feature weights JSON
-pub fn random_feature_weights_json<R: Rng>(rng: &mut R) -> String {
+/// Generate random feature weights JSON (broad: uses most features)
+pub fn random_feature_weights_broad<R: Rng>(rng: &mut R) -> String {
     let weights: HashMap<&str, f64> = HEURISTIC_FEATURES
         .iter()
         .map(|&name| {
@@ -97,6 +97,41 @@ pub fn random_feature_weights_json<R: Rng>(rng: &mut R) -> String {
         })
         .collect();
     serde_json::to_string(&weights).unwrap_or_else(|_| "{}".to_string())
+}
+
+/// Generate focused feature weights JSON (narrow: only 2-6 features active)
+pub fn random_feature_weights_focused<R: Rng>(rng: &mut R) -> String {
+    use rand::seq::SliceRandom;
+
+    // Pick 2-6 features to focus on
+    let num_features = rng.gen_range(2..=6);
+
+    // Shuffle features and pick the first N
+    let mut features: Vec<&str> = HEURISTIC_FEATURES.iter().copied().collect();
+    features.shuffle(rng);
+
+    let weights: HashMap<&str, f64> = HEURISTIC_FEATURES
+        .iter()
+        .map(|&name| {
+            let weight = if features[..num_features].contains(&name) {
+                // Active feature: random weight 1.0-3.0 (higher floor to ensure significance)
+                1.0 + rng.gen::<f64>() * 2.0
+            } else {
+                0.0  // Inactive feature
+            };
+            (name, weight)
+        })
+        .collect();
+    serde_json::to_string(&weights).unwrap_or_else(|_| "{}".to_string())
+}
+
+/// Generate random feature weights JSON (50/50 broad vs focused)
+pub fn random_feature_weights_json<R: Rng>(rng: &mut R) -> String {
+    if rng.gen::<f64>() < 0.5 {
+        random_feature_weights_focused(rng)
+    } else {
+        random_feature_weights_broad(rng)
+    }
 }
 
 /// Parse feature weights from JSON
@@ -502,6 +537,61 @@ mod tests {
             }
         }
         assert!(found_zero, "No zero weights found after 50 random generations");
+    }
+
+    #[test]
+    fn test_focused_feature_weights_has_few_active() {
+        // Test that focused weights only have 2-6 active features
+        for seed in 0..20 {
+            let mut rng = StdRng::seed_from_u64(seed);
+            let json = random_feature_weights_focused(&mut rng);
+            let weights = parse_feature_weights(&json);
+
+            let active_count = weights.values().filter(|&&w| w > 0.0).count();
+            assert!(
+                active_count >= 2 && active_count <= 6,
+                "Focused weights should have 2-6 active features, got {} (seed {})",
+                active_count, seed
+            );
+
+            // Active weights should be in range [1.0, 3.0]
+            for (name, &weight) in &weights {
+                if weight > 0.0 {
+                    assert!(
+                        weight >= 1.0 && weight <= 3.0,
+                        "Active weight {} for {} should be in [1.0, 3.0] (seed {})",
+                        weight, name, seed
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_broad_vs_focused_split() {
+        // Test that random_feature_weights_json produces both broad and focused
+        let mut broad_count = 0;
+        let mut focused_count = 0;
+
+        for seed in 0..100 {
+            let mut rng = StdRng::seed_from_u64(seed);
+            let json = random_feature_weights_json(&mut rng);
+            let weights = parse_feature_weights(&json);
+
+            let active_count = weights.values().filter(|&&w| w > 0.0).count();
+            if active_count <= 6 {
+                focused_count += 1;
+            } else {
+                broad_count += 1;
+            }
+        }
+
+        // With 50/50 split, expect roughly equal distribution (allow 20-80 range)
+        assert!(
+            broad_count >= 20 && broad_count <= 80,
+            "Expected roughly 50/50 split, got {} broad vs {} focused",
+            broad_count, focused_count
+        );
     }
 
     #[test]
