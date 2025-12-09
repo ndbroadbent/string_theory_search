@@ -680,6 +680,27 @@ fn is_prime(n: i32) -> bool {
 mod tests {
     use super::*;
 
+    // Cross-polytope in 4D (8 vertices, perfectly symmetric)
+    const CROSS_POLYTOPE_4D: &[i32] = &[
+        1, 0, 0, 0,
+        -1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, -1, 0, 0,
+        0, 0, 1, 0,
+        0, 0, -1, 0,
+        0, 0, 0, 1,
+        0, 0, 0, -1,
+    ];
+
+    // Asymmetric simplex (5 vertices)
+    const ASYMMETRIC_SIMPLEX: &[i32] = &[
+        0, 0, 0, 0,
+        2, 0, 0, 0,
+        0, 3, 0, 0,
+        0, 0, 1, 0,
+        1, 1, 1, 2,
+    ];
+
     #[test]
     fn test_compute_heuristics_basic() {
         // Simple 4-vertex polytope (tetrahedron in 4D)
@@ -712,5 +733,88 @@ mod tests {
         assert!(is_prime(7));
         assert!(!is_prime(9));
         assert!(is_prime(11));
+    }
+
+    #[test]
+    fn test_cross_polytope_is_symmetric() {
+        let h = compute_heuristics(1, 5, 8, CROSS_POLYTOPE_4D);
+
+        // Perfect symmetry on all axes
+        assert_eq!(h.symmetry_x.unwrap(), 1.0, "symmetry_x should be 1.0");
+        assert_eq!(h.symmetry_y.unwrap(), 1.0, "symmetry_y should be 1.0");
+        assert_eq!(h.symmetry_z.unwrap(), 1.0, "symmetry_z should be 1.0");
+        assert_eq!(h.symmetry_w.unwrap(), 1.0, "symmetry_w should be 1.0");
+
+        // Perfect sphericity (all vertices equidistant from centroid)
+        assert_eq!(h.sphericity.unwrap(), 1.0, "sphericity should be 1.0");
+
+        assert_eq!(h.vertex_count.unwrap(), 8);
+    }
+
+    #[test]
+    fn test_sphericity_bounds() {
+        for (name, vertices, h11, h21) in [
+            ("cross_polytope", CROSS_POLYTOPE_4D, 5, 8),
+            ("asymmetric_simplex", ASYMMETRIC_SIMPLEX, 10, 7),
+        ] {
+            let h = compute_heuristics(1, h11, h21, vertices);
+            let s = h.sphericity.unwrap();
+            assert!(s >= 0.0 && s <= 1.0, "{}: sphericity={} out of bounds", name, s);
+        }
+    }
+
+    #[test]
+    fn test_symmetry_bounds() {
+        for (name, vertices, h11, h21) in [
+            ("cross_polytope", CROSS_POLYTOPE_4D, 5, 8),
+            ("asymmetric_simplex", ASYMMETRIC_SIMPLEX, 10, 7),
+        ] {
+            let h = compute_heuristics(1, h11, h21, vertices);
+            for (axis, val) in [
+                ("x", h.symmetry_x.unwrap()),
+                ("y", h.symmetry_y.unwrap()),
+                ("z", h.symmetry_z.unwrap()),
+                ("w", h.symmetry_w.unwrap()),
+            ] {
+                assert!(val >= 0.0 && val <= 1.0, "{}: symmetry_{} = {} out of bounds", name, axis, val);
+            }
+        }
+    }
+
+    #[test]
+    fn test_vertex_count_matches() {
+        let h1 = compute_heuristics(1, 5, 8, CROSS_POLYTOPE_4D);
+        assert_eq!(h1.vertex_count.unwrap(), 8);
+
+        let h2 = compute_heuristics(2, 10, 7, ASYMMETRIC_SIMPLEX);
+        assert_eq!(h2.vertex_count.unwrap(), 5);
+    }
+
+    #[test]
+    fn test_chirality_differs_for_asymmetric() {
+        let h = compute_heuristics(1, 10, 7, ASYMMETRIC_SIMPLEX);
+
+        let chiralities = [
+            h.chirality_x.unwrap(),
+            h.chirality_y.unwrap(),
+            h.chirality_z.unwrap(),
+            h.chirality_w.unwrap(),
+        ];
+
+        // Asymmetric polytope should have different chirality on different axes
+        let unique: std::collections::HashSet<_> = chiralities
+            .iter()
+            .map(|&c| (c * 1000.0) as i64) // discretize for comparison
+            .collect();
+
+        assert!(unique.len() > 1,
+            "Chirality values should differ for asymmetric polytope, but got: {:?}", chiralities);
+    }
+
+    #[test]
+    fn test_hodge_numbers_stored() {
+        let h = compute_heuristics(42, 24, 21, CROSS_POLYTOPE_4D);
+        assert_eq!(h.h11, Some(24));
+        assert_eq!(h.h21, Some(21));
     }
 }

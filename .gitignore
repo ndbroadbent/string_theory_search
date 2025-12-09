@@ -15,3 +15,7 @@ config.server.toml
 test_chroma/
 chroma_heuristics/
 data/
+cluster_state.json
+web/.cta.json
+web/.vscode/
+tests/snapshots/

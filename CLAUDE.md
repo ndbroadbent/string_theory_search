@@ -110,6 +110,18 @@ Results saved to `results/run_XX/`:
 - `state_*.json` - full GA state for resume
 - `cluster_state.json` - polytope clustering data
 
+## Testing
+```bash
+# Run Python heuristics tests
+source .venv/bin/activate
+pytest tests/test_heuristics.py -v
+
+# Update snapshots (regenerate expected values)
+UPDATE_SNAPSHOTS=1 pytest tests/test_heuristics.py -v
+```
+
+Snapshots stored in `tests/snapshots/` - these are critical for regression testing.
+
 ## Ansible
 Inventory: `ansible/inventory.yml` (set string_theory host)
-Playbook installs: Rust, Python venv, PALP, CYTools, cymyc
+Playbook installs: Rust, Bun, Python venv, PALP, CYTools, cymyc
