@@ -364,7 +364,7 @@ pub fn evolve_next_generation(
     // Create next generation
     for i in 0..population_size {
         let algo = if i < elite_count {
-            // Keep elite unchanged (but as new entry)
+            // Keep elite unchanged (but as new entry) with NEW seed
             let (parent, _fitness) = &elite[i as usize % elite.len()];
             let mut child = parent.clone();
             child.id = None;
@@ -372,6 +372,7 @@ pub fn evolve_next_generation(
             child.meta_generation = next_gen;
             child.runs_required = runs_required;
             child.name = Some(format!("gen{}_elite{}", next_gen, i));
+            child.rng_seed = rng.gen();  // New seed so it explores different polytopes
             child
         } else if rng.gen::<f64>() < mutation_rate {
             // Mutate a random elite
