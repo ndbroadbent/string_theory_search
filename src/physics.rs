@@ -60,7 +60,7 @@ impl Default for PhysicsOutput {
 
 /// Genome for a real string compactification
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct RealCompactification {
+pub struct Compactification {
     /// Index into the polytope database
     pub polytope_id: usize,
 
@@ -84,11 +84,11 @@ pub struct RealCompactification {
     pub h21: i32,
 }
 
-impl RealCompactification {
+impl Compactification {
     /// Create a new random compactification
     pub fn random<R: rand::Rng>(rng: &mut R, polytope_data: &PolytopeData) -> Self {
-        let polytope_id = rng.gen_range(0..polytope_data.polytopes.len());
-        let polytope = &polytope_data.polytopes[polytope_id];
+        let polytope_id = rng.gen_range(0..polytope_data.len());
+        let polytope = polytope_data.get(polytope_id).expect("Invalid polytope index");
 
         let h11 = polytope.h11;
         let h21 = polytope.h12; // Note: h12 = h21 for CY3
@@ -131,8 +131,8 @@ impl RealCompactification {
     pub fn mutate<R: rand::Rng>(&mut self, rng: &mut R, strength: f64, polytope_data: &PolytopeData) {
         // Occasionally switch polytopes entirely
         if rng.gen::<f64>() < 0.05 * strength {
-            let new_id = rng.gen_range(0..polytope_data.polytopes.len());
-            let polytope = &polytope_data.polytopes[new_id];
+            let new_id = rng.gen_range(0..polytope_data.len());
+            let polytope = polytope_data.get(new_id).expect("Invalid polytope index");
             self.polytope_id = new_id;
             self.h11 = polytope.h11;
             self.h21 = polytope.h12;
@@ -244,66 +244,147 @@ pub struct Polytope {
     pub dual_point_count: i32,
 }
 
-/// Loaded polytope database
-#[derive(Debug, Clone)]
+/// Indexed polytope database - stores byte offsets, loads on demand
 pub struct PolytopeData {
-    pub polytopes: Vec<Polytope>,
+    offsets: Vec<u64>,
+    file: std::sync::Mutex<std::io::BufReader<std::fs::File>>,
+}
+
+/// JSONL format polytope (flat vertices array)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct JsonlPolytope {
+    vertices: Vec<i32>,
+    h11: i32,
+    h21: i32,
+    vertex_count: i32,
+}
+
+impl From<JsonlPolytope> for Polytope {
+    fn from(j: JsonlPolytope) -> Self {
+        // Reshape flat vertices array into Vec<Vec<i32>>
+        let vertices: Vec<Vec<i32>> = j.vertices
+            .chunks(4)
+            .map(|chunk| chunk.to_vec())
+            .collect();
+        Polytope {
+            vertices,
+            h11: j.h11,
+            h12: j.h21,  // h12 = h21 for CY3
+            euler: 2 * (j.h11 - j.h21),
+            point_count: j.vertex_count,
+            dual_point_count: 0,  // Not available in JSONL format
+        }
+    }
 }
 
 impl PolytopeData {
-    /// Load polytopes from JSON file
+    /// Load or build index for JSONL file
     pub fn load(path: &str) -> Result<Self, Box<dyn std::error::Error>> {
-        let data = std::fs::read_to_string(path)?;
-        let polytopes: Vec<Polytope> = serde_json::from_str(&data)?;
-        println!("Loaded {} polytopes from {}", polytopes.len(), path);
-        Ok(Self { polytopes })
+        use std::io::BufReader;
+
+        let index_path = format!("{}.idx", path);
+        let file = std::fs::File::open(path)?;
+        let file_len = file.metadata()?.len();
+
+        // Try to load existing index
+        let offsets = if let Ok(index_data) = std::fs::read(&index_path) {
+            // Validate: first 8 bytes = file length, rest = offsets
+            if index_data.len() >= 8 {
+                let stored_len = u64::from_le_bytes(index_data[0..8].try_into().unwrap());
+                if stored_len == file_len {
+                    let offsets: Vec<u64> = index_data[8..]
+                        .chunks_exact(8)
+                        .map(|b| u64::from_le_bytes(b.try_into().unwrap()))
+                        .collect();
+                    println!("Loaded index: {} polytopes from {}", offsets.len(), index_path);
+                    offsets
+                } else {
+                    println!("Index stale (file size changed), rebuilding...");
+                    Self::build_index(path, &index_path)?
+                }
+            } else {
+                Self::build_index(path, &index_path)?
+            }
+        } else {
+            println!("Building index for {}...", path);
+            Self::build_index(path, &index_path)?
+        };
+
+        let file = std::fs::File::open(path)?;
+        Ok(Self {
+            offsets,
+            file: std::sync::Mutex::new(BufReader::new(file)),
+        })
     }
 
-    /// Create minimal test data if file doesn't exist
-    pub fn load_or_default(path: &str) -> Self {
-        match Self::load(path) {
-            Ok(data) => data,
-            Err(e) => {
-                eprintln!("Warning: Could not load polytope data from {}: {}", path, e);
-                eprintln!("Using minimal built-in polytopes");
+    fn build_index(path: &str, index_path: &str) -> Result<Vec<u64>, Box<dyn std::error::Error>> {
+        use std::io::{BufRead, BufReader, Write};
 
-                // Minimal built-in polytopes for testing
-                Self {
-                    polytopes: vec![
-                        // Quintic threefold
-                        Polytope {
-                            vertices: vec![
-                                vec![1, 0, 0, 0],
-                                vec![0, 1, 0, 0],
-                                vec![0, 0, 1, 0],
-                                vec![0, 0, 0, 1],
-                                vec![-1, -1, -1, -1],
-                            ],
-                            h11: 1,
-                            h12: 101,
-                            euler: -200,
-                            point_count: 6,
-                            dual_point_count: 126,
-                        },
-                        // A simpler CY
-                        Polytope {
-                            vertices: vec![
-                                vec![1, 0, 0, 0],
-                                vec![0, 1, 0, 0],
-                                vec![0, 0, 1, 0],
-                                vec![1, 2, 3, 5],
-                                vec![-2, -3, -4, -5],
-                            ],
-                            h11: 21,
-                            h12: 1,
-                            euler: 40,
-                            point_count: 6,
-                            dual_point_count: 26,
-                        },
-                    ],
+        let file = std::fs::File::open(path)?;
+        let file_len = file.metadata()?.len();
+        let mut reader = BufReader::new(file);
+        let mut offsets = Vec::new();
+        let mut pos: u64 = 0;
+        let mut line = String::new();
+        let mut last_percent = 0;
+
+        loop {
+            let start = pos;
+            let bytes_read = reader.read_line(&mut line)?;
+            if bytes_read == 0 {
+                break;
+            }
+            if !line.trim().is_empty() {
+                offsets.push(start);
+            }
+            pos += bytes_read as u64;
+            line.clear();
+
+            let percent = (pos * 100 / file_len) as u32;
+            if percent > last_percent {
+                last_percent = percent;
+                if percent % 10 == 0 {
+                    print!("  {}%", percent);
+                    std::io::stdout().flush().ok();
                 }
             }
         }
+        println!();
+
+        // Save index: file_len (8 bytes) + offsets
+        let mut index_file = std::fs::File::create(index_path)?;
+        index_file.write_all(&file_len.to_le_bytes())?;
+        for offset in &offsets {
+            index_file.write_all(&offset.to_le_bytes())?;
+        }
+        println!("Saved index: {} entries to {}", offsets.len(), index_path);
+
+        Ok(offsets)
+    }
+
+    /// Get polytope by index (reads from file on demand)
+    pub fn get(&self, index: usize) -> Option<Polytope> {
+        use std::io::{BufRead, Seek, SeekFrom};
+
+        let offset = *self.offsets.get(index)?;
+        let mut file = self.file.lock().ok()?;
+        file.seek(SeekFrom::Start(offset)).ok()?;
+
+        let mut line = String::new();
+        file.read_line(&mut line).ok()?;
+
+        serde_json::from_str::<JsonlPolytope>(&line)
+            .ok()
+            .map(|j| j.into())
+    }
+
+    /// Number of polytopes
+    pub fn len(&self) -> usize {
+        self.offsets.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.offsets.is_empty()
     }
 }
 
@@ -318,10 +399,21 @@ pub fn init_physics_bridge() -> PyResult<()> {
             .unwrap_or_else(|_| PathBuf::from("."));
         path.insert(0, bridge_dir.to_string_lossy().to_string())?;
 
-        // Also add the venv site-packages
-        let venv_path = bridge_dir.join(".venv/lib/python3.14/site-packages");
-        if venv_path.exists() {
-            path.insert(0, venv_path.to_string_lossy().to_string())?;
+        // Add venv site-packages - try multiple Python versions
+        for py_ver in ["python3.11", "python3.12", "python3.10"] {
+            let venv_path = bridge_dir.join(format!(".venv/lib/{}/site-packages", py_ver));
+            if venv_path.exists() {
+                path.insert(0, venv_path.to_string_lossy().to_string())?;
+                break;
+            }
+            // Also check VIRTUAL_ENV env var
+            if let Ok(venv_dir) = std::env::var("VIRTUAL_ENV") {
+                let venv_path = PathBuf::from(&venv_dir).join(format!("lib/{}/site-packages", py_ver));
+                if venv_path.exists() {
+                    path.insert(0, venv_path.to_string_lossy().to_string())?;
+                    break;
+                }
+            }
         }
 
         // Import and instantiate the bridge
@@ -338,7 +430,7 @@ pub fn init_physics_bridge() -> PyResult<()> {
 }
 
 /// Compute physics from a compactification genome
-pub fn compute_physics(genome: &RealCompactification) -> PhysicsOutput {
+pub fn compute_physics(genome: &Compactification, vertices: &[Vec<i32>]) -> PhysicsOutput {
     let result = Python::with_gil(|py| -> PyResult<PhysicsOutput> {
         let bridge = PHYSICS_BRIDGE
             .get()
@@ -349,6 +441,7 @@ pub fn compute_physics(genome: &RealCompactification) -> PhysicsOutput {
         // Build genome dict for Python
         let genome_dict = PyDict::new(py);
         genome_dict.set_item("polytope_id", genome.polytope_id)?;
+        genome_dict.set_item("vertices", vertices)?;
         genome_dict.set_item("kahler_moduli", &genome.kahler_moduli)?;
         genome_dict.set_item("complex_moduli", &genome.complex_moduli)?;
         genome_dict.set_item("flux_f", &genome.flux_f)?;
@@ -401,27 +494,4 @@ pub fn is_physics_available() -> bool {
     PHYSICS_BRIDGE.get().is_some()
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_polytope_loading() {
-        let data = PolytopeData::load_or_default("polytopes_small.json");
-        assert!(!data.polytopes.is_empty());
-        println!("Loaded {} polytopes", data.polytopes.len());
-    }
-
-    #[test]
-    fn test_random_compactification() {
-        let data = PolytopeData::load_or_default("polytopes_small.json");
-        let mut rng = rand::thread_rng();
-        let comp = RealCompactification::random(&mut rng, &data);
-
-        println!("Random compactification:");
-        println!("  Polytope ID: {}", comp.polytope_id);
-        println!("  h11 = {}, h21 = {}", comp.h11, comp.h21);
-        println!("  Kähler moduli: {:?}", comp.kahler_moduli);
-        println!("  g_s = {}", comp.g_s);
-    }
-}
+// Tests require polytopes_three_gen.jsonl - run manually

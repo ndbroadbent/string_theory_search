@@ -1,13 +1,8 @@
-//! String Theory Landscape Explorer - Library
+//! String Theory Landscape Explorer
 //!
-//! This crate provides genetic algorithm-based search through
-//! the string theory landscape, looking for compactifications
-//! that reproduce observed physics.
+//! Search through the string theory landscape using genetic algorithms
+//! to find Calabi-Yau compactifications that reproduce Standard Model physics.
 
-pub mod compactification;
 pub mod constants;
-pub mod fitness;
-pub mod genetic;
 pub mod physics;
-pub mod real_genetic;
-pub mod renderer;
+pub mod searcher;

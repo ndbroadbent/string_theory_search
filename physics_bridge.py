@@ -310,7 +310,8 @@ class ModuliStabilizer:
         # F-term potential (AdS minimum)
         # At the minimum, DW ≈ 0, so V_F ≈ -3 e^K |W|²
         exp_k = np.exp(k)
-        v_ads = -3 * exp_k * np.abs(w_total)**2
+        w_abs_sq = np.abs(w_total)**2  # |W|² is always real
+        v_ads = -3.0 * exp_k * float(w_abs_sq)
 
         # Uplift from anti-D3 branes at warped throat tip
         # V_uplift = D / V^{4/3}
@@ -318,7 +319,7 @@ class ModuliStabilizer:
         d_uplift = n_antiD3 * warp_factor**4
         v_uplift = d_uplift / (cy_volume**(4/3) + 1e-10)
 
-        v_total = float(v_ads + v_uplift)
+        v_total = v_ads + v_uplift
 
         return {
             "v_ads": float(v_ads),

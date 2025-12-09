@@ -7,3 +7,9 @@ results/
 logs/
 polytope_data/
 ansible/inventory.yml
+polytopes_three_gen.jsonl
+polytopes_three_gen.jsonl.idx
+mise.local.toml
+config.toml
+config.server.toml
+

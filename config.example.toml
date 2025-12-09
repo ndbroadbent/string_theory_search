@@ -1,0 +1,17 @@
+[paths]
+polytopes = "polytopes_three_gen.jsonl"
+output_dir = "results"
+
+[search]
+population_size = 500
+elite_count = 20
+tournament_size = 5
+crossover_rate = 0.85
+mutation_rate = 0.4
+mutation_strength = 0.35
+collapse_threshold = 1000
+hall_of_fame_size = 100
+
+[limits]
+max_time = 86400
+max_generations = 100000

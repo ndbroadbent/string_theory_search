@@ -5,8 +5,8 @@
 
 use crate::constants;
 use crate::physics::{
-    compute_physics, init_physics_bridge, is_physics_available,
-    PhysicsOutput, PolytopeData, RealCompactification,
+    compute_physics, is_physics_available,
+    PhysicsOutput, PolytopeData, Compactification,
 };
 use rand::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -15,7 +15,7 @@ use std::sync::Arc;
 
 /// Configuration for the real physics GA
 #[derive(Debug, Clone)]
-pub struct RealGaConfig {
+pub struct GaConfig {
     pub population_size: usize,
     pub elite_count: usize,
     pub tournament_size: usize,
@@ -26,7 +26,7 @@ pub struct RealGaConfig {
     pub hall_of_fame_size: usize,
 }
 
-impl Default for RealGaConfig {
+impl Default for GaConfig {
     fn default() -> Self {
         Self {
             population_size: 500,  // Smaller due to expensive physics computations
@@ -611,16 +611,16 @@ impl ClusterState {
 
 /// An individual in the real physics GA
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct RealIndividual {
-    pub genome: RealCompactification,
+pub struct Individual {
+    pub genome: Compactification,
     pub physics: Option<PhysicsOutput>,
     pub fitness: f64,
 }
 
-impl RealIndividual {
+impl Individual {
     /// Create a new random individual
     pub fn random<R: Rng>(rng: &mut R, polytope_data: &PolytopeData) -> Self {
-        let genome = RealCompactification::random(rng, polytope_data);
+        let genome = Compactification::random(rng, polytope_data);
         Self {
             genome,
             physics: None,
@@ -629,12 +629,17 @@ impl RealIndividual {
     }
 
     /// Evaluate this individual's fitness using real physics
-    pub fn evaluate(&mut self) {
+    pub fn evaluate(&mut self, polytope_data: &PolytopeData) {
         if !is_physics_available() {
             panic!("Physics bridge not available! Cannot run without real physics.");
         }
 
-        let physics = compute_physics(&self.genome);
+        let vertices = polytope_data
+            .get(self.genome.polytope_id)
+            .map(|p| p.vertices)
+            .unwrap_or_default();
+
+        let physics = compute_physics(&self.genome, &vertices);
 
         if physics.success {
             self.fitness = compute_fitness(&physics);
@@ -739,34 +744,32 @@ pub struct RealGenerationStats {
 }
 
 /// The real physics landscape searcher
-pub struct RealLandscapeSearcher {
-    pub config: RealGaConfig,
+pub struct LandscapeSearcher {
+    pub config: GaConfig,
     pub polytope_data: Arc<PolytopeData>,
-    pub population: Vec<RealIndividual>,
-    pub best_ever: Option<RealIndividual>,
-    pub hall_of_fame: Vec<RealIndividual>,
+    pub population: Vec<Individual>,
+    pub best_ever: Option<Individual>,
+    pub hall_of_fame: Vec<Individual>,
     pub history: Vec<RealGenerationStats>,
     pub generation: usize,
     pub total_evaluated: u64,
     pub stagnation_count: usize,
     pub collapse_count: usize,
     pub cluster_state: ClusterState,
+    pub verbose: bool,
     cluster_state_path: String,
     rng: StdRng,
 }
 
-impl RealLandscapeSearcher {
+impl LandscapeSearcher {
     /// Create a new searcher
-    pub fn new(config: RealGaConfig, polytope_path: &str) -> Self {
-        // Initialize Python bridge
-        if let Err(e) = init_physics_bridge() {
-            eprintln!("Warning: Could not initialize physics bridge: {}", e);
-            eprintln!("Using fallback fitness function");
-        }
+    pub fn new(config: GaConfig, polytope_path: &str) -> Self {
+        // Physics bridge must be initialized by caller (search.rs)
+        assert!(is_physics_available(), "Physics bridge REQUIRED but not initialized");
 
         // Load polytope data
-        let polytope_data = Arc::new(PolytopeData::load_or_default(polytope_path));
-        println!("Using {} polytopes from Kreuzer-Skarke database", polytope_data.polytopes.len());
+        let polytope_data = Arc::new(PolytopeData::load(polytope_path).expect("Failed to load polytope data"));
+        println!("Using {} polytopes from Kreuzer-Skarke database", polytope_data.len());
 
         // Load or create cluster state
         let cluster_state_path = "cluster_state.json".to_string();
@@ -777,8 +780,8 @@ impl RealLandscapeSearcher {
         let mut rng = StdRng::from_entropy();
 
         // Initialize population
-        let population: Vec<RealIndividual> = (0..config.population_size)
-            .map(|_| RealIndividual::random(&mut rng, &polytope_data))
+        let population: Vec<Individual> = (0..config.population_size)
+            .map(|_| Individual::random(&mut rng, &polytope_data))
             .collect();
 
         Self {
@@ -793,6 +796,7 @@ impl RealLandscapeSearcher {
             stagnation_count: 0,
             collapse_count: 0,
             cluster_state,
+            verbose: false,
             cluster_state_path,
             rng,
         }
@@ -803,26 +807,40 @@ impl RealLandscapeSearcher {
         self.generation += 1;
 
         // Evaluate population and update cluster state with full feature vectors
-        for individual in &mut self.population {
+        let pop_size = self.population.len();
+        for (i, individual) in self.population.iter_mut().enumerate() {
             if individual.physics.is_none() {
-                individual.evaluate();
+                if self.verbose {
+                    eprint!("  [{}/{}] polytope {} ... ", i + 1, pop_size, individual.genome.polytope_id);
+                }
+                individual.evaluate(&self.polytope_data);
                 self.total_evaluated += 1;
-
-                // Compute full feature vector (geometric + physics)
-                let polytope = &self.polytope_data.polytopes[individual.genome.polytope_id];
-                let mut features = PolytopeFeatures::from_polytope(
-                    &polytope.vertices,
-                    polytope.h11,
-                    polytope.h12,  // h12 = h21 for CY3
-                );
-
-                // Add physics features from evaluation
-                if let Some(ref physics) = individual.physics {
-                    features.update_physics(physics, individual.fitness);
+                if self.verbose {
+                    if let Some(ref p) = individual.physics {
+                        if p.success {
+                            eprintln!("fit:{:.4} α_em:{:.2e} N:{}", individual.fitness, p.alpha_em, p.n_generations);
+                        } else {
+                            eprintln!("FAIL: {}", p.error.as_deref().unwrap_or("?"));
+                        }
+                    }
                 }
 
-                // Update cluster state with full feature vector
-                self.cluster_state.update_with_features(&features, individual.genome.polytope_id);
+                // Compute full feature vector (geometric + physics)
+                if let Some(polytope) = self.polytope_data.get(individual.genome.polytope_id) {
+                    let mut features = PolytopeFeatures::from_polytope(
+                        &polytope.vertices,
+                        polytope.h11,
+                        polytope.h12,  // h12 = h21 for CY3
+                    );
+
+                    // Add physics features from evaluation
+                    if let Some(ref physics) = individual.physics {
+                        features.update_physics(physics, individual.fitness);
+                    }
+
+                    // Update cluster state with full feature vector
+                    self.cluster_state.update_with_features(&features, individual.genome.polytope_id);
+                }
             }
         }
 
@@ -899,7 +917,7 @@ impl RealLandscapeSearcher {
         }
     }
 
-    fn update_hall_of_fame(&mut self, candidate: RealIndividual) {
+    fn update_hall_of_fame(&mut self, candidate: Individual) {
         // Check if this is unique enough
         let dominated = self.hall_of_fame.iter()
             .any(|existing| {
@@ -916,7 +934,7 @@ impl RealLandscapeSearcher {
     }
 
     fn landscape_collapse(&mut self) {
-        println!("🌠 LANDSCAPE COLLAPSE #{} - Exploring new region of moduli space!", self.collapse_count + 1);
+        println!("Stagnation detected, reinitializing population");
         self.collapse_count += 1;
         self.stagnation_count = 0;
 
@@ -950,8 +968,8 @@ impl RealLandscapeSearcher {
             let idx = elite_count + fresh_count + hof_inject + i;
             if idx < self.population.len() && i < self.cluster_state.hot_polytopes.len() {
                 let hot_id = self.cluster_state.hot_polytopes[i].id;
-                if hot_id < self.polytope_data.polytopes.len() {
-                    let mut individual = RealIndividual::random(&mut self.rng, &self.polytope_data);
+                if hot_id < self.polytope_data.len() {
+                    let mut individual = Individual::random(&mut self.rng, &self.polytope_data);
                     individual.genome.polytope_id = hot_id;
                     individual.physics = None;
                     self.population[idx] = individual;
@@ -967,7 +985,7 @@ impl RealLandscapeSearcher {
     }
 
     /// Create an individual using cluster-guided selection
-    fn create_cluster_guided_individual(&mut self) -> RealIndividual {
+    fn create_cluster_guided_individual(&mut self) -> Individual {
         let r = self.rng.gen::<f64>();
 
         // 70% exploit (use high-performing clusters), 20% explore, 10% hot polytopes
@@ -975,8 +993,8 @@ impl RealLandscapeSearcher {
             // Exploit: select from promising cluster
             if let Some(cluster_key) = self.cluster_state.select_cluster(&mut self.rng, 0.1) {
                 if let Some(polytope_id) = self.cluster_state.random_from_cluster(cluster_key, &mut self.rng) {
-                    if polytope_id < self.polytope_data.polytopes.len() {
-                        let mut individual = RealIndividual::random(&mut self.rng, &self.polytope_data);
+                    if polytope_id < self.polytope_data.len() {
+                        let mut individual = Individual::random(&mut self.rng, &self.polytope_data);
                         individual.genome.polytope_id = polytope_id;
                         return individual;
                     }
@@ -984,20 +1002,20 @@ impl RealLandscapeSearcher {
             }
         } else if r < 0.9 {
             // Explore: random selection
-            return RealIndividual::random(&mut self.rng, &self.polytope_data);
+            return Individual::random(&mut self.rng, &self.polytope_data);
         } else if !self.cluster_state.hot_polytopes.is_empty() {
             // Hot polytope selection
             let idx = self.rng.gen_range(0..self.cluster_state.hot_polytopes.len());
             let hot_id = self.cluster_state.hot_polytopes[idx].id;
-            if hot_id < self.polytope_data.polytopes.len() {
-                let mut individual = RealIndividual::random(&mut self.rng, &self.polytope_data);
+            if hot_id < self.polytope_data.len() {
+                let mut individual = Individual::random(&mut self.rng, &self.polytope_data);
                 individual.genome.polytope_id = hot_id;
                 return individual;
             }
         }
 
         // Fallback to random
-        RealIndividual::random(&mut self.rng, &self.polytope_data)
+        Individual::random(&mut self.rng, &self.polytope_data)
     }
 
     /// Save cluster state
@@ -1024,7 +1042,7 @@ impl RealLandscapeSearcher {
             // Crossover
             let mut child = if self.rng.gen::<f64>() < self.config.crossover_rate {
                 let child_genome = parent1.genome.crossover(&parent2.genome, &mut self.rng);
-                RealIndividual {
+                Individual {
                     genome: child_genome,
                     physics: None,
                     fitness: 0.0,
@@ -1069,7 +1087,7 @@ impl RealLandscapeSearcher {
     }
 
     /// Get current best individual
-    pub fn best(&self) -> Option<&RealIndividual> {
+    pub fn best(&self) -> Option<&Individual> {
         self.population.first()
     }
 
@@ -1084,8 +1102,8 @@ impl RealLandscapeSearcher {
         struct SavedState<'a> {
             generation: usize,
             total_evaluated: u64,
-            best_ever: &'a Option<RealIndividual>,
-            hall_of_fame: &'a Vec<RealIndividual>,
+            best_ever: &'a Option<Individual>,
+            hall_of_fame: &'a Vec<Individual>,
             collapse_count: usize,
         }
 
@@ -1165,7 +1183,7 @@ fn adaptive_mutation<R: Rng>(
 }
 
 /// Format a physics output for display
-pub fn format_real_fitness_line(individual: &RealIndividual) -> String {
+pub fn format_fitness_line(individual: &Individual) -> String {
     if let Some(ref physics) = individual.physics {
         if physics.success {
             format!(
@@ -1190,7 +1208,7 @@ pub fn format_real_fitness_line(individual: &RealIndividual) -> String {
 }
 
 /// Format detailed report
-pub fn format_real_fitness_report(individual: &RealIndividual) -> String {
+pub fn format_fitness_report(individual: &Individual) -> String {
     let mut report = String::new();
 
     report.push_str(&format!("Fitness: {:.6}\n", individual.fitness));
