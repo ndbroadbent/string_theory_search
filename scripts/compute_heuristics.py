@@ -70,6 +70,86 @@ def save_heuristics(heuristics: list[dict]):
     print(f"Saved {len(heuristics)} heuristics to {HEURISTICS_PATH}")
 
 
+def compute_outlier_scores(heuristics: list[dict]) -> list[dict]:
+    """
+    Compute population-level outlier scores for each polytope.
+    Must be run after all individual heuristics are computed.
+    """
+    if len(heuristics) < 3:
+        print("Need at least 3 polytopes to compute outlier scores")
+        return heuristics
+
+    print("Computing outlier scores...")
+
+    # Flatten nested structures and get numeric columns
+    def flatten(h: dict) -> dict:
+        flat = {}
+        for key, value in h.items():
+            if isinstance(value, dict):
+                for subkey, subval in value.items():
+                    if isinstance(subval, (int, float)):
+                        flat[f"{key}_{subkey}"] = subval
+            elif isinstance(value, list):
+                for i, v in enumerate(value):
+                    if isinstance(v, (int, float)):
+                        flat[f"{key}_{i}"] = v
+            elif isinstance(value, (int, float)):
+                flat[key] = value
+        return flat
+
+    # Build matrix of all numeric values
+    flat_data = [flatten(h) for h in heuristics]
+    all_keys = set()
+    for fd in flat_data:
+        all_keys.update(fd.keys())
+
+    # Remove non-metric keys
+    exclude_keys = {'polytope_id', 'outlier_score', 'outlier_max_zscore', 'outlier_max_dim'}
+    numeric_keys = sorted(all_keys - exclude_keys)
+
+    # Build numpy array
+    matrix = np.zeros((len(heuristics), len(numeric_keys)))
+    for i, fd in enumerate(flat_data):
+        for j, key in enumerate(numeric_keys):
+            val = fd.get(key, 0)
+            matrix[i, j] = val if not np.isnan(val) else 0
+
+    # Compute z-scores per column
+    means = np.nanmean(matrix, axis=0)
+    stds = np.nanstd(matrix, axis=0)
+    stds[stds == 0] = 1  # Avoid division by zero
+
+    z_scores = (matrix - means) / stds
+
+    # Compute outlier metrics for each polytope
+    for i, h in enumerate(heuristics):
+        abs_z = np.abs(z_scores[i])
+
+        # Mean absolute z-score (overall outlierness)
+        h['outlier_score'] = float(np.mean(abs_z))
+
+        # Max z-score and which dimension
+        max_idx = np.argmax(abs_z)
+        h['outlier_max_zscore'] = float(abs_z[max_idx])
+        h['outlier_max_dim'] = numeric_keys[max_idx]
+
+        # Count of dimensions where |z| > 2 (moderately unusual)
+        h['outlier_count_2sigma'] = int(np.sum(abs_z > 2))
+
+        # Count of dimensions where |z| > 3 (very unusual)
+        h['outlier_count_3sigma'] = int(np.sum(abs_z > 3))
+
+    # Report top outliers
+    sorted_by_score = sorted(heuristics, key=lambda x: -x['outlier_score'])
+    print(f"Top outliers:")
+    for h in sorted_by_score[:5]:
+        print(f"  Polytope {h['polytope_id']}: score={h['outlier_score']:.3f}, "
+              f"max_z={h['outlier_max_zscore']:.1f} ({h['outlier_max_dim']}), "
+              f"3σ dims={h['outlier_count_3sigma']}")
+
+    return heuristics
+
+
 def update_chromadb(heuristics: list[dict]):
     """Update ChromaDB with heuristics."""
     import chromadb
@@ -170,6 +250,7 @@ def compute_random(count: int):
             new_heuristics.append(asdict(h))
 
     all_heuristics = existing + new_heuristics
+    all_heuristics = compute_outlier_scores(all_heuristics)
     save_heuristics(all_heuristics)
     update_chromadb(all_heuristics)
 
@@ -196,6 +277,7 @@ def compute_specific(ids: list[int]):
             existing_by_id[idx] = asdict(h)
 
     all_heuristics = list(existing_by_id.values())
+    all_heuristics = compute_outlier_scores(all_heuristics)
     save_heuristics(all_heuristics)
     update_chromadb(all_heuristics)
 

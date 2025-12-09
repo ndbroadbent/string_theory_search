@@ -1031,3 +1031,68 @@ Physics often cares about:
 A polytope's geometry determines the Calabi-Yau topology, which determines the 4D physics. Geometric features we think are "random" might encode deep physics.
 
 **We don't know what we don't know.** Throw everything at it, let evolution sort it out.
+
+### Scaling Outlier Scores to 12M Polytopes
+
+The current outlier score computation loads all heuristics into memory and computes z-scores. This won't scale to 12M polytopes (~11GB just for the matrix).
+
+**Streaming Approach for Scale:**
+
+1. **Welford's Algorithm for Running Stats**
+   ```python
+   class RunningStats:
+       """Compute mean/variance in single pass, O(1) memory per dimension."""
+       def __init__(self, n_dims):
+           self.n = 0
+           self.mean = np.zeros(n_dims)
+           self.M2 = np.zeros(n_dims)  # Sum of squared differences
+
+       def update(self, x):
+           self.n += 1
+           delta = x - self.mean
+           self.mean += delta / self.n
+           delta2 = x - self.mean
+           self.M2 += delta * delta2
+
+       def variance(self):
+           return self.M2 / self.n if self.n > 1 else np.zeros_like(self.M2)
+
+       def std(self):
+           return np.sqrt(self.variance())
+   ```
+
+2. **Two-File Architecture**
+   - `population_stats.json` - Running mean/std/count per dimension
+   - `heuristics_sample.json` - Per-polytope heuristics (unchanged)
+
+3. **Workflow**
+   - **First pass**: Compute heuristics, update running stats
+   - **Second pass (optional)**: Compute outlier scores using stored stats
+   - **Incremental**: New polytopes update running stats, get outlier score immediately
+
+4. **Outlier Score Computation**
+   ```python
+   def compute_outlier_score(heuristics: dict, stats: RunningStats) -> dict:
+       """Compute outlier score for single polytope against population stats."""
+       flat = flatten_heuristics(heuristics)
+       z_scores = (flat - stats.mean) / (stats.std() + 1e-10)
+
+       heuristics['outlier_score'] = float(np.mean(np.abs(z_scores)))
+       heuristics['outlier_max_zscore'] = float(np.max(np.abs(z_scores)))
+       heuristics['outlier_max_dim'] = dimension_names[np.argmax(np.abs(z_scores))]
+       heuristics['outlier_count_3sigma'] = int(np.sum(np.abs(z_scores) > 3))
+
+       return heuristics
+   ```
+
+5. **Incremental Updates**
+   - When adding new polytopes: update stats, compute their outlier scores
+   - Existing polytope outlier scores become stale as population grows
+   - Can periodically recompute all outlier scores in batch (or accept slight staleness)
+
+**Implementation TODO:**
+- [ ] Create `PopulationStats` class with Welford's algorithm
+- [ ] Save/load stats to `population_stats.json`
+- [ ] Modify `compute_heuristics.py` to update stats incrementally
+- [ ] Add `--recompute-outliers` flag for batch recomputation
+- [ ] Consider: outlier scores relative to local cluster vs global population

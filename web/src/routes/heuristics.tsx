@@ -32,7 +32,6 @@ const DIMENSION_LABELS: Record<string, string> = {
   h11: 'h11',
   h21: 'h21',
   vertex_count: 'Vertex Count',
-  polytope_id: 'Polytope ID',
 
   // Circularity
   sphericity: 'Sphericity (π-ness)',
@@ -100,6 +99,12 @@ const DIMENSION_LABELS: Record<string, string> = {
   one_count: 'One Count',
   neg_one_count: 'Neg One Count',
   prime_count: 'Prime Count',
+
+  // Outlier scores (population-level)
+  outlier_score: 'Outlier Score',
+  outlier_max_zscore: 'Max Z-Score',
+  outlier_count_2sigma: '2σ Outlier Count',
+  outlier_count_3sigma: '3σ Outlier Count',
 };
 
 // Get label for a key, throw if missing
@@ -111,10 +116,14 @@ function getLabel(key: string): string {
   return label;
 }
 
+// Keys to exclude from dimension selectors (non-geometric identifiers)
+const EXCLUDE_DIMENSIONS = new Set(['polytope_id', 'outlier_max_dim']);
+
 // Extract numeric dimensions from a sample heuristics object
 function extractNumericDimensions(sample: PolytopeHeuristics): string[] {
   const dimensions: string[] = [];
   for (const [key, value] of Object.entries(sample)) {
+    if (EXCLUDE_DIMENSIONS.has(key)) continue;
     if (typeof value === 'number' && !Number.isNaN(value)) {
       getLabel(key); // Will throw if label missing
       dimensions.push(key);
