@@ -63,36 +63,64 @@ pub fn run_worker_loop(
         // Update heartbeat thread with current algorithm ID
         heartbeat.set_algorithm(algo_id);
 
-        // Get current trial count
-        let run_number = {
-            let conn = db_conn.lock().unwrap();
-            meta_ga::get_trial_count(&conn, algo_id).unwrap_or(0) + 1
-        };
-
-        print_algorithm_header(&algo, algo_id, run_number);
-
-        // Generate unique run ID and output directory
+        // Generate output directory for this algorithm
         let output_dir = format!("{}/algo_{}", config.paths.output_dir, algo_id);
         std::fs::create_dir_all(&output_dir).ok();
 
-        // Run the trial
-        let run_start = Instant::now();
-        let trial_result = run_trial(
-            &algo,
-            run_number,
-            polytope_path,
-            polytope_filter.clone(),
-            db_conn.clone(),
-            verbose,
-            &output_dir,
-            &interrupt_flag,
-        );
-        let run_elapsed = run_start.elapsed();
+        // Run ALL trials for this algorithm before releasing
+        loop {
+            if interrupt_flag.load(Ordering::Relaxed) {
+                println!("Interrupt flag set, stopping algorithm early");
+                break;
+            }
 
-        print_run_summary(&trial_result.run, run_number, run_elapsed.as_secs_f64());
+            // Get current trial count
+            let run_number = {
+                let conn = db_conn.lock().unwrap();
+                meta_ga::get_trial_count(&conn, algo_id).unwrap_or(0) + 1
+            };
 
-        // Record run result and check completion
-        record_run_and_check_completion(&db_conn, &trial_result, algo_id, &algo, my_pid);
+            // Check if algorithm is complete
+            if run_number > algo.runs_required {
+                println!("Algorithm {} completed all {} runs", algo_id, algo.runs_required);
+                let conn = db_conn.lock().unwrap();
+                if let Err(e) = db::complete_algorithm(&conn, algo_id, my_pid) {
+                    eprintln!("Failed to mark algorithm complete: {}", e);
+                }
+                break;
+            }
+
+            print_algorithm_header(&algo, algo_id, run_number);
+
+            // Run the trial
+            let run_start = Instant::now();
+            let trial_result = run_trial(
+                &algo,
+                run_number,
+                polytope_path,
+                polytope_filter.clone(),
+                db_conn.clone(),
+                verbose,
+                &output_dir,
+                &interrupt_flag,
+            );
+            let run_elapsed = run_start.elapsed();
+
+            print_run_summary(&trial_result.run, run_number, run_elapsed.as_secs_f64());
+
+            // Record run result
+            {
+                let conn = db_conn.lock().unwrap();
+                if let Err(e) = db::complete_run(&conn, &trial_result.run, trial_result.best_evaluation_id) {
+                    eprintln!("Failed to complete run: {}", e);
+                }
+            }
+
+            println!(
+                "Algorithm {} has {}/{} runs complete",
+                algo_id, run_number, algo.runs_required
+            );
+        }
 
         // Clear the algo ID for heartbeat
         heartbeat.clear_algorithm();
@@ -209,33 +237,3 @@ fn print_run_summary(run: &db::Run, run_number: i32, elapsed_secs: f64) {
     println!();
 }
 
-fn record_run_and_check_completion(
-    db_conn: &Arc<Mutex<Connection>>,
-    result: &crate::trial::TrialResult,
-    algo_id: i64,
-    algo: &db::MetaAlgorithm,
-    my_pid: i32,
-) {
-    let conn = db_conn.lock().unwrap();
-
-    if let Err(e) = db::complete_run(&conn, &result.run, result.best_evaluation_id) {
-        eprintln!("Failed to complete run: {}", e);
-    }
-
-    // Check if algorithm is complete
-    let trial_count = meta_ga::get_trial_count(&conn, algo_id).unwrap_or(0);
-    if trial_count >= algo.runs_required {
-        println!(
-            "Algorithm {} completed all {} trials",
-            algo_id, algo.runs_required
-        );
-        if let Err(e) = db::complete_algorithm(&conn, algo_id, my_pid) {
-            eprintln!("Failed to mark algorithm complete: {}", e);
-        }
-    } else {
-        println!(
-            "Algorithm {} has {}/{} trials complete",
-            algo_id, trial_count, algo.runs_required
-        );
-    }
-}
