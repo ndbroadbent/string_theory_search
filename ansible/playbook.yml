@@ -355,6 +355,7 @@
           User=root
           WorkingDirectory={{ project_dir }}
           Environment=VIRTUAL_ENV={{ project_dir }}/venv
+          Environment=PATH={{ project_dir }}/venv/bin:/usr/local/bin:/usr/bin:/bin
           ExecStart={{ project_dir }}/target/release/search -c config.server.toml
           Restart=on-failure
           RestartSec=30
