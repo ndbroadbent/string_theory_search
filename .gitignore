@@ -13,3 +13,5 @@ mise.local.toml
 config.toml
 config.server.toml
 
+test_chroma/
+chroma_heuristics/

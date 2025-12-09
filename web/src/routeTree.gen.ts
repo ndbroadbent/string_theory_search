@@ -9,9 +9,15 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as HeuristicsRouteImport } from './routes/heuristics'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as GenomePolytopeIdRouteImport } from './routes/genome.$polytopeId'
 
+const HeuristicsRoute = HeuristicsRouteImport.update({
+  id: '/heuristics',
+  path: '/heuristics',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -25,32 +31,43 @@ const GenomePolytopeIdRoute = GenomePolytopeIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/heuristics': typeof HeuristicsRoute
   '/genome/$polytopeId': typeof GenomePolytopeIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/heuristics': typeof HeuristicsRoute
   '/genome/$polytopeId': typeof GenomePolytopeIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/heuristics': typeof HeuristicsRoute
   '/genome/$polytopeId': typeof GenomePolytopeIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/genome/$polytopeId'
+  fullPaths: '/' | '/heuristics' | '/genome/$polytopeId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/genome/$polytopeId'
-  id: '__root__' | '/' | '/genome/$polytopeId'
+  to: '/' | '/heuristics' | '/genome/$polytopeId'
+  id: '__root__' | '/' | '/heuristics' | '/genome/$polytopeId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  HeuristicsRoute: typeof HeuristicsRoute
   GenomePolytopeIdRoute: typeof GenomePolytopeIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/heuristics': {
+      id: '/heuristics'
+      path: '/heuristics'
+      fullPath: '/heuristics'
+      preLoaderRoute: typeof HeuristicsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -70,6 +87,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  HeuristicsRoute: HeuristicsRoute,
   GenomePolytopeIdRoute: GenomePolytopeIdRoute,
 }
 export const routeTree = rootRouteImport
