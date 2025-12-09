@@ -371,9 +371,9 @@ export const getAllGenerations = createServerFn({ method: 'GET' }).handler(
           SUM(CASE WHEN a.status = 'completed' THEN 1 ELSE 0 END) as completed,
           SUM(CASE WHEN a.status = 'failed' THEN 1 ELSE 0 END) as failed,
           COUNT(*) as total,
-          MAX(r.best_fitness) as best_fitness
+          MAX(f.best_final_fitness) as best_fitness
         FROM meta_algorithms a
-        LEFT JOIN runs r ON r.algorithm_id = a.id
+        LEFT JOIN meta_fitness f ON f.algorithm_id = a.id
         GROUP BY a.meta_generation
         ORDER BY a.meta_generation DESC
         LIMIT 10
