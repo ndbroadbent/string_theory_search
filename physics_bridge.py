@@ -51,6 +51,10 @@ class CYToolsBridge:
     def __init__(self):
         self._cache = {}
 
+    def clear_cache(self):
+        """Clear all cached polytope analyses to free memory."""
+        self._cache.clear()
+
     def analyze_polytope(self, vertices: list[list[int]]) -> dict:
         """
         Full polytope analysis using CYTools.
@@ -354,6 +358,18 @@ class PhysicsBridge:
         self.gauge = GaugeCouplingComputer()
         self.moduli = ModuliStabilizer()
         self._kahler_cache = {}  # Cache: (polytope_id, seed_hash) -> kahler point
+
+    def clear_cache(self):
+        """
+        Clear all caches to free memory.
+
+        Should be called at the end of each run to prevent memory buildup.
+        """
+        self.cytools.clear_cache()
+        self._kahler_cache.clear()
+        # Force garbage collection to actually free memory
+        import gc
+        gc.collect()
 
     def _find_kahler_in_cone(self, cy_data: dict, genome: dict) -> np.ndarray:
         """

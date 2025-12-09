@@ -104,7 +104,7 @@ function RunDetail() {
             Run #{run.run_number}
           </h1>
           <span className="text-green-400 font-mono">
-            Fitness: {run.final_fitness.toFixed(6)}
+            Fitness: {run.final_fitness?.toFixed(6) ?? '-'}
           </span>
         </div>
 
@@ -158,19 +158,19 @@ function RunDetail() {
             <div className="bg-slate-800 rounded-lg p-6">
               <h2 className="text-lg font-semibold mb-4">Run Performance</h2>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                <MetricBox label="Initial Fitness" value={run.initial_fitness.toFixed(4)} />
-                <MetricBox label="Final Fitness" value={run.final_fitness.toFixed(4)} highlight />
+                <MetricBox label="Initial Fitness" value={run.initial_fitness?.toFixed(5) ?? '-'} />
+                <MetricBox label="Final Fitness" value={run.final_fitness?.toFixed(5) ?? '-'} highlight />
                 <MetricBox
                   label="Improvement"
-                  value={`${run.fitness_improvement > 0 ? '+' : ''}${run.fitness_improvement.toFixed(4)}`}
-                  color={run.fitness_improvement > 0 ? 'green' : 'red'}
+                  value={run.fitness_improvement != null ? `${run.fitness_improvement > 0 ? '+' : ''}${run.fitness_improvement.toFixed(5)}` : '-'}
+                  color={(run.fitness_improvement ?? 0) > 0 ? 'green' : 'red'}
                 />
-                <MetricBox label="Improvement Rate" value={run.improvement_rate.toExponential(2)} />
-                <MetricBox label="Fitness AUC" value={run.fitness_auc.toFixed(4)} />
-                <MetricBox label="Generations" value={run.generations_run.toString()} />
-                <MetricBox label="CC Log Error" value={run.best_cc_log_error.toFixed(2)} suffix="log10" />
-                <MetricBox label="Physics Success" value={`${(run.physics_success_rate * 100).toFixed(1)}%`} />
-                <MetricBox label="Unique Polytopes" value={run.unique_polytopes_tried.toString()} />
+                <MetricBox label="Improvement Rate" value={run.improvement_rate?.toExponential(2) ?? '-'} />
+                <MetricBox label="Fitness AUC" value={run.fitness_auc?.toFixed(5) ?? '-'} />
+                <MetricBox label="Generations" value={run.generations_run?.toString() ?? '-'} />
+                <MetricBox label="CC Log Error" value={run.best_cc_log_error?.toFixed(2) ?? '-'} suffix="log10" />
+                <MetricBox label="Physics Success" value={run.physics_success_rate != null ? `${(run.physics_success_rate * 100).toFixed(1)}%` : '-'} />
+                <MetricBox label="Unique Polytopes" value={run.unique_polytopes_tried?.toString() ?? '-'} />
               </div>
             </div>
           </div>
@@ -224,7 +224,7 @@ function RunDetail() {
                       </p>
                       <div className="bg-slate-900/50 rounded p-2 max-h-24 overflow-y-auto">
                         <p className="text-gray-300 font-mono text-[10px] break-all">
-                          [{evaluation.kahler_moduli.map((v) => v.toFixed(3)).join(', ')}]
+                          [{evaluation.kahler_moduli.map((v) => v?.toFixed(3) ?? 'null').join(', ')}]
                         </p>
                       </div>
                     </div>
@@ -237,7 +237,7 @@ function RunDetail() {
                       </p>
                       <div className="bg-slate-900/50 rounded p-2 max-h-24 overflow-y-auto">
                         <p className="text-gray-300 font-mono text-[10px] break-all">
-                          [{evaluation.complex_moduli.map((v) => v.toFixed(3)).join(', ')}]
+                          [{evaluation.complex_moduli.map((v) => v?.toFixed(3) ?? 'null').join(', ')}]
                         </p>
                       </div>
                     </div>
@@ -312,7 +312,7 @@ function RunDetail() {
                   >
                     <div className="flex justify-between items-center">
                       <span className="font-mono">Run #{r.run_number}</span>
-                      <span className="text-xs">{r.final_fitness.toFixed(4)}</span>
+                      <span className="text-xs">{r.final_fitness?.toFixed(5) ?? '-'}</span>
                     </div>
                   </Link>
                 ))}

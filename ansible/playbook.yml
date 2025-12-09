@@ -70,13 +70,29 @@
     # ============================================
     # Project Setup
     # ============================================
-    - name: Clone/update string_theory repository
-      git:
-        repo: "{{ repo_url }}"
+    - name: Sync project files to server
+      synchronize:
+        src: "{{ playbook_dir }}/../"
         dest: "{{ project_dir }}"
-        version: main
-        force: yes
-      register: git_clone
+        delete: yes
+        rsync_opts:
+          - "--exclude=.git"
+          - "--exclude=.venv"
+          - "--exclude=venv"
+          - "--exclude=node_modules"
+          - "--exclude=target"
+          - "--exclude=data"
+          - "--exclude=results"
+          - "--exclude=logs"
+          - "--exclude=.output"
+          - "--exclude=*.db"
+          - "--exclude=*.db-journal"
+          - "--exclude=config.server.toml"
+          - "--exclude=__pycache__"
+          - "--exclude=.pytest_cache"
+          - "--exclude=chroma_heuristics"
+          - "--exclude=test_chroma"
+      register: project_sync
 
     - name: Create data directory (NVMe)
       file:

@@ -9,6 +9,7 @@ use rusqlite::Connection;
 
 use string_theory::db;
 use string_theory::meta_ga;
+use string_theory::physics;
 
 use crate::config::{Config, DEFAULT_ALGORITHMS_PER_GENERATION};
 use crate::heartbeat::HeartbeatThread;
@@ -115,6 +116,9 @@ pub fn run_worker_loop(
                     eprintln!("Failed to complete run: {}", e);
                 }
             }
+
+            // Clear physics caches to prevent memory buildup
+            physics::clear_physics_cache();
 
             println!(
                 "Algorithm {} has {}/{} runs complete",
@@ -230,8 +234,8 @@ fn print_algorithm_header(algo: &db::MetaAlgorithm, algo_id: i64, run_number: i3
 fn print_run_summary(run: &db::Run, run_number: i32, elapsed_secs: f64) {
     println!();
     println!("Trial {} completed in {:.1}s", run_number, elapsed_secs);
-    println!("  Initial fitness: {:.4}", run.initial_fitness);
-    println!("  Final fitness: {:.4}", run.final_fitness);
+    println!("  Initial fitness: {:.5}", run.initial_fitness);
+    println!("  Final fitness: {:.5}", run.final_fitness);
     println!("  Improvement rate: {:.6}", run.improvement_rate);
     println!("  CC log error: {:.1}", run.best_cc_log_error);
     println!();

@@ -106,12 +106,12 @@ function PerformanceCard({ algorithm }: { algorithm: MetaAlgorithmWithFitness })
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <MetricBox
           label="Meta-Fitness"
-          value={algorithm.meta_fitness?.toFixed(4) ?? '-'}
+          value={algorithm.meta_fitness?.toFixed(5) ?? '-'}
           highlight
         />
         <MetricBox
           label="Best Final Fitness"
-          value={algorithm.best_final_fitness?.toFixed(4) ?? '-'}
+          value={algorithm.best_final_fitness?.toFixed(5) ?? '-'}
         />
         <MetricBox
           label="Best CC Error"
@@ -128,7 +128,7 @@ function PerformanceCard({ algorithm }: { algorithm: MetaAlgorithmWithFitness })
         />
         <MetricBox
           label="Mean Fitness AUC"
-          value={algorithm.mean_fitness_auc?.toFixed(4) ?? '-'}
+          value={algorithm.mean_fitness_auc?.toFixed(5) ?? '-'}
         />
         <MetricBox
           label="Mean CC Error"
@@ -223,10 +223,10 @@ function ParametersCard({ algorithm, generation }: { algorithm: MetaAlgorithmWit
   );
 }
 
-function FeatureWeightsCard({ weights }: { weights: Record<string, number> }) {
-  const entries = Object.entries(weights).sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]));
+function FeatureWeightsCard({ weights }: { weights: Record<string, number> | null }) {
+  const entries = weights ? Object.entries(weights).sort((a, b) => Math.abs(b[1]) - Math.abs(a[1])) : [];
 
-  if (entries.length === 0) {
+  if (!weights || entries.length === 0) {
     return (
       <div className="bg-slate-800 rounded-lg p-6">
         <h2 className="text-lg font-semibold mb-4">Feature Weights</h2>
@@ -312,15 +312,15 @@ function RunsTable({ runs, generation, algorithmId }: { runs: MetaRun[]; generat
                 </Link>
               </td>
               <td className="py-2 font-mono">{run.generations_run}</td>
-              <td className="py-2 font-mono">{run.initial_fitness.toFixed(4)}</td>
-              <td className="py-2 font-mono">{run.final_fitness.toFixed(4)}</td>
+              <td className="py-2 font-mono">{run.initial_fitness?.toFixed(5) ?? '-'}</td>
+              <td className="py-2 font-mono">{run.final_fitness?.toFixed(5) ?? '-'}</td>
               <td className="py-2 font-mono">
-                <span className={run.fitness_improvement > 0 ? 'text-emerald-400' : 'text-red-400'}>
-                  {run.fitness_improvement > 0 ? '+' : ''}{run.fitness_improvement.toFixed(4)}
+                <span className={(run.fitness_improvement ?? 0) > 0 ? 'text-emerald-400' : 'text-red-400'}>
+                  {(run.fitness_improvement ?? 0) > 0 ? '+' : ''}{run.fitness_improvement?.toFixed(5) ?? '-'}
                 </span>
               </td>
-              <td className="py-2 font-mono">{run.best_cc_log_error.toFixed(2)}</td>
-              <td className="py-2 font-mono">{(run.physics_success_rate * 100).toFixed(1)}%</td>
+              <td className="py-2 font-mono">{run.best_cc_log_error?.toFixed(2) ?? '-'}</td>
+              <td className="py-2 font-mono">{run.physics_success_rate != null ? (run.physics_success_rate * 100).toFixed(1) + '%' : '-'}</td>
             </tr>
           ))}
         </tbody>

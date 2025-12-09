@@ -508,4 +508,21 @@ pub fn is_physics_available() -> bool {
     PHYSICS_BRIDGE.get().is_some()
 }
 
+/// Clear physics bridge caches to free memory
+///
+/// Should be called at the end of each run to prevent memory buildup.
+pub fn clear_physics_cache() {
+    if let Some(bridge) = PHYSICS_BRIDGE.get() {
+        let result = Python::with_gil(|py| -> PyResult<()> {
+            let bridge = bridge.bind(py);
+            bridge.call_method0("clear_cache")?;
+            Ok(())
+        });
+
+        if let Err(e) = result {
+            eprintln!("Warning: Failed to clear physics cache: {}", e);
+        }
+    }
+}
+
 // Tests require polytopes_three_gen.jsonl - run manually

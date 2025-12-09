@@ -120,7 +120,7 @@ pub fn run_trial(
         fitness_history.push(current_best);
 
         eprintln!(
-            "{:.1}s | ok:{} fail:{} | best:{:.4}",
+            "{:.1}s | ok:{} fail:{} | best:{:.5}",
             gen_elapsed, stats.physics_successes, stats.physics_failures, current_best
         );
 

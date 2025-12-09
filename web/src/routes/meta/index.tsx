@@ -175,10 +175,10 @@ function AlgorithmRow({ algorithm, generation }: { algorithm: MetaAlgorithmWithF
         {algorithm.run_count}/{algorithm.runs_required}
       </td>
       <td className="px-4 py-3 font-mono">
-        {algorithm.meta_fitness?.toFixed(4) ?? '-'}
+        {algorithm.meta_fitness?.toFixed(5) ?? '-'}
       </td>
       <td className="px-4 py-3 font-mono">
-        {algorithm.best_final_fitness?.toFixed(4) ?? '-'}
+        {algorithm.best_final_fitness?.toFixed(5) ?? '-'}
       </td>
       <td className="px-4 py-3 font-mono">
         {algorithm.best_cc_log_error?.toFixed(2) ?? '-'}
