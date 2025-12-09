@@ -93,9 +93,6 @@ class CYToolsBridge:
         # Kähler cone (valid range for Kähler moduli)
         kahler_cone = cy.toric_kahler_cone()
 
-        # Get a valid point in Kähler cone for initialization
-        kahler_cone_tip = kahler_cone.tip_of_stretched_cone(1.0)
-
         # Store CY object for later use
         result = {
             "success": True,
@@ -106,7 +103,6 @@ class CYToolsBridge:
             "intersection_numbers": intersection_nums.tolist() if hasattr(intersection_nums, 'tolist') else intersection_nums,
             "c2": c2.tolist() if hasattr(c2, 'tolist') else list(c2),
             "is_favorable": h11 == len(p.points()) - 5,  # Favorable = simpler physics
-            "kahler_cone_tip": kahler_cone_tip.tolist() if hasattr(kahler_cone_tip, 'tolist') else list(kahler_cone_tip),
             "_cy_object": cy,  # Keep for volume computations
         }
 
@@ -129,12 +125,12 @@ class CYToolsBridge:
 
         cy = cy_data["_cy_object"]
 
-        # Resize kahler_moduli to match CY's actual h11 (can differ from polytope file)
-        h11 = cy.h11()
-        if len(kahler_moduli) > h11:
-            kahler_moduli = kahler_moduli[:h11]
-        elif len(kahler_moduli) < h11:
-            kahler_moduli = np.concatenate([kahler_moduli, np.ones(h11 - len(kahler_moduli))])
+        # Kähler moduli must match the Kähler cone ambient dimension, NOT cy.h11()
+        cone_dim = cy.toric_kahler_cone().ambient_dim()
+        if len(kahler_moduli) > cone_dim:
+            kahler_moduli = kahler_moduli[:cone_dim]
+        elif len(kahler_moduli) < cone_dim:
+            kahler_moduli = np.concatenate([kahler_moduli, np.ones(cone_dim - len(kahler_moduli))])
 
         # CY volume: V = (1/6) κ_ijk t^i t^j t^k
         cy_volume = cy.compute_cy_volume(kahler_moduli)
@@ -357,6 +353,55 @@ class PhysicsBridge:
         self.cytools = CYToolsBridge()
         self.gauge = GaugeCouplingComputer()
         self.moduli = ModuliStabilizer()
+        self._kahler_cache = {}  # Cache: (polytope_id, seed_hash) -> kahler point
+
+    def _find_kahler_in_cone(self, cy_data: dict, genome: dict) -> np.ndarray:
+        """
+        Find a valid Kähler point inside the cone.
+
+        Method: trace from cone tip along direction from genome.
+        Find where ray exits cone, return midpoint of (tip, exit).
+        Small direction changes = small output changes (smooth gradients).
+        """
+        cy = cy_data["_cy_object"]
+        cone = cy.toric_kahler_cone()
+        dim = cone.ambient_dim()
+
+        # Get direction from genome (normalize to unit vector)
+        genome_kahler = np.array(genome.get("kahler_moduli", [1.0] * dim))
+        if len(genome_kahler) < dim:
+            genome_kahler = np.concatenate([genome_kahler, np.zeros(dim - len(genome_kahler))])
+        direction = genome_kahler[:dim]
+
+        # Normalize to unit vector (handle zero vector)
+        norm = np.linalg.norm(direction)
+        if norm < 1e-10:
+            direction = np.ones(dim) / np.sqrt(dim)
+        else:
+            direction = direction / norm
+
+        # Start from tip of cone (guaranteed inside)
+        tip = cone.tip_of_stretched_cone(1.0)
+
+        # Binary search to find where ray exits cone
+        # Ray: point(t) = tip + t * direction
+        t_min, t_max = 0.0, 1.0
+
+        # First, find an upper bound where we're outside
+        while cone.contains(tip + t_max * direction) and t_max < 1000:
+            t_max *= 2
+
+        # Binary search for exit point
+        for _ in range(50):  # ~15 decimal digits precision
+            t_mid = (t_min + t_max) / 2
+            if cone.contains(tip + t_mid * direction):
+                t_min = t_mid
+            else:
+                t_max = t_mid
+
+        # Use point at 50% of the way to boundary (safely inside)
+        t_final = t_min * 0.5
+        return tip + t_final * direction
 
     def compute_physics(self, genome: dict) -> dict:
         """
@@ -389,18 +434,8 @@ class PhysicsBridge:
             return cy_data
 
         # 2. Get Kähler moduli (must be in Kähler cone)
-        # Use cone tip as base, then scale by genome's moduli
-        h11 = cy_data["h11"]
-        cone_tip = np.array(cy_data.get("kahler_cone_tip", [1.0] * h11))
-
-        # Genome provides scaling factors around the cone tip
-        genome_kahler = np.array(genome.get("kahler_moduli", [1.0] * h11))
-        if len(genome_kahler) < h11:
-            genome_kahler = np.concatenate([genome_kahler, np.ones(h11 - len(genome_kahler))])
-        genome_kahler = genome_kahler[:h11]
-
-        # Scale cone tip by genome values (keeps us in cone direction)
-        kahler = cone_tip * np.maximum(genome_kahler, 0.1)
+        # Use genome as seed, walk trajectory until inside cone
+        kahler = self._find_kahler_in_cone(cy_data, genome)
 
         # 3. Compute volumes
         vol_data = self.cytools.compute_volumes(cy_data, kahler)
@@ -431,6 +466,7 @@ class PhysicsBridge:
         )
 
         # 5. Compute flux superpotential and potential
+        h11 = cy_data["h11"]
         h21 = cy_data["h21"]
         n_periods = 2 * (h21 + 1)
 
