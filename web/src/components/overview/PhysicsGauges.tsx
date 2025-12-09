@@ -14,23 +14,40 @@ interface GaugeProps {
   computed: number;
   target: number;
   format?: 'scientific' | 'decimal';
+  showLogDiff?: boolean; // Show orders of magnitude difference instead of percentage
 }
 
-function Gauge({ label, computed, target, format = 'scientific' }: GaugeProps) {
-  // Calculate how close we are (log scale for very different magnitudes)
-  const logComputed = Math.log10(Math.abs(computed) + 1e-50);
-  const logTarget = Math.log10(Math.abs(target) + 1e-50);
-  const logDiff = Math.abs(logComputed - logTarget);
+function formatSuperscript(v: number, format: 'scientific' | 'decimal'): React.ReactNode {
+  if (format === 'decimal') return v.toFixed(4);
 
-  // Convert to percentage (0 = way off, 100 = exact match)
-  // Use exp decay: at 0 orders of magnitude diff = 100%, at 3 orders = ~5%
-  const accuracy = Math.exp(-logDiff) * 100;
-  const percentage = Math.min(100, Math.max(0, accuracy));
+  const exp = v.toExponential(3);
+  const match = exp.match(/^(-?\d+\.?\d*)e([+-]?\d+)$/);
+  if (!match) return exp;
 
-  const formatValue = (v: number) => {
-    if (format === 'decimal') return v.toFixed(4);
-    return v.toExponential(3);
+  const [, mantissa, exponent] = match;
+  const superscriptDigits: Record<string, string> = {
+    '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴',
+    '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹',
+    '-': '⁻', '+': '',
   };
+  const supExp = exponent.split('').map(c => superscriptDigits[c] || c).join('');
+
+  return <>{mantissa} × 10{supExp}</>;
+}
+
+function Gauge({ label, computed, target, format = 'scientific', showLogDiff }: GaugeProps) {
+  // Calculate how close we are using log scale
+  const logComputed = Math.log10(Math.abs(computed) + 1e-200);
+  const logTarget = Math.log10(Math.abs(target) + 1e-200);
+
+  // Log-based percentage: compare exponents directly
+  // e.g., 10^10 vs 10^100 → 10/100 = 10%
+  // For negative exponents: 10^-10 vs 10^-100 → 10/100 = 10%
+  const absLogComputed = Math.abs(logComputed);
+  const absLogTarget = Math.abs(logTarget);
+  const percentage = absLogTarget > 0
+    ? Math.min(100, (Math.min(absLogComputed, absLogTarget) / Math.max(absLogComputed, absLogTarget)) * 100)
+    : (absLogComputed < 1 ? 100 : 0);
 
   // Color based on accuracy
   const getColor = () => {
@@ -56,9 +73,9 @@ function Gauge({ label, computed, target, format = 'scientific' }: GaugeProps) {
       </div>
       <div className="flex justify-between text-xs">
         <span className="text-cyan-400">
-          Computed: {Number.isFinite(computed) ? formatValue(computed) : 'N/A'}
+          Computed: {Number.isFinite(computed) ? formatSuperscript(computed, format) : 'N/A'}
         </span>
-        <span className="text-gray-500">Target: {formatValue(target)}</span>
+        <span className="text-gray-500">Target: {formatSuperscript(target, format)}</span>
       </div>
     </div>
   );
@@ -93,6 +110,12 @@ export function PhysicsGauges({ physics }: PhysicsGaugesProps) {
         computed={physics.n_generations}
         target={TARGET_PHYSICS.n_generations}
         format="decimal"
+      />
+
+      <Gauge
+        label="Cosmological Constant (Λ)"
+        computed={physics.cosmological_constant}
+        target={TARGET_PHYSICS.cosmological_constant}
       />
 
       {/* Internal parameters (no target) */}

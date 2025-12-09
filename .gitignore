@@ -16,3 +16,5 @@ config.server.toml
 test_chroma/
 chroma_heuristics/
 data/*.db
+data/*.db-shm
+data/*.db-wal

@@ -1,134 +1,146 @@
 # String Theory Landscape Explorer
 
-A genetic algorithm to search the string theory landscape for Calabi-Yau compactifications that reproduce Standard Model physics.
+A meta-genetic algorithm to search the string theory landscape for Calabi-Yau compactifications that reproduce Standard Model physics.
 
 ## What This Does
 
-Searches through ~473 million 4D reflexive polytopes (Kreuzer-Skarke database) to find Calabi-Yau manifolds whose compactification could give:
+Searches through 12.2 million three-generation polytopes from the Kreuzer-Skarke database to find Calabi-Yau manifolds whose compactification gives:
 - **3 generations** of fermions (quarks + leptons)
 - **SU(3) × SU(2) × U(1)** gauge group
-- Correct particle masses and mixing angles
+- Correct gauge couplings (α_em, α_s, sin²θ_W)
+- Small cosmological constant (Λ ≈ 10⁻¹²² Planck units)
+
+## Key Innovation: Meta-GA
+
+Instead of tuning hyperparameters manually, this project uses a **meta-genetic algorithm** that evolves search strategies:
+
+```
+Meta-GA evolves:
+├── 50+ feature weights (which polytope properties matter?)
+├── GA parameters (mutation rate, population size, etc.)
+├── Search strategy (similarity radius, path interpolation)
+└── Polytope switching behavior
+```
+
+Multiple workers run in parallel, each trying different evolved strategies. The strategies that find good physics faster get selected for the next meta-generation.
 
 ## Quick Start
 
 ```bash
-# 1. Download polytope data (~15.8 GB)
-python download_all_polytopes.py --output-dir polytope_data
+# 1. Install dependencies
+uv venv --python /opt/homebrew/opt/python@3.11/bin/python3.11 .venv
+uv sync
+uv pip install ../cytools_source ../cymyc_source
 
-# 2. Filter to 3-generation candidates
-python filter_three_gen.py --parquet-dir polytope_data --output polytopes_three_gen.json
+# 2. Build
+PYO3_PYTHON=/opt/homebrew/opt/python@3.11/bin/python3.11 cargo build --release --bin search
 
-# 3. Build and run the GA
-cargo build --release --bin real_physics
-./target/release/real_physics
+# 3. Run a worker
+VIRTUAL_ENV=$(pwd)/.venv ./target/release/search
 ```
 
-## Physics Background
-
-### The 3-Generation Constraint
-
-The number of fermion generations is determined by the Euler characteristic:
+For multiple parallel workers:
+```bash
+# Terminal 1, 2, 3, ...
+VIRTUAL_ENV=$(pwd)/.venv ./target/release/search
 ```
-χ = 2(h11 - h21)
-```
-
-For 3 generations: **|h11 - h21| = 3**
-
-This constraint alone filters 473M polytopes down to a much smaller candidate set.
-
-### Hodge Numbers
-
-- **h11**: Kähler moduli (shape deformations)
-- **h21**: Complex structure moduli
-
-Small Hodge numbers are preferred for realistic model building. Known working examples:
-- (h11, h21) = (1, 4) → 3 generations, can break to Standard Model
-- (h11, h21) = (1, 1) → Minimal case
 
 ## Architecture
 
 ```
-┌──────────────────┐     ┌──────────────────┐     ┌──────────────────┐
-│  Kreuzer-Skarke  │────►│  3-Gen Filter    │────►│  Genetic         │
-│  Database        │     │  |h11-h21| = 3   │     │  Algorithm       │
-│  (473M polytopes)│     │                  │     │                  │
-└──────────────────┘     └──────────────────┘     └────────┬─────────┘
-                                                           │
-                         ┌──────────────────┐              │
-                         │  PALP            │◄─────────────┘
-                         │  (Physics Eval)  │
-                         └──────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│                    META-GA (evolves strategies)                 │
+├─────────────────────────────────────────────────────────────────┤
+│  Generation 0: 16 random algorithms                             │
+│  Each algorithm runs 10 trials                                  │
+│  Top performers reproduce → Generation 1                        │
+│  Repeat...                                                      │
+├─────────────────────────────────────────────────────────────────┤
+│                    INNER GA (per trial)                         │
+├─────────────────────────────────────────────────────────────────┤
+│  Population of compactifications on polytopes                   │
+│  Evolve: Kähler moduli, complex moduli, fluxes, g_s             │
+│  Fitness = match to observed physics                            │
+├─────────────────────────────────────────────────────────────────┤
+│                    PHYSICS (per evaluation)                     │
+├─────────────────────────────────────────────────────────────────┤
+│  CYTools → triangulation, intersection numbers                  │
+│  cymyc → numerical CY metrics                                   │
+│  KKLT → moduli stabilization, cosmological constant             │
+└─────────────────────────────────────────────────────────────────┘
 ```
-
-### Adaptive Selection (Planned)
-
-Instead of random polytope selection, the GA learns which regions produce good results:
-
-1. **Cluster polytopes** by (h11, h21, vertex structure)
-2. **Track fitness** per cluster
-3. **Weight selection** toward promising clusters
-4. **Learn mutation patterns** that improve fitness
-
-See [NOTES.md](NOTES.md) for detailed design.
 
 ## Files
 
-| File | Description |
-|------|-------------|
-| `download_all_polytopes.py` | Download parquet files from HuggingFace |
-| `filter_three_gen.py` | Filter to 3-generation candidates |
-| `src/bin/real_physics.rs` | Main GA binary |
-| `src/real_genetic.rs` | Genetic algorithm implementation |
-| `src/physics.rs` | PALP interface for physics calculations |
-| `ansible/` | Server deployment automation |
-| `NOTES.md` | Technical design notes |
+```
+src/
+├── lib.rs              # Module exports
+├── constants.rs        # Target physics values
+├── physics.rs          # PyO3 bridge to CYTools/cymyc
+├── db.rs               # SQLite persistence layer
+├── meta_ga.rs          # Meta-evolution functions
+└── searcher.rs         # Inner GA implementation
+
+src/bin/search/
+├── main.rs             # Worker entry point
+├── config.rs           # CLI args and config parsing
+├── heartbeat.rs        # Background heartbeat thread
+├── trial.rs            # Trial execution
+└── worker.rs           # Main worker loop
+
+migrations/
+├── 001_initial_schema.sql
+└── 002_meta_ga_schema.sql
+```
+
+## Configuration
+
+Create `config.toml`:
+```toml
+[paths]
+polytopes = "polytopes_three_gen.jsonl"
+output_dir = "results"
+database = "data/string_theory.db"
+
+[meta_ga]
+algorithms_per_generation = 16
+trials_required = 10
+```
 
 ## Requirements
 
-- Rust 1.70+
-- Python 3.10+
-- PALP (Polytope Analysis Lattice Package)
-- ~20GB disk space for polytope data
+- **Rust** 1.70+
+- **Python** 3.11 (Homebrew recommended for PyO3)
+- **CYTools** - polytope analysis
+- **cymyc** - numerical CY metrics
+- **~4GB** polytope data
 
-### Python Dependencies
+## Documentation
 
-```bash
-pip install numpy pyarrow requests
-```
+- **[DOCS.md](DOCS.md)** - Comprehensive technical documentation
+- **[NOTES.md](NOTES.md)** - Physics background and design notes
+- **[CLAUDE.md](CLAUDE.md)** - Development instructions
 
-### PALP Installation
+## Physics Background
 
-```bash
-git clone https://gitlab.com/stringstuwien/PALP.git
-cd PALP
-make
-```
+The project targets these Standard Model values:
 
-## Server Deployment
+| Constant | Symbol | Value |
+|----------|--------|-------|
+| Fine structure | α_em | 7.297 × 10⁻³ |
+| Strong coupling | α_s | 0.118 |
+| Weinberg angle | sin²θ_W | 0.231 |
+| Generations | N_gen | 3 |
+| Cosmological constant | Λ | 2.888 × 10⁻¹²² |
 
-Uses Ansible for automated setup:
-
-```bash
-cd ansible
-ansible-playbook -i inventory.yml playbook.yml
-```
-
-This sets up:
-- Rust toolchain
-- Python venv with dependencies
-- PALP from source
-- Polytope data download (background)
-
-## Data Sources
-
-- **Polytopes**: [calabi-yau-data/polytopes-4d](https://huggingface.co/datasets/calabi-yau-data/polytopes-4d) on HuggingFace
-- **PALP**: [GitLab](https://gitlab.com/stringstuwien/PALP)
+The three-generation constraint (|h11 - h21| = 3) filters 473M polytopes down to 12.2M candidates.
 
 ## References
 
-- Kreuzer & Skarke, "Complete classification of reflexive polyhedra in four dimensions" [arXiv:hep-th/0002240](https://arxiv.org/abs/hep-th/0002240)
-- Braun et al., "A three-generation Calabi-Yau manifold with small Hodge numbers" [arXiv:0909.3947](https://arxiv.org/abs/0909.3947)
-- He, "The Calabi-Yau Landscape" [arXiv:1812.02893](https://arxiv.org/abs/1812.02893)
+- [DOCS.md](DOCS.md) for detailed architecture
+- CYTools: https://github.com/LiamMcAllisterGroup/cytools
+- cymyc: https://github.com/Justin-Tan/cymyc
+- Kreuzer-Skarke: https://huggingface.co/datasets/calabi-yau-data/polytopes-4d
 
 ## License
 

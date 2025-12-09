@@ -2,7 +2,9 @@
 
 ## Overview
 
-This project uses a genetic algorithm to search the string theory landscape for Calabi-Yau compactifications that could reproduce Standard Model physics. The search space is the Kreuzer-Skarke database of ~473 million 4D reflexive polytopes.
+This project uses a **meta-genetic algorithm** to search the string theory landscape for Calabi-Yau compactifications that could reproduce Standard Model physics. The search space is the Kreuzer-Skarke database filtered to 12.2 million three-generation candidates.
+
+**Key insight**: Instead of manually tuning GA hyperparameters, we evolve the search strategies themselves. The meta-GA discovers which geometric features predict good physics, optimal mutation rates, and effective polytope selection strategies.
 
 ## Physics Background
 
@@ -93,16 +95,17 @@ Classic tool for toric geometry computations.
 - Outputs: `polytopes_three_gen.json`
 - Expected reduction: 473M → maybe 1-10M polytopes
 
-### 3. GA Search (real_physics binary)
+### 3. Meta-GA Search (search binary)
 - Loads filtered polytopes
-- Runs genetic algorithm with CYTools/cymyc physics evaluation
-- Persists state for resume capability
+- Runs as distributed worker in meta-GA system
+- Acquires algorithm from database, runs trials, records results
+- Multiple workers coordinate via SQLite WAL mode
 
 ## Physics Computations (physics_bridge.py)
 
 ### Architecture
 ```
-real_physics.rs (Rust binary)
+search binary (Rust, src/bin/search/)
        │
        ▼
 physics.rs (PyO3 bridge)
@@ -337,9 +340,12 @@ cat cluster_state.json | jq '.clusters | length'
 | `download_all_polytopes.py` | Download parquet files from HuggingFace |
 | `filter_three_gen.py` | Filter to 3-generation candidates |
 | `physics_bridge.py` | CYTools + cymyc physics computations |
-| `src/bin/real_physics.rs` | Main GA binary |
-| `src/real_genetic.rs` | GA implementation with clustering |
+| `src/bin/search/` | Meta-GA worker binary (multi-file) |
+| `src/searcher.rs` | Inner GA implementation |
+| `src/meta_ga.rs` | Meta-evolution functions |
+| `src/db.rs` | SQLite persistence layer |
 | `src/physics.rs` | Rust-Python bridge via PyO3 |
+| `migrations/*.sql` | Database schema |
 | `ansible/playbook.yml` | Server setup automation |
 
 ## References
@@ -363,44 +369,37 @@ cat cluster_state.json | jq '.clusters | length'
 ### Completed
 - [x] Download pipeline for polytope data
 - [x] Filter script for 3-generation candidates
-- [x] Update real_physics to use polytopes_three_gen.json
 - [x] Implement cluster-based adaptive selection with UCB
 - [x] Add mutation pattern tracking
 - [x] Persist cluster state to disk
 - [x] Add polytope feature vectors (embeddings)
 - [x] Rewrite physics_bridge.py to use CYTools + cymyc
 - [x] Update ansible to install CYTools and cymyc
+- [x] SQLite database layer with migrations
+- [x] Meta-GA schema (algorithms, trials, fitness)
+- [x] Worker locking with PID + heartbeat
+- [x] Multi-file search binary structure
+- [x] Generation 0 initialization
+- [x] Meta-evolution (crossover, mutation)
+- [x] Trial execution and metrics
+- [x] Web dashboard (SolidStart + better-sqlite3)
 
 ### TODO
 
-**Layer 1: Evaluation Recording**
-- [ ] Persist every evaluation to `evaluations.jsonl`
-- [ ] Include full geometry features + physics results
-- [ ] Load history on startup to resume learning
-
-**Layer 2: Feature Clustering**
-- [ ] Cluster by full geometry features (not just h11/h21)
-- [ ] Use k-means or HDBSCAN in feature space
-- [ ] Track cluster statistics (evals, avg fitness, best fitness)
-- [ ] UCB-based cluster selection
-
-**Layer 3: Learned Ranker**
-- [ ] Train simple NN: geometry → predicted fitness
-- [ ] Trigger training after N evaluations (e.g., 1000)
-- [ ] Use ranker scores to bias polytope selection
-- [ ] Retrain periodically as more data accumulates
-
-**Layer 4: Active Learning**
-- [ ] Track model uncertainty per polytope
-- [ ] Balance exploit (high score) vs explore (high uncertainty)
-- [ ] Prioritize under-explored clusters
+**Meta-GA Enhancements**
+- [ ] Feature weight application to polytope selection
+- [ ] Similarity search using weighted distance
+- [ ] Path interpolation between good polytopes
+- [ ] Learned ranker from evaluation history
 
 **Infrastructure**
-- [ ] Add `-v` verbose logging (DONE)
-- [ ] Double Ctrl+C force quit (DONE)
-- [ ] Create visualization for cluster/ranker data
-- [ ] Add monitoring dashboard
+- [ ] Add meta-GA views to web dashboard
+- [ ] Visualization of meta-fitness over generations
+- [ ] Feature importance analysis from evolved weights
+
+**Physics**
 - [ ] Integrate cymyc trained metric models
+- [ ] More accurate gauge coupling computation
 
 ## Polytope Transition Graph
 

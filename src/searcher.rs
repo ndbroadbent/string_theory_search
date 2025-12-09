@@ -5,6 +5,7 @@
 
 use crate::constants;
 use crate::db;
+use crate::meta_ga::{parse_feature_weights, weighted_distance};
 use crate::physics::{
     compute_physics, is_physics_available,
     PhysicsOutput, PolytopeData, Compactification,
@@ -40,6 +41,67 @@ impl Default for GaConfig {
             collapse_threshold: 2000,
             hall_of_fame_size: 50,
         }
+    }
+}
+
+/// Search strategy parameters evolved by the meta-GA
+/// These control HOW we explore the polytope landscape
+#[derive(Debug, Clone, Serialize)]
+pub struct SearchStrategy {
+    /// Weights for computing polytope similarity (from meta-GA feature_weights)
+    /// Keys match heuristic column names in the database
+    pub feature_weights: HashMap<String, f64>,
+
+    /// How wide to search around good polytopes (0.1 = very local, 1.0 = broad)
+    pub similarity_radius: f64,
+
+    /// Balance between similarity search (0) and path-walking between good polytopes (1)
+    pub interpolation_weight: f64,
+
+    /// Generations before considering switching to a different polytope
+    pub polytope_patience: i32,
+
+    /// Minimum fitness improvement required to stay with current polytope
+    pub switch_threshold: f64,
+
+    /// Random probability of switching polytopes regardless of improvement
+    pub switch_probability: f64,
+
+    /// Weight for cosmological constant in fitness computation
+    pub cc_weight: f64,
+}
+
+impl Default for SearchStrategy {
+    fn default() -> Self {
+        Self {
+            feature_weights: HashMap::new(),  // Empty = use default (unweighted)
+            similarity_radius: 0.5,
+            interpolation_weight: 0.5,
+            polytope_patience: 5,
+            switch_threshold: 0.01,
+            switch_probability: 0.1,
+            cc_weight: 10.0,
+        }
+    }
+}
+
+impl SearchStrategy {
+    /// Create from a MetaAlgorithm's parameters
+    pub fn from_meta_algorithm(algo: &db::MetaAlgorithm) -> Self {
+        Self {
+            feature_weights: parse_feature_weights(&algo.feature_weights),
+            similarity_radius: algo.similarity_radius,
+            interpolation_weight: algo.interpolation_weight,
+            polytope_patience: algo.polytope_patience,
+            switch_threshold: algo.switch_threshold,
+            switch_probability: algo.switch_probability,
+            cc_weight: algo.cc_weight,
+        }
+    }
+
+    /// Check if feature weights are defined (not empty)
+    pub fn has_feature_weights(&self) -> bool {
+        !self.feature_weights.is_empty()
     }
 }
 
@@ -714,16 +776,18 @@ pub fn compute_fitness(physics: &PhysicsOutput) -> f64 {
     total_score += 2.0 * n_gen_score;
     total_weight += 2.0;
 
-    // Cosmological constant needs special handling (tiny target)
+    // Cosmological constant - THE key target, weight heavily (10x others)
+    // This is the famous fine-tuning problem: Λ ≈ 10^-122 in Planck units
     let cc_ratio = if constants::COSMOLOGICAL_CONSTANT.abs() > 1e-150 {
         (physics.cosmological_constant / constants::COSMOLOGICAL_CONSTANT).abs()
     } else {
         0.0
     };
     let cc_log = if cc_ratio > 0.0 { cc_ratio.ln().abs() } else { 300.0 };
-    let cc_score = (-cc_log / 100.0).exp();  // Scale down log penalty
-    total_score += 0.5 * cc_score;
-    total_weight += 0.5;
+    // More aggressive scoring: each order of magnitude off reduces score
+    let cc_score = (-cc_log / 50.0).exp();
+    total_score += 10.0 * cc_score;
+    total_weight += 10.0;
 
     // Mass ratios
     let me_ratio = if constants::ELECTRON_PLANCK_RATIO > 0.0 && physics.m_e_planck_ratio > 0.0 {
@@ -773,6 +837,8 @@ pub struct RealGenerationStats {
 /// The real physics landscape searcher
 pub struct LandscapeSearcher {
     pub config: GaConfig,
+    /// Search strategy evolved by meta-GA (feature weights, similarity params, etc.)
+    pub strategy: SearchStrategy,
     pub polytope_data: Arc<PolytopeData>,
     /// If set, only search within these polytope IDs
     pub polytope_filter: Option<Vec<usize>>,
@@ -792,22 +858,40 @@ pub struct LandscapeSearcher {
     db_conn: Option<Arc<Mutex<Connection>>>,
     /// Run ID for tracking evaluations
     run_id: Option<String>,
+    /// Cache of heuristics per polytope for weighted similarity search
+    heuristics_cache: HashMap<usize, HashMap<String, f64>>,
+    /// Generations since last polytope switch (for polytope_patience)
+    gens_on_current_polytope: usize,
+    /// Best fitness achieved on current polytope (for switch_threshold)
+    best_fitness_on_current_polytope: f64,
 }
 
 impl LandscapeSearcher {
-    /// Create a new searcher
+    /// Create a new searcher with default strategy
     pub fn new(config: GaConfig, polytope_path: &str) -> Self {
-        Self::new_with_filter(config, polytope_path, None)
+        Self::new_with_strategy(config, SearchStrategy::default(), polytope_path, None, None, None)
     }
 
     /// Create a new searcher with an optional polytope filter
     pub fn new_with_filter(config: GaConfig, polytope_path: &str, polytope_filter: Option<Vec<usize>>) -> Self {
-        Self::new_with_db(config, polytope_path, polytope_filter, None, None)
+        Self::new_with_strategy(config, SearchStrategy::default(), polytope_path, polytope_filter, None, None)
     }
 
-    /// Create a new searcher with database connection and run ID
+    /// Create a new searcher with database connection and run ID (legacy, uses default strategy)
     pub fn new_with_db(
         config: GaConfig,
+        polytope_path: &str,
+        polytope_filter: Option<Vec<usize>>,
+        db_conn: Option<Arc<Mutex<Connection>>>,
+        run_id: Option<String>,
+    ) -> Self {
+        Self::new_with_strategy(config, SearchStrategy::default(), polytope_path, polytope_filter, db_conn, run_id)
+    }
+
+    /// Create a new searcher with full configuration including meta-GA search strategy
+    pub fn new_with_strategy(
+        config: GaConfig,
+        strategy: SearchStrategy,
         polytope_path: &str,
         polytope_filter: Option<Vec<usize>>,
         db_conn: Option<Arc<Mutex<Connection>>>,
@@ -832,6 +916,16 @@ impl LandscapeSearcher {
                     filter.len() - valid_ids.len());
             }
             println!("Filtering to {} specific polytope IDs", valid_ids.len());
+        }
+
+        // Log strategy info if feature weights are defined
+        if strategy.has_feature_weights() {
+            println!("Using evolved search strategy with {} feature weights",
+                strategy.feature_weights.len());
+            println!("  similarity_radius: {:.3}, interpolation_weight: {:.3}",
+                strategy.similarity_radius, strategy.interpolation_weight);
+            println!("  polytope_patience: {}, switch_threshold: {:.3}, switch_prob: {:.3}",
+                strategy.polytope_patience, strategy.switch_threshold, strategy.switch_probability);
         }
 
         // Load or create cluster state
@@ -859,6 +953,7 @@ impl LandscapeSearcher {
 
         Self {
             config,
+            strategy,
             polytope_data,
             polytope_filter,
             population,
@@ -875,6 +970,9 @@ impl LandscapeSearcher {
             rng,
             db_conn,
             run_id,
+            heuristics_cache: HashMap::new(),
+            gens_on_current_polytope: 0,
+            best_fitness_on_current_polytope: 0.0,
         }
     }
 
@@ -1089,43 +1187,192 @@ impl LandscapeSearcher {
         }
     }
 
+    /// Get heuristics for a polytope from database (or cache)
+    fn get_polytope_heuristics(&mut self, polytope_id: usize) -> Option<HashMap<String, f64>> {
+        // Check cache first
+        if let Some(heuristics) = self.heuristics_cache.get(&polytope_id) {
+            return Some(heuristics.clone());
+        }
+
+        // Query database if available
+        if let Some(ref conn) = self.db_conn {
+            if let Ok(locked) = conn.lock() {
+                if let Ok(Some(heuristics_data)) = db::get_heuristics(&locked, polytope_id as i64) {
+                    let heuristics_map = heuristics_data.to_map();
+                    // Cache for future use
+                    self.heuristics_cache.insert(polytope_id, heuristics_map.clone());
+                    return Some(heuristics_map);
+                }
+            }
+        }
+
+        None
+    }
+
+    /// Find polytopes similar to a reference polytope using weighted distance
+    /// Returns up to `limit` polytope IDs sorted by similarity (closest first)
+    fn find_similar_polytopes(&mut self, reference_id: usize, limit: usize) -> Vec<usize> {
+        // Need feature weights to do weighted search
+        if !self.strategy.has_feature_weights() {
+            return Vec::new();
+        }
+
+        let ref_heuristics = match self.get_polytope_heuristics(reference_id) {
+            Some(h) => h,
+            None => return Vec::new(),
+        };
+
+        // Clone filter to avoid borrow conflicts
+        let filter = self.polytope_filter.clone();
+        let mut candidates: Vec<(usize, f64)> = Vec::new();
+
+        // Collect hot polytope IDs first to avoid borrow conflicts
+        let hot_poly_ids: Vec<usize> = self.cluster_state.hot_polytopes.iter().map(|h| h.id).collect();
+
+        // Search through cached heuristics or hot polytopes
+        // (We can't search all 12M polytopes efficiently here)
+        for &hot_poly in &hot_poly_ids {
+            if hot_poly == reference_id {
+                continue;
+            }
+
+            // Check filter
+            let in_filter = filter.is_none() || filter.as_ref().unwrap().contains(&hot_poly);
+            if !in_filter {
+                continue;
+            }
+
+            if let Some(heuristics) = self.get_polytope_heuristics(hot_poly) {
+                let dist = weighted_distance(&self.strategy.feature_weights, &ref_heuristics, &heuristics);
+                if dist < self.strategy.similarity_radius * 10.0 {  // Scale radius for distance units
+                    candidates.push((hot_poly, dist));
+                }
+            }
+        }
+
+        // Collect cluster polytope IDs first to avoid borrow conflicts
+        let cluster_poly_ids: Vec<usize> = self.cluster_state.clusters.values()
+            .flat_map(|c| c.polytope_ids.iter().copied())
+            .filter(|&id| id != reference_id && !candidates.iter().any(|(cid, _)| *cid == id))
+            .collect();
+
+        for poly_id in cluster_poly_ids {
+            let in_filter = filter.is_none() || filter.as_ref().unwrap().contains(&poly_id);
+            if !in_filter {
+                continue;
+            }
+
+            if let Some(heuristics) = self.get_polytope_heuristics(poly_id) {
+                let dist = weighted_distance(&self.strategy.feature_weights, &ref_heuristics, &heuristics);
+                if dist < self.strategy.similarity_radius * 10.0 {
+                    candidates.push((poly_id, dist));
+                }
+            }
+        }
+
+        // Sort by distance (ascending) and take top `limit`
+        candidates.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
+        candidates.truncate(limit);
+
+        candidates.into_iter().map(|(id, _)| id).collect()
+    }
+
+    /// Select a polytope using similarity-weighted search around good performers
+    fn select_polytope_by_similarity(&mut self) -> Option<usize> {
+        if !self.strategy.has_feature_weights() || self.cluster_state.hot_polytopes.is_empty() {
+            return None;
+        }
+
+        // Pick a reference polytope (from hot list with probability weighted by fitness)
+        let hot = &self.cluster_state.hot_polytopes;
+        let total_fitness: f64 = hot.iter().map(|h| h.fitness).sum();
+        if total_fitness <= 0.0 {
+            return None;
+        }
+
+        let mut r = self.rng.gen::<f64>() * total_fitness;
+        let mut reference_id = hot[0].id;
+        for h in hot {
+            r -= h.fitness;
+            if r <= 0.0 {
+                reference_id = h.id;
+                break;
+            }
+        }
+
+        // Find similar polytopes
+        let similar = self.find_similar_polytopes(reference_id, 10);
+        if similar.is_empty() {
+            return None;
+        }
+
+        // Pick one randomly from similar set (biased toward closer ones)
+        let idx = (self.rng.gen::<f64>() * self.rng.gen::<f64>() * similar.len() as f64) as usize;
+        let idx = idx.min(similar.len() - 1);
+        Some(similar[idx])
+    }
+
     /// Create an individual using cluster-guided selection
     fn create_cluster_guided_individual(&mut self) -> Individual {
         let r = self.rng.gen::<f64>();
-        let filter = self.polytope_filter.as_deref();
+        // Clone filter to avoid borrow conflicts with self-mutating methods
+        let filter = self.polytope_filter.clone();
+        let filter_slice = filter.as_deref();
+
+        // If we have feature weights, use similarity-weighted selection with probability
+        // controlled by interpolation_weight (0 = never use similarity, 1 = always use)
+        if self.strategy.has_feature_weights() && r < self.strategy.interpolation_weight {
+            if let Some(polytope_id) = self.select_polytope_by_similarity() {
+                let mut individual = Individual::random_filtered(&mut self.rng, &self.polytope_data, filter_slice);
+                individual.genome.polytope_id = polytope_id;
+                return individual;
+            }
+        }
+
+        // Adjust remaining probability space
+        let r_adjusted = if self.strategy.has_feature_weights() {
+            let denom = 1.0 - self.strategy.interpolation_weight;
+            if denom > 0.001 {
+                (r - self.strategy.interpolation_weight) / denom
+            } else {
+                r
+            }
+        } else {
+            r
+        };
 
         // 70% exploit (use high-performing clusters), 20% explore, 10% hot polytopes
-        if r < 0.7 && !self.cluster_state.clusters.is_empty() {
+        if r_adjusted < 0.7 && !self.cluster_state.clusters.is_empty() {
             // Exploit: select from promising cluster
             if let Some(cluster_key) = self.cluster_state.select_cluster(&mut self.rng, 0.1) {
                 if let Some(polytope_id) = self.cluster_state.random_from_cluster(cluster_key, &mut self.rng) {
                     // Only use this polytope if it's in the filter (or no filter)
-                    let in_filter = filter.is_none() || filter.unwrap().contains(&polytope_id);
+                    let in_filter = filter_slice.is_none() || filter_slice.unwrap().contains(&polytope_id);
                     if polytope_id < self.polytope_data.len() && in_filter {
-                        let mut individual = Individual::random_filtered(&mut self.rng, &self.polytope_data, filter);
+                        let mut individual = Individual::random_filtered(&mut self.rng, &self.polytope_data, filter_slice);
                         individual.genome.polytope_id = polytope_id;
                         return individual;
                     }
                 }
             }
-        } else if r < 0.9 {
+        } else if r_adjusted < 0.9 {
             // Explore: random selection
-            return Individual::random_filtered(&mut self.rng, &self.polytope_data, filter);
+            return Individual::random_filtered(&mut self.rng, &self.polytope_data, filter_slice);
         } else if !self.cluster_state.hot_polytopes.is_empty() {
             // Hot polytope selection
             let idx = self.rng.gen_range(0..self.cluster_state.hot_polytopes.len());
             let hot_id = self.cluster_state.hot_polytopes[idx].id;
             // Only use hot polytope if it's in the filter (or no filter)
-            let in_filter = filter.is_none() || filter.unwrap().contains(&hot_id);
+            let in_filter = filter_slice.is_none() || filter_slice.unwrap().contains(&hot_id);
             if hot_id < self.polytope_data.len() && in_filter {
-                let mut individual = Individual::random_filtered(&mut self.rng, &self.polytope_data, filter);
+                let mut individual = Individual::random_filtered(&mut self.rng, &self.polytope_data, filter_slice);
                 individual.genome.polytope_id = hot_id;
                 return individual;
             }
         }
 
         // Fallback to random
-        Individual::random_filtered(&mut self.rng, &self.polytope_data, filter)
+        Individual::random_filtered(&mut self.rng, &self.polytope_data, filter_slice)
     }
 
     /// Save cluster state
@@ -1365,4 +1612,205 @@ pub fn format_fitness_report(individual: &Individual) -> String {
     }
 
     report
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // =========================================================================
+    // SearchStrategy Tests
+    // =========================================================================
+
+    #[test]
+    fn test_search_strategy_default() {
+        let strategy = SearchStrategy::default();
+
+        assert!(strategy.feature_weights.is_empty());
+        assert!((strategy.similarity_radius - 0.5).abs() < 0.001);
+        assert!((strategy.interpolation_weight - 0.5).abs() < 0.001);
+        assert_eq!(strategy.polytope_patience, 5);
+        assert!((strategy.switch_threshold - 0.01).abs() < 0.001);
+        assert!((strategy.switch_probability - 0.1).abs() < 0.001);
+        assert!((strategy.cc_weight - 10.0).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_search_strategy_has_feature_weights() {
+        let empty = SearchStrategy::default();
+        assert!(!empty.has_feature_weights());
+
+        let with_weights = SearchStrategy {
+            feature_weights: [("sphericity".to_string(), 1.0)].into_iter().collect(),
+            ..Default::default()
+        };
+        assert!(with_weights.has_feature_weights());
+    }
+
+    #[test]
+    fn test_search_strategy_from_meta_algorithm() {
+        use crate::db::MetaAlgorithm;
+        use crate::meta_ga::default_feature_weights_json;
+
+        let algo = MetaAlgorithm {
+            id: Some(1),
+            name: Some("test".to_string()),
+            version: 1,
+            feature_weights: default_feature_weights_json(),
+            similarity_radius: 0.3,
+            interpolation_weight: 0.7,
+            population_size: 100,
+            max_generations: 15,
+            mutation_rate: 0.4,
+            mutation_strength: 0.3,
+            crossover_rate: 0.8,
+            tournament_size: 5,
+            elite_count: 10,
+            polytope_patience: 8,
+            switch_threshold: 0.05,
+            switch_probability: 0.15,
+            cc_weight: 12.0,
+            parent_id: None,
+            meta_generation: 0,
+            trials_required: 10,
+        };
+
+        let strategy = SearchStrategy::from_meta_algorithm(&algo);
+
+        assert!(!strategy.feature_weights.is_empty());
+        assert_eq!(strategy.feature_weights.get("sphericity"), Some(&1.0));
+        assert!((strategy.similarity_radius - 0.3).abs() < 0.001);
+        assert!((strategy.interpolation_weight - 0.7).abs() < 0.001);
+        assert_eq!(strategy.polytope_patience, 8);
+        assert!((strategy.switch_threshold - 0.05).abs() < 0.001);
+        assert!((strategy.switch_probability - 0.15).abs() < 0.001);
+        assert!((strategy.cc_weight - 12.0).abs() < 0.001);
+    }
+
+    // =========================================================================
+    // GaConfig Tests
+    // =========================================================================
+
+    #[test]
+    fn test_ga_config_default() {
+        let config = GaConfig::default();
+
+        assert_eq!(config.population_size, 500);
+        assert_eq!(config.elite_count, 10);
+        assert_eq!(config.tournament_size, 5);
+        assert!((config.crossover_rate - 0.85).abs() < 0.001);
+        assert!((config.base_mutation_rate - 0.4).abs() < 0.001);
+        assert!((config.base_mutation_strength - 0.35).abs() < 0.001);
+        assert_eq!(config.collapse_threshold, 2000);
+        assert_eq!(config.hall_of_fame_size, 50);
+    }
+
+    // =========================================================================
+    // PolytopeFeatures Tests
+    // =========================================================================
+
+    #[test]
+    fn test_polytope_features_from_simple_polytope() {
+        // Simple unit simplex vertices
+        let vertices = vec![
+            vec![1, 0, 0, 0],
+            vec![0, 1, 0, 0],
+            vec![0, 0, 1, 0],
+            vec![0, 0, 0, 1],
+        ];
+
+        let features = PolytopeFeatures::from_polytope(&vertices, 4, 1);
+
+        assert!((features.h11 - 4.0).abs() < 0.001);
+        assert!((features.h21 - 1.0).abs() < 0.001);
+        assert!((features.euler_char - 6.0).abs() < 0.001);
+        assert!((features.vertex_count - 4.0).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_polytope_features_to_vector() {
+        let vertices = vec![
+            vec![1, 0, 0, 0],
+            vec![0, 1, 0, 0],
+        ];
+
+        let features = PolytopeFeatures::from_polytope(&vertices, 3, 0);
+        let vec = features.to_vector();
+
+        assert_eq!(vec.len(), PolytopeFeatures::FEATURE_COUNT);
+    }
+
+    #[test]
+    fn test_polytope_features_cosine_similarity_identical() {
+        let vertices = vec![
+            vec![1, 0, 0, 0],
+            vec![0, 1, 0, 0],
+        ];
+
+        let f1 = PolytopeFeatures::from_polytope(&vertices, 3, 0);
+        let f2 = PolytopeFeatures::from_polytope(&vertices, 3, 0);
+
+        let sim = f1.cosine_similarity(&f2);
+        assert!((sim - 1.0).abs() < 0.0001, "Identical features should have similarity 1.0");
+    }
+
+    #[test]
+    fn test_polytope_features_distance_identical() {
+        let vertices = vec![
+            vec![1, 0, 0, 0],
+            vec![0, 1, 0, 0],
+        ];
+
+        let f1 = PolytopeFeatures::from_polytope(&vertices, 3, 0);
+        let f2 = PolytopeFeatures::from_polytope(&vertices, 3, 0);
+
+        let dist = f1.distance(&f2);
+        assert!(dist < 0.0001, "Identical features should have distance 0");
+    }
+
+    // =========================================================================
+    // ClusterState Tests
+    // =========================================================================
+
+    #[test]
+    fn test_cluster_key_format() {
+        assert_eq!(ClusterState::cluster_key(5, 2, 6), "h5_2__v5-7");
+        assert_eq!(ClusterState::cluster_key(10, 7, 9), "h10_7__v8-10");
+        assert_eq!(ClusterState::cluster_key(100, 97, 30), "h100_97__v26+");
+    }
+
+    #[test]
+    fn test_cluster_state_new() {
+        let state = ClusterState::new();
+
+        assert!(state.clusters.is_empty());
+        assert!(state.hot_polytopes.is_empty());
+        assert!(state.mutation_patterns.is_empty());
+        assert_eq!(state.total_evaluations, 0);
+    }
+
+    #[test]
+    fn test_cluster_state_update() {
+        let mut state = ClusterState::new();
+
+        state.update(5, 2, 6, 12345, 0.75);
+
+        assert_eq!(state.total_evaluations, 1);
+        assert!(state.clusters.contains_key("h5_2__v5-7"));
+
+        let cluster = state.clusters.get("h5_2__v5-7").unwrap();
+        assert_eq!(cluster.evaluations, 1);
+        assert!((cluster.fitness_sum - 0.75).abs() < 0.001);
+        assert!((cluster.fitness_best - 0.75).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_cluster_stats_avg_fitness() {
+        let mut stats = ClusterStats::new(5);
+        assert!((stats.avg_fitness() - 0.0).abs() < 0.001);
+
+        stats.evaluations = 4;
+        stats.fitness_sum = 2.0;
+        assert!((stats.avg_fitness() - 0.5).abs() < 0.001);
+    }
 }
