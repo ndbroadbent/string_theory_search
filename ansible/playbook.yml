@@ -316,6 +316,7 @@
         chdir: "{{ project_dir }}/web"
         executable: /bin/bash
       register: bun_build
+      notify: restart web service
 
     - name: Create systemd service for web dashboard
       copy:
