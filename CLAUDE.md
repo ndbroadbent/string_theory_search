@@ -25,11 +25,30 @@ PYO3_PYTHON=/opt/homebrew/opt/python@3.11/bin/python3.11 cargo build --release -
 
 ## Server Setup
 - Host: `root@10.5.7.33`
-- Polytopes: `/data/polytopes/polytopes_three_gen.jsonl`
+- Project: `/root/string_theory` (NVMe)
+- Data: `/root/string_theory/data/` (NVMe) - filtered polytopes, SQLite, ChromaDB
+- Raw polytopes: `/data/polytopes/parquet/` (ZFS spinning disk) - 400M raw polytopes
 - CYTools: `/root/cytools_source`
 - cymyc: `/root/cymyc_source`
 - Venv: `/root/string_theory/venv`
-- Deploy: `ansible-playbook -i ansible/inventory.yml ansible/playbook.yml`
+
+### Deploy
+```bash
+ansible-playbook -i ansible/inventory.yml ansible/playbook.yml
+```
+
+### Server Services
+```bash
+# Web dashboard (auto-starts, port 3000)
+systemctl status string-theory-web
+systemctl restart string-theory-web
+
+# Search workers (stopped by default, 2 instances configured)
+systemctl start string-theory-search.target   # Start 2 workers
+systemctl stop string-theory-search.target    # Stop all workers
+systemctl start string-theory-search@3        # Start additional worker
+journalctl -u string-theory-search@1 -f       # Follow worker logs
+```
 
 ## Build & Run
 ```bash
