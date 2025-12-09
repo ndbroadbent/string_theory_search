@@ -72,8 +72,8 @@ impl Default for PathsConfig {
 pub struct MetaGaConfig {
     #[serde(default = "default_algorithms_per_gen")]
     pub algorithms_per_generation: i32,
-    #[serde(default = "default_trials_required")]
-    pub trials_required: i32,
+    #[serde(default = "default_runs_required")]
+    pub runs_required: i32,
     #[serde(default = "default_master_seed")]
     pub master_seed: u64,
 }
@@ -81,7 +81,7 @@ pub struct MetaGaConfig {
 fn default_algorithms_per_gen() -> i32 {
     DEFAULT_ALGORITHMS_PER_GENERATION
 }
-fn default_trials_required() -> i32 {
+fn default_runs_required() -> i32 {
     DEFAULT_TRIALS_REQUIRED
 }
 fn default_master_seed() -> u64 {
@@ -94,7 +94,7 @@ impl Default for MetaGaConfig {
     fn default() -> Self {
         Self {
             algorithms_per_generation: default_algorithms_per_gen(),
-            trials_required: default_trials_required(),
+            runs_required: default_runs_required(),
             master_seed: default_master_seed(),
         }
     }

@@ -9,7 +9,7 @@ import Database from 'better-sqlite3';
 import type {
   MetaAlgorithm,
   MetaAlgorithmWithFitness,
-  MetaTrial,
+  MetaRun,
   MetaState,
   GenerationStatus,
 } from '../types';
@@ -64,7 +64,7 @@ function rowToAlgorithm(row: Record<string, unknown>): MetaAlgorithm {
     meta_generation: row.meta_generation as number,
     rng_seed: String(row.rng_seed ?? '0'),
     status: row.status as MetaAlgorithm['status'],
-    trials_required: row.trials_required as number,
+    runs_required: row.runs_required as number,
     locked_by_pid: row.locked_by_pid as number | null,
     last_heartbeat_at: row.last_heartbeat_at as string | null,
     completed_at: row.completed_at as string | null,
@@ -76,7 +76,7 @@ function rowToAlgorithm(row: Record<string, unknown>): MetaAlgorithm {
 function rowToAlgorithmWithFitness(row: Record<string, unknown>): MetaAlgorithmWithFitness {
   return {
     ...rowToAlgorithm(row),
-    trial_count: (row.trial_count as number) ?? 0,
+    run_count: (row.run_count as number) ?? 0,
     mean_improvement_rate: row.mean_improvement_rate as number | null,
     best_improvement_rate: row.best_improvement_rate as number | null,
     mean_fitness_auc: row.mean_fitness_auc as number | null,
@@ -87,12 +87,12 @@ function rowToAlgorithmWithFitness(row: Record<string, unknown>): MetaAlgorithmW
   };
 }
 
-/** Convert database row to MetaTrial */
-function rowToTrial(row: Record<string, unknown>): MetaTrial {
+/** Convert database row to MetaRun */
+function rowToRun(row: Record<string, unknown>): MetaRun {
   return {
     id: row.id as number,
     algorithm_id: row.algorithm_id as number,
-    run_id: row.run_id as string | null,
+    run_number: row.run_number as number,
     generations_run: row.generations_run as number,
     initial_fitness: row.initial_fitness as number,
     final_fitness: row.final_fitness as number,
@@ -211,7 +211,7 @@ export const getAlgorithms = createServerFn({ method: 'GET' })
       let query = `
         SELECT
           a.*,
-          COALESCE(f.trial_count, 0) as trial_count,
+          COALESCE(f.run_count, 0) as run_count,
           f.mean_improvement_rate,
           f.best_improvement_rate,
           f.mean_fitness_auc,
@@ -259,7 +259,7 @@ export const getAlgorithm = createServerFn({ method: 'GET' })
       const row = db.prepare(`
         SELECT
           a.*,
-          COALESCE(f.trial_count, 0) as trial_count,
+          COALESCE(f.run_count, 0) as run_count,
           f.mean_improvement_rate,
           f.best_improvement_rate,
           f.mean_fitness_auc,
@@ -283,11 +283,11 @@ export const getAlgorithm = createServerFn({ method: 'GET' })
   });
 
 /**
- * Get trials for an algorithm
+ * Get runs for an algorithm
  */
-export const getTrials = createServerFn({ method: 'GET' })
+export const getRuns = createServerFn({ method: 'GET' })
   .inputValidator((data: { algorithmId: number }) => data)
-  .handler(async ({ data: { algorithmId } }): Promise<MetaTrial[]> => {
+  .handler(async ({ data: { algorithmId } }): Promise<MetaRun[]> => {
     const dbPath = getDbPath();
     if (!existsSync(dbPath)) {
       return [];
@@ -297,16 +297,16 @@ export const getTrials = createServerFn({ method: 'GET' })
       const db = new Database(dbPath, { readonly: true });
 
       const rows = db.prepare(`
-        SELECT * FROM meta_trials
+        SELECT * FROM runs
         WHERE algorithm_id = ?
-        ORDER BY started_at DESC
+        ORDER BY run_number ASC
       `).all(algorithmId) as Record<string, unknown>[];
 
       db.close();
 
-      return rows.map(rowToTrial);
+      return rows.map(rowToRun);
     } catch (error) {
-      console.error('Error loading trials:', error);
+      console.error('Error loading runs:', error);
       return [];
     }
   });

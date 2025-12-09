@@ -93,45 +93,13 @@ fn get_migrations() -> Vec<(i32, &'static str, &'static str)> {
         (2, "Meta-GA schema", include_str!("../migrations/002_meta_ga_schema.sql")),
         (3, "Heuristics Hodge numbers", include_str!("../migrations/003_heuristics_hodge_numbers.sql")),
         (4, "RNG seed for reproducibility", include_str!("../migrations/004_rng_seed.sql")),
+        (5, "Unify runs and trials", include_str!("../migrations/005_unify_runs.sql")),
     ]
 }
 
-/// Insert a new run record
-pub fn insert_run(
-    conn: &Connection,
-    run_id: &str,
-    config_json: &str,
-    polytope_filter_json: Option<&str>,
-) -> Result<()> {
-    conn.execute(
-        "INSERT OR REPLACE INTO runs (id, started_at, config, polytope_filter)
-         VALUES (?1, datetime('now'), ?2, ?3)",
-        params![run_id, config_json, polytope_filter_json],
-    )?;
-    Ok(())
-}
-
-/// Update run statistics on completion
-pub fn update_run_stats(
-    conn: &Connection,
-    run_id: &str,
-    total_generations: i32,
-    total_evaluations: i64,
-    best_fitness: f64,
-    best_polytope_id: Option<i64>,
-) -> Result<()> {
-    conn.execute(
-        "UPDATE runs SET
-            ended_at = datetime('now'),
-            total_generations = ?2,
-            total_evaluations = ?3,
-            best_fitness = ?4,
-            best_polytope_id = ?5
-         WHERE id = ?1",
-        params![run_id, total_generations, total_evaluations, best_fitness, best_polytope_id],
-    )?;
-    Ok(())
-}
+// Note: The old insert_run and update_run_stats functions have been removed.
+// Runs are now created via insert_meta_run (renamed from insert_meta_trial)
+// and are linked to meta_algorithms.
 
 /// Upsert a polytope (insert on first evaluation)
 pub fn upsert_polytope(
@@ -155,7 +123,7 @@ pub fn upsert_polytope(
 pub fn insert_evaluation(
     conn: &Connection,
     polytope_id: i64,
-    run_id: Option<&str>,
+    run_id: Option<i64>,  // Now an integer referencing runs.id
     generation: Option<i32>,
     genome: &Compactification,
     physics: &PhysicsOutput,
@@ -632,7 +600,7 @@ pub struct MetaAlgorithm {
     pub meta_generation: i32,
 
     // === Trials ===
-    pub trials_required: i32,
+    pub runs_required: i32,
 
     // === RNG seed for reproducibility ===
     pub rng_seed: u64,
@@ -660,7 +628,7 @@ impl Default for MetaAlgorithm {
             cc_weight: 10.0,
             parent_id: None,
             meta_generation: 0,
-            trials_required: 10,
+            runs_required: 10,
             rng_seed: 0, // Will be set when creating algorithm
         }
     }
@@ -668,9 +636,9 @@ impl Default for MetaAlgorithm {
 
 /// Derive a trial seed from algorithm seed and trial number
 /// This ensures each trial is reproducible given the algorithm seed
-pub fn derive_trial_seed(algo_seed: u64, trial_number: i32) -> u64 {
+pub fn derive_run_seed(algo_seed: u64, run_number: i32) -> u64 {
     // Use a simple but deterministic combination
-    algo_seed.wrapping_add(trial_number as u64).wrapping_mul(2654435761)
+    algo_seed.wrapping_add(run_number as u64).wrapping_mul(2654435761)
 }
 
 /// Insert a new meta-algorithm
@@ -683,7 +651,7 @@ pub fn insert_meta_algorithm(conn: &Connection, algo: &MetaAlgorithm) -> Result<
             mutation_rate, mutation_strength, crossover_rate,
             tournament_size, elite_count,
             polytope_patience, switch_threshold, switch_probability,
-            cc_weight, parent_id, meta_generation, trials_required, rng_seed
+            cc_weight, parent_id, meta_generation, runs_required, rng_seed
         ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20)",
         params![
             algo.name,
@@ -704,7 +672,7 @@ pub fn insert_meta_algorithm(conn: &Connection, algo: &MetaAlgorithm) -> Result<
             algo.cc_weight,
             algo.parent_id,
             algo.meta_generation,
-            algo.trials_required,
+            algo.runs_required,
             algo.rng_seed as i64,
         ],
     )?;
@@ -720,7 +688,7 @@ pub fn get_meta_algorithm(conn: &Connection, id: i64) -> Result<Option<MetaAlgor
                 mutation_rate, mutation_strength, crossover_rate,
                 tournament_size, elite_count,
                 polytope_patience, switch_threshold, switch_probability,
-                cc_weight, parent_id, meta_generation, trials_required, rng_seed
+                cc_weight, parent_id, meta_generation, runs_required, rng_seed
          FROM meta_algorithms WHERE id = ?1",
         params![id],
         |row| {
@@ -744,7 +712,7 @@ pub fn get_meta_algorithm(conn: &Connection, id: i64) -> Result<Option<MetaAlgor
                 cc_weight: row.get(16)?,
                 parent_id: row.get(17)?,
                 meta_generation: row.get(18)?,
-                trials_required: row.get(19)?,
+                runs_required: row.get(19)?,
                 rng_seed: row.get::<_, Option<i64>>(20)?.unwrap_or(0) as u64,
             })
         },
@@ -757,12 +725,12 @@ pub fn get_meta_algorithm(conn: &Connection, id: i64) -> Result<Option<MetaAlgor
     }
 }
 
-/// Meta-trial result
+/// Run result (one execution of a GA with an algorithm's parameters)
 #[derive(Debug, Clone)]
-pub struct MetaTrial {
+pub struct Run {
     pub id: Option<i64>,
     pub algorithm_id: i64,
-    pub run_id: Option<String>,
+    pub run_number: i32,  // Which run of this algorithm (1, 2, 3...)
     pub generations_run: i32,
     pub initial_fitness: f64,
     pub final_fitness: f64,
@@ -774,32 +742,32 @@ pub struct MetaTrial {
     pub unique_polytopes_tried: i32,
 }
 
-/// Insert a meta-trial result
-pub fn insert_meta_trial(conn: &Connection, trial: &MetaTrial) -> Result<i64> {
+/// Insert a run result
+pub fn insert_run(conn: &Connection, run: &Run) -> Result<i64> {
     conn.execute(
-        "INSERT INTO meta_trials (
-            algorithm_id, run_id, generations_run,
+        "INSERT INTO runs (
+            algorithm_id, run_number, generations_run,
             initial_fitness, final_fitness, fitness_improvement, improvement_rate,
             fitness_auc, best_cc_log_error, physics_success_rate, unique_polytopes_tried,
             started_at, ended_at
         ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, datetime('now'), datetime('now'))",
         params![
-            trial.algorithm_id,
-            trial.run_id,
-            trial.generations_run,
-            trial.initial_fitness,
-            trial.final_fitness,
-            trial.fitness_improvement,
-            trial.improvement_rate,
-            trial.fitness_auc,
-            trial.best_cc_log_error,
-            trial.physics_success_rate,
-            trial.unique_polytopes_tried,
+            run.algorithm_id,
+            run.run_number,
+            run.generations_run,
+            run.initial_fitness,
+            run.final_fitness,
+            run.fitness_improvement,
+            run.improvement_rate,
+            run.fitness_auc,
+            run.best_cc_log_error,
+            run.physics_success_rate,
+            run.unique_polytopes_tried,
         ],
     )?;
 
     // Update aggregate meta_fitness
-    update_meta_fitness(conn, trial.algorithm_id)?;
+    update_meta_fitness(conn, run.algorithm_id)?;
 
     Ok(conn.last_insert_rowid())
 }
@@ -807,11 +775,11 @@ pub fn insert_meta_trial(conn: &Connection, trial: &MetaTrial) -> Result<i64> {
 /// Update aggregate meta-fitness for an algorithm
 fn update_meta_fitness(conn: &Connection, algorithm_id: i64) -> Result<()> {
     conn.execute(
-        "INSERT INTO meta_fitness (algorithm_id, trial_count, mean_improvement_rate, best_improvement_rate,
+        "INSERT INTO meta_fitness (algorithm_id, run_count, mean_improvement_rate, best_improvement_rate,
                                    mean_fitness_auc, best_final_fitness, best_cc_log_error, mean_cc_log_error, meta_fitness)
          SELECT
              algorithm_id,
-             COUNT(*) as trial_count,
+             COUNT(*) as run_count,
              AVG(improvement_rate) as mean_improvement_rate,
              MAX(improvement_rate) as best_improvement_rate,
              AVG(fitness_auc) as mean_fitness_auc,
@@ -820,11 +788,11 @@ fn update_meta_fitness(conn: &Connection, algorithm_id: i64) -> Result<()> {
              AVG(best_cc_log_error) as mean_cc_log_error,
              -- Combined meta-fitness: weighted sum of improvement rate and CC performance
              (AVG(improvement_rate) * 0.3 + MAX(final_fitness) * 0.3 + (1.0 / (1.0 + AVG(best_cc_log_error))) * 0.4) as meta_fitness
-         FROM meta_trials
+         FROM runs
          WHERE algorithm_id = ?1
          GROUP BY algorithm_id
          ON CONFLICT(algorithm_id) DO UPDATE SET
-             trial_count = excluded.trial_count,
+             run_count = excluded.run_count,
              mean_improvement_rate = excluded.mean_improvement_rate,
              best_improvement_rate = excluded.best_improvement_rate,
              mean_fitness_auc = excluded.mean_fitness_auc,
@@ -847,7 +815,7 @@ pub fn get_top_meta_algorithms(conn: &Connection, generation: i32, limit: i32) -
                 a.mutation_rate, a.mutation_strength, a.crossover_rate,
                 a.tournament_size, a.elite_count,
                 a.polytope_patience, a.switch_threshold, a.switch_probability,
-                a.cc_weight, a.parent_id, a.meta_generation, a.trials_required, a.rng_seed,
+                a.cc_weight, a.parent_id, a.meta_generation, a.runs_required, a.rng_seed,
                 COALESCE(f.meta_fitness, 0) as meta_fitness
          FROM meta_algorithms a
          LEFT JOIN meta_fitness f ON f.algorithm_id = a.id
@@ -877,7 +845,7 @@ pub fn get_top_meta_algorithms(conn: &Connection, generation: i32, limit: i32) -
             cc_weight: row.get(16)?,
             parent_id: row.get(17)?,
             meta_generation: row.get(18)?,
-            trials_required: row.get(19)?,
+            runs_required: row.get(19)?,
             rng_seed: row.get::<_, Option<i64>>(20)?.unwrap_or(0) as u64,
         };
         let fitness: f64 = row.get(21)?;
@@ -1092,7 +1060,7 @@ mod tests {
             "heuristics",
             "runs",
             "meta_algorithms",
-            "meta_trials",
+            "runs",
             "meta_fitness",
             "meta_state",
         ];
@@ -1262,7 +1230,7 @@ mod tests {
             cc_weight: 10.0,
             parent_id: None,
             meta_generation: 0,
-            trials_required: 10,
+            runs_required: 10,
             rng_seed: 12345,
         };
 
@@ -1273,7 +1241,7 @@ mod tests {
         assert_eq!(retrieved.name, Some("test_algo".to_string()));
         assert_eq!(retrieved.population_size, 100);
         assert!((retrieved.similarity_radius - 0.6).abs() < 0.001);
-        assert_eq!(retrieved.trials_required, 10);
+        assert_eq!(retrieved.runs_required, 10);
     }
 
     #[test]
@@ -1289,7 +1257,7 @@ mod tests {
     fn test_meta_algorithm_default() {
         let algo = MetaAlgorithm::default();
         assert_eq!(algo.version, META_ALGORITHM_VERSION);
-        assert_eq!(algo.trials_required, 10);
+        assert_eq!(algo.runs_required, 10);
         assert!(!algo.feature_weights.is_empty());
     }
 
@@ -1298,7 +1266,7 @@ mod tests {
     // =========================================================================
 
     #[test]
-    fn test_insert_meta_trial_updates_fitness() {
+    fn test_insert_run_updates_fitness() {
         let (_dir, conn) = test_db();
         let locked = conn.lock().unwrap();
 
@@ -1307,10 +1275,10 @@ mod tests {
         let algo_id = insert_meta_algorithm(&locked, &algo).unwrap();
 
         // Insert a trial (run_id=None to avoid foreign key constraint on runs table)
-        let trial = MetaTrial {
+        let trial = Run {
             id: None,
             algorithm_id: algo_id,
-            run_id: None,
+            run_number: 1,
             generations_run: 10,
             initial_fitness: 0.1,
             final_fitness: 0.5,
@@ -1322,13 +1290,13 @@ mod tests {
             unique_polytopes_tried: 100,
         };
 
-        let trial_id = insert_meta_trial(&locked, &trial).unwrap();
+        let trial_id = insert_run(&locked, &trial).unwrap();
         assert!(trial_id > 0);
 
         // Check that meta_fitness was updated
         let (count, fitness): (i32, f64) = locked
             .query_row(
-                "SELECT trial_count, meta_fitness FROM meta_fitness WHERE algorithm_id = ?",
+                "SELECT run_count, meta_fitness FROM meta_fitness WHERE algorithm_id = ?",
                 params![algo_id],
                 |row| Ok((row.get(0)?, row.get(1)?)),
             )
@@ -1348,10 +1316,10 @@ mod tests {
 
         // Insert multiple trials (run_id=None to avoid foreign key constraint)
         for i in 1..=3 {
-            let trial = MetaTrial {
+            let trial = Run {
                 id: None,
                 algorithm_id: algo_id,
-                run_id: None,
+                run_number: 1,
                 generations_run: 10,
                 initial_fitness: 0.1,
                 final_fitness: 0.3 + (i as f64 * 0.1),
@@ -1362,12 +1330,12 @@ mod tests {
                 physics_success_rate: 0.7 + (i as f64 * 0.05),
                 unique_polytopes_tried: 50 + (i as i32 * 10),
             };
-            insert_meta_trial(&locked, &trial).unwrap();
+            insert_run(&locked, &trial).unwrap();
         }
 
         let (count, best_final): (i32, f64) = locked
             .query_row(
-                "SELECT trial_count, best_final_fitness FROM meta_fitness WHERE algorithm_id = ?",
+                "SELECT run_count, best_final_fitness FROM meta_fitness WHERE algorithm_id = ?",
                 params![algo_id],
                 |row| Ok((row.get(0)?, row.get(1)?)),
             )
@@ -1621,10 +1589,10 @@ mod tests {
                 .unwrap();
 
             // Insert trial (run_id=None to avoid foreign key constraint)
-            let trial = MetaTrial {
+            let trial = Run {
                 id: None,
                 algorithm_id: algo_id,
-                run_id: None,
+                run_number: 1,
                 generations_run: 10,
                 initial_fitness: 0.1,
                 final_fitness: i as f64 * 0.2,
@@ -1635,7 +1603,7 @@ mod tests {
                 physics_success_rate: 0.8,
                 unique_polytopes_tried: 100,
             };
-            insert_meta_trial(&locked, &trial).unwrap();
+            insert_run(&locked, &trial).unwrap();
         }
 
         let top = get_top_meta_algorithms(&locked, 0, 2).unwrap();

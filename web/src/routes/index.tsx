@@ -3,66 +3,40 @@
  */
 
 import { createFileRoute, Link } from '@tanstack/react-router';
-import { useState, useEffect, useMemo } from 'react';
-import { listRuns, getAllGenomes } from '../server/results';
+import { useState, useEffect } from 'react';
+import { getAllEvaluations } from '../server/results';
 import { FitnessScatter } from '../components/overview/FitnessScatter';
 import { PhysicsGauges } from '../components/overview/PhysicsGauges';
 import { GenomeTable } from '../components/overview/GenomeTable';
 import { useVisualizationStore } from '../stores/visualization';
-import type { GenomeResult, RunInfo } from '../types';
+import type { GenomeResult } from '../types';
 
 export const Route = createFileRoute('/')({
   component: Dashboard,
   loader: async () => {
-    const runs = await listRuns();
-    return { runs };
+    const genomes = await getAllEvaluations({ data: { limit: 200 } });
+    return { genomes };
   },
 });
 
 function Dashboard() {
-  const { runs: allRuns } = Route.useLoaderData();
+  const { genomes } = Route.useLoaderData();
 
-  // Filter out empty runs and sort by best fitness descending
-  const runs = useMemo(
-    () =>
-      allRuns
-        .filter((r) => r.genomeCount > 0)
-        .sort((a, b) => b.bestFitness - a.bestFitness),
-    [allRuns]
+  // Initialize with first genome if available
+  const [selectedGenome, setSelectedGenome] = useState<GenomeResult | null>(
+    () => genomes.length > 0 ? genomes[0] : null
   );
 
-  const [selectedRunId, setSelectedRunId] = useState<string | null>(null);
-  const [genomes, setGenomes] = useState<GenomeResult[]>([]);
-  const [selectedGenome, setSelectedGenome] = useState<GenomeResult | null>(null);
-  const [loading, setLoading] = useState(false);
-
-  const { setRuns, setAllGenomes, setSelectedGenome: setStoreGenome } =
+  const { setAllGenomes, setSelectedGenome: setStoreGenome } =
     useVisualizationStore();
 
-  // Sync runs to store and set initial selection
+  // Sync genomes to store
   useEffect(() => {
-    setRuns(runs);
-    if (!selectedRunId && runs.length > 0) {
-      setSelectedRunId(runs[0].id);
+    setAllGenomes(genomes);
+    if (genomes.length > 0 && selectedGenome) {
+      setStoreGenome(selectedGenome);
     }
-  }, [runs, setRuns, selectedRunId]);
-
-  // Load genomes when run changes
-  useEffect(() => {
-    if (!selectedRunId) return;
-
-    setLoading(true);
-    getAllGenomes({ data: { runId: selectedRunId } })
-      .then((data) => {
-        setGenomes(data);
-        setAllGenomes(data);
-        if (data.length > 0) {
-          setSelectedGenome(data[0]);
-          setStoreGenome(data[0]);
-        }
-      })
-      .finally(() => setLoading(false));
-  }, [selectedRunId, setAllGenomes, setStoreGenome]);
+  }, [genomes, setAllGenomes, selectedGenome, setStoreGenome]);
 
   const handleGenomeSelect = (genome: GenomeResult) => {
     setSelectedGenome(genome);
@@ -82,43 +56,25 @@ function Dashboard() {
           </p>
         </div>
 
-        {/* Run Selector */}
-        <div className="mb-6 flex items-center gap-4">
-          <label className="text-sm text-gray-400">Select Run:</label>
-          <select
-            value={selectedRunId ?? ''}
-            onChange={(e) => setSelectedRunId(e.target.value || null)}
-            className="bg-slate-800 border border-slate-600 rounded px-3 py-1.5 text-gray-200 text-sm focus:outline-none focus:border-cyan-500"
-          >
-            {runs.length === 0 && (
-              <option value="">No runs available</option>
-            )}
-            {runs.map((run) => (
-              <option key={run.id} value={run.id}>
-                {run.id} - {run.genomeCount} genomes (best: {run.bestFitness.toFixed(4)})
-              </option>
-            ))}
-          </select>
-
+        {/* Stats bar */}
+        <div className="mb-6 flex items-center gap-6 text-sm">
+          <span className="text-gray-400">
+            Showing <span className="text-cyan-400 font-mono">{genomes.length}</span> best evaluations
+          </span>
           {selectedGenome && (
             <Link
-              to="/genome/$polytopeId"
-              params={{ polytopeId: String(selectedGenome.genome.polytope_id) }}
-              search={{ runId: selectedRunId! }}
+              to="/polytope/$id"
+              params={{ id: String(selectedGenome.genome.polytope_id) }}
               className="ml-auto px-4 py-1.5 bg-cyan-600 hover:bg-cyan-700 text-white text-sm rounded transition-colors"
             >
-              View Detail →
+              View Polytope →
             </Link>
           )}
         </div>
 
-        {loading ? (
+        {genomes.length === 0 ? (
           <div className="flex items-center justify-center h-64">
-            <div className="text-gray-400">Loading genomes...</div>
-          </div>
-        ) : genomes.length === 0 ? (
-          <div className="flex items-center justify-center h-64">
-            <div className="text-gray-400">No genomes found in this run</div>
+            <div className="text-gray-400">No evaluations found. Run the search to generate data.</div>
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

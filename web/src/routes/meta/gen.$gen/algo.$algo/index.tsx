@@ -1,42 +1,44 @@
 /**
  * Algorithm Detail Page
- * Shows algorithm parameters, trials, and lineage
+ * Shows algorithm parameters, runs, and lineage
  */
 
 import { createFileRoute, Link, notFound } from '@tanstack/react-router';
-import { getAlgorithm, getTrials, getAlgorithmLineage } from '../server/meta';
-import type { MetaAlgorithmWithFitness, MetaTrial, MetaAlgorithm } from '../types';
+import { getAlgorithm, getRuns, getAlgorithmLineage } from '../../../../server/meta';
+import type { MetaAlgorithmWithFitness, MetaRun, MetaAlgorithm } from '../../../../types';
 
-export const Route = createFileRoute('/meta/$id')({
+export const Route = createFileRoute('/meta/gen/$gen/algo/$algo/')({
   loader: async ({ params }) => {
-    const id = parseInt(params.id, 10);
-    if (isNaN(id)) throw notFound();
+    const gen = parseInt(params.gen, 10);
+    const algoId = parseInt(params.algo, 10);
+    if (isNaN(algoId)) throw notFound();
 
-    const [algorithm, trials, lineage] = await Promise.all([
-      getAlgorithm({ data: { id } }),
-      getTrials({ data: { algorithmId: id } }),
-      getAlgorithmLineage({ data: { id } }),
+    const [algorithm, runs, lineage] = await Promise.all([
+      getAlgorithm({ data: { id: algoId } }),
+      getRuns({ data: { algorithmId: algoId } }),
+      getAlgorithmLineage({ data: { id: algoId } }),
     ]);
 
     if (!algorithm) throw notFound();
 
-    return { algorithm, trials, lineage };
+    return { generation: gen, algorithm, runs, lineage };
   },
   component: AlgorithmDetail,
 });
 
 function AlgorithmDetail() {
-  const { algorithm, trials, lineage } = Route.useLoaderData();
+  const { generation, algorithm, runs, lineage } = Route.useLoaderData();
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
       {/* Header */}
       <div className="flex items-center gap-4 mb-6">
         <Link
-          to="/meta"
+          to="/meta/gen/$gen"
+          params={{ gen: String(generation) }}
           className="text-gray-400 hover:text-white transition-colors"
         >
-          &larr; Back
+          &larr; Gen {generation}
         </Link>
         <h1 className="text-2xl font-bold">
           Algorithm #{algorithm.id}
@@ -53,26 +55,26 @@ function AlgorithmDetail() {
           {/* Performance Summary */}
           <PerformanceCard algorithm={algorithm} />
 
-          {/* Trials Table */}
+          {/* Runs Table */}
           <section className="bg-slate-800 rounded-lg p-6">
             <h2 className="text-lg font-semibold mb-4">
-              Trials ({trials.length}/{algorithm.trials_required})
+              Runs ({runs.length}/{algorithm.runs_required})
             </h2>
-            {trials.length === 0 ? (
-              <p className="text-gray-400">No trials completed yet.</p>
+            {runs.length === 0 ? (
+              <p className="text-gray-400">No runs completed yet.</p>
             ) : (
-              <TrialsTable trials={trials} />
+              <RunsTable runs={runs} generation={generation} algorithmId={algorithm.id} />
             )}
           </section>
 
-          {/* Feature Weights - Full Width under trials */}
+          {/* Feature Weights */}
           <FeatureWeightsCard weights={algorithm.feature_weights} />
         </div>
 
         {/* Sidebar */}
         <div className="space-y-6">
           {/* Parameters */}
-          <ParametersCard algorithm={algorithm} />
+          <ParametersCard algorithm={algorithm} generation={generation} />
 
           {/* Lineage */}
           {lineage.length > 1 && <LineageCard lineage={lineage} currentId={algorithm.id} />}
@@ -134,8 +136,8 @@ function PerformanceCard({ algorithm }: { algorithm: MetaAlgorithmWithFitness })
           suffix="log10"
         />
         <MetricBox
-          label="Trials"
-          value={`${algorithm.trial_count}/${algorithm.trials_required}`}
+          label="Runs"
+          value={`${algorithm.run_count}/${algorithm.runs_required}`}
         />
       </div>
     </div>
@@ -164,7 +166,7 @@ function MetricBox({
   );
 }
 
-function ParametersCard({ algorithm }: { algorithm: MetaAlgorithmWithFitness }) {
+function ParametersCard({ algorithm, generation }: { algorithm: MetaAlgorithmWithFitness; generation: number }) {
   const params = [
     { label: 'Generation', value: algorithm.meta_generation },
     { label: 'Version', value: algorithm.version },
@@ -195,7 +197,7 @@ function ParametersCard({ algorithm }: { algorithm: MetaAlgorithmWithFitness }) 
         ))}
       </dl>
 
-      {/* RNG Seed - shown separately for visibility */}
+      {/* RNG Seed */}
       <div className="mt-4 pt-4 border-t border-slate-700">
         <div className="flex justify-between text-sm">
           <span className="text-gray-400">RNG Seed</span>
@@ -209,8 +211,8 @@ function ParametersCard({ algorithm }: { algorithm: MetaAlgorithmWithFitness }) 
         <div className="mt-4 pt-4 border-t border-slate-700">
           <span className="text-gray-400">Parent: </span>
           <Link
-            to="/meta/$id"
-            params={{ id: String(algorithm.parent_id) }}
+            to="/meta/gen/$gen/algo/$algo"
+            params={{ gen: String(generation - 1), algo: String(algorithm.parent_id) }}
             className="text-cyan-400 hover:text-cyan-300 font-mono"
           >
             #{algorithm.parent_id}
@@ -267,8 +269,8 @@ function LineageCard({ lineage, currentId }: { lineage: MetaAlgorithm[]; current
               <span className="font-mono">#{algo.id} (current)</span>
             ) : (
               <Link
-                to="/meta/$id"
-                params={{ id: String(algo.id) }}
+                to="/meta/gen/$gen/algo/$algo"
+                params={{ gen: String(algo.meta_generation), algo: String(algo.id) }}
                 className="font-mono hover:text-white transition-colors"
               >
                 #{algo.id}
@@ -282,13 +284,12 @@ function LineageCard({ lineage, currentId }: { lineage: MetaAlgorithm[]; current
   );
 }
 
-function TrialsTable({ trials }: { trials: MetaTrial[] }) {
+function RunsTable({ runs, generation, algorithmId }: { runs: MetaRun[]; generation: number; algorithmId: number }) {
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
           <tr className="text-left text-gray-400 border-b border-slate-700">
-            <th className="pb-2 font-medium">Trial</th>
             <th className="pb-2 font-medium">Run</th>
             <th className="pb-2 font-medium">Gens</th>
             <th className="pb-2 font-medium">Initial</th>
@@ -299,20 +300,27 @@ function TrialsTable({ trials }: { trials: MetaTrial[] }) {
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-700/50">
-          {trials.map((trial) => (
-            <tr key={trial.id} className="hover:bg-slate-700/30">
-              <td className="py-2 font-mono">#{trial.id}</td>
-              <td className="py-2 font-mono text-gray-400">{trial.run_id ?? '-'}</td>
-              <td className="py-2 font-mono">{trial.generations_run}</td>
-              <td className="py-2 font-mono">{trial.initial_fitness.toFixed(4)}</td>
-              <td className="py-2 font-mono">{trial.final_fitness.toFixed(4)}</td>
+          {runs.map((run) => (
+            <tr key={run.id} className="hover:bg-slate-700/30">
+              <td className="py-2">
+                <Link
+                  to="/meta/gen/$gen/algo/$algo/run/$run"
+                  params={{ gen: String(generation), algo: String(algorithmId), run: String(run.run_number) }}
+                  className="text-cyan-400 hover:text-cyan-300 font-mono"
+                >
+                  #{run.run_number}
+                </Link>
+              </td>
+              <td className="py-2 font-mono">{run.generations_run}</td>
+              <td className="py-2 font-mono">{run.initial_fitness.toFixed(4)}</td>
+              <td className="py-2 font-mono">{run.final_fitness.toFixed(4)}</td>
               <td className="py-2 font-mono">
-                <span className={trial.fitness_improvement > 0 ? 'text-emerald-400' : 'text-red-400'}>
-                  {trial.fitness_improvement > 0 ? '+' : ''}{trial.fitness_improvement.toFixed(4)}
+                <span className={run.fitness_improvement > 0 ? 'text-emerald-400' : 'text-red-400'}>
+                  {run.fitness_improvement > 0 ? '+' : ''}{run.fitness_improvement.toFixed(4)}
                 </span>
               </td>
-              <td className="py-2 font-mono">{trial.best_cc_log_error.toFixed(2)}</td>
-              <td className="py-2 font-mono">{(trial.physics_success_rate * 100).toFixed(1)}%</td>
+              <td className="py-2 font-mono">{run.best_cc_log_error.toFixed(2)}</td>
+              <td className="py-2 font-mono">{(run.physics_success_rate * 100).toFixed(1)}%</td>
             </tr>
           ))}
         </tbody>

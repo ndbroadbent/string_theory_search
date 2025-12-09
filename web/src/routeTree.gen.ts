@@ -9,18 +9,15 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as MetaRouteImport } from './routes/meta'
 import { Route as HeuristicsRouteImport } from './routes/heuristics'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as MetaIndexRouteImport } from './routes/meta/index'
 import { Route as PolytopeIdRouteImport } from './routes/polytope.$id'
-import { Route as MetaIdRouteImport } from './routes/meta.$id'
 import { Route as GenomePolytopeIdRouteImport } from './routes/genome.$polytopeId'
+import { Route as MetaGenGenIndexRouteImport } from './routes/meta/gen.$gen/index'
+import { Route as MetaGenGenAlgoAlgoIndexRouteImport } from './routes/meta/gen.$gen/algo.$algo/index'
+import { Route as MetaGenGenAlgoAlgoRunRunRouteImport } from './routes/meta/gen.$gen/algo.$algo/run.$run'
 
-const MetaRoute = MetaRouteImport.update({
-  id: '/meta',
-  path: '/meta',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const HeuristicsRoute = HeuristicsRouteImport.update({
   id: '/heuristics',
   path: '/heuristics',
@@ -31,91 +28,115 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MetaIndexRoute = MetaIndexRouteImport.update({
+  id: '/meta/',
+  path: '/meta/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PolytopeIdRoute = PolytopeIdRouteImport.update({
   id: '/polytope/$id',
   path: '/polytope/$id',
   getParentRoute: () => rootRouteImport,
-} as any)
-const MetaIdRoute = MetaIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => MetaRoute,
 } as any)
 const GenomePolytopeIdRoute = GenomePolytopeIdRouteImport.update({
   id: '/genome/$polytopeId',
   path: '/genome/$polytopeId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MetaGenGenIndexRoute = MetaGenGenIndexRouteImport.update({
+  id: '/meta/gen/$gen/',
+  path: '/meta/gen/$gen/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MetaGenGenAlgoAlgoIndexRoute = MetaGenGenAlgoAlgoIndexRouteImport.update({
+  id: '/meta/gen/$gen/algo/$algo/',
+  path: '/meta/gen/$gen/algo/$algo/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MetaGenGenAlgoAlgoRunRunRoute =
+  MetaGenGenAlgoAlgoRunRunRouteImport.update({
+    id: '/meta/gen/$gen/algo/$algo/run/$run',
+    path: '/meta/gen/$gen/algo/$algo/run/$run',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/heuristics': typeof HeuristicsRoute
-  '/meta': typeof MetaRouteWithChildren
   '/genome/$polytopeId': typeof GenomePolytopeIdRoute
-  '/meta/$id': typeof MetaIdRoute
   '/polytope/$id': typeof PolytopeIdRoute
+  '/meta': typeof MetaIndexRoute
+  '/meta/gen/$gen': typeof MetaGenGenIndexRoute
+  '/meta/gen/$gen/algo/$algo': typeof MetaGenGenAlgoAlgoIndexRoute
+  '/meta/gen/$gen/algo/$algo/run/$run': typeof MetaGenGenAlgoAlgoRunRunRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/heuristics': typeof HeuristicsRoute
-  '/meta': typeof MetaRouteWithChildren
   '/genome/$polytopeId': typeof GenomePolytopeIdRoute
-  '/meta/$id': typeof MetaIdRoute
   '/polytope/$id': typeof PolytopeIdRoute
+  '/meta': typeof MetaIndexRoute
+  '/meta/gen/$gen': typeof MetaGenGenIndexRoute
+  '/meta/gen/$gen/algo/$algo': typeof MetaGenGenAlgoAlgoIndexRoute
+  '/meta/gen/$gen/algo/$algo/run/$run': typeof MetaGenGenAlgoAlgoRunRunRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/heuristics': typeof HeuristicsRoute
-  '/meta': typeof MetaRouteWithChildren
   '/genome/$polytopeId': typeof GenomePolytopeIdRoute
-  '/meta/$id': typeof MetaIdRoute
   '/polytope/$id': typeof PolytopeIdRoute
+  '/meta/': typeof MetaIndexRoute
+  '/meta/gen/$gen/': typeof MetaGenGenIndexRoute
+  '/meta/gen/$gen/algo/$algo/': typeof MetaGenGenAlgoAlgoIndexRoute
+  '/meta/gen/$gen/algo/$algo/run/$run': typeof MetaGenGenAlgoAlgoRunRunRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/heuristics'
-    | '/meta'
     | '/genome/$polytopeId'
-    | '/meta/$id'
     | '/polytope/$id'
+    | '/meta'
+    | '/meta/gen/$gen'
+    | '/meta/gen/$gen/algo/$algo'
+    | '/meta/gen/$gen/algo/$algo/run/$run'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/heuristics'
-    | '/meta'
     | '/genome/$polytopeId'
-    | '/meta/$id'
     | '/polytope/$id'
+    | '/meta'
+    | '/meta/gen/$gen'
+    | '/meta/gen/$gen/algo/$algo'
+    | '/meta/gen/$gen/algo/$algo/run/$run'
   id:
     | '__root__'
     | '/'
     | '/heuristics'
-    | '/meta'
     | '/genome/$polytopeId'
-    | '/meta/$id'
     | '/polytope/$id'
+    | '/meta/'
+    | '/meta/gen/$gen/'
+    | '/meta/gen/$gen/algo/$algo/'
+    | '/meta/gen/$gen/algo/$algo/run/$run'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   HeuristicsRoute: typeof HeuristicsRoute
-  MetaRoute: typeof MetaRouteWithChildren
   GenomePolytopeIdRoute: typeof GenomePolytopeIdRoute
   PolytopeIdRoute: typeof PolytopeIdRoute
+  MetaIndexRoute: typeof MetaIndexRoute
+  MetaGenGenIndexRoute: typeof MetaGenGenIndexRoute
+  MetaGenGenAlgoAlgoIndexRoute: typeof MetaGenGenAlgoAlgoIndexRoute
+  MetaGenGenAlgoAlgoRunRunRoute: typeof MetaGenGenAlgoAlgoRunRunRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/meta': {
-      id: '/meta'
-      path: '/meta'
-      fullPath: '/meta'
-      preLoaderRoute: typeof MetaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/heuristics': {
       id: '/heuristics'
       path: '/heuristics'
@@ -130,19 +151,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/meta/': {
+      id: '/meta/'
+      path: '/meta'
+      fullPath: '/meta'
+      preLoaderRoute: typeof MetaIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/polytope/$id': {
       id: '/polytope/$id'
       path: '/polytope/$id'
       fullPath: '/polytope/$id'
       preLoaderRoute: typeof PolytopeIdRouteImport
       parentRoute: typeof rootRouteImport
-    }
-    '/meta/$id': {
-      id: '/meta/$id'
-      path: '/$id'
-      fullPath: '/meta/$id'
-      preLoaderRoute: typeof MetaIdRouteImport
-      parentRoute: typeof MetaRoute
     }
     '/genome/$polytopeId': {
       id: '/genome/$polytopeId'
@@ -151,25 +172,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GenomePolytopeIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/meta/gen/$gen/': {
+      id: '/meta/gen/$gen/'
+      path: '/meta/gen/$gen'
+      fullPath: '/meta/gen/$gen'
+      preLoaderRoute: typeof MetaGenGenIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/meta/gen/$gen/algo/$algo/': {
+      id: '/meta/gen/$gen/algo/$algo/'
+      path: '/meta/gen/$gen/algo/$algo'
+      fullPath: '/meta/gen/$gen/algo/$algo'
+      preLoaderRoute: typeof MetaGenGenAlgoAlgoIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/meta/gen/$gen/algo/$algo/run/$run': {
+      id: '/meta/gen/$gen/algo/$algo/run/$run'
+      path: '/meta/gen/$gen/algo/$algo/run/$run'
+      fullPath: '/meta/gen/$gen/algo/$algo/run/$run'
+      preLoaderRoute: typeof MetaGenGenAlgoAlgoRunRunRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
-
-interface MetaRouteChildren {
-  MetaIdRoute: typeof MetaIdRoute
-}
-
-const MetaRouteChildren: MetaRouteChildren = {
-  MetaIdRoute: MetaIdRoute,
-}
-
-const MetaRouteWithChildren = MetaRoute._addFileChildren(MetaRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   HeuristicsRoute: HeuristicsRoute,
-  MetaRoute: MetaRouteWithChildren,
   GenomePolytopeIdRoute: GenomePolytopeIdRoute,
   PolytopeIdRoute: PolytopeIdRoute,
+  MetaIndexRoute: MetaIndexRoute,
+  MetaGenGenIndexRoute: MetaGenGenIndexRoute,
+  MetaGenGenAlgoAlgoIndexRoute: MetaGenGenAlgoAlgoIndexRoute,
+  MetaGenGenAlgoAlgoRunRunRoute: MetaGenGenAlgoAlgoRunRunRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

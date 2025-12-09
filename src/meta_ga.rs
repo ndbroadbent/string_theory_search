@@ -135,7 +135,7 @@ pub fn weighted_distance(
 // =============================================================================
 
 /// Create a random algorithm for initial population
-pub fn random_algorithm<R: Rng>(rng: &mut R, meta_generation: i32, trials_required: i32) -> MetaAlgorithm {
+pub fn random_algorithm<R: Rng>(rng: &mut R, meta_generation: i32, runs_required: i32) -> MetaAlgorithm {
     // Generate a seed for this algorithm from the rng
     let algo_seed: u64 = rng.gen();
 
@@ -159,7 +159,7 @@ pub fn random_algorithm<R: Rng>(rng: &mut R, meta_generation: i32, trials_requir
         cc_weight: rng.gen_range(5.0..=15.0),
         parent_id: None,
         meta_generation,
-        trials_required,
+        runs_required,
         rng_seed: algo_seed,
     }
 }
@@ -300,7 +300,7 @@ pub fn crossover_algorithms<R: Rng>(
 pub fn init_generation_zero(
     conn: &Connection,
     population_size: i32,
-    trials_required: i32,
+    runs_required: i32,
     master_seed: u64,
 ) -> rusqlite::Result<()> {
     use rand::SeedableRng;
@@ -309,7 +309,7 @@ pub fn init_generation_zero(
     let mut rng = StdRng::seed_from_u64(master_seed);
 
     for i in 0..population_size {
-        let mut algo = random_algorithm(&mut rng, 0, trials_required);
+        let mut algo = random_algorithm(&mut rng, 0, runs_required);
         algo.name = Some(format!("gen0_algo{}", i));
         crate::db::insert_meta_algorithm(conn, &algo)?;
     }
@@ -329,7 +329,7 @@ pub fn evolve_next_generation(
     conn: &Connection,
     current_gen: i32,
     population_size: i32,
-    trials_required: i32,
+    runs_required: i32,
     elite_count: i32,
     mutation_rate: f64,
     mutation_strength: f64,
@@ -370,7 +370,7 @@ pub fn evolve_next_generation(
             child.id = None;
             child.parent_id = parent.id;
             child.meta_generation = next_gen;
-            child.trials_required = trials_required;
+            child.runs_required = runs_required;
             child.name = Some(format!("gen{}_elite{}", next_gen, i));
             child
         } else if rng.gen::<f64>() < mutation_rate {
@@ -378,7 +378,7 @@ pub fn evolve_next_generation(
             let (parent, _) = &elite[rng.gen_range(0..elite.len())];
             let mut child = mutate_algorithm(parent, &mut rng, mutation_strength);
             child.meta_generation = next_gen;
-            child.trials_required = trials_required;
+            child.runs_required = runs_required;
             child.name = Some(format!("gen{}_mutant{}", next_gen, i));
             child
         } else {
@@ -389,7 +389,7 @@ pub fn evolve_next_generation(
             // Also apply light mutation
             child = mutate_algorithm(&child, &mut rng, mutation_strength * 0.5);
             child.meta_generation = next_gen;
-            child.trials_required = trials_required;
+            child.runs_required = runs_required;
             child.name = Some(format!("gen{}_cross{}", next_gen, i));
             child
         };
@@ -406,16 +406,16 @@ pub fn evolve_next_generation(
 /// Get number of completed trials for an algorithm
 pub fn get_trial_count(conn: &Connection, algorithm_id: i64) -> rusqlite::Result<i32> {
     conn.query_row(
-        "SELECT COUNT(*) FROM meta_trials WHERE algorithm_id = ?1",
+        "SELECT COUNT(*) FROM runs WHERE algorithm_id = ?1",
         params![algorithm_id],
         |row| row.get(0),
     )
 }
 
 /// Check if an algorithm has completed all required trials
-pub fn is_algorithm_complete(conn: &Connection, algorithm_id: i64, trials_required: i32) -> rusqlite::Result<bool> {
+pub fn is_algorithm_complete(conn: &Connection, algorithm_id: i64, runs_required: i32) -> rusqlite::Result<bool> {
     let count = get_trial_count(conn, algorithm_id)?;
-    Ok(count >= trials_required)
+    Ok(count >= runs_required)
 }
 
 #[cfg(test)]
@@ -692,7 +692,7 @@ mod tests {
 
             // Check fixed values
             assert_eq!(algo.meta_generation, 5);
-            assert_eq!(algo.trials_required, 15);
+            assert_eq!(algo.runs_required, 15);
             assert!(algo.id.is_none());
             assert!(algo.parent_id.is_none());
         }
@@ -749,7 +749,7 @@ mod tests {
             cc_weight: 1.0,
             parent_id: None,
             meta_generation: 0,
-            trials_required: 10,
+            runs_required: 10,
             rng_seed: 99999,
         };
 
@@ -831,7 +831,7 @@ mod tests {
             cc_weight: 5.0,
             parent_id: None,
             meta_generation: 0,
-            trials_required: 10,
+            runs_required: 10,
             rng_seed: 11111,
         };
 
@@ -855,7 +855,7 @@ mod tests {
             cc_weight: 15.0,
             parent_id: None,
             meta_generation: 0,
-            trials_required: 10,
+            runs_required: 10,
             rng_seed: 22222,
         };
 
@@ -928,9 +928,9 @@ mod tests {
             .unwrap();
         assert_eq!(count, 5);
 
-        // Check all have correct trials_required
+        // Check all have correct runs_required
         let trials: Vec<i32> = conn
-            .prepare("SELECT trials_required FROM meta_algorithms")
+            .prepare("SELECT runs_required FROM meta_algorithms")
             .unwrap()
             .query_map([], |row| row.get(0))
             .unwrap()
@@ -986,10 +986,10 @@ mod tests {
 
         // Insert trials
         for i in 0..3 {
-            let trial = crate::db::MetaTrial {
+            let trial = crate::db::Run {
                 id: None,
                 algorithm_id: algo_id,
-                run_id: None,
+                run_number: 1,
                 generations_run: 10,
                 initial_fitness: 0.1,
                 final_fitness: 0.5,
@@ -1000,7 +1000,7 @@ mod tests {
                 physics_success_rate: 0.8,
                 unique_polytopes_tried: 100,
             };
-            crate::db::insert_meta_trial(&conn, &trial).unwrap();
+            crate::db::insert_run(&conn, &trial).unwrap();
             assert_eq!(get_trial_count(&conn, algo_id).unwrap(), i + 1);
         }
     }
@@ -1018,10 +1018,10 @@ mod tests {
 
         // Add trials
         for _ in 0..2 {
-            let trial = crate::db::MetaTrial {
+            let trial = crate::db::Run {
                 id: None,
                 algorithm_id: algo_id,
-                run_id: None,
+                run_number: 1,
                 generations_run: 10,
                 initial_fitness: 0.1,
                 final_fitness: 0.5,
@@ -1032,15 +1032,15 @@ mod tests {
                 physics_success_rate: 0.8,
                 unique_polytopes_tried: 100,
             };
-            crate::db::insert_meta_trial(&conn, &trial).unwrap();
+            crate::db::insert_run(&conn, &trial).unwrap();
         }
         assert!(!is_algorithm_complete(&conn, algo_id, 3).unwrap());
 
         // Add one more - now complete
-        let trial = crate::db::MetaTrial {
+        let trial = crate::db::Run {
             id: None,
             algorithm_id: algo_id,
-            run_id: None,
+            run_number: 1,
             generations_run: 10,
             initial_fitness: 0.1,
             final_fitness: 0.5,
@@ -1051,7 +1051,7 @@ mod tests {
             physics_success_rate: 0.8,
             unique_polytopes_tried: 100,
         };
-        crate::db::insert_meta_trial(&conn, &trial).unwrap();
+        crate::db::insert_run(&conn, &trial).unwrap();
         assert!(is_algorithm_complete(&conn, algo_id, 3).unwrap());
     }
 
@@ -1085,10 +1085,10 @@ mod tests {
             ).unwrap();
 
             // Add a trial with varying fitness
-            let trial = crate::db::MetaTrial {
+            let trial = crate::db::Run {
                 id: None,
                 algorithm_id: algo_id,
-                run_id: None,
+                run_number: 1,
                 generations_run: 10,
                 initial_fitness: 0.1,
                 final_fitness: 0.1 * (i + 1) as f64,
@@ -1099,7 +1099,7 @@ mod tests {
                 physics_success_rate: 0.8,
                 unique_polytopes_tried: 100,
             };
-            crate::db::insert_meta_trial(&conn, &trial).unwrap();
+            crate::db::insert_run(&conn, &trial).unwrap();
         }
 
         // Evolve to generation 1

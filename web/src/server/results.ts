@@ -37,30 +37,40 @@ export const listRuns = createServerFn({ method: 'GET' }).handler(
     try {
       const db = new Database(dbPath, { readonly: true });
 
+      // New schema: runs table has algorithm_id, run_number, final_fitness, etc.
       const rows = db.prepare(`
         SELECT
-          id,
-          started_at,
-          total_generations,
-          best_fitness,
-          (SELECT COUNT(*) FROM evaluations WHERE run_id = runs.id) as eval_count
-        FROM runs
-        ORDER BY started_at DESC
+          r.id,
+          r.algorithm_id,
+          r.run_number,
+          r.started_at,
+          r.generations_run,
+          r.final_fitness,
+          a.meta_generation,
+          (SELECT COUNT(*) FROM evaluations WHERE run_id = r.id) as eval_count
+        FROM runs r
+        JOIN meta_algorithms a ON a.id = r.algorithm_id
+        ORDER BY r.started_at DESC
       `).all() as Array<{
-        id: string;
+        id: number;
+        algorithm_id: number;
+        run_number: number;
         started_at: string | null;
-        total_generations: number | null;
-        best_fitness: number | null;
+        generations_run: number | null;
+        final_fitness: number | null;
+        meta_generation: number;
         eval_count: number;
       }>;
 
       db.close();
 
+      // Map runs - for now use unique_polytopes_tried as proxy for genome count
+      // since evaluations.run_id is NULL for old data
       return rows.map(row => ({
-        id: row.id,
-        path: '', // No longer file-based
-        genomeCount: row.eval_count,
-        bestFitness: row.best_fitness ?? 0,
+        id: String(row.id),
+        path: `/meta/gen/${row.meta_generation}/algo/${row.algorithm_id}/run/${row.run_number}`,
+        genomeCount: row.eval_count || row.generations_run || 0,
+        bestFitness: row.final_fitness ?? 0,
         timestamp: row.started_at ? new Date(row.started_at) : new Date(0),
       }));
     } catch (e) {
@@ -69,6 +79,39 @@ export const listRuns = createServerFn({ method: 'GET' }).handler(
     }
   }
 );
+
+/** Get all evaluations (not filtered by run - for overview) */
+export const getAllEvaluations = createServerFn({ method: 'GET' })
+  .inputValidator((data: { limit?: number }) => data)
+  .handler(async ({ data: { limit = 100 } }): Promise<GenomeResult[]> => {
+    const dbPath = getDbPath();
+    if (!existsSync(dbPath)) {
+      return [];
+    }
+
+    try {
+      const db = new Database(dbPath, { readonly: true });
+
+      const rows = db.prepare(`
+        SELECT
+          e.*,
+          p.h11,
+          p.h21
+        FROM evaluations e
+        LEFT JOIN polytopes p ON p.id = e.polytope_id
+        WHERE e.success = 1
+        ORDER BY e.fitness DESC
+        LIMIT ?
+      `).all(limit) as Record<string, unknown>[];
+
+      db.close();
+
+      return rows.map(rowToGenomeResult);
+    } catch (e) {
+      console.error('Failed to read evaluations:', e);
+      return [];
+    }
+  });
 
 /** List top evaluations in a run */
 export const listGenomes = createServerFn({ method: 'GET' })

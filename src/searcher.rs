@@ -857,7 +857,7 @@ pub struct LandscapeSearcher {
     /// Database connection for persistent storage
     db_conn: Option<Arc<Mutex<Connection>>>,
     /// Run ID for tracking evaluations
-    run_id: Option<String>,
+    run_id: Option<i64>,
     /// Cache of heuristics per polytope for weighted similarity search
     heuristics_cache: HashMap<usize, HashMap<String, f64>>,
     /// Generations since last polytope switch (for polytope_patience)
@@ -883,7 +883,7 @@ impl LandscapeSearcher {
         polytope_path: &str,
         polytope_filter: Option<Vec<usize>>,
         db_conn: Option<Arc<Mutex<Connection>>>,
-        run_id: Option<String>,
+        run_id: Option<i64>,
     ) -> Self {
         Self::new_with_seed(config, SearchStrategy::default(), polytope_path, polytope_filter, db_conn, run_id, None)
     }
@@ -896,7 +896,7 @@ impl LandscapeSearcher {
         polytope_path: &str,
         polytope_filter: Option<Vec<usize>>,
         db_conn: Option<Arc<Mutex<Connection>>>,
-        run_id: Option<String>,
+        run_id: Option<i64>,
     ) -> Self {
         Self::new_with_seed(config, strategy, polytope_path, polytope_filter, db_conn, run_id, None)
     }
@@ -909,7 +909,7 @@ impl LandscapeSearcher {
         polytope_path: &str,
         polytope_filter: Option<Vec<usize>>,
         db_conn: Option<Arc<Mutex<Connection>>>,
-        run_id: Option<String>,
+        run_id: Option<i64>,
         seed: Option<u64>,
     ) -> Self {
         // Physics bridge must be initialized by caller (search.rs)
@@ -949,15 +949,9 @@ impl LandscapeSearcher {
         println!("Cluster state: {} clusters, {} total evaluations",
             cluster_state.clusters.len(), cluster_state.total_evaluations);
 
-        // Register run in database
-        if let (Some(ref conn), Some(ref rid)) = (&db_conn, &run_id) {
-            let config_json = serde_json::to_string(&config).unwrap_or_default();
-            let filter_json = polytope_filter.as_ref()
-                .map(|f| serde_json::to_string(f).unwrap_or_default());
-            if let Ok(locked) = conn.lock() {
-                let _ = db::insert_run(&locked, rid, &config_json, filter_json.as_deref());
-            }
-        }
+        // Note: Run registration now happens via insert_run() with a Run struct
+        // For meta-GA runs, this is done in run_trial() which creates the Run record
+        // For standalone runs, evaluations are still recorded but without a run_id
 
         // Use deterministic seed if provided, otherwise entropy
         let mut rng = match seed {
@@ -1041,7 +1035,7 @@ impl LandscapeSearcher {
                         let _ = db::insert_evaluation(
                             &locked,
                             individual.genome.polytope_id as i64,
-                            self.run_id.as_deref(),
+                            self.run_id,
                             Some(self.generation as i32),
                             &individual.genome,
                             physics,
@@ -1402,25 +1396,24 @@ impl LandscapeSearcher {
         self.cluster_state.save(&self.cluster_state_path)
     }
 
-    /// Update run statistics in the database on completion
-    pub fn finalize_run(&self) {
-        if let (Some(ref conn), Some(ref rid)) = (&self.db_conn, &self.run_id) {
-            if let Ok(locked) = conn.lock() {
-                let best_polytope_id = self.best_ever.as_ref()
-                    .map(|b| b.genome.polytope_id as i64);
-                let best_fitness = self.best_ever.as_ref()
-                    .map(|b| b.fitness)
-                    .unwrap_or(0.0);
-                let _ = db::update_run_stats(
-                    &locked,
-                    rid,
-                    self.generation as i32,
-                    self.total_evaluated as i64,
-                    best_fitness,
-                    best_polytope_id,
-                );
-            }
-        }
+    /// Get best fitness achieved
+    pub fn get_best_fitness(&self) -> f64 {
+        self.best_ever.as_ref().map(|b| b.fitness).unwrap_or(0.0)
+    }
+
+    /// Get best polytope ID
+    pub fn get_best_polytope_id(&self) -> Option<i64> {
+        self.best_ever.as_ref().map(|b| b.genome.polytope_id as i64)
+    }
+
+    /// Get total evaluations
+    pub fn get_total_evaluated(&self) -> u64 {
+        self.total_evaluated
+    }
+
+    /// Get current generation
+    pub fn get_generation(&self) -> usize {
+        self.generation
     }
 
     fn evolve(&mut self) {
@@ -1694,7 +1687,7 @@ mod tests {
             cc_weight: 12.0,
             parent_id: None,
             meta_generation: 0,
-            trials_required: 10,
+            runs_required: 10,
             rng_seed: 54321,
         };
 

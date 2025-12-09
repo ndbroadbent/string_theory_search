@@ -8,7 +8,7 @@ use std::time::Instant;
 use rusqlite::Connection;
 
 use string_theory::constants;
-use string_theory::db::{self, MetaAlgorithm, MetaTrial};
+use string_theory::db::{self, MetaAlgorithm, Run};
 use string_theory::searcher::{format_fitness_line, GaConfig, LandscapeSearcher, SearchStrategy};
 
 /// Convert MetaAlgorithm to GaConfig for the inner GA
@@ -28,32 +28,33 @@ pub fn algorithm_to_ga_config(algo: &MetaAlgorithm) -> GaConfig {
 /// Run one trial of an algorithm and return the results
 pub fn run_trial(
     algo: &MetaAlgorithm,
-    trial_number: i32,
+    run_number: i32,
     polytope_path: &str,
     polytope_filter: Option<Vec<usize>>,
     db_conn: Arc<Mutex<Connection>>,
-    run_id: String,
     verbose: bool,
     output_dir: &str,
     interrupt_flag: &Arc<AtomicBool>,
-) -> MetaTrial {
+) -> Run {
     let ga_config = algorithm_to_ga_config(algo);
     let search_strategy = SearchStrategy::from_meta_algorithm(algo);
     let max_generations = algo.max_generations as usize;
 
-    // Derive deterministic trial seed from algorithm seed and trial number
-    let trial_seed = db::derive_trial_seed(algo.rng_seed, trial_number);
-    println!("  Trial seed: {} (derived from algo_seed={}, trial={})",
-             trial_seed, algo.rng_seed, trial_number);
+    // Derive deterministic run seed from algorithm seed and run number
+    let run_seed = db::derive_run_seed(algo.rng_seed, run_number);
+    println!("  Run seed: {} (derived from algo_seed={}, run={})",
+             run_seed, algo.rng_seed, run_number);
 
+    // Note: run_id is None here - evaluations won't be linked to a run record
+    // The Run record is created after the trial completes with all the metrics
     let mut searcher = LandscapeSearcher::new_with_seed(
         ga_config.clone(),
         search_strategy,
         polytope_path,
         polytope_filter,
         Some(db_conn.clone()),
-        Some(run_id.clone()),
-        Some(trial_seed),
+        None,  // No run_id yet - will be set after insert_run
+        Some(run_seed),
     );
     searcher.verbose = verbose;
 
@@ -119,9 +120,6 @@ pub fn run_trial(
         }
     }
 
-    // Finalize run
-    searcher.finalize_run();
-
     // Save best if good
     let final_fitness = fitness_history.last().copied().unwrap_or(0.0);
     if final_fitness > 0.3 {
@@ -130,10 +128,10 @@ pub fn run_trial(
         }
     }
 
-    // Compute trial metrics
-    compute_trial_metrics(
+    // Compute run metrics
+    compute_run_metrics(
         algo.id.unwrap_or(0),
-        run_id,
+        run_number,
         &fitness_history,
         initial_fitness,
         &searcher,
@@ -143,16 +141,16 @@ pub fn run_trial(
     )
 }
 
-fn compute_trial_metrics(
+fn compute_run_metrics(
     algorithm_id: i64,
-    run_id: String,
+    run_number: i32,
     fitness_history: &[f64],
     initial_fitness: f64,
     searcher: &LandscapeSearcher,
     physics_successes: usize,
     physics_failures: usize,
     unique_polytopes_count: usize,
-) -> MetaTrial {
+) -> Run {
     let generations_run = fitness_history.len() as i32;
     let final_fitness = fitness_history.last().copied().unwrap_or(0.0);
     let fitness_improvement = final_fitness - initial_fitness;
@@ -190,10 +188,10 @@ fn compute_trial_metrics(
         0.0
     };
 
-    MetaTrial {
+    Run {
         id: None,
         algorithm_id,
-        run_id: Some(run_id),
+        run_number,
         generations_run,
         initial_fitness,
         final_fitness,

@@ -245,7 +245,7 @@ export interface MetaAlgorithm {
 
   // Status
   status: 'pending' | 'running' | 'completed' | 'failed';
-  trials_required: number;
+  runs_required: number;
   locked_by_pid: number | null;
   last_heartbeat_at: string | null;
   completed_at: string | null;
@@ -254,7 +254,7 @@ export interface MetaAlgorithm {
 
 /** Meta-algorithm with fitness info */
 export interface MetaAlgorithmWithFitness extends MetaAlgorithm {
-  trial_count: number;
+  run_count: number;
   mean_improvement_rate: number | null;
   best_improvement_rate: number | null;
   mean_fitness_auc: number | null;
@@ -264,11 +264,11 @@ export interface MetaAlgorithmWithFitness extends MetaAlgorithm {
   meta_fitness: number | null;
 }
 
-/** Meta-trial result */
-export interface MetaTrial {
+/** Run result (one execution of an algorithm) */
+export interface MetaRun {
   id: number;
   algorithm_id: number;
-  run_id: string | null;
+  run_number: number;
   generations_run: number;
   initial_fitness: number;
   final_fitness: number;

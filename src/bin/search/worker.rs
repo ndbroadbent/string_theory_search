@@ -64,37 +64,35 @@ pub fn run_worker_loop(
         heartbeat.set_algorithm(algo_id);
 
         // Get current trial count
-        let trial_number = {
+        let run_number = {
             let conn = db_conn.lock().unwrap();
             meta_ga::get_trial_count(&conn, algo_id).unwrap_or(0) + 1
         };
 
-        print_algorithm_header(&algo, algo_id, trial_number);
+        print_algorithm_header(&algo, algo_id, run_number);
 
         // Generate unique run ID and output directory
-        let run_id = format!("meta_{}_{}", algo_id, trial_number);
         let output_dir = format!("{}/algo_{}", config.paths.output_dir, algo_id);
         std::fs::create_dir_all(&output_dir).ok();
 
         // Run the trial
-        let trial_start = Instant::now();
-        let trial = run_trial(
+        let run_start = Instant::now();
+        let run_result = run_trial(
             &algo,
-            trial_number,
+            run_number,
             polytope_path,
             polytope_filter.clone(),
             db_conn.clone(),
-            run_id,
             verbose,
             &output_dir,
             &interrupt_flag,
         );
-        let trial_elapsed = trial_start.elapsed();
+        let run_elapsed = run_start.elapsed();
 
-        print_trial_summary(&trial, trial_number, trial_elapsed.as_secs_f64());
+        print_run_summary(&run_result, run_number, run_elapsed.as_secs_f64());
 
-        // Record trial result and check completion
-        record_trial_and_check_completion(&db_conn, &trial, algo_id, &algo, my_pid);
+        // Record run result and check completion
+        record_run_and_check_completion(&db_conn, &run_result, algo_id, &algo, my_pid);
 
         // Clear the algo ID for heartbeat
         heartbeat.clear_algorithm();
@@ -126,7 +124,7 @@ fn acquire_algorithm(
         if let Err(e) = meta_ga::init_generation_zero(
             &conn,
             config.meta_ga.algorithms_per_generation,
-            config.meta_ga.trials_required,
+            config.meta_ga.runs_required,
             config.meta_ga.master_seed,
         ) {
             return AcquisitionResult::Fatal(format!("Failed to initialize generation 0: {}", e));
@@ -152,7 +150,7 @@ fn acquire_algorithm(
                 &conn,
                 current_gen,
                 config.meta_ga.algorithms_per_generation,
-                config.meta_ga.trials_required,
+                config.meta_ga.runs_required,
                 META_ELITE_COUNT,
                 META_MUTATION_RATE,
                 META_MUTATION_STRENGTH,
@@ -179,11 +177,11 @@ fn acquire_algorithm(
     }
 }
 
-fn print_algorithm_header(algo: &db::MetaAlgorithm, algo_id: i64, trial_number: i32) {
+fn print_algorithm_header(algo: &db::MetaAlgorithm, algo_id: i64, run_number: i32) {
     println!("═══════════════════════════════════════════════════════════════");
     println!(
         "  ALGORITHM {} (gen {}) - Trial {}/{}",
-        algo_id, algo.meta_generation, trial_number, algo.trials_required
+        algo_id, algo.meta_generation, run_number, algo.runs_required
     );
     println!("═══════════════════════════════════════════════════════════════");
     println!(
@@ -201,9 +199,9 @@ fn print_algorithm_header(algo: &db::MetaAlgorithm, algo_id: i64, trial_number: 
     println!();
 }
 
-fn print_trial_summary(trial: &db::MetaTrial, trial_number: i32, elapsed_secs: f64) {
+fn print_run_summary(trial: &db::Run, run_number: i32, elapsed_secs: f64) {
     println!();
-    println!("Trial {} completed in {:.1}s", trial_number, elapsed_secs);
+    println!("Trial {} completed in {:.1}s", run_number, elapsed_secs);
     println!("  Initial fitness: {:.4}", trial.initial_fitness);
     println!("  Final fitness: {:.4}", trial.final_fitness);
     println!("  Improvement rate: {:.6}", trial.improvement_rate);
@@ -211,25 +209,25 @@ fn print_trial_summary(trial: &db::MetaTrial, trial_number: i32, elapsed_secs: f
     println!();
 }
 
-fn record_trial_and_check_completion(
+fn record_run_and_check_completion(
     db_conn: &Arc<Mutex<Connection>>,
-    trial: &db::MetaTrial,
+    trial: &db::Run,
     algo_id: i64,
     algo: &db::MetaAlgorithm,
     my_pid: i32,
 ) {
     let conn = db_conn.lock().unwrap();
 
-    if let Err(e) = db::insert_meta_trial(&conn, trial) {
+    if let Err(e) = db::insert_run(&conn, trial) {
         eprintln!("Failed to insert trial result: {}", e);
     }
 
     // Check if algorithm is complete
     let trial_count = meta_ga::get_trial_count(&conn, algo_id).unwrap_or(0);
-    if trial_count >= algo.trials_required {
+    if trial_count >= algo.runs_required {
         println!(
             "Algorithm {} completed all {} trials",
-            algo_id, algo.trials_required
+            algo_id, algo.runs_required
         );
         if let Err(e) = db::complete_algorithm(&conn, algo_id, my_pid) {
             eprintln!("Failed to mark algorithm complete: {}", e);
@@ -237,7 +235,7 @@ fn record_trial_and_check_completion(
     } else {
         println!(
             "Algorithm {} has {}/{} trials complete",
-            algo_id, trial_count, algo.trials_required
+            algo_id, trial_count, algo.runs_required
         );
     }
 }
