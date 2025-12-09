@@ -76,7 +76,7 @@ export const useVisualizationStore = create<VisualizationState>((set) => ({
 
   showVertices: true,
   showEdges: true,
-  vertexSize: 0.05,
+  vertexSize: 0.03,
   zoom: 2.0, // 2x default zoom
 
   // Actions

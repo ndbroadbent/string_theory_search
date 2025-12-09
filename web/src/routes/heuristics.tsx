@@ -2,7 +2,7 @@
  * Heuristics Explorer - Scatter plot across different dimensions
  */
 
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, Link } from '@tanstack/react-router';
 import { useState, useMemo } from 'react';
 import {
   ScatterChart,
@@ -174,6 +174,7 @@ function HeuristicsExplorer() {
       x: getValue(h, xAxis),
       y: getValue(h, yAxis),
       color: getValue(h, colorBy),
+      z: 1, // Fixed size for all points
     }));
   }, [heuristics, xAxis, yAxis, colorBy]);
 
@@ -296,7 +297,7 @@ function HeuristicsExplorer() {
                     fontSize: 12,
                   }}
                 />
-                <ZAxis range={[50, 200]} />
+                <ZAxis dataKey="z" range={[8, 8]} />
                 <Tooltip
                   cursor={{ strokeDasharray: '3 3' }}
                   content={({ payload }) => {
@@ -352,9 +353,18 @@ function HeuristicsExplorer() {
           <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700 max-h-[600px] overflow-y-auto">
             {selectedPoint ? (
               <>
-                <h3 className="text-lg font-medium text-white mb-3">
-                  Polytope #{selectedPoint.polytope_id}
-                </h3>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-lg font-medium text-white">
+                    Polytope #{selectedPoint.polytope_id}
+                  </h3>
+                  <Link
+                    to="/polytope/$id"
+                    params={{ id: String(selectedPoint.polytope_id) }}
+                    className="text-sm text-cyan-400 hover:text-cyan-300 transition-colors"
+                  >
+                    View 3D →
+                  </Link>
+                </div>
 
                 <div className="space-y-4">
                   {/* Basic Info */}

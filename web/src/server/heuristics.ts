@@ -38,3 +38,22 @@ export const getHeuristics = createServerFn({ method: 'GET' }).handler(
     }
   }
 );
+
+/**
+ * Get heuristics for a specific polytope by ID
+ */
+export const getHeuristicsForPolytope = createServerFn({ method: 'GET' })
+  .inputValidator((data: { polytopeId: number }) => data)
+  .handler(async ({ data: { polytopeId } }): Promise<PolytopeHeuristics | null> => {
+    const projectRoot = getProjectRoot();
+    const heuristicsPath = join(projectRoot, 'heuristics_sample.json');
+
+    try {
+      const content = await readFile(heuristicsPath, 'utf-8');
+      const heuristics = JSON.parse(content) as PolytopeHeuristics[];
+      return heuristics.find((h) => h.polytope_id === polytopeId) ?? null;
+    } catch (error) {
+      console.error('Error loading heuristics:', error);
+      return null;
+    }
+  });

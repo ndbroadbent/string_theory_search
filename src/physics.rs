@@ -87,7 +87,15 @@ pub struct Compactification {
 impl Compactification {
     /// Create a new random compactification
     pub fn random<R: rand::Rng>(rng: &mut R, polytope_data: &PolytopeData) -> Self {
-        let polytope_id = rng.gen_range(0..polytope_data.len());
+        Self::random_filtered(rng, polytope_data, None)
+    }
+
+    /// Create a new random compactification, optionally filtering to specific polytope IDs
+    pub fn random_filtered<R: rand::Rng>(rng: &mut R, polytope_data: &PolytopeData, filter: Option<&[usize]>) -> Self {
+        let polytope_id = match filter {
+            Some(ids) if !ids.is_empty() => ids[rng.gen_range(0..ids.len())],
+            _ => rng.gen_range(0..polytope_data.len()),
+        };
         let polytope = polytope_data.get(polytope_id).expect("Invalid polytope index");
 
         let h11 = polytope.h11;
@@ -129,9 +137,17 @@ impl Compactification {
 
     /// Mutate this compactification
     pub fn mutate<R: rand::Rng>(&mut self, rng: &mut R, strength: f64, polytope_data: &PolytopeData) {
+        self.mutate_filtered(rng, strength, polytope_data, None)
+    }
+
+    /// Mutate this compactification, optionally filtering polytope switches to specific IDs
+    pub fn mutate_filtered<R: rand::Rng>(&mut self, rng: &mut R, strength: f64, polytope_data: &PolytopeData, filter: Option<&[usize]>) {
         // Occasionally switch polytopes entirely
         if rng.gen::<f64>() < 0.05 * strength {
-            let new_id = rng.gen_range(0..polytope_data.len());
+            let new_id = match filter {
+                Some(ids) if !ids.is_empty() => ids[rng.gen_range(0..ids.len())],
+                _ => rng.gen_range(0..polytope_data.len()),
+            };
             let polytope = polytope_data.get(new_id).expect("Invalid polytope index");
             self.polytope_id = new_id;
             self.h11 = polytope.h11;

@@ -42,6 +42,11 @@ struct Args {
     /// Verbose debug output (show each individual evaluation)
     #[arg(short = 'v', long)]
     verbose: bool,
+
+    /// Specific polytope IDs to search (comma-separated or @filename)
+    /// Example: --ids 2143852,1234567 or --ids @interesting_ids.txt
+    #[arg(long, value_delimiter = ',')]
+    ids: Option<Vec<String>>,
 }
 
 #[derive(Debug, Deserialize, Default)]
@@ -151,6 +156,50 @@ fn load_config(path: &str) -> Config {
     }
 }
 
+/// Parse polytope IDs from CLI arguments
+/// Supports: comma-separated IDs or @filename to read from file
+fn parse_polytope_ids(args_ids: Option<Vec<String>>) -> Option<Vec<usize>> {
+    let ids = args_ids?;
+    let mut result = Vec::new();
+
+    for arg in ids {
+        if arg.starts_with('@') {
+            // Read IDs from file
+            let filename = &arg[1..];
+            match std::fs::read_to_string(filename) {
+                Ok(content) => {
+                    for line in content.lines() {
+                        let line = line.trim();
+                        if line.is_empty() || line.starts_with('#') {
+                            continue;
+                        }
+                        // Parse each line as a number (could be comma-separated or one per line)
+                        for part in line.split(',') {
+                            if let Ok(id) = part.trim().parse::<usize>() {
+                                result.push(id);
+                            }
+                        }
+                    }
+                }
+                Err(e) => {
+                    eprintln!("Warning: Failed to read IDs file '{}': {}", filename, e);
+                }
+            }
+        } else {
+            // Direct ID
+            if let Ok(id) = arg.parse::<usize>() {
+                result.push(id);
+            }
+        }
+    }
+
+    if result.is_empty() {
+        None
+    } else {
+        Some(result)
+    }
+}
+
 fn main() {
     env_logger::init();
     let args = Args::parse();
@@ -162,6 +211,9 @@ fn main() {
     let max_generations = args.max_generations.unwrap_or(config.limits.max_generations);
     let polytope_path = args.polytopes.unwrap_or(config.paths.polytopes);
     let population_size = args.population.unwrap_or(config.search.population_size);
+
+    // Parse filtered polytope IDs
+    let polytope_filter = parse_polytope_ids(args.ids);
 
     let run_id = args.run_id.unwrap_or_else(|| rand::random::<u32>() % 100);
     let output_dir = format!("{}/run_{:02}", config.paths.output_dir, run_id);
@@ -192,13 +244,16 @@ fn main() {
         hall_of_fame_size: config.search.hall_of_fame_size,
     };
 
-    let mut searcher = LandscapeSearcher::new(ga_config.clone(), &polytope_path);
+    let mut searcher = LandscapeSearcher::new_with_filter(ga_config.clone(), &polytope_path, polytope_filter.clone());
     searcher.verbose = args.verbose;
 
     println!("Population size: {}", ga_config.population_size);
     println!("Max time: {}s", max_time);
     println!("Max generations: {}", max_generations);
     println!("Output: {}", output_dir);
+    if let Some(ref filter) = polytope_filter {
+        println!("Polytope filter: {} specific IDs", filter.len());
+    }
     println!();
     println!("Target constants:");
     println!("  alpha_em     = {:.6e}", constants::ALPHA_EM);

@@ -620,7 +620,12 @@ pub struct Individual {
 impl Individual {
     /// Create a new random individual
     pub fn random<R: Rng>(rng: &mut R, polytope_data: &PolytopeData) -> Self {
-        let genome = Compactification::random(rng, polytope_data);
+        Self::random_filtered(rng, polytope_data, None)
+    }
+
+    /// Create a new random individual, optionally filtering to specific polytope IDs
+    pub fn random_filtered<R: Rng>(rng: &mut R, polytope_data: &PolytopeData, filter: Option<&[usize]>) -> Self {
+        let genome = Compactification::random_filtered(rng, polytope_data, filter);
         Self {
             genome,
             physics: None,
@@ -767,6 +772,8 @@ pub struct RealGenerationStats {
 pub struct LandscapeSearcher {
     pub config: GaConfig,
     pub polytope_data: Arc<PolytopeData>,
+    /// If set, only search within these polytope IDs
+    pub polytope_filter: Option<Vec<usize>>,
     pub population: Vec<Individual>,
     pub best_ever: Option<Individual>,
     pub hall_of_fame: Vec<Individual>,
@@ -784,12 +791,31 @@ pub struct LandscapeSearcher {
 impl LandscapeSearcher {
     /// Create a new searcher
     pub fn new(config: GaConfig, polytope_path: &str) -> Self {
+        Self::new_with_filter(config, polytope_path, None)
+    }
+
+    /// Create a new searcher with an optional polytope filter
+    pub fn new_with_filter(config: GaConfig, polytope_path: &str, polytope_filter: Option<Vec<usize>>) -> Self {
         // Physics bridge must be initialized by caller (search.rs)
         assert!(is_physics_available(), "Physics bridge REQUIRED but not initialized");
 
         // Load polytope data
         let polytope_data = Arc::new(PolytopeData::load(polytope_path).expect("Failed to load polytope data"));
         println!("Using {} polytopes from Kreuzer-Skarke database", polytope_data.len());
+
+        // Validate filter IDs
+        if let Some(ref filter) = polytope_filter {
+            let max_id = polytope_data.len();
+            let valid_ids: Vec<usize> = filter.iter()
+                .filter(|&&id| id < max_id)
+                .copied()
+                .collect();
+            if valid_ids.len() < filter.len() {
+                eprintln!("Warning: {} polytope IDs were out of range and skipped",
+                    filter.len() - valid_ids.len());
+            }
+            println!("Filtering to {} specific polytope IDs", valid_ids.len());
+        }
 
         // Load or create cluster state
         let cluster_state_path = "cluster_state.json".to_string();
@@ -801,12 +827,13 @@ impl LandscapeSearcher {
 
         // Initialize population
         let population: Vec<Individual> = (0..config.population_size)
-            .map(|_| Individual::random(&mut rng, &polytope_data))
+            .map(|_| Individual::random_filtered(&mut rng, &polytope_data, polytope_filter.as_deref()))
             .collect();
 
         Self {
             config,
             polytope_data,
+            polytope_filter,
             population,
             best_ever: None,
             hall_of_fame: Vec::new(),
@@ -976,7 +1003,7 @@ impl LandscapeSearcher {
             if elite_count + fresh_count + i < self.population.len() {
                 let idx = self.rng.gen_range(0..self.hall_of_fame.len());
                 let mut mutant = self.hall_of_fame[idx].clone();
-                mutant.genome.mutate(&mut self.rng, 1.0, &self.polytope_data);
+                mutant.genome.mutate_filtered(&mut self.rng, 1.0, &self.polytope_data, self.polytope_filter.as_deref());
                 mutant.physics = None;  // Force re-evaluation
                 self.population[elite_count + fresh_count + i] = mutant;
             }
@@ -989,7 +1016,7 @@ impl LandscapeSearcher {
             if idx < self.population.len() && i < self.cluster_state.hot_polytopes.len() {
                 let hot_id = self.cluster_state.hot_polytopes[i].id;
                 if hot_id < self.polytope_data.len() {
-                    let mut individual = Individual::random(&mut self.rng, &self.polytope_data);
+                    let mut individual = Individual::random_filtered(&mut self.rng, &self.polytope_data, self.polytope_filter.as_deref());
                     individual.genome.polytope_id = hot_id;
                     individual.physics = None;
                     self.population[idx] = individual;
@@ -999,7 +1026,7 @@ impl LandscapeSearcher {
 
         // Rest: heavily mutated current population
         for i in (elite_count + fresh_count + hof_inject + hot_inject)..self.population.len() {
-            self.population[i].genome.mutate(&mut self.rng, 1.0, &self.polytope_data);
+            self.population[i].genome.mutate_filtered(&mut self.rng, 1.0, &self.polytope_data, self.polytope_filter.as_deref());
             self.population[i].physics = None;
         }
     }
@@ -1007,14 +1034,17 @@ impl LandscapeSearcher {
     /// Create an individual using cluster-guided selection
     fn create_cluster_guided_individual(&mut self) -> Individual {
         let r = self.rng.gen::<f64>();
+        let filter = self.polytope_filter.as_deref();
 
         // 70% exploit (use high-performing clusters), 20% explore, 10% hot polytopes
         if r < 0.7 && !self.cluster_state.clusters.is_empty() {
             // Exploit: select from promising cluster
             if let Some(cluster_key) = self.cluster_state.select_cluster(&mut self.rng, 0.1) {
                 if let Some(polytope_id) = self.cluster_state.random_from_cluster(cluster_key, &mut self.rng) {
-                    if polytope_id < self.polytope_data.len() {
-                        let mut individual = Individual::random(&mut self.rng, &self.polytope_data);
+                    // Only use this polytope if it's in the filter (or no filter)
+                    let in_filter = filter.is_none() || filter.unwrap().contains(&polytope_id);
+                    if polytope_id < self.polytope_data.len() && in_filter {
+                        let mut individual = Individual::random_filtered(&mut self.rng, &self.polytope_data, filter);
                         individual.genome.polytope_id = polytope_id;
                         return individual;
                     }
@@ -1022,20 +1052,22 @@ impl LandscapeSearcher {
             }
         } else if r < 0.9 {
             // Explore: random selection
-            return Individual::random(&mut self.rng, &self.polytope_data);
+            return Individual::random_filtered(&mut self.rng, &self.polytope_data, filter);
         } else if !self.cluster_state.hot_polytopes.is_empty() {
             // Hot polytope selection
             let idx = self.rng.gen_range(0..self.cluster_state.hot_polytopes.len());
             let hot_id = self.cluster_state.hot_polytopes[idx].id;
-            if hot_id < self.polytope_data.len() {
-                let mut individual = Individual::random(&mut self.rng, &self.polytope_data);
+            // Only use hot polytope if it's in the filter (or no filter)
+            let in_filter = filter.is_none() || filter.unwrap().contains(&hot_id);
+            if hot_id < self.polytope_data.len() && in_filter {
+                let mut individual = Individual::random_filtered(&mut self.rng, &self.polytope_data, filter);
                 individual.genome.polytope_id = hot_id;
                 return individual;
             }
         }
 
         // Fallback to random
-        Individual::random(&mut self.rng, &self.polytope_data)
+        Individual::random_filtered(&mut self.rng, &self.polytope_data, filter)
     }
 
     /// Save cluster state
@@ -1082,7 +1114,7 @@ impl LandscapeSearcher {
             );
 
             if self.rng.gen::<f64>() < rate {
-                child.genome.mutate(&mut self.rng, strength, &self.polytope_data);
+                child.genome.mutate_filtered(&mut self.rng, strength, &self.polytope_data, self.polytope_filter.as_deref());
             }
 
             new_population.push(child);
