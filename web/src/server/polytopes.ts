@@ -30,7 +30,7 @@ async function loadIndex(): Promise<bigint[]> {
   if (indexCache) return indexCache;
 
   const root = getProjectRoot();
-  const indexPath = join(root, 'polytopes_three_gen.jsonl.idx');
+  const indexPath = join(root, 'data', 'polytopes_three_gen.jsonl.idx');
 
   try {
     const buffer = await readFile(indexPath);
@@ -67,7 +67,7 @@ export const getPolytope = createServerFn({ method: 'GET' })
 
     const offset = offsets[polytopeId];
     const root = getProjectRoot();
-    const dataPath = join(root, 'polytopes_three_gen.jsonl');
+    const dataPath = join(root, 'data', 'polytopes_three_gen.jsonl');
 
     try {
       const handle = await open(dataPath, 'r');
@@ -111,7 +111,7 @@ export const getPolytopes = createServerFn({ method: 'GET' })
     }): Promise<(PolytopeEntry | null)[]> => {
       const offsets = await loadIndex();
       const root = getProjectRoot();
-      const dataPath = join(root, 'polytopes_three_gen.jsonl');
+      const dataPath = join(root, 'data', 'polytopes_three_gen.jsonl');
 
       const results: (PolytopeEntry | null)[] = [];
 
