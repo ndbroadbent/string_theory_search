@@ -19,8 +19,10 @@ function getProjectRoot(): string {
   if (cwd.endsWith('/web') || cwd.endsWith('\\web')) {
     return dirname(cwd);
   }
-  if (import.meta.dir) {
-    return dirname(dirname(dirname(import.meta.dir)));
+  // Bun-specific: import.meta.dir
+  const metaDir = (import.meta as unknown as { dir?: string }).dir;
+  if (metaDir) {
+    return dirname(dirname(dirname(metaDir)));
   }
   return cwd;
 }
@@ -60,6 +62,7 @@ function rowToAlgorithm(row: Record<string, unknown>): MetaAlgorithm {
     cc_weight: row.cc_weight as number,
     parent_id: row.parent_id as number | null,
     meta_generation: row.meta_generation as number,
+    rng_seed: String(row.rng_seed ?? '0'),
     status: row.status as MetaAlgorithm['status'],
     trials_required: row.trials_required as number,
     locked_by_pid: row.locked_by_pid as number | null,
@@ -119,7 +122,7 @@ export const getMetaState = createServerFn({ method: 'GET' }).handler(
 
       const row = db.prepare(`
         SELECT current_generation, algorithms_per_generation,
-               best_meta_fitness, best_algorithm_id, updated_at
+               best_meta_fitness, best_algorithm_id, master_seed, updated_at
         FROM meta_state WHERE id = 1
       `).get() as Record<string, unknown> | undefined;
 
@@ -132,6 +135,7 @@ export const getMetaState = createServerFn({ method: 'GET' }).handler(
         algorithms_per_generation: row.algorithms_per_generation as number,
         best_meta_fitness: row.best_meta_fitness as number | null,
         best_algorithm_id: row.best_algorithm_id as number | null,
+        master_seed: row.master_seed ? String(row.master_seed) : null,
         updated_at: row.updated_at as string | null,
       };
     } catch (error) {

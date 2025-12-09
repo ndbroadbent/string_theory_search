@@ -194,11 +194,23 @@ function ParametersCard({ algorithm }: { algorithm: MetaAlgorithmWithFitness }) 
           </div>
         ))}
       </dl>
+
+      {/* RNG Seed - shown separately for visibility */}
+      <div className="mt-4 pt-4 border-t border-slate-700">
+        <div className="flex justify-between text-sm">
+          <span className="text-gray-400">RNG Seed</span>
+          <span className="font-mono text-cyan-400 text-xs break-all max-w-[150px] text-right">
+            {algorithm.rng_seed}
+          </span>
+        </div>
+      </div>
+
       {algorithm.parent_id && (
         <div className="mt-4 pt-4 border-t border-slate-700">
           <span className="text-gray-400">Parent: </span>
           <Link
-            to={`/meta/${algorithm.parent_id}`}
+            to="/meta/$id"
+            params={{ id: String(algorithm.parent_id) }}
             className="text-cyan-400 hover:text-cyan-300 font-mono"
           >
             #{algorithm.parent_id}
@@ -255,7 +267,8 @@ function LineageCard({ lineage, currentId }: { lineage: MetaAlgorithm[]; current
               <span className="font-mono">#{algo.id} (current)</span>
             ) : (
               <Link
-                to={`/meta/${algo.id}`}
+                to="/meta/$id"
+                params={{ id: String(algo.id) }}
                 className="font-mono hover:text-white transition-colors"
               >
                 #{algo.id}

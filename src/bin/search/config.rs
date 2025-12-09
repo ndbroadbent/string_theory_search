@@ -86,8 +86,8 @@ fn default_trials_required() -> i32 {
 }
 fn default_master_seed() -> u64 {
     // Use a fixed default seed for reproducibility
-    // This is the answer to life, the universe, and everything, shifted
-    42_424_242_424_242
+    // The answer to life, the universe, and everything
+    42
 }
 
 impl Default for MetaGaConfig {

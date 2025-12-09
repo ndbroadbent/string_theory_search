@@ -41,7 +41,7 @@ function MetaDashboard() {
         <h2 className="text-xl font-semibold mb-4">Generations</h2>
         {generations.length === 0 ? (
           <div className="bg-slate-800 rounded-lg p-6 text-gray-400">
-            No generations yet. Run the meta-GA to start evolving algorithms.
+            No generations yet. Run the program to start evolving algorithms.
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -79,7 +79,7 @@ function MetaStateCard({ state }: { state: MetaState | null }) {
   return (
     <div className="bg-slate-800 rounded-lg p-6 mb-8">
       <h2 className="text-lg font-semibold mb-4">Global State</h2>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <StatBox
           label="Current Generation"
           value={state.current_generation.toString()}
@@ -97,6 +97,11 @@ function MetaStateCard({ state }: { state: MetaState | null }) {
           value={state.best_algorithm_id ? `#${state.best_algorithm_id}` : '-'}
           link={state.best_algorithm_id ? `/meta/${state.best_algorithm_id}` : undefined}
         />
+        <StatBox
+          label="Meta Seed"
+          value={state.master_seed ?? '-'}
+          mono
+        />
       </div>
     </div>
   );
@@ -106,15 +111,17 @@ function StatBox({
   label,
   value,
   link,
+  mono,
 }: {
   label: string;
   value: string;
   link?: string;
+  mono?: boolean;
 }) {
   const content = (
     <div className="bg-slate-700/50 rounded-lg p-4">
       <div className="text-sm text-gray-400 mb-1">{label}</div>
-      <div className="text-xl font-mono font-semibold">{value}</div>
+      <div className={`text-xl font-semibold ${mono ? 'font-mono text-sm break-all' : 'font-mono'}`}>{value}</div>
     </div>
   );
 
@@ -223,7 +230,8 @@ function AlgorithmRow({ algorithm }: { algorithm: MetaAlgorithmWithFitness }) {
     <tr className="hover:bg-slate-700/30 transition-colors">
       <td className="px-4 py-3">
         <Link
-          to={`/meta/${algorithm.id}`}
+          to={`/meta/${algorithm.id}` as '/meta/$id'}
+          params={{ id: String(algorithm.id) }}
           className="text-cyan-400 hover:text-cyan-300 font-mono"
         >
           #{algorithm.id}

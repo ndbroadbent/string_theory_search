@@ -14,8 +14,10 @@ function getProjectRoot(): string {
   if (cwd.endsWith('/web') || cwd.endsWith('\\web')) {
     return dirname(cwd);
   }
-  if (import.meta.dir) {
-    return dirname(dirname(dirname(import.meta.dir)));
+  // Bun-specific: import.meta.dir
+  const metaDir = (import.meta as unknown as { dir?: string }).dir;
+  if (metaDir) {
+    return dirname(dirname(dirname(metaDir)));
   }
   return cwd;
 }
@@ -104,7 +106,7 @@ export const listGenomes = createServerFn({ method: 'GET' })
     }
   );
 
-/** Read a single evaluation result */
+/** Read a single evaluation result by eval ID */
 export const getGenome = createServerFn({ method: 'GET' })
   .inputValidator((data: { runId: string; evalId: number }) => data)
   .handler(async ({ data: { runId, evalId } }): Promise<GenomeResult | null> => {
@@ -133,6 +135,41 @@ export const getGenome = createServerFn({ method: 'GET' })
       return rowToGenomeResult(row);
     } catch (e) {
       console.error('Failed to read genome:', e);
+      return null;
+    }
+  });
+
+/** Get best genome for a polytope in a specific run */
+export const getGenomeByPolytope = createServerFn({ method: 'GET' })
+  .inputValidator((data: { runId: string; polytopeId: number }) => data)
+  .handler(async ({ data: { runId, polytopeId } }): Promise<GenomeResult | null> => {
+    const dbPath = getDbPath();
+    if (!existsSync(dbPath)) {
+      return null;
+    }
+
+    try {
+      const db = new Database(dbPath, { readonly: true });
+
+      const row = db.prepare(`
+        SELECT
+          e.*,
+          p.h11,
+          p.h21
+        FROM evaluations e
+        LEFT JOIN polytopes p ON p.id = e.polytope_id
+        WHERE e.polytope_id = ? AND e.run_id = ?
+        ORDER BY e.fitness DESC
+        LIMIT 1
+      `).get(polytopeId, runId) as Record<string, unknown> | null;
+
+      db.close();
+
+      if (!row) return null;
+
+      return rowToGenomeResult(row);
+    } catch (e) {
+      console.error('Failed to read genome by polytope:', e);
       return null;
     }
   });

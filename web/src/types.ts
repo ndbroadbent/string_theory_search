@@ -240,6 +240,9 @@ export interface MetaAlgorithm {
   parent_id: number | null;
   meta_generation: number;
 
+  // Reproducibility
+  rng_seed: string; // u64 stored as string to preserve precision
+
   // Status
   status: 'pending' | 'running' | 'completed' | 'failed';
   trials_required: number;
@@ -285,6 +288,7 @@ export interface MetaState {
   algorithms_per_generation: number;
   best_meta_fitness: number | null;
   best_algorithm_id: number | null;
+  master_seed: string | null; // u64 stored as string to preserve precision
   updated_at: string | null;
 }
 

@@ -4,7 +4,7 @@
 
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { Suspense, lazy, useState, useEffect } from 'react';
-import { getGenome, listGenomes } from '../server/results';
+import { getGenomeByPolytope } from '../server/results';
 import { getPolytope } from '../server/polytopes';
 import { PhysicsGauges } from '../components/overview/PhysicsGauges';
 import { PolytopeControls } from '../components/polytope/PolytopeControls';
@@ -29,10 +29,9 @@ const Polytope4D = lazy(() =>
 export const Route = createFileRoute('/genome/$polytopeId')({
   component: GenomeDetail,
   validateSearch: (search: Record<string, unknown>) => ({
-    runId: search.runId as string,
-    filename: search.filename as string | undefined,
+    runId: search.runId as string | undefined,
   }),
-  loader: async ({ params, context }) => {
+  loader: async ({ params }) => {
     const polytopeId = parseInt(params.polytopeId, 10);
     return { polytopeId };
   },
@@ -40,7 +39,7 @@ export const Route = createFileRoute('/genome/$polytopeId')({
 
 function GenomeDetail() {
   const { polytopeId } = Route.useLoaderData();
-  const { runId, filename } = Route.useSearch();
+  const { runId } = Route.useSearch();
 
   const [genome, setGenome] = useState<GenomeResult | null>(null);
   const [polytope, setPolytope] = useState<PolytopeEntry | null>(null);
@@ -54,33 +53,12 @@ function GenomeDetail() {
       setError(null);
 
       try {
-        // Find the genome file for this polytope
-        const genomeFiles = await listGenomes({ data: { runId } });
-        let targetFilename = filename;
-
-        if (!targetFilename) {
-          // Find the file containing this polytope ID
-          // We'll need to read a few files to find the right one
-          // For now, just load the first one if no filename specified
-          targetFilename = genomeFiles[0]?.filename;
-        }
-
-        if (targetFilename) {
-          const genomeData = await getGenome({
-            data: { runId, filename: targetFilename },
+        // Load genome data if runId is provided
+        if (runId) {
+          const genomeData = await getGenomeByPolytope({
+            data: { runId, polytopeId },
           });
-          if (genomeData && genomeData.genome.polytope_id === polytopeId) {
-            setGenome(genomeData);
-          } else {
-            // Search through all genomes
-            for (const f of genomeFiles) {
-              const g = await getGenome({ data: { runId, filename: f.filename } });
-              if (g && g.genome.polytope_id === polytopeId) {
-                setGenome(g);
-                break;
-              }
-            }
-          }
+          setGenome(genomeData);
         }
 
         // Load polytope data
@@ -94,7 +72,7 @@ function GenomeDetail() {
     }
 
     loadData();
-  }, [polytopeId, runId, filename]);
+  }, [polytopeId, runId]);
 
   if (loading) {
     return (
