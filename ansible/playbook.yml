@@ -392,11 +392,10 @@
       systemd:
         daemon_reload: yes
 
-    - name: Ensure search workers are stopped by default (start manually)
+    - name: Ensure search workers are not auto-started on boot
       systemd:
         name: string-theory-search.target
         enabled: no
-        state: stopped
 
     # ============================================
     # Heuristics Worker Service
@@ -423,11 +422,10 @@
           WantedBy=multi-user.target
         mode: '0644'
 
-    - name: Ensure heuristics worker is stopped by default (start manually)
+    - name: Ensure heuristics worker is not auto-started on boot
       systemd:
         name: string-theory-heuristics
         enabled: no
-        state: stopped
         daemon_reload: yes
 
     # ============================================
