@@ -122,6 +122,11 @@ UPDATE_SNAPSHOTS=1 pytest tests/test_heuristics.py -v
 
 Snapshots stored in `tests/snapshots/` - these are critical for regression testing.
 
+## Web Dashboard
+- Uses Bun runtime with `bun:sqlite` for database access (NOT better-sqlite3)
+- Dev script uses `bun --bun vite` to ensure Bun runtime
+- Never use better-sqlite3 - it doesn't work with Bun runtime
+
 ## Ansible
 Inventory: `ansible/inventory.yml` (set string_theory host)
 Playbook installs: Rust, Bun, Python venv, PALP, CYTools, cymyc

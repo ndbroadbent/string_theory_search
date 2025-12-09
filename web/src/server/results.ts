@@ -6,7 +6,7 @@ import { createServerFn } from '@tanstack/react-start';
 import type { GenomeResult, RunInfo } from '../types';
 import { existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
-import Database from 'better-sqlite3';
+import { Database } from 'bun:sqlite';
 
 /** Get the project root directory (parent of web/) */
 function getProjectRoot(): string {

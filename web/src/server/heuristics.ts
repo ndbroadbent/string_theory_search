@@ -7,7 +7,7 @@
 import { createServerFn } from '@tanstack/react-start';
 import { existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
-import Database from 'better-sqlite3';
+import { Database } from 'bun:sqlite';
 import type { PolytopeHeuristics } from '../types';
 
 function getProjectRoot(): string {
