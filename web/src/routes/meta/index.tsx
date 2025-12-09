@@ -73,6 +73,7 @@ function GenerationsTable({ generations }: { generations: GenerationStatus[] }) 
         <thead>
           <tr className="bg-slate-700/50 text-left">
             <th className="px-4 py-3 font-medium">Generation</th>
+            <th className="px-4 py-3 font-medium">Best</th>
             <th className="px-4 py-3 font-medium">Total</th>
             <th className="px-4 py-3 font-medium">Pending</th>
             <th className="px-4 py-3 font-medium">Running</th>
@@ -97,6 +98,9 @@ function GenerationsTable({ generations }: { generations: GenerationStatus[] }) 
                   >
                     Gen {gen.generation}
                   </Link>
+                </td>
+                <td className="px-4 py-3 font-mono text-amber-400">
+                  {gen.best_fitness != null ? gen.best_fitness.toFixed(4) : '-'}
                 </td>
                 <td className="px-4 py-3 font-mono">{gen.total}</td>
                 <td className="px-4 py-3 font-mono text-gray-400">{gen.pending}</td>

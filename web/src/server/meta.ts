@@ -365,15 +365,18 @@ export const getAllGenerations = createServerFn({ method: 'GET' }).handler(
 
       const rows = db.prepare(`
         SELECT
-          meta_generation as generation,
-          SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
-          SUM(CASE WHEN status = 'running' THEN 1 ELSE 0 END) as running,
-          SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed,
-          SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) as failed,
-          COUNT(*) as total
-        FROM meta_algorithms
-        GROUP BY meta_generation
-        ORDER BY meta_generation DESC
+          a.meta_generation as generation,
+          SUM(CASE WHEN a.status = 'pending' THEN 1 ELSE 0 END) as pending,
+          SUM(CASE WHEN a.status = 'running' THEN 1 ELSE 0 END) as running,
+          SUM(CASE WHEN a.status = 'completed' THEN 1 ELSE 0 END) as completed,
+          SUM(CASE WHEN a.status = 'failed' THEN 1 ELSE 0 END) as failed,
+          COUNT(*) as total,
+          MAX(r.best_fitness) as best_fitness
+        FROM meta_algorithms a
+        LEFT JOIN runs r ON r.algorithm_id = a.id
+        GROUP BY a.meta_generation
+        ORDER BY a.meta_generation DESC
+        LIMIT 10
       `).all() as Array<{
         generation: number;
         pending: number;
@@ -381,6 +384,7 @@ export const getAllGenerations = createServerFn({ method: 'GET' }).handler(
         completed: number;
         failed: number;
         total: number;
+        best_fitness: number | null;
       }>;
 
       db.close();

@@ -323,4 +323,5 @@ export interface GenerationStatus {
   completed: number;
   failed: number;
   total: number;
+  best_fitness: number | null;
 }
