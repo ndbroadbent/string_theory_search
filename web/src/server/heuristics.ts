@@ -98,7 +98,7 @@ async function loadHeuristics(): Promise<PolytopeHeuristics[]> {
     // Limit to 500 for performance
     const rows = db.prepare(`
       SELECT * FROM heuristics
-      ORDER BY outlier_score DESC
+      ORDER BY polytope_id
       LIMIT 500
     `).all() as Record<string, unknown>[];
 
