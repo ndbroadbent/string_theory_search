@@ -42,6 +42,12 @@ function RootDocument() {
             >
               Heuristics Explorer
             </Link>
+            <Link
+              to="/meta"
+              className="text-gray-300 hover:text-white text-sm font-medium transition-colors [&.active]:text-cyan-400"
+            >
+              Meta-GA
+            </Link>
           </div>
         </nav>
         <Outlet />

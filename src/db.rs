@@ -91,6 +91,7 @@ fn get_migrations() -> Vec<(i32, &'static str, &'static str)> {
     vec![
         (1, "Initial schema", include_str!("../migrations/001_initial_schema.sql")),
         (2, "Meta-GA schema", include_str!("../migrations/002_meta_ga_schema.sql")),
+        (3, "Heuristics Hodge numbers", include_str!("../migrations/003_heuristics_hodge_numbers.sql")),
     ]
 }
 
@@ -307,7 +308,7 @@ pub fn upsert_heuristics(
 ) -> Result<()> {
     conn.execute(
         "INSERT INTO heuristics (
-            polytope_id,
+            polytope_id, h11, h21, vertex_count,
             sphericity, inertia_isotropy,
             chirality_optimal, chirality_x, chirality_y, chirality_z, chirality_w, handedness_det,
             symmetry_x, symmetry_y, symmetry_z, symmetry_w,
@@ -322,9 +323,12 @@ pub fn upsert_heuristics(
         ) VALUES (
             ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16,
             ?17, ?18, ?19, ?20, ?21, ?22, ?23, ?24, ?25, ?26, ?27, ?28, ?29, ?30, ?31,
-            ?32, ?33, ?34, ?35, ?36, ?37, ?38, ?39, ?40, ?41, datetime('now')
+            ?32, ?33, ?34, ?35, ?36, ?37, ?38, ?39, ?40, ?41, ?42, ?43, ?44, datetime('now')
         )
         ON CONFLICT(polytope_id) DO UPDATE SET
+            h11 = excluded.h11,
+            h21 = excluded.h21,
+            vertex_count = excluded.vertex_count,
             sphericity = excluded.sphericity,
             inertia_isotropy = excluded.inertia_isotropy,
             chirality_optimal = excluded.chirality_optimal,
@@ -368,6 +372,9 @@ pub fn upsert_heuristics(
             updated_at = datetime('now')",
         params![
             polytope_id,
+            heuristics.h11,
+            heuristics.h21,
+            heuristics.vertex_count,
             heuristics.sphericity,
             heuristics.inertia_isotropy,
             heuristics.chirality_optimal,
@@ -416,6 +423,11 @@ pub fn upsert_heuristics(
 /// Heuristics data structure (matches schema)
 #[derive(Debug, Clone, Default)]
 pub struct HeuristicsData {
+    // Hodge numbers (stored directly for fast lookup)
+    pub h11: Option<i32>,
+    pub h21: Option<i32>,
+    pub vertex_count: Option<i32>,
+    // Shape metrics
     pub sphericity: Option<f64>,
     pub inertia_isotropy: Option<f64>,
     pub chirality_optimal: Option<f64>,
@@ -515,6 +527,9 @@ pub fn get_heuristics(conn: &Connection, polytope_id: i64) -> Result<Option<Heur
         params![polytope_id],
         |row| {
             Ok(HeuristicsData {
+                h11: row.get("h11")?,
+                h21: row.get("h21")?,
+                vertex_count: row.get("vertex_count")?,
                 sphericity: row.get("sphericity")?,
                 inertia_isotropy: row.get("inertia_isotropy")?,
                 chirality_optimal: row.get("chirality_optimal")?,
@@ -1648,6 +1663,9 @@ mod tests {
     #[test]
     fn test_heuristics_data_to_map_all_numeric_fields() {
         let data = HeuristicsData {
+            h11: Some(42),
+            h21: Some(39),
+            vertex_count: Some(10),
             sphericity: Some(1.0),
             inertia_isotropy: Some(2.0),
             chirality_optimal: Some(3.0),
@@ -1705,5 +1723,96 @@ mod tests {
 
         // String field not included
         assert!(!map.contains_key("outlier_max_dim"));
+    }
+
+    #[test]
+    fn test_upsert_heuristics_stores_hodge_numbers() {
+        let (_dir, conn) = test_db();
+        let locked = conn.lock().unwrap();
+
+        // First create the polytope (FK constraint)
+        upsert_polytope(&locked, 12345, 24, 21, 15, "[]").unwrap();
+
+        // Create heuristics with h11/h21/vertex_count
+        let data = HeuristicsData {
+            h11: Some(24),
+            h21: Some(21),
+            vertex_count: Some(15),
+            sphericity: Some(0.75),
+            ..Default::default()
+        };
+
+        upsert_heuristics(&locked, 12345, &data).unwrap();
+
+        // Verify by querying directly
+        let (h11, h21, vertex_count): (Option<i32>, Option<i32>, Option<i32>) = locked
+            .query_row(
+                "SELECT h11, h21, vertex_count FROM heuristics WHERE polytope_id = 12345",
+                [],
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+            )
+            .unwrap();
+
+        assert_eq!(h11, Some(24), "h11 should be stored correctly");
+        assert_eq!(h21, Some(21), "h21 should be stored correctly");
+        assert_eq!(vertex_count, Some(15), "vertex_count should be stored correctly");
+    }
+
+    #[test]
+    fn test_get_heuristics_retrieves_hodge_numbers() {
+        let (_dir, conn) = test_db();
+        let locked = conn.lock().unwrap();
+
+        // First create the polytope (FK constraint)
+        upsert_polytope(&locked, 99999, 30, 27, 20, "[]").unwrap();
+
+        // Insert heuristics with h11/h21/vertex_count
+        let data = HeuristicsData {
+            h11: Some(30),
+            h21: Some(27),
+            vertex_count: Some(20),
+            sphericity: Some(0.85),
+            spikiness: Some(0.42),
+            ..Default::default()
+        };
+
+        upsert_heuristics(&locked, 99999, &data).unwrap();
+
+        // Retrieve and verify
+        let retrieved = get_heuristics(&locked, 99999).unwrap().expect("Should find heuristics");
+
+        assert_eq!(retrieved.h11, Some(30), "h11 should be retrieved correctly");
+        assert_eq!(retrieved.h21, Some(27), "h21 should be retrieved correctly");
+        assert_eq!(retrieved.vertex_count, Some(20), "vertex_count should be retrieved correctly");
+        assert_eq!(retrieved.sphericity, Some(0.85));
+        assert_eq!(retrieved.spikiness, Some(0.42));
+    }
+
+    #[test]
+    fn test_heuristics_hodge_numbers_not_zero_when_set() {
+        // This test specifically verifies the bug fix for h11/h21 always being zero
+        let (_dir, conn) = test_db();
+        let locked = conn.lock().unwrap();
+
+        // First create the polytope (FK constraint)
+        upsert_polytope(&locked, 777, 42, 39, 25, "[]").unwrap();
+
+        // Insert with non-zero h11/h21
+        let data = HeuristicsData {
+            h11: Some(42),
+            h21: Some(39),
+            vertex_count: Some(25),
+            ..Default::default()
+        };
+
+        upsert_heuristics(&locked, 777, &data).unwrap();
+
+        // Retrieve and verify they are NOT zero
+        let retrieved = get_heuristics(&locked, 777).unwrap().expect("Should find heuristics");
+
+        assert_ne!(retrieved.h11, Some(0), "h11 should NOT be zero");
+        assert_ne!(retrieved.h21, Some(0), "h21 should NOT be zero");
+        assert_eq!(retrieved.h11, Some(42));
+        assert_eq!(retrieved.h21, Some(39));
     }
 }

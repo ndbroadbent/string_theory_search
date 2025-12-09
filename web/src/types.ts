@@ -201,3 +201,99 @@ export interface PolytopeHeuristics {
   neg_one_count: number;
   prime_count: number;
 }
+
+// ============================================
+// Meta-GA Types
+// ============================================
+
+/** Meta-algorithm definition (search strategy genome) */
+export interface MetaAlgorithm {
+  id: number;
+  name: string | null;
+  version: number;
+
+  // Feature weights (JSON object)
+  feature_weights: Record<string, number>;
+
+  // Search strategy
+  similarity_radius: number;
+  interpolation_weight: number;
+
+  // GA parameters
+  population_size: number;
+  max_generations: number;
+  mutation_rate: number;
+  mutation_strength: number;
+  crossover_rate: number;
+  tournament_size: number;
+  elite_count: number;
+
+  // Polytope switching
+  polytope_patience: number;
+  switch_threshold: number;
+  switch_probability: number;
+
+  // Fitness weights
+  cc_weight: number;
+
+  // Lineage
+  parent_id: number | null;
+  meta_generation: number;
+
+  // Status
+  status: 'pending' | 'running' | 'completed' | 'failed';
+  trials_required: number;
+  locked_by_pid: number | null;
+  last_heartbeat_at: string | null;
+  completed_at: string | null;
+  created_at: string;
+}
+
+/** Meta-algorithm with fitness info */
+export interface MetaAlgorithmWithFitness extends MetaAlgorithm {
+  trial_count: number;
+  mean_improvement_rate: number | null;
+  best_improvement_rate: number | null;
+  mean_fitness_auc: number | null;
+  best_final_fitness: number | null;
+  best_cc_log_error: number | null;
+  mean_cc_log_error: number | null;
+  meta_fitness: number | null;
+}
+
+/** Meta-trial result */
+export interface MetaTrial {
+  id: number;
+  algorithm_id: number;
+  run_id: string | null;
+  generations_run: number;
+  initial_fitness: number;
+  final_fitness: number;
+  fitness_improvement: number;
+  improvement_rate: number;
+  fitness_auc: number;
+  best_cc_log_error: number;
+  physics_success_rate: number;
+  unique_polytopes_tried: number;
+  started_at: string | null;
+  ended_at: string | null;
+}
+
+/** Global meta-state */
+export interface MetaState {
+  current_generation: number;
+  algorithms_per_generation: number;
+  best_meta_fitness: number | null;
+  best_algorithm_id: number | null;
+  updated_at: string | null;
+}
+
+/** Generation status counts */
+export interface GenerationStatus {
+  generation: number;
+  pending: number;
+  running: number;
+  completed: number;
+  failed: number;
+  total: number;
+}

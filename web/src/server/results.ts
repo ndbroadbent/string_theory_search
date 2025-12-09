@@ -1,165 +1,202 @@
 /**
- * Server functions for reading genome results
+ * Server functions for reading genome results from SQLite
  */
 
 import { createServerFn } from '@tanstack/react-start';
 import type { GenomeResult, RunInfo } from '../types';
-import { readdir, readFile, stat } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
+import Database from 'better-sqlite3';
 
 /** Get the project root directory (parent of web/) */
 function getProjectRoot(): string {
-  // In development, process.cwd() is the web/ directory
-  // Project root is one level up
   const cwd = process.cwd();
-  // If we're in web/, go up one level
   if (cwd.endsWith('/web') || cwd.endsWith('\\web')) {
     return dirname(cwd);
   }
-  // If import.meta.dir is available (Bun), use it
   if (import.meta.dir) {
-    // import.meta.dir points to src/server/, go up 3 levels
     return dirname(dirname(dirname(import.meta.dir)));
   }
-  // Fallback: assume cwd is project root
   return cwd;
 }
 
-/** List all available runs */
+function getDbPath(): string {
+  return join(getProjectRoot(), 'data', 'string_theory.db');
+}
+
+/** List all available runs from SQLite */
 export const listRuns = createServerFn({ method: 'GET' }).handler(
   async (): Promise<RunInfo[]> => {
-    const resultsDir = join(getProjectRoot(), 'results');
-    const runs: RunInfo[] = [];
-
-    try {
-      const entries = await readdir(resultsDir, { withFileTypes: true });
-
-      for (const entry of entries) {
-        if (entry.isDirectory() && entry.name.startsWith('run_')) {
-          const runPath = join(resultsDir, entry.name);
-          const files = await readdir(runPath);
-
-          // Count genome files and find best fitness
-          const genomeFiles = files.filter(
-            (f) => f.startsWith('fit') && f.endsWith('.json')
-          );
-
-          let bestFitness = 0;
-          let timestamp = new Date(0);
-
-          for (const f of genomeFiles) {
-            // Parse fitness from filename: fit0_5788_20251209_030240.json
-            const match = f.match(/fit(\d+)_(\d+)/);
-            if (match) {
-              const fitness = parseFloat(`${match[1]}.${match[2]}`);
-              if (fitness > bestFitness) bestFitness = fitness;
-            }
-
-            // Get modification time
-            try {
-              const s = await stat(join(runPath, f));
-              if (s.mtime > timestamp) timestamp = s.mtime;
-            } catch {
-              // ignore stat errors
-            }
-          }
-
-          runs.push({
-            id: entry.name,
-            path: runPath,
-            genomeCount: genomeFiles.length,
-            bestFitness,
-            timestamp,
-          });
-        }
-      }
-
-      // Sort by timestamp descending
-      runs.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
-    } catch (e) {
-      console.error('Failed to list runs:', e);
+    const dbPath = getDbPath();
+    if (!existsSync(dbPath)) {
+      return [];
     }
 
-    return runs;
+    try {
+      const db = new Database(dbPath, { readonly: true });
+
+      const rows = db.prepare(`
+        SELECT
+          id,
+          started_at,
+          total_generations,
+          best_fitness,
+          (SELECT COUNT(*) FROM evaluations WHERE run_id = runs.id) as eval_count
+        FROM runs
+        ORDER BY started_at DESC
+      `).all() as Array<{
+        id: string;
+        started_at: string | null;
+        total_generations: number | null;
+        best_fitness: number | null;
+        eval_count: number;
+      }>;
+
+      db.close();
+
+      return rows.map(row => ({
+        id: row.id,
+        path: '', // No longer file-based
+        genomeCount: row.eval_count,
+        bestFitness: row.best_fitness ?? 0,
+        timestamp: row.started_at ? new Date(row.started_at) : new Date(0),
+      }));
+    } catch (e) {
+      console.error('Failed to list runs:', e);
+      return [];
+    }
   }
 );
 
-/** List genome files in a run */
+/** List top evaluations in a run */
 export const listGenomes = createServerFn({ method: 'GET' })
   .inputValidator((data: { runId: string }) => data)
   .handler(
     async ({
       data: { runId },
     }): Promise<{ filename: string; fitness: number }[]> => {
-      const runDir = join(getProjectRoot(), 'results', runId);
-      const genomes: { filename: string; fitness: number }[] = [];
-
-      try {
-        const files = await readdir(runDir);
-
-        for (const f of files) {
-          if (f.startsWith('fit') && f.endsWith('.json')) {
-            const match = f.match(/fit(\d+)_(\d+)/);
-            if (match) {
-              genomes.push({
-                filename: f,
-                fitness: parseFloat(`${match[1]}.${match[2]}`),
-              });
-            }
-          }
-        }
-
-        // Sort by fitness descending
-        genomes.sort((a, b) => b.fitness - a.fitness);
-      } catch (e) {
-        console.error('Failed to list genomes:', e);
+      const dbPath = getDbPath();
+      if (!existsSync(dbPath)) {
+        return [];
       }
 
-      return genomes;
+      try {
+        const db = new Database(dbPath, { readonly: true });
+
+        const rows = db.prepare(`
+          SELECT id, fitness
+          FROM evaluations
+          WHERE run_id = ?
+          ORDER BY fitness DESC
+          LIMIT 100
+        `).all(runId) as Array<{ id: number; fitness: number }>;
+
+        db.close();
+
+        return rows.map(row => ({
+          filename: `eval_${row.id}`,
+          fitness: row.fitness,
+        }));
+      } catch (e) {
+        console.error('Failed to list genomes:', e);
+        return [];
+      }
     }
   );
 
-/** Read a single genome result */
+/** Read a single evaluation result */
 export const getGenome = createServerFn({ method: 'GET' })
-  .inputValidator((data: { runId: string; filename: string }) => data)
-  .handler(async ({ data: { runId, filename } }): Promise<GenomeResult | null> => {
-    const filePath = join(getProjectRoot(), 'results', runId, filename);
+  .inputValidator((data: { runId: string; evalId: number }) => data)
+  .handler(async ({ data: { runId, evalId } }): Promise<GenomeResult | null> => {
+    const dbPath = getDbPath();
+    if (!existsSync(dbPath)) {
+      return null;
+    }
 
     try {
-      const content = await readFile(filePath, 'utf-8');
-      return JSON.parse(content) as GenomeResult;
+      const db = new Database(dbPath, { readonly: true });
+
+      const row = db.prepare(`
+        SELECT
+          e.*,
+          p.h11,
+          p.h21
+        FROM evaluations e
+        LEFT JOIN polytopes p ON p.id = e.polytope_id
+        WHERE e.id = ? AND e.run_id = ?
+      `).get(evalId, runId) as Record<string, unknown> | null;
+
+      db.close();
+
+      if (!row) return null;
+
+      return rowToGenomeResult(row);
     } catch (e) {
       console.error('Failed to read genome:', e);
       return null;
     }
   });
 
-/** Read all genomes from a run (for scatter plots) */
+/** Read all evaluations from a run (for scatter plots) */
 export const getAllGenomes = createServerFn({ method: 'GET' })
   .inputValidator((data: { runId: string }) => data)
   .handler(async ({ data: { runId } }): Promise<GenomeResult[]> => {
-    const runDir = join(getProjectRoot(), 'results', runId);
-    const results: GenomeResult[] = [];
-
-    try {
-      const files = await readdir(runDir);
-
-      for (const f of files) {
-        if (f.startsWith('fit') && f.endsWith('.json')) {
-          try {
-            const content = await readFile(join(runDir, f), 'utf-8');
-            results.push(JSON.parse(content) as GenomeResult);
-          } catch {
-            // Skip invalid files
-          }
-        }
-      }
-
-      // Sort by fitness descending
-      results.sort((a, b) => b.fitness - a.fitness);
-    } catch (e) {
-      console.error('Failed to read genomes:', e);
+    const dbPath = getDbPath();
+    if (!existsSync(dbPath)) {
+      return [];
     }
 
-    return results;
+    try {
+      const db = new Database(dbPath, { readonly: true });
+
+      const rows = db.prepare(`
+        SELECT
+          e.*,
+          p.h11,
+          p.h21
+        FROM evaluations e
+        LEFT JOIN polytopes p ON p.id = e.polytope_id
+        WHERE e.run_id = ?
+        ORDER BY e.fitness DESC
+      `).all(runId) as Record<string, unknown>[];
+
+      db.close();
+
+      return rows.map(rowToGenomeResult);
+    } catch (e) {
+      console.error('Failed to read genomes:', e);
+      return [];
+    }
   });
+
+/** Convert a database row to GenomeResult */
+function rowToGenomeResult(row: Record<string, unknown>): GenomeResult {
+  return {
+    genome: {
+      polytope_id: row.polytope_id as number,
+      kahler_moduli: JSON.parse((row.kahler_moduli as string) || '[]'),
+      complex_moduli: JSON.parse((row.complex_moduli as string) || '[]'),
+      flux_f: JSON.parse((row.flux_f as string) || '[]'),
+      flux_h: JSON.parse((row.flux_h as string) || '[]'),
+      g_s: row.g_s as number,
+      h11: (row.h11 as number) ?? 0,
+      h21: (row.h21 as number) ?? 0,
+    },
+    physics: {
+      success: (row.success as number) === 1,
+      error: row.error as string | null,
+      alpha_em: row.alpha_em as number,
+      alpha_s: row.alpha_s as number,
+      sin2_theta_w: row.sin2_theta_w as number,
+      cosmological_constant: row.cosmological_constant as number,
+      n_generations: row.n_generations as number,
+      m_e_planck_ratio: 0,
+      m_p_planck_ratio: 0,
+      cy_volume: 0,
+      string_coupling: row.g_s as number,
+      flux_tadpole: 0,
+      superpotential_abs: 0,
+    },
+    fitness: row.fitness as number,
+  };
+}

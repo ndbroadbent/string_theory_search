@@ -9,11 +9,18 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as MetaRouteImport } from './routes/meta'
 import { Route as HeuristicsRouteImport } from './routes/heuristics'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PolytopeIdRouteImport } from './routes/polytope.$id'
+import { Route as MetaIdRouteImport } from './routes/meta.$id'
 import { Route as GenomePolytopeIdRouteImport } from './routes/genome.$polytopeId'
 
+const MetaRoute = MetaRouteImport.update({
+  id: '/meta',
+  path: '/meta',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const HeuristicsRoute = HeuristicsRouteImport.update({
   id: '/heuristics',
   path: '/heuristics',
@@ -29,6 +36,11 @@ const PolytopeIdRoute = PolytopeIdRouteImport.update({
   path: '/polytope/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MetaIdRoute = MetaIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => MetaRoute,
+} as any)
 const GenomePolytopeIdRoute = GenomePolytopeIdRouteImport.update({
   id: '/genome/$polytopeId',
   path: '/genome/$polytopeId',
@@ -38,39 +50,72 @@ const GenomePolytopeIdRoute = GenomePolytopeIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/heuristics': typeof HeuristicsRoute
+  '/meta': typeof MetaRouteWithChildren
   '/genome/$polytopeId': typeof GenomePolytopeIdRoute
+  '/meta/$id': typeof MetaIdRoute
   '/polytope/$id': typeof PolytopeIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/heuristics': typeof HeuristicsRoute
+  '/meta': typeof MetaRouteWithChildren
   '/genome/$polytopeId': typeof GenomePolytopeIdRoute
+  '/meta/$id': typeof MetaIdRoute
   '/polytope/$id': typeof PolytopeIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/heuristics': typeof HeuristicsRoute
+  '/meta': typeof MetaRouteWithChildren
   '/genome/$polytopeId': typeof GenomePolytopeIdRoute
+  '/meta/$id': typeof MetaIdRoute
   '/polytope/$id': typeof PolytopeIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/heuristics' | '/genome/$polytopeId' | '/polytope/$id'
+  fullPaths:
+    | '/'
+    | '/heuristics'
+    | '/meta'
+    | '/genome/$polytopeId'
+    | '/meta/$id'
+    | '/polytope/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/heuristics' | '/genome/$polytopeId' | '/polytope/$id'
-  id: '__root__' | '/' | '/heuristics' | '/genome/$polytopeId' | '/polytope/$id'
+  to:
+    | '/'
+    | '/heuristics'
+    | '/meta'
+    | '/genome/$polytopeId'
+    | '/meta/$id'
+    | '/polytope/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/heuristics'
+    | '/meta'
+    | '/genome/$polytopeId'
+    | '/meta/$id'
+    | '/polytope/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   HeuristicsRoute: typeof HeuristicsRoute
+  MetaRoute: typeof MetaRouteWithChildren
   GenomePolytopeIdRoute: typeof GenomePolytopeIdRoute
   PolytopeIdRoute: typeof PolytopeIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/meta': {
+      id: '/meta'
+      path: '/meta'
+      fullPath: '/meta'
+      preLoaderRoute: typeof MetaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/heuristics': {
       id: '/heuristics'
       path: '/heuristics'
@@ -92,6 +137,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PolytopeIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/meta/$id': {
+      id: '/meta/$id'
+      path: '/$id'
+      fullPath: '/meta/$id'
+      preLoaderRoute: typeof MetaIdRouteImport
+      parentRoute: typeof MetaRoute
+    }
     '/genome/$polytopeId': {
       id: '/genome/$polytopeId'
       path: '/genome/$polytopeId'
@@ -102,9 +154,20 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface MetaRouteChildren {
+  MetaIdRoute: typeof MetaIdRoute
+}
+
+const MetaRouteChildren: MetaRouteChildren = {
+  MetaIdRoute: MetaIdRoute,
+}
+
+const MetaRouteWithChildren = MetaRoute._addFileChildren(MetaRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   HeuristicsRoute: HeuristicsRoute,
+  MetaRoute: MetaRouteWithChildren,
   GenomePolytopeIdRoute: GenomePolytopeIdRoute,
   PolytopeIdRoute: PolytopeIdRoute,
 }

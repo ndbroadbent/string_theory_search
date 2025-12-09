@@ -1,11 +1,10 @@
 /**
  * Server functions for polytope heuristics data
  *
- * Reads from SQLite database (data/string_theory.db) with fallback to JSON
+ * Reads from SQLite database (data/string_theory.db)
  */
 
 import { createServerFn } from '@tanstack/react-start';
-import { readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import Database from 'better-sqlite3';
@@ -27,11 +26,6 @@ function getProjectRoot(): string {
 function getDbPath(): string {
   const projectRoot = getProjectRoot();
   return join(projectRoot, 'data', 'string_theory.db');
-}
-
-function getJsonPath(): string {
-  const projectRoot = getProjectRoot();
-  return join(projectRoot, 'heuristics_sample.json');
 }
 
 /**
@@ -87,45 +81,30 @@ function rowToHeuristics(row: Record<string, unknown>): PolytopeHeuristics {
 }
 
 /**
- * Get heuristics from SQLite, or fall back to JSON
+ * Get heuristics from SQLite
  */
 async function loadHeuristics(): Promise<PolytopeHeuristics[]> {
   const dbPath = getDbPath();
 
-  // Try SQLite first
-  if (existsSync(dbPath)) {
-    try {
-      const db = new Database(dbPath, { readonly: true });
-
-      // Join heuristics with polytopes to get h11, h21, vertex_count
-      const rows = db.prepare(`
-        SELECT
-          h.*,
-          COALESCE(p.h11, 0) as h11,
-          COALESCE(p.h21, 0) as h21,
-          COALESCE(p.vertex_count, 0) as vertex_count
-        FROM heuristics h
-        LEFT JOIN polytopes p ON p.id = h.polytope_id
-        ORDER BY h.outlier_score DESC
-      `).all() as Record<string, unknown>[];
-
-      db.close();
-
-      if (rows.length > 0) {
-        return rows.map(rowToHeuristics);
-      }
-    } catch (error) {
-      console.error('Error loading from SQLite:', error);
-    }
+  if (!existsSync(dbPath)) {
+    console.error('Database not found:', dbPath);
+    return [];
   }
 
-  // Fall back to JSON
-  const jsonPath = getJsonPath();
   try {
-    const content = await readFile(jsonPath, 'utf-8');
-    return JSON.parse(content) as PolytopeHeuristics[];
+    const db = new Database(dbPath, { readonly: true });
+
+    // Read directly from heuristics table (h11, h21, vertex_count are stored there)
+    const rows = db.prepare(`
+      SELECT * FROM heuristics
+      ORDER BY outlier_score DESC
+    `).all() as Record<string, unknown>[];
+
+    db.close();
+
+    return rows.map(rowToHeuristics);
   } catch (error) {
-    console.error('Error loading heuristics JSON:', error);
+    console.error('Error loading from SQLite:', error);
     return [];
   }
 }
@@ -147,35 +126,27 @@ export const getHeuristicsForPolytope = createServerFn({ method: 'GET' })
   .handler(async ({ data: { polytopeId } }): Promise<PolytopeHeuristics | null> => {
     const dbPath = getDbPath();
 
-    // Try SQLite first
-    if (existsSync(dbPath)) {
-      try {
-        const db = new Database(dbPath, { readonly: true });
-
-        const row = db.prepare(`
-          SELECT
-            h.*,
-            COALESCE(p.h11, 0) as h11,
-            COALESCE(p.h21, 0) as h21,
-            COALESCE(p.vertex_count, 0) as vertex_count
-          FROM heuristics h
-          LEFT JOIN polytopes p ON p.id = h.polytope_id
-          WHERE h.polytope_id = ?
-        `).get(polytopeId) as Record<string, unknown> | null;
-
-        db.close();
-
-        if (row) {
-          return rowToHeuristics(row);
-        }
-      } catch (error) {
-        console.error('Error loading from SQLite:', error);
-      }
+    if (!existsSync(dbPath)) {
+      return null;
     }
 
-    // Fall back to JSON
-    const heuristics = await loadHeuristics();
-    return heuristics.find((h) => h.polytope_id === polytopeId) ?? null;
+    try {
+      const db = new Database(dbPath, { readonly: true });
+
+      const row = db.prepare(`
+        SELECT * FROM heuristics WHERE polytope_id = ?
+      `).get(polytopeId) as Record<string, unknown> | null;
+
+      db.close();
+
+      if (row) {
+        return rowToHeuristics(row);
+      }
+      return null;
+    } catch (error) {
+      console.error('Error loading from SQLite:', error);
+      return null;
+    }
   });
 
 /**
