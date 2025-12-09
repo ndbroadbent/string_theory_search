@@ -94,6 +94,7 @@ fn get_migrations() -> Vec<(i32, &'static str, &'static str)> {
         (3, "Heuristics Hodge numbers", include_str!("../migrations/003_heuristics_hodge_numbers.sql")),
         (4, "RNG seed for reproducibility", include_str!("../migrations/004_rng_seed.sql")),
         (5, "Unify runs and trials", include_str!("../migrations/005_unify_runs.sql")),
+        (6, "Workers table", include_str!("../migrations/006_workers.sql")),
     ]
 }
 
@@ -1029,6 +1030,158 @@ pub fn count_algorithms_in_generation(conn: &Connection, generation: i32) -> Res
         params![generation],
         |row| row.get(0),
     )
+}
+
+// =============================================================================
+// Worker Registration & Heartbeat
+// =============================================================================
+
+/// Worker info returned from queries
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct WorkerInfo {
+    pub id: String,
+    pub worker_type: String,
+    pub hostname: String,
+    pub pid: i32,
+    pub started_at: String,
+    pub last_heartbeat_at: String,
+    pub status: String,
+    pub current_task: Option<String>,
+    pub tasks_completed: i32,
+    pub errors: i32,
+}
+
+/// Register a worker (upsert - updates if exists)
+pub fn register_worker(
+    conn: &Connection,
+    worker_type: &str,
+    hostname: &str,
+    pid: i32,
+) -> Result<String> {
+    let worker_id = format!("{}_{}_{}", worker_type, hostname, pid);
+    let now = chrono::Utc::now().format("%Y-%m-%d %H:%M:%S").to_string();
+
+    conn.execute(
+        "INSERT INTO workers (id, worker_type, hostname, pid, started_at, last_heartbeat_at, status)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?5, 'idle')
+         ON CONFLICT(id) DO UPDATE SET
+             last_heartbeat_at = ?5,
+             status = 'idle'",
+        params![worker_id, worker_type, hostname, pid, now],
+    )?;
+
+    Ok(worker_id)
+}
+
+/// Update worker heartbeat and optionally status/task
+pub fn worker_heartbeat(
+    conn: &Connection,
+    worker_id: &str,
+    status: Option<&str>,
+    current_task: Option<&str>,
+) -> Result<bool> {
+    let now = chrono::Utc::now().format("%Y-%m-%d %H:%M:%S").to_string();
+
+    let rows = if let Some(s) = status {
+        conn.execute(
+            "UPDATE workers SET last_heartbeat_at = ?1, status = ?2, current_task = ?3 WHERE id = ?4",
+            params![now, s, current_task, worker_id],
+        )?
+    } else {
+        conn.execute(
+            "UPDATE workers SET last_heartbeat_at = ?1 WHERE id = ?2",
+            params![now, worker_id],
+        )?
+    };
+
+    Ok(rows > 0)
+}
+
+/// Increment tasks completed for a worker
+pub fn worker_task_completed(conn: &Connection, worker_id: &str) -> Result<()> {
+    conn.execute(
+        "UPDATE workers SET tasks_completed = tasks_completed + 1, status = 'idle', current_task = NULL WHERE id = ?1",
+        params![worker_id],
+    )?;
+    Ok(())
+}
+
+/// Increment error count for a worker
+pub fn worker_error(conn: &Connection, worker_id: &str) -> Result<()> {
+    conn.execute(
+        "UPDATE workers SET errors = errors + 1 WHERE id = ?1",
+        params![worker_id],
+    )?;
+    Ok(())
+}
+
+/// Unregister a worker (on clean shutdown)
+pub fn unregister_worker(conn: &Connection, worker_id: &str) -> Result<()> {
+    conn.execute("DELETE FROM workers WHERE id = ?1", params![worker_id])?;
+    Ok(())
+}
+
+/// Get active workers (heartbeat within last N seconds)
+pub fn get_active_workers(conn: &Connection, stale_seconds: i64) -> Result<Vec<WorkerInfo>> {
+    let cutoff = (chrono::Utc::now() - chrono::Duration::seconds(stale_seconds))
+        .format("%Y-%m-%d %H:%M:%S").to_string();
+
+    let mut stmt = conn.prepare(
+        "SELECT id, worker_type, hostname, pid, started_at, last_heartbeat_at, status, current_task, tasks_completed, errors
+         FROM workers
+         WHERE last_heartbeat_at >= ?1
+         ORDER BY worker_type, hostname, pid"
+    )?;
+
+    let rows = stmt.query_map(params![cutoff], |row| {
+        Ok(WorkerInfo {
+            id: row.get(0)?,
+            worker_type: row.get(1)?,
+            hostname: row.get(2)?,
+            pid: row.get(3)?,
+            started_at: row.get(4)?,
+            last_heartbeat_at: row.get(5)?,
+            status: row.get(6)?,
+            current_task: row.get(7)?,
+            tasks_completed: row.get(8)?,
+            errors: row.get(9)?,
+        })
+    })?;
+
+    rows.collect()
+}
+
+/// Get count of active workers by type
+pub fn get_worker_counts(conn: &Connection, stale_seconds: i64) -> Result<(i32, i32)> {
+    let cutoff = (chrono::Utc::now() - chrono::Duration::seconds(stale_seconds))
+        .format("%Y-%m-%d %H:%M:%S").to_string();
+
+    let search: i32 = conn.query_row(
+        "SELECT COUNT(*) FROM workers WHERE worker_type = 'search' AND last_heartbeat_at >= ?1",
+        params![cutoff],
+        |row| row.get(0),
+    ).unwrap_or(0);
+
+    let heuristics: i32 = conn.query_row(
+        "SELECT COUNT(*) FROM workers WHERE worker_type = 'heuristics' AND last_heartbeat_at >= ?1",
+        params![cutoff],
+        |row| row.get(0),
+    ).unwrap_or(0);
+
+    Ok((search, heuristics))
+}
+
+/// Clean up stale workers (remove workers that haven't sent heartbeat)
+pub fn cleanup_stale_workers(conn: &Connection, stale_seconds: i64) -> Result<i32> {
+    let cutoff = (chrono::Utc::now() - chrono::Duration::seconds(stale_seconds))
+        .format("%Y-%m-%d %H:%M:%S").to_string();
+
+    let deleted = conn.execute(
+        "DELETE FROM workers WHERE last_heartbeat_at < ?1",
+        params![cutoff],
+    )?;
+
+    Ok(deleted as i32)
 }
 
 #[cfg(test)]

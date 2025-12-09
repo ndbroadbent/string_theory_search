@@ -96,6 +96,15 @@
         state: directory
         mode: '0755'
 
+    - name: Create config.server.toml
+      copy:
+        dest: "{{ project_dir }}/config.server.toml"
+        content: |
+          [paths]
+          polytopes = "data/polytopes_three_gen.jsonl"
+          database = "data/string_theory.db"
+        mode: '0644'
+
     # ============================================
     # Python Virtual Environment
     # ============================================
