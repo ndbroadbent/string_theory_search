@@ -28,6 +28,10 @@ pub struct Args {
     /// Specific polytope IDs to search (comma-separated or @filename)
     #[arg(long, value_delimiter = ',')]
     pub ids: Option<Vec<String>>,
+
+    /// Run database migrations and exit (no physics bridge required)
+    #[arg(long)]
+    pub migrate: bool,
 }
 
 #[derive(Debug, Deserialize, Default)]

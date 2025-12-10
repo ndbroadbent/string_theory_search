@@ -36,6 +36,22 @@ fn main() {
 
     let my_pid = std::process::id() as i32;
 
+    // Handle --migrate: run migrations and exit (no physics bridge needed)
+    if args.migrate {
+        println!("Running database migrations...");
+        println!("Database path: {}", config.paths.database);
+        match db::init_database(&config.paths.database) {
+            Ok(_) => {
+                println!("Migrations completed successfully.");
+                std::process::exit(0);
+            }
+            Err(e) => {
+                eprintln!("Migration failed: {}", e);
+                std::process::exit(1);
+            }
+        }
+    }
+
     print_banner(my_pid);
 
     // Initialize Python bridge - REQUIRED

@@ -30,5 +30,9 @@ memmap2 = "0.9"
 name = "heuristics"
 path = "src/bin/heuristics.rs"
 
+[[bin]]
+name = "evaluate"
+path = "src/bin/evaluate.rs"
+
 [dev-dependencies]
 tempfile = "3.15"

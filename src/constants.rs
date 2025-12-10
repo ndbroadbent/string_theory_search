@@ -5,6 +5,11 @@
 //! - PDG (Particle Data Group) 2024
 //! - CODATA 2018 fundamental constants
 
+/// Physics model version for cache invalidation.
+/// Bump this when physics_bridge.py or computation logic changes.
+/// This is included in the evaluation input hash - changing it invalidates all cached results.
+pub const PHYSICS_MODEL_VERSION: &str = "1.0.0";
+
 /// Fine structure constant (electromagnetic coupling)
 /// α = e²/(4πε₀ℏc) ≈ 1/137.035999084
 pub const ALPHA_EM: f64 = 7.2973525693e-3;

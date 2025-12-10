@@ -54,6 +54,12 @@ function RootDocument() {
             >
               Meta-GA
             </Link>
+            <Link
+              to="/playground"
+              className="text-gray-300 hover:text-white text-sm font-medium transition-colors [&.active]:text-cyan-400"
+            >
+              Playground
+            </Link>
           </div>
         </nav>
         <Outlet />

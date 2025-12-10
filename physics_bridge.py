@@ -9,6 +9,12 @@ Uses CYTools and cymyc for rigorous Calabi-Yau computations:
 NO FALLBACKS - requires proper tools installed.
 """
 
+# Physics model version for cache invalidation.
+# Bump this when computation logic changes.
+# This is included in the evaluation input hash - changing it invalidates all cached results.
+# MUST match PHYSICS_MODEL_VERSION in src/constants.rs
+PHYSICS_MODEL_VERSION = "1.0.0"
+
 import json
 import sys
 import os
@@ -371,13 +377,79 @@ class PhysicsBridge:
         import gc
         gc.collect()
 
-    def _find_kahler_in_cone(self, cy_data: dict, genome: dict) -> np.ndarray:
+    def _get_kahler_moduli(self, cy_data: dict, genome: dict) -> np.ndarray:
         """
-        Find a valid Kähler point inside the cone.
+        Get valid Kähler moduli based on mode.
+
+        Modes (set via genome["kahler_mode"]):
+        - "ga" (default): Use raytracing from genome direction (for GA exploration)
+        - "fixed": Use exact values from genome, validate they're in cone
+
+        Args:
+            cy_data: CYTools analysis result
+            genome: Genome dict with kahler_moduli and optionally kahler_mode
+
+        Returns:
+            Valid Kähler moduli array inside the Kähler cone
+        """
+        mode = genome.get("kahler_mode", "ga")
+
+        if mode == "fixed":
+            return self._get_fixed_kahler(cy_data, genome)
+        else:
+            return self._find_kahler_by_ray(cy_data, genome)
+
+    def _get_fixed_kahler(self, cy_data: dict, genome: dict) -> np.ndarray:
+        """
+        Use exact Kähler moduli from genome (for playground/testing).
+
+        If the provided moduli are outside the cone, project them in.
+        """
+        cy = cy_data["_cy_object"]
+        cone = cy.toric_kahler_cone()
+        dim = cone.ambient_dim()
+
+        # Get moduli from genome
+        kahler = np.array(genome.get("kahler_moduli", [1.0] * dim), dtype=float)
+
+        # Adjust dimension
+        if len(kahler) > dim:
+            kahler = kahler[:dim]
+        elif len(kahler) < dim:
+            # Pad with ones (reasonable default)
+            kahler = np.concatenate([kahler, np.ones(dim - len(kahler))])
+
+        # Check if already in cone
+        if cone.contains(kahler):
+            return kahler
+
+        # Project into cone: find the point in the cone closest to kahler
+        # Simple approach: scale toward tip until inside
+        tip = cone.tip_of_stretched_cone(1.0)
+
+        # Binary search for largest alpha where tip + alpha*(kahler - tip) is in cone
+        alpha_min, alpha_max = 0.0, 1.0
+        for _ in range(50):
+            alpha_mid = (alpha_min + alpha_max) / 2
+            test_point = tip + alpha_mid * (kahler - tip)
+            if cone.contains(test_point):
+                alpha_min = alpha_mid
+            else:
+                alpha_max = alpha_mid
+
+        # Use 95% of the way to boundary (safely inside)
+        alpha_final = alpha_min * 0.95
+        return tip + alpha_final * (kahler - tip)
+
+    def _find_kahler_by_ray(self, cy_data: dict, genome: dict) -> np.ndarray:
+        """
+        Find a valid Kähler point using raytracing from cone tip.
 
         Method: trace from cone tip along direction from genome.
         Find where ray exits cone, return midpoint of (tip, exit).
         Small direction changes = small output changes (smooth gradients).
+
+        This is the GA mode - genome specifies a direction, not exact values.
         """
         cy = cy_data["_cy_object"]
         cone = cy.toric_kahler_cone()
@@ -450,8 +522,9 @@ class PhysicsBridge:
             return cy_data
 
         # 2. Get Kähler moduli (must be in Kähler cone)
-        # Use genome as seed, walk trajectory until inside cone
-        kahler = self._find_kahler_in_cone(cy_data, genome)
+        # Mode "ga" (default): raytracing from genome direction
+        # Mode "fixed": use exact values from genome
+        kahler = self._get_kahler_moduli(cy_data, genome)
 
         # 3. Compute volumes
         vol_data = self.cytools.compute_volumes(cy_data, kahler)

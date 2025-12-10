@@ -11,13 +11,29 @@ import { Database } from 'bun:sqlite';
 /** Get the project root directory (parent of web/) */
 function getProjectRoot(): string {
   const cwd = process.cwd();
+  // When running from web/ directory (dev mode)
   if (cwd.endsWith('/web') || cwd.endsWith('\\web')) {
     return dirname(cwd);
   }
-  // Bun-specific: import.meta.dir
+  // Check if we're at project root
+  if (existsSync(join(cwd, 'data', 'string_theory.db'))) {
+    return cwd;
+  }
+  // Try Bun-specific import.meta.dir (web/src/server/)
   const metaDir = (import.meta as unknown as { dir?: string }).dir;
-  if (metaDir) {
+  if (metaDir && existsSync(join(dirname(dirname(dirname(metaDir))), 'data', 'string_theory.db'))) {
     return dirname(dirname(dirname(metaDir)));
+  }
+  // Fallback: try to find db relative to __dirname-like paths
+  // In Vite SSR, file URLs are used
+  const url = (import.meta as unknown as { url?: string }).url;
+  if (url) {
+    const filePath = url.startsWith('file://') ? url.slice(7) : url;
+    const serverDir = dirname(filePath);
+    const potentialRoot = dirname(dirname(dirname(serverDir)));
+    if (existsSync(join(potentialRoot, 'data', 'string_theory.db'))) {
+      return potentialRoot;
+    }
   }
   return cwd;
 }

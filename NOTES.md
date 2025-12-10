@@ -364,6 +364,110 @@ cat cluster_state.json | jq '.clusters | length'
 - He, "The Calabi-Yau Landscape" [arXiv:1812.02893](https://arxiv.org/abs/1812.02893)
 - cymyc paper: [arXiv:2410.19728](https://arxiv.org/abs/2410.19728)
 
+## McAllister Group: Small Cosmological Constant Results
+
+### Key Achievement
+The Cornell group (Demirtas, Kim, McAllister, Moritz, Rios-Tascon) achieved **|Λ| < 10⁻¹²³** in Planck units - matching/beating the observed cosmological constant.
+
+**Papers:**
+- [Small Cosmological Constants in String Theory](https://arxiv.org/abs/2107.09064) (JHEP 2021)
+- [Vacua with Small Flux Superpotential](https://arxiv.org/abs/1912.10047) (PRL 2020)
+- [Conifold Vacua with Small Flux Superpotential](https://arxiv.org/abs/2009.03312)
+- [Exponentially Small Cosmological Constant](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.128.011602) (PRL)
+
+### How They Did It (DKMM Mechanism)
+
+The key insight: **exponentially small W₀ (flux superpotential)** is achievable through careful flux selection, not random search.
+
+**Two-step construction:**
+1. Find quantized fluxes where F-terms and superpotential **vanish perturbatively** along a flat direction (ignoring non-perturbative corrections)
+2. Restore non-perturbative corrections → flat direction is lifted → W₀ becomes exponentially small
+
+**Requirements for this to work:**
+- **Large h²¹** (many complex structure moduli) - their example: (h¹¹, h²¹) = (2, 272)
+- **Large complex structure limit** - working far from singular points
+- **Weak string coupling** (g_s << 1)
+- **Specific flux quantization** - not random, but satisfying algebraic conditions
+
+### Why Random Search Won't Find These
+
+The problem is NP-complete (subset sum variant):
+- Need flux integers that sum to give exponentially small W₀
+- Random sampling has essentially zero probability of hitting this
+- The 10⁻¹²³ result requires **number-theoretic structure** in the flux choices
+
+### What Properties They Selected For
+
+**Geometric criteria:**
+1. **Large h²¹** - More complex structure moduli = more "knobs" to tune
+2. **Favorable polytopes** - Kähler forms descend from ambient toric variety
+3. **Specific orientifolds** - O3/O7 planes with right involution
+4. **Controllable α' expansion** - Verified via Gopakumar-Vafa invariants
+
+**Flux selection criteria:**
+1. F-terms vanish at leading order in prepotential expansion
+2. Superpotential W₀ vanishes perturbatively along a flat direction
+3. Non-perturbative corrections are exponentially suppressed
+4. Tadpole constraint: N_flux ≤ χ(CY)/24
+
+### Computable Properties (CYTools)
+
+CYTools can compute these properties that matter for KKLT/small-Λ:
+
+**From Polytope class:**
+- Hodge numbers (h¹¹, h²¹)
+- Euler characteristic χ
+- Favorability (whether Kähler forms descend)
+- All triangulations (fine, regular, star)
+
+**From CalabiYau class:**
+- Intersection numbers κᵢⱼₖ
+- Kähler cone (valid moduli range)
+- Mori cone
+- Second Chern class c₂
+
+**From triangulations:**
+- Different geometric phases
+- Extended Kähler cone (all birational phases)
+
+**Gopakumar-Vafa invariants:**
+- Encode BPS spectrum
+- Verify α' expansion is controlled
+- Computed via topological string methods
+
+### Implications for Our Search
+
+**What we could do differently:**
+
+1. **Prioritize large h²¹** - Our 3-gen filter gives |h¹¹ - h²¹| = 3, but within that, prefer large h²¹ (e.g., h²¹ = 100+ means h¹¹ = 97 or 103)
+
+2. **Focus on favorable polytopes** - CYTools can check this
+
+3. **Compute Gopakumar-Vafa invariants** - These predict whether small Λ is achievable for a given CY
+
+4. **Structured flux search** - Instead of random flux integers, search for fluxes satisfying the DKMM algebraic conditions
+
+5. **Conifold proximity** - Vacua near conifold points can have exponentially small W₀
+
+### The Hard Truth
+
+The McAllister results came from **analytical understanding**, not brute-force search:
+- They knew *what to look for* mathematically
+- They derived conditions fluxes must satisfy
+- Then found explicit examples satisfying those conditions
+
+Our GA approach is unlikely to find 10⁻¹²² by chance. But it might:
+- Find **locally good** regions worth deeper analytical study
+- Discover **correlations** between heuristics and physics that inform theory
+- Serve as a **validation tool** for theoretical predictions
+
+### Future Directions
+
+1. **Implement DKMM flux conditions** as a search constraint
+2. **Compute GV invariants** for promising polytopes
+3. **Focus on conifold-adjacent** regions in moduli space
+4. **Use heuristics to predict** which polytopes are worth expensive GV computation
+
 ## Progress
 
 ### Completed
@@ -1095,3 +1199,202 @@ The current outlier score computation loads all heuristics into memory and compu
 - [ ] Modify `compute_heuristics.py` to update stats incrementally
 - [ ] Add `--recompute-outliers` flag for batch recomputation
 - [ ] Consider: outlier scores relative to local cluster vs global population
+
+## Decomposed Fitness: Multi-Dimensional Gradient Descent
+
+### The Problem with Scalar Fitness
+
+Currently, we search for specific target values:
+- Fine Structure Constant: α_em = 7.297×10⁻³
+- Strong Coupling: α_s = 0.118
+- Weinberg Angle: sin²θ_W = 0.231
+- Cosmological Constant: Λ = 2.888×10⁻¹²²
+
+The fitness function combines these into a single scalar (weighted sum of log-errors). This creates a **deceptively smooth** landscape that hides the underlying complexity.
+
+**Key insight**: These observables are **computed quantities**—they're functions of more fundamental parameters. If we decompose them into their constituent parts, we might find that:
+1. Different "components" have different fitness gradients
+2. The landscape is smoother along some component axes than others
+3. We can make progress on multiple fronts simultaneously
+
+### Physics Decomposition Examples
+
+#### 1. Gauge Couplings
+
+At tree level in Type IIB:
+```
+α_a = g_s / (4π τ_a)
+```
+where τ_a is the 4-cycle volume wrapped by the D7-brane.
+
+**Decomposition:**
+- Component A: g_s (string coupling) — affects ALL gauge couplings equally
+- Component B: τ_a ratios — affects RATIOS between gauge couplings
+- Component C: Overall volume scale — affects absolute magnitudes
+
+Instead of searching for "α_em = 0.00729", search for:
+- g_s in correct range
+- τ_ratios that give correct coupling ratios
+- Volume scale that gives correct absolute values
+
+Each component might have a smoother fitness landscape than the combined observable.
+
+#### 2. Weinberg Angle
+
+The Weinberg angle relates SU(2) and U(1) couplings:
+```
+sin²θ_W = g'² / (g² + g'²)
+         = α_1 / (α_1 + α_2)   (at unification scale)
+```
+
+This depends on:
+- The 4-cycle volumes wrapped by different brane stacks
+- The RG running from string scale to Z mass
+- The specific GUT embedding (SU(5), SO(10), etc.)
+
+**Decomposition:**
+- Component X: Cycle volume ratio τ_1/τ_2 → determines g'/g ratio at string scale
+- Component Y: RG running distance → depends on unification scale
+- Component Z: GUT breaking pattern → discrete choice
+
+We might find: X is easy to optimize, Y has smooth gradients, Z is a discrete branching choice.
+
+#### 3. Cosmological Constant
+
+From KKLT:
+```
+Λ ≈ V_uplift + V_AdS
+  = D/V^(4/3) - 3|W₀|²/V² × e^K
+```
+
+**Decomposition:**
+- Component P: W₀ magnitude — from flux choice, can be exponentially small
+- Component Q: CY volume V — from Kähler moduli
+- Component R: Uplift contribution D — from anti-D3 brane count
+
+The McAllister group achieved 10⁻¹²² by making W₀ exponentially small (DKMM mechanism), not by fine-tuning all components equally.
+
+### Why This Might Help
+
+#### A. Gradient Isolation
+
+Currently: Moving in parameter space changes ALL observables simultaneously.
+
+With decomposition: We can identify directions that primarily affect ONE component.
+
+**Example**: If we discover that:
+- g_s primarily affects the "magnitude scale" component
+- Kähler ratios primarily affect the "ratio" component
+- Flux integers primarily affect the "W₀" component
+
+Then we can do **coordinate descent**: optimize one component at a time.
+
+#### B. Partial Success Recognition
+
+Currently: A configuration with α_em=0.007, α_s=0.12, sin²θ_W=0.5, Λ=10⁻³⁰ gets a mediocre fitness score.
+
+With decomposition: We might recognize:
+- "Coupling magnitude": ✓ Correct (both α values close)
+- "Coupling ratio": ✓ Correct (α_s/α_em ≈ 16, target is 16.2)
+- "Weinberg angle": ✗ Wrong (0.5 vs 0.23)
+- "CC magnitude": ✗ Wrong (10⁻³⁰ vs 10⁻¹²²)
+
+This tells us: **2/4 components are solved**. Focus search on the unsolved components.
+
+#### C. Transfer Learning Between Targets
+
+Different components might be transferable:
+- A configuration that achieves good "coupling ratios" might be a good starting point for optimizing "CC magnitude"
+- The "correct g_s range" might be the same for many good solutions
+
+### Parameterization Connection
+
+This relates to the RESEARCH_GA_PARAMETERIZATIONS.md question: **which parameterization creates the smoothest fitness gradients?**
+
+The answer might be: parameterize in **component space**, not observable space.
+
+**Observable space**: (α_em, α_s, sin²θ_W, Λ)
+**Component space**: (g_s, τ_ratio_1, τ_ratio_2, V_scale, W₀_magnitude, ...)
+
+The component space might:
+- Have more dimensions (more degrees of freedom)
+- But smoother gradients per dimension
+- And independent optimization axes
+
+### Implementation Ideas
+
+#### 1. Multi-Objective GA
+
+Instead of single fitness, track multiple objectives:
+```python
+objectives = {
+    "gauge_magnitude_error": ...,
+    "gauge_ratio_error": ...,
+    "weinberg_error": ...,
+    "cc_log_error": ...,
+}
+```
+
+Use Pareto-front based selection (NSGA-II style). An individual is "good" if no other individual beats it on ALL objectives.
+
+#### 2. Hierarchical Search
+
+1. First optimize gauge coupling ratios (ignore magnitudes)
+2. Then fix ratios, optimize magnitudes
+3. Then fix gauge sector, optimize CC
+
+This assumes the components are somewhat independent.
+
+#### 3. Component Fitness Weighting
+
+Dynamic weights based on current progress:
+```python
+if gauge_ratios_solved:
+    weight_ratios *= 0.1  # De-emphasize solved component
+    weight_cc *= 10       # Focus on unsolved component
+```
+
+#### 4. Feature Engineering for Components
+
+Compute component-specific geometric features:
+- "g_s range compatibility" — which geometric features correlate with g_s being in the right range?
+- "τ ratio structure" — which features predict good cycle volume ratios?
+
+### Open Questions
+
+1. **What are the actual components?**
+   The physics determines this. Need to carefully analyze which parameter combinations affect which observables.
+
+2. **Are components independent?**
+   Probably not perfectly. But even partial independence helps.
+
+3. **Do smoother component gradients exist?**
+   Empirical question. Try it and see.
+
+4. **Does the 214 vs 4 Kähler parameterization matter here?**
+   The 214-dimensional space might naturally align with component axes better than the 4-dimensional Kähler moduli space.
+
+### Experiment: Component Gradient Analysis
+
+Using McAllister's polytope 4-214-647 as ground truth:
+
+1. At the optimal point, compute Jacobian: ∂(observable)/∂(parameter) for each observable and parameter
+2. Do SVD of Jacobian to find "principal component directions"
+3. Check: do the principal components align with interpretable physics?
+4. Measure: gradient smoothness along principal components vs along original parameter axes
+
+If components exist and have smooth gradients, SVD should reveal them.
+
+### Related: "Soft" Targets
+
+Instead of hard targets:
+```
+fitness = distance(α_em, 0.00729)
+```
+
+Use soft/banded targets:
+```
+fitness = 0 if α_em ∈ [0.006, 0.009] else penalty
+```
+
+This turns the optimization from "find exact point" to "find valid region". Regions might be much easier to find, then refine within region.

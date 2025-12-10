@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as PolytopesRouteImport } from './routes/polytopes'
+import { Route as PlaygroundRouteImport } from './routes/playground'
 import { Route as HeuristicsRouteImport } from './routes/heuristics'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as MetaIndexRouteImport } from './routes/meta/index'
@@ -21,6 +22,11 @@ import { Route as MetaGenGenAlgoAlgoRunRunRouteImport } from './routes/meta/gen.
 const PolytopesRoute = PolytopesRouteImport.update({
   id: '/polytopes',
   path: '/polytopes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PlaygroundRoute = PlaygroundRouteImport.update({
+  id: '/playground',
+  path: '/playground',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HeuristicsRoute = HeuristicsRouteImport.update({
@@ -63,6 +69,7 @@ const MetaGenGenAlgoAlgoRunRunRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/heuristics': typeof HeuristicsRoute
+  '/playground': typeof PlaygroundRoute
   '/polytopes': typeof PolytopesRoute
   '/polytope/$id': typeof PolytopeIdRoute
   '/meta': typeof MetaIndexRoute
@@ -73,6 +80,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/heuristics': typeof HeuristicsRoute
+  '/playground': typeof PlaygroundRoute
   '/polytopes': typeof PolytopesRoute
   '/polytope/$id': typeof PolytopeIdRoute
   '/meta': typeof MetaIndexRoute
@@ -84,6 +92,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/heuristics': typeof HeuristicsRoute
+  '/playground': typeof PlaygroundRoute
   '/polytopes': typeof PolytopesRoute
   '/polytope/$id': typeof PolytopeIdRoute
   '/meta/': typeof MetaIndexRoute
@@ -96,6 +105,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/heuristics'
+    | '/playground'
     | '/polytopes'
     | '/polytope/$id'
     | '/meta'
@@ -106,6 +116,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/heuristics'
+    | '/playground'
     | '/polytopes'
     | '/polytope/$id'
     | '/meta'
@@ -116,6 +127,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/heuristics'
+    | '/playground'
     | '/polytopes'
     | '/polytope/$id'
     | '/meta/'
@@ -127,6 +139,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   HeuristicsRoute: typeof HeuristicsRoute
+  PlaygroundRoute: typeof PlaygroundRoute
   PolytopesRoute: typeof PolytopesRoute
   PolytopeIdRoute: typeof PolytopeIdRoute
   MetaIndexRoute: typeof MetaIndexRoute
@@ -142,6 +155,13 @@ declare module '@tanstack/react-router' {
       path: '/polytopes'
       fullPath: '/polytopes'
       preLoaderRoute: typeof PolytopesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/playground': {
+      id: '/playground'
+      path: '/playground'
+      fullPath: '/playground'
+      preLoaderRoute: typeof PlaygroundRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/heuristics': {
@@ -199,6 +219,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   HeuristicsRoute: HeuristicsRoute,
+  PlaygroundRoute: PlaygroundRoute,
   PolytopesRoute: PolytopesRoute,
   PolytopeIdRoute: PolytopeIdRoute,
   MetaIndexRoute: MetaIndexRoute,

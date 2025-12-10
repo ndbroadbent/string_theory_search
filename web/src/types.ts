@@ -283,6 +283,9 @@ export interface MetaRun {
   ended_at: string | null;
 }
 
+/** Evaluation source type */
+export type EvaluationSource = 'ga' | 'playground' | 'test';
+
 /** Evaluation record (single physics evaluation) */
 export interface Evaluation {
   id: number;
@@ -303,6 +306,15 @@ export interface Evaluation {
   success: boolean;
   error: string | null;
   created_at: string;
+
+  // Content-addressable fields (migration 008)
+  input_hash: string | null;
+  model_version: string | null;
+  source: EvaluationSource | null;
+  label: string | null;
+  vertices_json: string | null;  // For external polytopes (polytope_id = -1)
+  h11: number | null;
+  h21: number | null;
 }
 
 /** Global meta-state */
@@ -325,3 +337,4 @@ export interface GenerationStatus {
   total: number;
   best_fitness: number | null;
 }
+

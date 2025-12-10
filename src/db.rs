@@ -96,6 +96,7 @@ fn get_migrations() -> Vec<(i32, &'static str, &'static str)> {
         (5, "Unify runs and trials", include_str!("../migrations/005_unify_runs.sql")),
         (6, "Workers table", include_str!("../migrations/006_workers.sql")),
         (7, "Best evaluation cache", include_str!("../migrations/007_run_best_evaluation.sql")),
+        (8, "Content-addressable evaluations", include_str!("../migrations/008_content_addressable.sql")),
     ]
 }
 
