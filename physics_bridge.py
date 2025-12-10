@@ -617,6 +617,7 @@ class PhysicsBridge:
             "tadpole_satisfied": tadpole <= tadpole_bound,
 
             # Potential
+            "w0_flux": potential["w_flux_abs"],
             "superpotential_abs": w_total,
             "v_ads": potential["v_ads"],
             "v_uplift": potential["v_uplift"],

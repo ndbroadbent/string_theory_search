@@ -11,14 +11,6 @@ import json
 import pytest
 from pathlib import Path
 
-
-def einstein_to_string_frame(v_einstein: float, g_s: float) -> float:
-    """Convert CY volume from Einstein frame to string frame.
-
-    V_string = V_einstein * g_s^(3/2)
-    """
-    return v_einstein * (g_s ** 1.5)
-
 # Skip all tests if physics_bridge is not available
 physics_bridge = pytest.importorskip("physics_bridge")
 
@@ -79,21 +71,25 @@ class TestMcAllisterFixtures:
 
         result = bridge.compute_physics(genome)
 
-        # Must succeed
-        assert result["success"] is True
+        # Convert Einstein frame volume to string frame: V_string = V_einstein * g_s^(3/2)
+        g_s = data["g_s"]
+        cy_volume_string = data["expected"]["cy_volume"] * (g_s ** 1.5)
 
-        # McAllister expected values
-        # W₀ = 2.30012e-90 (superpotential magnitude)
-        # CY Volume = 4711.83 (Einstein frame)
-        # CC ≈ 10^-122 (derived from W₀ via KKLT potential)
-        expected_cy_volume_string = einstein_to_string_frame(data["expected"]["cy_volume"], data["g_s"])
-        assert result["cy_volume"] == expected_cy_volume_string
-        assert result["superpotential_abs"] == data["expected"]["w0_magnitude"]
-        assert result["cosmological_constant"] == 1e-122
+        # Build expected dict with all fields we care about
+        expected = {
+            "success": True,
+            "h11": data["h11"],
+            "h21": data["h21"],
+            "w0_flux": data["expected"]["w0_flux"],
+            "cy_volume": cy_volume_string,
+            "cosmological_constant": data["expected"]["cosmological_constant"],
+        }
 
-        # Hodge numbers
-        assert result["h11"] == 4
-        assert result["h21"] == 214
+        # Extract only the fields we care about from result
+        actual = {k: result[k] for k in expected.keys()}
+
+        # Compare all at once - shows ALL differences on failure
+        assert actual == expected
 
 
 class TestPhysicsBridgeBasics:

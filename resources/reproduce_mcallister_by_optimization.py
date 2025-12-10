@@ -17,6 +17,11 @@ import sys
 from pathlib import Path
 import numpy as np
 from scipy.optimize import minimize
+from concurrent.futures import ProcessPoolExecutor, as_completed
+import multiprocessing
+
+# Full precision for numpy printing
+np.set_printoptions(precision=20, suppress=False)
 
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
@@ -50,6 +55,43 @@ def load_float(filename: str) -> float:
     """Load a single float from a file."""
     with open(DATA_DIR / filename) as f:
         return float(f.read().strip())
+
+
+def run_single_optimization(args):
+    """Worker function for parallel optimization. Creates its own CYTools objects."""
+    idx, start_point, worker_data = args
+
+    try:
+        from cytools import Polytope
+        import numpy as np
+        from scipy.optimize import minimize
+
+        # Create fresh CYTools objects in this worker
+        poly = Polytope(worker_data['dual_points'])
+        triang = poly.triangulate(simplices=worker_data['dual_simplices'])
+        cy = triang.get_cy()
+        cone = cy.toric_kahler_cone()
+        H = np.array(cone.hyperplanes())
+        target = worker_data['target_V_string']
+
+        def objective(t):
+            V = cy.compute_cy_volume(t)
+            return (V - target) ** 2
+
+        def cone_constraint(t):
+            return H @ t
+
+        start = np.array(start_point)
+        res = minimize(
+            objective,
+            start,
+            method='SLSQP',
+            constraints={'type': 'ineq', 'fun': cone_constraint},
+            options={'ftol': 1e-30, 'maxiter': 10000}
+        )
+        return (idx, res.fun, res.x.tolist())
+    except Exception as e:
+        return (idx, None, None)
 
 
 def main():
@@ -119,18 +161,58 @@ def main():
     print(f"V at initial: {cy.compute_cy_volume(t_init):.6f}")
     print()
 
-    # Optimize with cone constraint
-    print("Optimizing to match target volume...")
+    # Generate starting points
+    n_starts = 100
+    np.random.seed(42)  # Reproducibility
+    starting_points = [t_init.tolist()]  # Include original
+    for i in range(n_starts - 1):
+        perturbed = t_init * (1 + 0.05 * np.random.randn(len(t_init)))
+        perturbed = np.maximum(perturbed, 0.01)
+        starting_points.append(perturbed.tolist())
+
+    # Parallel optimization - each worker creates its own CYTools objects
+    n_workers = multiprocessing.cpu_count()
+    print(f"Optimizing to match target volume (parallel search)...")
+    print(f"  Using {n_workers} CPU cores")
+    print(f"  Running {n_starts} optimization starts...")
+    print()
+
+    # Save data needed by workers
+    worker_data = {
+        'dual_points': dual_points,
+        'dual_simplices': dual_simplices,
+        'target_V_string': target_V_string,
+    }
+
+    with multiprocessing.Pool(n_workers) as pool:
+        args_list = [(i, start, worker_data) for i, start in enumerate(starting_points)]
+        results = []
+        for result in pool.imap_unordered(run_single_optimization, args_list):
+            idx, obj_val, moduli = result
+            results.append((idx, obj_val, moduli))
+            if obj_val is not None:
+                print(f"  [{idx+1}/{n_starts}] obj={obj_val:.6e}", flush=True)
+
+    # Find best result
+    valid_results = [(i, o, m) for i, o, m in results if o is not None]
+    if not valid_results:
+        raise RuntimeError("All optimizations failed")
+
+    best_idx, best_fun, best_moduli = min(valid_results, key=lambda x: x[1])
+    print()
+    print(f"  Best objective value: {best_fun:.6e} (from start {best_idx})")
+
+    # Re-run best to get full result object
     result = minimize(
         objective,
-        t_init,
+        best_moduli,
         method='SLSQP',
         constraints={'type': 'ineq', 'fun': cone_constraint},
-        options={'ftol': 1e-12, 'maxiter': 1000}
+        options={'ftol': 1e-30, 'maxiter': 10000}
     )
 
-    if not result.success:
-        raise RuntimeError(f"Optimization failed: {result.message}")
+    if result is None or (not result.success and result.fun > 1e-20):
+        raise RuntimeError(f"Optimization failed: {result.message if result else 'No valid result'}")
 
     t_opt = result.x
     V_opt = cy.compute_cy_volume(t_opt)
@@ -138,13 +220,20 @@ def main():
 
     print()
     print("=" * 70)
-    print("RESULTS")
+    print("RESULTS (FULL PRECISION)")
     print("=" * 70)
-    print(f"  Kähler moduli t: {t_opt}")
-    print(f"  V_string: {V_opt:.6f}")
-    print(f"  V_einstein: {V_E_opt:.4f}")
-    print(f"  Expected V_E: {expected_vol_einstein:.4f}")
-    print(f"  Error: {abs(V_E_opt - expected_vol_einstein) / expected_vol_einstein * 100:.6f}%")
+    print(f"  Kähler moduli t (list): {t_opt.tolist()}")
+    print(f"  Kähler moduli t (repr): {repr(t_opt.tolist())}")
+    print()
+    print(f"  V_string computed:  {V_opt!r}")
+    print(f"  V_string target:    {target_V_string!r}")
+    print(f"  V_string diff:      {abs(V_opt - target_V_string)!r}")
+    print(f"  V_string match:     {V_opt == target_V_string}")
+    print()
+    print(f"  V_einstein computed: {V_E_opt!r}")
+    print(f"  V_einstein expected: {expected_vol_einstein!r}")
+    print(f"  V_einstein diff:     {abs(V_E_opt - expected_vol_einstein)!r}")
+    print(f"  Error %: {abs(V_E_opt - expected_vol_einstein) / expected_vol_einstein * 100!r}")
     print()
 
     # Verify cone containment

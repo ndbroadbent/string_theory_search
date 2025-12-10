@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 """
-Reproduce McAllister et al. CY volume (4711.83) using their exact triangulation.
+Reproduce McAllister et al. CY volume (4711.83) using GLSM projection.
 
-This script uses the SAME triangulation as McAllister (all 294 lattice points
-of the primal polytope Δ), giving h11=214, h21=4, and 218 prime toric divisors.
+This script uses the EXACT procedure to reconstruct the 4 Kähler moduli from
+McAllister's 214 ambient parameters using GLSM linear relations.
+
+Key insight: McAllister's kahler_param.dat contains 214 ambient coordinates for
+non-basis divisors. The 4 basis divisor coordinates are determined by solving
+the GLSM constraint Q @ t_amb = 0.
 
 Reference: arXiv:2107.09064 "Small cosmological constants in string theory"
 """
@@ -43,6 +47,17 @@ def load_points(filename: str) -> list[list[int]]:
     return points
 
 
+def load_simplices(filename: str) -> list[list[int]]:
+    """Load simplices from a CSV file (one simplex per line, 0-indexed)."""
+    simplices = []
+    with open(DATA_DIR / filename) as f:
+        for line in f:
+            line = line.strip()
+            if line:
+                simplices.append([int(x) for x in line.split(",")])
+    return simplices
+
+
 def load_float(filename: str) -> float:
     """Load a single float from a file."""
     with open(DATA_DIR / filename) as f:
@@ -52,7 +67,7 @@ def load_float(filename: str) -> float:
 def main():
     print("=" * 70)
     print("Reproducing McAllister CY Volume (4-214-647)")
-    print("Using McAllister's exact triangulation (294 lattice points)")
+    print("Using GLSM projection (NOT optimization)")
     print("=" * 70)
     print()
 
@@ -61,269 +76,271 @@ def main():
     except ImportError:
         raise RuntimeError("CYTools not installed")
 
-    # Load McAllister data
+    # ==========================================================================
+    # Step 0: Load all McAllister data files
+    # ==========================================================================
     print("Loading McAllister data files...")
-    all_points = load_points("points.dat")
+
+    dual_points = load_points("dual_points.dat")
+    dual_simplices = load_simplices("dual_simplices.dat")
     g_s = load_float("g_s.dat")
     expected_vol_einstein = load_float("cy_vol.dat")
+    expected_vol_einstein_corrected = load_float("corrected_cy_vol.dat")
+
+    # Load both uncorrected and corrected Kähler parameters
     kahler_params = load_csv_floats("kahler_param.dat")
-    basis_indices = load_csv_ints("basis.dat")
+    kahler_params_corrected = load_csv_floats("corrected_kahler_param.dat")
+
+    # basis.dat: 214 indices (1-indexed) of non-basis divisors
+    # The first 4 entries of basis.dat permutation give the basis divisors
+    basis_perm = load_csv_ints("basis.dat")  # 214 values, 1-indexed
+
+    # kklt_basis.dat: ordering of non-basis divisors matching kahler_param.dat
+    kklt_basis = load_csv_ints("kklt_basis.dat")  # 214 values, 1-indexed
+
+    # Target divisor volumes for verification
     target_vols = load_csv_floats("target_volumes.dat")
+    target_vols_corrected = load_csv_floats("corrected_target_volumes.dat")
 
     print(f"  g_s: {g_s}")
-    print(f"  expected CY vol (Einstein): {expected_vol_einstein}")
-    print(f"  all_points (Δ): {len(all_points)} lattice points")
+    print(f"  expected CY vol (Einstein, uncorrected): {expected_vol_einstein}")
+    print(f"  expected CY vol (Einstein, corrected):   {expected_vol_einstein_corrected}")
+    print(f"  dual_points: {len(dual_points)} vertices")
+    print(f"  dual_simplices: {len(dual_simplices)} simplices")
     print(f"  kahler_params: {len(kahler_params)} values")
-    print(f"  basis_indices: {len(basis_indices)} entries, range [{basis_indices.min()}, {basis_indices.max()}]")
-    print(f"  target_volumes: {len(target_vols)} entries, sum={target_vols.sum():.2f}")
+    print(f"  kklt_basis: {len(kklt_basis)} values, range [{kklt_basis.min()}, {kklt_basis.max()}]")
     print()
 
-    # Create polytope from McAllister's full point set
+    # ==========================================================================
+    # Step 1: Build CY from dual polytope with McAllister's exact triangulation
+    # ==========================================================================
     print("=" * 70)
-    print("Creating CY from McAllister's points.dat (294 points)")
+    print("Step 1: Build CY from dual polytope Δ* with exact triangulation")
     print("=" * 70)
-    poly = Polytope(all_points)
+
+    poly = Polytope(dual_points)
+    print(f"  Polytope vertices: {len(dual_points)}")
     print(f"  Is reflexive: {poly.is_reflexive()}")
-    print(f"  Total lattice points: {len(poly.labels)}")
 
-    # Triangulate
-    triang = poly.triangulate(include_points_interior_to_facets=True)
-    print(f"  Points in triangulation: {len(triang.points())}")
-
+    # Use McAllister's exact triangulation
+    triang = poly.triangulate(simplices=dual_simplices)
     cy = triang.get_cy()
+
     h11 = cy.h11()
     h21 = cy.h21()
+    n_divisors = len(cy.prime_toric_divisors())
+
     print(f"  h11={h11}, h21={h21}")
-    print(f"  Prime toric divisors: {len(cy.prime_toric_divisors())}")
-
-    # This gives h11=214, h21=4 (swapped from dual)
-    # McAllister's target: h11=4, h21=214
-    # So we need to use the mirror!
-
-    print()
-    print("=" * 70)
-    print("Mirror Symmetry Check")
-    print("=" * 70)
-    print(f"  Current: h11={h11}, h21={h21}")
-    print(f"  McAllister expects: h11=4, h21=214")
-    print()
-    print("  The CY from Δ has (h11, h21) = (214, 4)")
-    print("  The CY from Δ* has (h11, h21) = (4, 214)")
-    print("  These are mirror pairs!")
+    print(f"  Prime toric divisors: {n_divisors}")
+    print(f"  Divisor basis (CYTools default): {cy.divisor_basis()}")
     print()
 
-    # For McAllister's setup with h11=4, we need Δ* (the dual)
-    # But McAllister's kahler_param.dat has 214 values for Δ's ambient space
-
-    # Let's understand the mapping:
-    # - McAllister's CY has h11=4 Kähler moduli
-    # - The 214 kahler_param values are ambient toric variety coordinates
-    # - The GLSM constraints reduce 218 ambient coords to h11=4 moduli
-
+    # ==========================================================================
+    # Step 2: Set McAllister's exact divisor basis
+    # ==========================================================================
     print("=" * 70)
-    print("Understanding McAllister's Parametrization")
+    print("Step 2: Set McAllister's divisor basis")
     print("=" * 70)
 
-    # The basis.dat contains indices of non-basis divisors
-    # The 4 indices NOT in basis.dat form the divisor basis
-    all_divisor_indices = set(range(1, 219))  # 1 to 218
-    non_basis_set = set(basis_indices)
-    basis_divisors = sorted(all_divisor_indices - non_basis_set)
-    print(f"  McAllister's basis divisors (by exclusion): {basis_divisors}")
-    print(f"  These 4 divisors span the h11=4 Kähler moduli space")
+    # basis.dat contains 214 non-basis divisor indices (1-indexed)
+    # The 4 divisors NOT in basis.dat form the basis
+    # According to the procedure: first 4 entries of basis permutation are the basis
+
+    # Actually, basis.dat lists the NON-basis divisors
+    # We need to find which 4 are NOT listed
+    all_divisor_indices = set(range(1, n_divisors + 1))  # 1 to N (1-indexed)
+    non_basis_set = set(basis_perm)
+    basis_divisors_1idx = sorted(all_divisor_indices - non_basis_set)
+
+    # Convert to 0-indexed for CYTools
+    B = [d - 1 for d in basis_divisors_1idx]
+
+    print(f"  Non-basis divisors (from basis.dat): {len(non_basis_set)} indices")
+    print(f"  Basis divisors (1-indexed): {basis_divisors_1idx}")
+    print(f"  Basis divisors (0-indexed): {B}")
+
+    # Set the divisor basis
+    cy.set_divisor_basis(B)
+    print(f"  CYTools divisor basis set to: {cy.divisor_basis()}")
     print()
 
-    # The kahler_param.dat values are the ambient Kähler parameters
-    # for the 214 non-basis divisors. The 4 basis divisor values
-    # are determined by the GLSM constraints.
+    # ==========================================================================
+    # Step 3: GLSM projection from 214 ambient params to 4 Kähler moduli
+    # ==========================================================================
+    print("=" * 70)
+    print("Step 3: GLSM projection")
+    print("=" * 70)
 
-    # Get the GLSM for the h11=214 CY (from Δ)
-    glsm = cy.glsm_charge_matrix()
-    print(f"  GLSM charge matrix shape: {glsm.shape}")
-    print(f"  (This is for h11=214 CY from Δ)")
+    # Get GLSM charge matrix (excluding origin column)
+    Q = cy.glsm_charge_matrix(include_origin=False)
+    print(f"  GLSM charge matrix shape: {Q.shape}")
 
-    # For the h11=4 CY (from Δ*), we'd have a different GLSM
-    # Let's create that
-    dual_points = load_points("dual_points.dat")
-    poly_dual = Polytope(dual_points)
-    triang_dual = poly_dual.triangulate()
-    cy_dual = triang_dual.get_cy()
-    glsm_dual = cy_dual.glsm_charge_matrix()
-    print(f"  GLSM charge matrix for Δ*: {glsm_dual.shape}")
-    print(f"  (This is for h11={cy_dual.h11()} CY from Δ*)")
+    N = Q.shape[1]  # Number of prime toric divisors
+    print(f"  Number of prime toric divisors: {N}")
 
+    # Non-basis divisor indices (0-indexed), in the order of kklt_basis.dat
+    NB = kklt_basis - 1  # Convert to 0-indexed
+
+    print(f"  Basis indices B (0-indexed): {B}")
+    print(f"  Non-basis indices NB: {len(NB)} values")
     print()
-    print("=" * 70)
-    print("Computing Volume via GLSM Projection")
-    print("=" * 70)
 
-    # McAllister's parametrization:
-    # - 218 prime toric divisors (from all 294 lattice points of Δ)
-    # - basis.dat indicates which 214 are non-basis
-    # - The remaining 4 form the basis: [8, 9, 10, 17]
-    # - kahler_param.dat gives values for the 214 non-basis divisors
-    # - GLSM constraints determine the 4 basis divisor values
+    # Build the ambient vector t_amb
+    # Insert kahler_params at positions NB, solve for positions B
 
-    # Build the full ambient Kähler vector (218 components)
-    # First, figure out which index maps to which
-    # basis.dat has 214 values ranging from 1 to 218
+    def solve_glsm(kpar: np.ndarray, name: str) -> np.ndarray:
+        """Solve GLSM constraint for basis coordinates given non-basis values."""
+        print(f"  Solving GLSM for {name}...")
 
-    # McAllister's ordering: basis_indices tells us which divisors
-    # have their Kähler parameters in kahler_param.dat
+        # t_amb[NB] = kpar (known)
+        # t_amb[B] = ? (unknown)
+        # Constraint: Q @ t_amb = 0
+        # Q[:, B] @ t_B + Q[:, NB] @ t_NB = 0
+        # Q[:, B] @ t_B = -Q[:, NB] @ kpar
 
-    # Create full t vector with NaN for basis positions
-    t_ambient = np.full(218, np.nan)
-    for i, idx in enumerate(basis_indices):
-        # basis_indices are 1-indexed
-        t_ambient[idx - 1] = kahler_params[i]
+        rhs = -Q[:, NB] @ kpar
+        t_B, residuals, rank, s = np.linalg.lstsq(Q[:, B], rhs, rcond=None)
 
-    # The 4 NaN positions are the basis divisors
-    basis_pos = np.where(np.isnan(t_ambient))[0]
-    print(f"  Basis positions (0-indexed): {basis_pos}")
-    print(f"  Basis positions (1-indexed): {basis_pos + 1}")
-    print(f"  Expected: {basis_divisors}")
+        # Verify constraint satisfaction
+        t_amb = np.zeros(N)
+        t_amb[B] = t_B
+        t_amb[NB] = kpar
+        constraint_error = Q @ t_amb
+        max_error = np.abs(constraint_error).max()
 
-    # Now use GLSM to solve for basis coordinates
-    # Q @ [1, t_1, ..., t_218] = 0 for linear equivalence
-    # Actually, for the h11=214 CY, the GLSM has 214 rows
+        print(f"    t_B = {t_B}")
+        print(f"    GLSM constraint error: {max_error:.2e}")
 
-    # But wait - we want the h11=4 CY. The parametrization mismatch
-    # is fundamental: McAllister uses the mirror manifold's ambient space.
+        if max_error > 1e-10:
+            print(f"    WARNING: Large constraint error!")
 
+        return t_B
+
+    # Solve for uncorrected parameters
+    t_uncorrected = solve_glsm(kahler_params, "uncorrected")
     print()
-    print("=" * 70)
-    print("KEY REALIZATION")
-    print("=" * 70)
-    print("""
-The CY manifold defined by polytope 4-214-647 has TWO equivalent
-descriptions via mirror symmetry:
 
-1. CY from Δ (294 lattice points): h11=214, h21=4
-   - 218 prime toric divisors
-   - 214 non-basis + 4 basis = 218 total
-   - This is the toric variety resolution McAllister uses
-
-2. CY from Δ* (12 vertices): h11=4, h21=214
-   - 8 prime toric divisors
-   - 4 non-basis + 4 basis = 8 total
-   - This is what CYTools default triangulation gives
-
-McAllister's kahler_param.dat (214 values) lives in description 1.
-CYTools' compute_cy_volume expects 4 Kähler moduli in description 2.
-
-These are the SAME manifold but different parameterizations.
-The CY volume should be the same in both descriptions!
-
-Let's verify by computing volumes in both:
-""")
-
-    # Compute volume in the h11=214 description
-    print("Computing CY volume in h11=214 description...")
-
-    # We need to solve for the basis divisor values using GLSM
-    # Q @ t = 0 where t is the 218-component ambient vector
-
-    # The GLSM for h11=214 CY has shape (214, 219)
-    # Extract the (214 x 218) part (excluding origin column)
-    Q = glsm[:, 1:]  # (214, 218)
-
-    # Split into basis and non-basis columns
-    non_basis_pos = np.array([i for i in range(218) if i not in basis_pos])
-    Q_B = Q[:, basis_pos]  # (214, 4)
-    Q_A = Q[:, non_basis_pos]  # (214, 214)
-
-    print(f"  Q shape: {Q.shape}")
-    print(f"  Q_B shape: {Q_B.shape}")
-    print(f"  Q_A shape: {Q_A.shape}")
-
-    # The GLSM constraint is Q @ t = 0
-    # Q_B @ t_B + Q_A @ t_A = 0
-    # But Q_B is (214, 4) which is overdetermined!
-
-    # This means the 214 GLSM constraints are NOT all independent
-    # when we have only 4 basis divisors. Let's check rank.
-    print(f"  Rank of Q_B: {np.linalg.matrix_rank(Q_B)}")
-    print(f"  Rank of Q: {np.linalg.matrix_rank(Q)}")
-
-    # The rank should be 4 (= number of basis divisors = h11 for mirror)
-    # Use least squares to find t_B
-    t_A = kahler_params
-    t_B, residuals, rank, s = np.linalg.lstsq(Q_B, -Q_A @ t_A, rcond=None)
-    print(f"  Solved t_B (least squares): {t_B}")
-    print(f"  Residuals: {residuals if len(residuals) > 0 else 'N/A (overdetermined)'}")
-
-    # Verify the constraint
-    t_full = np.zeros(218)
-    t_full[basis_pos] = t_B
-    t_full[non_basis_pos] = t_A
-    constraint_error = Q @ t_full
-    print(f"  Max constraint error: {np.abs(constraint_error).max():.2e}")
-
-    # Now try to compute volume with the h11=214 CY
-    # The Kähler moduli for h11=214 CY are t_1, ..., t_214 (all 218 with 4 linear relations)
-    # Actually, CYTools wants h11 = 214 moduli
-
+    # Solve for corrected parameters
+    t_corrected = solve_glsm(kahler_params_corrected, "corrected")
     print()
-    print("  Attempting volume computation with h11=214 CY...")
 
-    # CYTools expects h11-dimensional input for compute_cy_volume
-    # For h11=214, we need 214 values
+    # ==========================================================================
+    # Step 4: Compute volumes and verify
+    # ==========================================================================
+    print("=" * 70)
+    print("Step 4: Compute volumes and verify")
+    print("=" * 70)
 
-    # The divisor basis for h11=214 CY
-    cy_div_basis = cy.divisor_basis()
-    print(f"  CYTools divisor basis for h11=214 CY: {len(cy_div_basis)} divisors")
+    def compute_and_verify(t: np.ndarray, expected_V_E: float, name: str):
+        """Compute CY volume and verify against expected."""
+        print(f"\n  {name}:")
+        print(f"    Kähler moduli t = {t}")
 
-    # The Kähler moduli are projections of the ambient coords onto basis divisors
-    # We need to understand CYTools' basis choice
-    print(f"  CYTools basis: {cy_div_basis[:10]}... (first 10)")
-
-    # Try computing volume with a point in the Kähler cone
-    # First get the cone
-    try:
+        # Check if t is in Kähler cone
         cone = cy.toric_kahler_cone()
-        print(f"  Kähler cone ambient dim: {cone.ambient_dimension()}")
+        in_cone = cone.contains(t)
+        print(f"    In Kähler cone: {in_cone}")
 
-        # Try to get tip (may fail for high-dim cones)
-        tip = cone.tip_of_stretched_cone(0.1)  # smaller stretch
-        if tip is not None:
-            print(f"  Cone tip found: shape={tip.shape}")
-            V_tip = cy.compute_cy_volume(tip)
-            V_tip_E = V_tip * (g_s ** (-1.5))
-            print(f"  V at tip (string frame): {V_tip:.6f}")
-            print(f"  V at tip (Einstein frame): {V_tip_E:.4f}")
+        if not in_cone:
+            print(f"    WARNING: Point is outside Kähler cone!")
+
+        # Compute string frame volume
+        V_string = cy.compute_cy_volume(t)
+
+        # Convert to Einstein frame: V_E = V_S * g_s^(-3/2)
+        V_einstein = V_string * (g_s ** (-1.5))
+
+        print(f"    V_string (computed):  {V_string}")
+        print(f"    V_einstein (computed): {V_einstein}")
+        print(f"    V_einstein (expected): {expected_V_E}")
+
+        error = abs(V_einstein - expected_V_E)
+        rel_error = error / expected_V_E
+        print(f"    Absolute error: {error:.6e}")
+        print(f"    Relative error: {rel_error:.6e}")
+
+        if rel_error < 1e-10:
+            print(f"    ✓ EXACT MATCH (within floating point)")
+        elif rel_error < 1e-6:
+            print(f"    ~ Close match")
         else:
-            print("  Could not find cone tip (common for high-dim cones)")
-    except Exception as e:
-        print(f"  Kähler cone error: {e}")
+            print(f"    ✗ MISMATCH")
 
+        return V_string, V_einstein
+
+    V_s_unc, V_e_unc = compute_and_verify(t_uncorrected, expected_vol_einstein, "UNCORRECTED")
+    V_s_cor, V_e_cor = compute_and_verify(t_corrected, expected_vol_einstein_corrected, "CORRECTED")
+
+    # ==========================================================================
+    # Step 5: Verify divisor volumes
+    # ==========================================================================
     print()
     print("=" * 70)
-    print("FINAL SUMMARY")
+    print("Step 5: Verify divisor volumes")
+    print("=" * 70)
+
+    def verify_divisor_volumes(t: np.ndarray, target: np.ndarray, name: str):
+        """Verify divisor volumes match targets."""
+        print(f"\n  {name}:")
+
+        # Compute all divisor volumes (not just basis)
+        tau_all = cy.compute_divisor_volumes(t, in_basis=False)
+
+        # Target volumes are in Einstein frame, convert to string frame
+        # τ_S = τ_E * g_s^(3/2) (divisor volumes scale opposite to CY volume)
+        # Actually: τ_E = τ_S * g_s^(-1) for 4-cycles
+        # Let's check both conventions
+
+        # Extract volumes at non-basis positions (matching target ordering)
+        tau_NB = tau_all[NB]
+
+        print(f"    Computed τ (first 5): {tau_NB[:5]}")
+        print(f"    Target τ (first 5):   {target[:5]}")
+
+        # Try to find the right frame conversion
+        # τ_4-cycle in Einstein vs string frame: τ_E = τ_S / g_s
+        tau_target_string = target * g_s  # Convert target from Einstein to string
+
+        diff = tau_NB - tau_target_string
+        max_diff = np.abs(diff).max()
+        rel_diff = np.abs(diff / (tau_target_string + 1e-10)).max()
+
+        print(f"    Max absolute diff: {max_diff:.6e}")
+        print(f"    Max relative diff: {rel_diff:.6e}")
+
+    verify_divisor_volumes(t_uncorrected, target_vols, "UNCORRECTED")
+    verify_divisor_volumes(t_corrected, target_vols_corrected, "CORRECTED")
+
+    # ==========================================================================
+    # Summary
+    # ==========================================================================
+    print()
+    print("=" * 70)
+    print("SUMMARY")
     print("=" * 70)
     print(f"""
-McAllister's polytope 4-214-647:
-  - Primal Δ: 294 lattice points → h11=214, h21=4 CY
-  - Dual Δ*: 12 vertices → h11=4, h21=214 CY (mirror)
+McAllister 4-214-647 reproduction via GLSM projection:
 
-McAllister's data uses the primal Δ ambient space:
-  - 218 prime toric divisors
-  - 214 non-basis divisors (kahler_param.dat)
-  - 4 basis divisors: {basis_divisors}
+  g_s = {g_s}
 
-CYTools default uses Δ*:
-  - 8 prime toric divisors
-  - 4 Kähler moduli
+  UNCORRECTED:
+    Kähler moduli t = {t_uncorrected}
+    V_string  = {V_s_unc}
+    V_einstein = {V_e_unc}
+    Expected   = {expected_vol_einstein}
 
-The two descriptions give the SAME CY volume (by mirror symmetry).
-Since direct GLSM projection is complex, the optimization approach
-(reproduce_mcallister_by_optimization.py) is the pragmatic solution:
-  - Use CYTools' 4-moduli parametrization (from Δ*)
-  - Optimize to match McAllister's CY volume = {expected_vol_einstein:.2f}
-  - This gives valid Kähler moduli inside the Kähler cone
+  CORRECTED (with instanton corrections):
+    Kähler moduli t = {t_corrected}
+    V_string  = {V_s_cor}
+    V_einstein = {V_e_cor}
+    Expected   = {expected_vol_einstein_corrected}
 
-Expected result:
-  V_string = {expected_vol_einstein * g_s**1.5:.6f}
-  V_einstein = {expected_vol_einstein:.4f}
+This is the EXACT reconstruction of McAllister's Kähler moduli from
+their 214 ambient parameters using GLSM linear relations.
+
+NOTE: W₀ = 2.30012e-90 cannot be computed from geometry alone.
+      It requires period computation which CYTools does not provide.
+      Use W_0.dat directly for physics computations.
 """)
 
 

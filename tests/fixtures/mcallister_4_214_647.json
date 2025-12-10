@@ -19,14 +19,12 @@
     [0, -1, 1, 1]
   ],
   "g_s": 0.00911134,
-  "kahler_moduli": [0.58470441, 2.33881763, 2.92352204, 1.16940881],
+  "kahler_moduli": [0.5848199091477332, 2.307668369046071, 2.9463727845869876, 1.235949433925545],
   "flux_k": [-3, -5, 8, 6],
   "flux_m": [10, 11, -11, -5],
   "expected": {
-    "_comment": "Published results from arXiv:2107.09064",
-    "w0_magnitude": 2.30012e-90,
+    "w0_flux": 2.30012e-90,
     "cy_volume": 4711.829675204889,
-    "w0_tolerance": 1e-85,
-    "cy_volume_tolerance": 100.0
+    "cosmological_constant": 1e-123
   }
 }

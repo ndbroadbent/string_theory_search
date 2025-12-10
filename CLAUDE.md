@@ -152,3 +152,32 @@ Snapshots stored in `tests/snapshots/` - these are critical for regression testi
 ## Ansible
 Inventory: `ansible/inventory.yml` (set string_theory host)
 Playbook installs: Rust, Bun, Python venv, PALP, CYTools, cymyc
+
+## CRITICAL: McAllister Reproduction is the North Star
+
+The ONLY thing that matters is computing the cosmological constant correctly.
+
+McAllister et al. (arXiv:2107.09064) achieved Λ ~ 10⁻¹²³ for polytope 4-214-647.
+This is our **ground truth** - the first real result we can validate against.
+
+The workflow is:
+1. **Reproduce McAllister's result exactly** using their published data
+2. **Get a passing unit test** that validates our entire physics pipeline
+3. **Add it to database and web UI** - so we can see what a valid result looks like
+
+Until we can reproduce McAllister, our GA results are meaningless garbage.
+
+### McAllister Data (resources/small_cc_2107.09064_source/anc/paper_data/4-214-647/)
+- `points.dat`: Primal polytope (294 points, h11=214, h21=4)
+- `dual_points.dat`: Dual polytope (12 points, h11=4, h21=214)
+- `kahler_param.dat`: 214 Kähler parameters (for primal, NOT dual)
+- `basis.dat`: 214 divisor basis indices for primal (NOT 4 basis divisors!)
+- `g_s.dat`: 0.00911134
+- `W_0.dat`: 2.30012e-90 (flux superpotential - requires periods to compute)
+- `cy_vol.dat`: 4711.83 (Einstein frame)
+
+### Key Insight: Primal vs Dual
+- The genome must support BOTH primal (h11=214) and dual (h11=4) polytopes
+- McAllister's kahler_param.dat is for the PRIMAL with 214 moduli
+- Don't try to convert 214 params to 4 - just use the primal directly
+- CYTools works with either; physics_bridge should too
