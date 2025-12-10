@@ -13,6 +13,20 @@ cone.contains(t): True
 All divisor volumes: positive
 ```
 
+## Root Cause: Mirror Symmetry Parametrization
+
+The fundamental issue is that McAllister and CYTools use **mirror-symmetric descriptions** of the same Calabi-Yau manifold:
+
+| Property | McAllister (primal Δ) | CYTools (dual Δ*) |
+|----------|----------------------|-------------------|
+| Lattice points | 294 (all of Δ) | 12 (vertices of Δ*) |
+| Hodge numbers | h11=214, h21=4 | h11=4, h21=214 |
+| Prime toric divisors | 218 | 8 |
+| Ambient Kähler params | 214 (non-basis) | 4 (= h11) |
+| Basis divisors | [8, 9, 10, 17] | [5, 6, 7, 8] |
+
+The manifolds are **mirror pairs** (h11 ↔ h21 swap). The CY volume is the same, but the parametrizations are incompatible.
+
 ## What We Tried (and Why It Failed)
 
 ### Attempt 1: Using `basis.dat` First 4 Entries as Divisor Basis
@@ -33,11 +47,18 @@ All divisor volumes: positive
 
 ### Attempt 3: GLSM Projection from 214 Ambient Parameters
 
-**Approach**: Use `cy.glsm_charge_matrix()` and `cy.divisor_basis_matrix()` to project McAllister's 214 `kahler_param.dat` values to 4 Kähler moduli.
+**Approach**: Use `cy.glsm_charge_matrix()` to project McAllister's 214 `kahler_param.dat` values to 4 Kähler moduli.
 
-**Result**: Could not implement - dimension mismatch.
+**Result**: Could not implement - mirror symmetry mismatch.
 
-**Why it failed**: McAllister uses a **Fine Regular Star Triangulation (FRST)** with 218 prime toric divisors derived from ALL lattice points (294 in `points.dat`). CYTools with the 12-vertex dual polytope only constructs 8 prime toric divisors. The two parameterizations are fundamentally different.
+**Why it failed**: McAllister uses the **primal polytope Δ** (294 lattice points) giving h11=214. CYTools default uses the **dual Δ*** (12 vertices) giving h11=4. These are mirror pairs - the GLSM matrices have incompatible dimensions:
+- McAllister's GLSM: (214, 219) for h11=214
+- CYTools' GLSM: (4, 9) for h11=4
+
+We tried using `Polytope(all_points)` with McAllister's 294 points, which gives h11=214 and 218 divisors matching McAllister. But:
+1. CYTools picks a different divisor basis than McAllister
+2. The 214-dim Kähler cone is too high-dimensional for numerical optimization
+3. Least-squares GLSM solution has huge constraint error (1040)
 
 ### Attempt 4: Scaling Cone Tip to Match Volume
 
@@ -74,18 +95,21 @@ result = minimize(
 - Volume matches exactly (0.000000% error)
 - All divisor volumes are positive
 
-## Key Insight: Different Triangulation Granularity
+## Key Insight: Mirror Symmetry, Not Triangulation Granularity
 
-McAllister uses a **finer triangulation** than CYTools:
+Initially we thought McAllister used a "finer triangulation." The actual issue is **mirror symmetry**:
 
-| Property | McAllister FRST | CYTools Default |
-|----------|-----------------|-----------------|
-| Lattice points used | 294 (all of Δ) | 12 (vertices of Δ*) |
+| Property | McAllister (primal Δ) | CYTools Default (dual Δ*) |
+|----------|----------------------|---------------------------|
+| Polytope | Δ (294 lattice points) | Δ* (12 vertices) |
+| Hodge numbers | h11=214, h21=4 | h11=4, h21=214 |
 | Prime toric divisors | 218 | 8 |
-| Ambient parameters | 214 (non-basis) | 4 (= h11) |
-| Basis divisors | 4 | 4 |
+| Ambient parameters | 214 | 4 |
+| CY manifold | **Same manifold** | **Same manifold** |
 
-The `kahler_param.dat` with 214 values represents coordinates in a 214-dimensional ambient space that cannot be directly projected to CYTools' 4-dimensional Kähler moduli space because the triangulations are different.
+The key realization: Δ and Δ* define **mirror-pair CY manifolds** with swapped Hodge numbers. McAllister's `kahler_param.dat` lives in the h11=214 parametrization, while CYTools' `compute_cy_volume` expects h11=4 moduli.
+
+**Irony**: CYTools is developed by the same McAllister group! The parametrization choice in the paper vs. the library is different.
 
 ## Frame Conversion
 
@@ -101,7 +125,8 @@ With g_s = 0.00911134:
 
 ## Files
 
-- `tools/reproduce_mcallister_volume.py` - Working reproduction script
+- `resources/reproduce_mcallister_by_optimization.py` - Working script (constrained optimization)
+- `resources/reproduce_mcallister_by_glsm.py` - Analysis script (explains mirror symmetry issue)
 - `tests/fixtures/mcallister_4_214_647.json` - Test fixture with correct Kähler moduli
 - `resources/small_cc_2107.09064_source/anc/paper_data/4-214-647/` - McAllister raw data
 

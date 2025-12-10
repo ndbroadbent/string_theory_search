@@ -1,0 +1,13 @@
+- mobius-strip-ness - can we detect some kind of mobius strip structure within the polytope? a loop connected to itself via a half twist?
+- torus (donut shape)
+- cube - how closely it resembles a cube
+- X - how close it is to an X shape
+- L
+- I
+- T
+- Y
+- U
+- V
+- W
+- Z
+- plus tetris shapes
