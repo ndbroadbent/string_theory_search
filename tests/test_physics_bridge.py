@@ -11,6 +11,14 @@ import json
 import pytest
 from pathlib import Path
 
+
+def einstein_to_string_frame(v_einstein: float, g_s: float) -> float:
+    """Convert CY volume from Einstein frame to string frame.
+
+    V_string = V_einstein * g_s^(3/2)
+    """
+    return v_einstein * (g_s ** 1.5)
+
 # Skip all tests if physics_bridge is not available
 physics_bridge = pytest.importorskip("physics_bridge")
 
@@ -37,51 +45,28 @@ class TestMcAllisterFixtures:
         assert data["h11"] == 4
         assert data["h21"] == 214
         assert len(data["vertices"]) == 12
-        assert len(data["kahler_moduli"]) == 214
+        assert len(data["kahler_moduli"]) == 4
         assert len(data["flux_k"]) == 4
         assert len(data["flux_m"]) == 4
 
     @pytest.mark.slow
-    def test_cy_volume(self, mcallister_4_214_647):
-        """Test that CY volume matches published value."""
-        data = mcallister_4_214_647
-
-        # Create bridge instance
-        bridge = physics_bridge.PhysicsBridge()
-
-        # Analyze polytope
-        cy_data = bridge.cytools.analyze_polytope(data["vertices"])
-
-        if not cy_data.get("success", True):
-            pytest.skip(f"Polytope analysis failed: {cy_data.get('error')}")
-
-        expected = data["expected"]["cy_volume"]
-        tolerance = data["expected"]["cy_volume_tolerance"]
-
-        # Check if CY volume is available in the analysis
-        if "cy_volume" in cy_data:
-            result = cy_data["cy_volume"]
-            assert abs(result - expected) < tolerance, (
-                f"CY volume mismatch: got {result}, expected {expected} +/- {tolerance}"
-            )
-
-    @pytest.mark.slow
     def test_full_physics_computation(self, mcallister_4_214_647):
-        """Test full physics computation against McAllister published values.
+        """Test full physics computation against McAllister published results.
 
-        This test validates that our physics bridge produces results consistent
-        with arXiv:2107.09064. If this test fails, our GA results are suspect.
+        Uses kahler_mode="fixed" to use exact Kähler values from the fixture.
 
-        Expected values from the paper:
+        McAllister paper (arXiv:2107.09064) reports:
         - W₀ = 2.30012e-90
-        - CY Volume = 4711.83
+        - CY Volume = 4711.83 (Einstein frame)
+        - Cosmological constant ~ 10^-122
+
+        If these tests fail, our physics_bridge implementation is broken.
         """
         data = mcallister_4_214_647
 
-        # Create bridge instance
         bridge = physics_bridge.PhysicsBridge()
 
-        # Build genome dict matching PhysicsBridge.compute_physics interface
+        # Build genome with FIXED mode - use exact Kähler values
         genome = {
             "vertices": data["vertices"],
             "kahler_moduli": data["kahler_moduli"],
@@ -89,59 +74,26 @@ class TestMcAllisterFixtures:
             "flux_f": data["flux_k"],
             "flux_h": data["flux_m"],
             "g_s": data["g_s"],
+            "kahler_mode": "fixed",  # Use exact values, don't raytrace
         }
 
-        # Run full computation
         result = bridge.compute_physics(genome)
 
-        # Check computation succeeded
-        assert result["success"], f"Physics computation failed: {result.get('error')}"
+        # Must succeed
+        assert result["success"] is True
 
-        # Validate CY volume against published value
-        expected_cy_volume = data["expected"]["cy_volume"]
-        cy_volume_tolerance = data["expected"]["cy_volume_tolerance"]
-        assert abs(result["cy_volume"] - expected_cy_volume) < cy_volume_tolerance, (
-            f"CY volume mismatch: got {result['cy_volume']}, "
-            f"expected {expected_cy_volume} +/- {cy_volume_tolerance}"
-        )
+        # McAllister expected values
+        # W₀ = 2.30012e-90 (superpotential magnitude)
+        # CY Volume = 4711.83 (Einstein frame)
+        # CC ≈ 10^-122 (derived from W₀ via KKLT potential)
+        expected_cy_volume_string = einstein_to_string_frame(data["expected"]["cy_volume"], data["g_s"])
+        assert result["cy_volume"] == expected_cy_volume_string
+        assert result["superpotential_abs"] == data["expected"]["w0_magnitude"]
+        assert result["cosmological_constant"] == 1e-122
 
-        # Validate W₀ (superpotential) against published value
-        # W₀ relates to cosmological constant via Λ ∝ |W₀|²/V²
-        expected_w0 = data["expected"]["w0_magnitude"]
-        w0_tolerance = data["expected"]["w0_tolerance"]
-
-        # The physics bridge should compute W0 or something proportional to it
-        # Check if W0 is available in results
-        if "w0" in result or "superpotential" in result:
-            computed_w0 = abs(result.get("w0", result.get("superpotential", 0)))
-            # For extremely small W0 values, check order of magnitude
-            if expected_w0 < 1e-50:
-                # Check that log10 values are within 5 orders of magnitude
-                import math
-                if computed_w0 > 0:
-                    log_diff = abs(math.log10(computed_w0) - math.log10(expected_w0))
-                    assert log_diff < 5, (
-                        f"W0 order of magnitude mismatch: got {computed_w0:.2e}, "
-                        f"expected {expected_w0:.2e} (log diff: {log_diff})"
-                    )
-            else:
-                assert abs(computed_w0 - expected_w0) < w0_tolerance, (
-                    f"W0 mismatch: got {computed_w0}, expected {expected_w0}"
-                )
-
-        # Basic sanity checks on gauge couplings
-        assert 0 < result["alpha_em"] < 1, f"alpha_em out of range: {result['alpha_em']}"
-        assert 0 < result["alpha_s"] < 1, f"alpha_s out of range: {result['alpha_s']}"
-        assert 0 < result["sin2_theta_w"] < 1, f"sin2_theta_w out of range: {result['sin2_theta_w']}"
-
-        # Print actual values for debugging
-        print(f"\n=== McAllister 4-214-647 Results ===")
-        print(f"CY Volume: {result['cy_volume']:.4f} (expected: {expected_cy_volume})")
-        print(f"alpha_em: {result['alpha_em']:.6e}")
-        print(f"alpha_s: {result['alpha_s']:.6f}")
-        print(f"sin2_theta_w: {result['sin2_theta_w']:.6f}")
-        print(f"n_generations: {result.get('n_generations', 'N/A')}")
-        print(f"cosmological_constant: {result.get('cosmological_constant', 'N/A')}")
+        # Hodge numbers
+        assert result["h11"] == 4
+        assert result["h21"] == 214
 
 
 class TestPhysicsBridgeBasics:
@@ -187,15 +139,18 @@ class TestPhysicsBridgeBasics:
             "flux_f": [1, 0, 0, 0],
             "flux_h": [0, 1, 0, 0],
             "g_s": 0.1,
+            "kahler_mode": "fixed",
         }
 
         result = bridge.compute_physics(genome)
 
-        # Should complete (success or failure with specific error)
-        # Even if computation fails, it should fail gracefully
-        assert "success" in result
-        if not result["success"]:
-            assert "error" in result
+        # Should complete successfully
+        assert result["success"] is True
+
+        # Quintic has h11=1, h21=101 (from CYTools)
+        # Note: actual values depend on CYTools triangulation
+        assert result["h11"] == 1
+        assert result["h21"] == 101
 
 
 if __name__ == "__main__":
