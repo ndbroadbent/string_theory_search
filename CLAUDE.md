@@ -79,8 +79,29 @@ config.server.toml   - server config (/data/polytopes path)
 ## Physics Bridge
 - Uses CYTools for polytope analysis, triangulations, intersection numbers
 - Uses cymyc (JAX) for numerical CY metrics
-- Crashes if not available - no fallbacks ever
 - Computes: gauge couplings, cosmological constant, generation count
+
+### CRITICAL: No Silent Fallbacks
+**NEVER write code that silently falls back to approximations or default values when a computation fails.**
+
+Bad (NEVER DO THIS):
+```python
+result = compute_something()
+if not result["success"]:
+    # Silent fallback - WRONG!
+    value = some_approximation()
+```
+
+Good (ALWAYS DO THIS):
+```python
+result = compute_something()
+if not result["success"]:
+    return {"success": False, "error": result.get("error", "unknown")}
+```
+
+This applies to ALL computations: volumes, gauge couplings, potentials, etc.
+If CYTools or any physics computation fails, the entire evaluation must fail loudly.
+Silent fallbacks make debugging nearly impossible and produce garbage results.
 
 ## Target Constants (what we're matching)
 - α_em = 7.297e-3 (fine structure)

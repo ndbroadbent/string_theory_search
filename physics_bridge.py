@@ -135,12 +135,13 @@ class CYToolsBridge:
 
         cy = cy_data["_cy_object"]
 
-        # Kähler moduli must match the Kähler cone ambient dimension, NOT cy.h11()
+        # Kähler moduli must match the Kähler cone ambient dimension exactly
         cone_dim = cy.toric_kahler_cone().ambient_dim()
-        if len(kahler_moduli) > cone_dim:
-            kahler_moduli = kahler_moduli[:cone_dim]
-        elif len(kahler_moduli) < cone_dim:
-            kahler_moduli = np.concatenate([kahler_moduli, np.ones(cone_dim - len(kahler_moduli))])
+        if len(kahler_moduli) != cone_dim:
+            raise ValueError(
+                f"Kähler moduli dimension mismatch in compute_volumes: "
+                f"got {len(kahler_moduli)}, expected {cone_dim}"
+            )
 
         # CY volume: V = (1/6) κ_ijk t^i t^j t^k
         cy_volume = cy.compute_cy_volume(kahler_moduli)
@@ -403,43 +404,36 @@ class PhysicsBridge:
         """
         Use exact Kähler moduli from genome (for playground/testing).
 
-        If the provided moduli are outside the cone, project them in.
+        FAILS LOUDLY if:
+        - kahler_moduli not provided
+        - moduli are outside the Kähler cone
         """
         cy = cy_data["_cy_object"]
         cone = cy.toric_kahler_cone()
         dim = cone.ambient_dim()
 
-        # Get moduli from genome
-        kahler = np.array(genome.get("kahler_moduli", [1.0] * dim), dtype=float)
+        # Fixed mode REQUIRES explicit kahler_moduli - no silent defaults
+        if "kahler_moduli" not in genome:
+            raise ValueError(
+                f"Fixed mode requires explicit 'kahler_moduli' in genome. "
+                f"Expected array of length {dim} (h11={dim})."
+            )
+        kahler = np.array(genome["kahler_moduli"], dtype=float)
 
-        # Adjust dimension
-        if len(kahler) > dim:
-            kahler = kahler[:dim]
-        elif len(kahler) < dim:
-            # Pad with ones (reasonable default)
-            kahler = np.concatenate([kahler, np.ones(dim - len(kahler))])
+        # Dimension mismatch is a hard error
+        if len(kahler) != dim:
+            raise ValueError(
+                f"Kähler moduli dimension mismatch: got {len(kahler)}, expected {dim} (h11={dim})"
+            )
 
-        # Check if already in cone
-        if cone.contains(kahler):
-            return kahler
+        # Check if in cone - FAIL LOUDLY if not
+        if not cone.contains(kahler):
+            raise ValueError(
+                f"Kähler moduli {kahler.tolist()} are NOT in the Kähler cone. "
+                f"Cannot proceed with fixed mode - the provided moduli are invalid for this triangulation."
+            )
 
-        # Project into cone: find the point in the cone closest to kahler
-        # Simple approach: scale toward tip until inside
-        tip = cone.tip_of_stretched_cone(1.0)
-
-        # Binary search for largest alpha where tip + alpha*(kahler - tip) is in cone
-        alpha_min, alpha_max = 0.0, 1.0
-        for _ in range(50):
-            alpha_mid = (alpha_min + alpha_max) / 2
-            test_point = tip + alpha_mid * (kahler - tip)
-            if cone.contains(test_point):
-                alpha_min = alpha_mid
-            else:
-                alpha_max = alpha_mid
-
-        # Use 95% of the way to boundary (safely inside)
-        alpha_final = alpha_min * 0.95
-        return tip + alpha_final * (kahler - tip)
+        return kahler
 
     def _find_kahler_by_ray(self, cy_data: dict, genome: dict) -> np.ndarray:
         """
@@ -529,12 +523,9 @@ class PhysicsBridge:
         # 3. Compute volumes
         vol_data = self.cytools.compute_volumes(cy_data, kahler)
         if not vol_data["success"]:
-            # Use simplified volume if CYTools computation fails
-            cy_volume = float(np.prod(kahler) / 6.0)
-            divisor_volumes = kahler**2
-        else:
-            cy_volume = vol_data["cy_volume"]
-            divisor_volumes = np.array(vol_data["divisor_volumes"])
+            return {"success": False, "error": f"Volume computation failed: {vol_data.get('error', 'unknown')}"}
+        cy_volume = vol_data["cy_volume"]
+        divisor_volumes = np.array(vol_data["divisor_volumes"])
 
         # Validate volumes - CYTools returns complex/negative for invalid geometry
         if np.iscomplex(cy_volume) or np.real(cy_volume) <= 0:
