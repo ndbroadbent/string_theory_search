@@ -1,0 +1,20 @@
+[project]
+name = "mcallister-2107-experiment"
+version = "0.1.0"
+description = "Reproduce McAllister arXiv:2107.09064 with era-appropriate CYTools"
+requires-python = ">=3.9,<3.10"
+dependencies = [
+    "numpy<2",
+    "scipy",
+    "python-flint",
+    "pplpy",
+    "cvxopt",
+    "ortools",
+    "mpmath",
+    "tqdm>=4.67.1",
+    "requests>=2.32.5",
+    "mosek>=11.0.30",
+]
+
+[tool.uv]
+dev-dependencies = []

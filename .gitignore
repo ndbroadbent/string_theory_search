@@ -5,6 +5,7 @@ venv/
 __pycache__/
 results/
 logs/
+vendor/
 polytope_data/
 ansible/inventory.yml
 polytopes_three_gen.jsonl
@@ -23,3 +24,4 @@ tests/snapshots/
 resources/small_cc_2107.09064_source/
 web/test-results/.last-run.json
 src/string_theory.egg-info/
+

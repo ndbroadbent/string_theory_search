@@ -165,18 +165,18 @@ The “full DKMM + mirror symmetry engine” is a future step, and now you have 
 
 If you decide later you want to push toward “less hand-fed”:
 
-1. **Re-derive the 2-term racetrack from GV inputs**
+  1. **Re-derive the 2-term racetrack from GV inputs**
 
    * Use `cy.compute_gvs()` (or cygv directly) on the dual to get GV invariants N_q̃.
    * Use fluxes M,K to build the effective charge coefficients M·q̃ N_q̃.
    * Identify those q̃ that give q̃·p small (in some basis) and show that the two leading ones correspond to the 32/110 and 33/110 terms.
 
-2. **Compute e^{K₀} from κ̃ and p in some basis**
+1. **Compute e^{K₀} from κ̃ and p in some basis**
 
    * Work either entirely in CYTools’ basis or entirely in the paper’s basis.
    * Show that `e^{K0} = (4/3 κ̃_abc p^a p^b p^c)^-1` in that basis numerically matches 0.2361.
 
-3. **(Harder) Reproduce p = N⁻¹K in the paper’s basis**
+2. **(Harder) Reproduce p = N⁻¹K in the paper’s basis**
 
    * Use the prepotential polynomial from the paper (if they give it explicitly),
    * Compare it to your CYTools volume polynomial,
