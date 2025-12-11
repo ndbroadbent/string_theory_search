@@ -6,10 +6,14 @@ Genetic algorithm searching through Calabi-Yau compactifications to find configu
 ## Local Setup (Mac)
 - Python: Homebrew 3.11 (`/opt/homebrew/opt/python@3.11/bin/python3.11`)
   - NOTE: mise/asdf Python has broken PyO3 embedding paths, use homebrew
-- Package manager: `uv` (never pip/venv directly)
+- Package manager: `uv` with `pyproject.toml`
+  - **All dependencies in `pyproject.toml`** - never install manually
+  - Run Python: `uv run python script.py`
+  - Run tests: `uv run pytest`
+  - Add package: `uv add <package>`
+  - Sync venv: `uv sync` (usually automatic with `uv run`)
+  - No need to activate venv - `uv run` handles it
 - numpy<2 required (cytools/ortools need numpy 1.x)
-- CYTools: `../cytools_source` (compiled, installed via `uv pip install`)
-- cymyc: `../cymyc_source` (compiled, installed via `uv pip install`)
 - PALP: `../palp_source` (C programs, compile with `make`)
 - Polytopes: `polytopes_three_gen.jsonl` (3.4GB, 12.2M three-gen candidates)
 

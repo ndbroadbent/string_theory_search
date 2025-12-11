@@ -6,10 +6,18 @@ dependencies = [
     "numpy<2",
     "jax",
     "jaxlib",
+    "cygv",
+    "pytest",
+    "cytools",
+    "cymyc",
 ]
 
 [tool.uv]
 dev-dependencies = []
+
+[tool.uv.sources]
+cytools = { path = "../cytools_source", editable = true }
+cymyc = { path = "../cymyc_source", editable = true }
 
 [tool.pytest.ini_options]
 markers = [
