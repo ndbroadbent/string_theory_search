@@ -482,7 +482,7 @@ Treat the entire pipeline as a black-box optimization:
 ```
 minimize Σ_i w_i × |log(param_i / target_i)|
 
-subject to:
+subject ot
 - N_gen = 3 (hard constraint)
 - (M, K) ∈ Z^n × Z^n
 - -½ M·K ≤ Q_D3
