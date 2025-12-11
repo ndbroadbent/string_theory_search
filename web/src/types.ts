@@ -52,11 +52,20 @@ export interface Compactification {
   h21: number;
 }
 
+/** Run reference for linking from evaluation to run page */
+export interface RunReference {
+  runId: number;
+  algorithmId: number;
+  metaGeneration: number;
+  runNumber: number;
+}
+
 /** Combined genome result with physics and fitness */
 export interface GenomeResult {
   genome: Compactification;
   physics: PhysicsOutput;
   fitness: number;
+  runRef: RunReference | null;
 }
 
 /** Polytope data from the JSONL file */

@@ -112,9 +112,14 @@ export const getAllEvaluations = createServerFn({ method: 'GET' })
         SELECT
           e.*,
           p.h11,
-          p.h21
+          p.h21,
+          r.algorithm_id,
+          r.run_number,
+          a.meta_generation
         FROM evaluations e
         LEFT JOIN polytopes p ON p.id = e.polytope_id
+        LEFT JOIN runs r ON r.id = e.run_id
+        LEFT JOIN meta_algorithms a ON a.id = r.algorithm_id
         WHERE e.success = 1
         ORDER BY e.fitness DESC
         LIMIT ?
@@ -267,6 +272,16 @@ export const getAllGenomes = createServerFn({ method: 'GET' })
 
 /** Convert a database row to GenomeResult */
 function rowToGenomeResult(row: Record<string, unknown>): GenomeResult {
+  // Build run reference if we have the necessary data
+  const runId = row.run_id as number | null;
+  const algorithmId = row.algorithm_id as number | null;
+  const metaGeneration = row.meta_generation as number | null;
+  const runNumber = row.run_number as number | null;
+
+  const runRef = (runId != null && algorithmId != null && metaGeneration != null && runNumber != null)
+    ? { runId, algorithmId, metaGeneration, runNumber }
+    : null;
+
   return {
     genome: {
       polytope_id: row.polytope_id as number,
@@ -294,5 +309,6 @@ function rowToGenomeResult(row: Record<string, unknown>): GenomeResult {
       superpotential_abs: 0,
     },
     fitness: row.fitness as number,
+    runRef,
   };
 }

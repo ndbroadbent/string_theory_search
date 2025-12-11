@@ -62,13 +62,28 @@ function Dashboard() {
             Showing <span className="text-cyan-400 font-mono">{genomes.length}</span> best evaluations
           </span>
           {selectedGenome && (
-            <Link
-              to="/polytope/$id"
-              params={{ id: String(selectedGenome.genome.polytope_id) }}
-              className="ml-auto px-4 py-1.5 bg-cyan-600 hover:bg-cyan-700 text-white text-sm rounded transition-colors"
-            >
-              View Polytope →
-            </Link>
+            <div className="ml-auto flex items-center gap-2">
+              {selectedGenome.runRef && (
+                <Link
+                  to="/meta/gen/$gen/algo/$algo/run/$run"
+                  params={{
+                    gen: String(selectedGenome.runRef.metaGeneration),
+                    algo: String(selectedGenome.runRef.algorithmId),
+                    run: String(selectedGenome.runRef.runNumber),
+                  }}
+                  className="px-4 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-sm rounded transition-colors"
+                >
+                  View Run →
+                </Link>
+              )}
+              <Link
+                to="/polytope/$id"
+                params={{ id: String(selectedGenome.genome.polytope_id) }}
+                className="px-4 py-1.5 bg-cyan-600 hover:bg-cyan-700 text-white text-sm rounded transition-colors"
+              >
+                View Polytope →
+              </Link>
+            </div>
           )}
         </div>
 
