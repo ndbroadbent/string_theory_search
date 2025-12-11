@@ -1,0 +1,2 @@
+
+Calculating one single valid set of constants for every single one of the 12 million candidates is probably an extremely smart thing to do. That information will be a critical dimension on our polytopes that the outer GA could use to search. And we might just find some important correlations. We should compute 10 random samples that produce valid physics for all 12 million candidates, then store: min, max, mean, std_dev for each.
