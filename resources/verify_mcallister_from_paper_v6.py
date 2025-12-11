@@ -18,6 +18,10 @@ since W₀, g_s, V₀ are computed analytically from the paper's formulas.
 
 from pathlib import Path
 import math
+import sys
+
+# Use vendored cytools
+sys.path.insert(0, str(Path(__file__).parent.parent / "vendor/cytools_latest/src"))
 
 import numpy as np
 from mpmath import mp, mpf, pi, log
