@@ -1,0 +1,4267 @@
+Small Cosmological Constants
+in String Theory
+
+arXiv:2107.09064v3 [hep-th] 11 Jan 2022
+
+Mehmet Demirtas,a,b Manki Kim,a,c Liam McAllister,a
+Jakob Moritz,a and Andres Rios-Tascona
+
+a
+
+b
+
+Department of Physics, Cornell University, Ithaca, NY 14853, USA
+Department of Physics, Northeastern University, Boston, MA 02115, USA
+c
+Center for Theoretical Physics, MIT, Cambridge, MA 02139, USA
+
+Abstract
+We construct supersymmetric AdS4 vacua of type IIB string theory in compactifications on orientifolds of Calabi-Yau threefold hypersurfaces. We first find explicit orientifolds and quantized fluxes for which the superpotential takes the form proposed
+by Kachru, Kallosh, Linde, and Trivedi. Given very mild assumptions on the numerical values of the Pfaffians, these compactifications admit vacua in which all moduli
+are stabilized at weak string coupling. By computing high-degree Gopakumar-Vafa
+invariants we give strong evidence that the α0 expansion is likewise well-controlled.
+We find extremely small cosmological constants, with magnitude < 10−123 in Planck
+units. The compactifications are large, but not exponentially so, and hence these
+vacua manifest hierarchical scale-separation, with the AdS length exceeding the
+Kaluza-Klein length by a factor of a googol.
+
+Contents
+1 Introduction
+1.1 Plan of the paper . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
+2
+5
+
+2 Classical flux vacua
+2.1 Setup . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+2.2 Orientifolds of Calabi-Yau hypersurfaces . . . . . . . . . . . . . . . . . . .
+2.3 Flux vacua . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
+7
+7
+10
+11
+
+3 Nonperturbative superpotential
+3.1 Rigid divisors . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+3.2 Pfaffian prefactors . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+3.3 Autochthonous divisors . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
+14
+14
+16
+22
+
+4 Kähler potential and Kähler coordinates
+4.1 Corrections at string tree level . . . . . . . . . . . . . . . . . . . . . . . . .
+4.2 Corrections beyond string tree level . . . . . . . . . . . . . . . . . . . . . .
+
+23
+24
+28
+
+5 Computational methods
+5.1 Iterative solution . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+5.2 Algorithm for F-flat solutions . . . . . . . . . . . . . . . . . . . . . . . . .
+5.3 Gopakumar-Vafa invariants . . . . . . . . . . . . . . . . . . . . . . . . . .
+5.4 Radius of convergence . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
+30
+30
+32
+34
+35
+
+6 Examples
+6.1 Vacuum with (h2,1 , h1,1 ) = (5, 113) . . . . . . . . . . . . . . . . . . . . . . .
+6.2 Vacuum with (h2,1 , h1,1 ) = (7, 51) . . . . . . . . . . . . . . . . . . . . . . .
+6.3 Vacuum with (h2,1 , h1,1 ) = (5, 81) . . . . . . . . . . . . . . . . . . . . . . .
+6.4 Vacuum with (h2,1 , h1,1 ) = (4, 214) . . . . . . . . . . . . . . . . . . . . . . .
+
+38
+39
+48
+50
+52
+
+7 Discussion
+
+54
+
+8 Conclusions
+
+57
+
+A Comments on de Sitter vacua
+
+58
+
+1
+
+1
+
+Introduction
+
+To understand the effects of the quantization of gravity in cosmology, one can search for
+cosmological solutions of string theory. A first step is to characterize isolated vacua in
+well-controlled settings, such as the four-dimensional N = 1 supergravity theories that
+arise in compactifications of type IIB string theory on Calabi-Yau orientifolds.
+Our goal in this work is to find supersymmetric AdS4 vacua of the type proposed by
+Kachru, Kallosh, Linde, and Trivedi (KKLT) [1]. Three conditions are necessary for such
+vacua to exist. First, the expectation value of the classical flux superpotential must be
+exponentially small. Second, the nonperturbative superpotential must contain at least h1,1
+independent terms for the h1,1 Kähler moduli. Third, there must exist a point inside the
+Kähler cone at which the F-terms for all the Kähler moduli vanish, and the α0 and gs expansions are well-controlled. An important open problem is to determine how widely these
+requirements are fulfilled in ensembles of flux compactifications on Calabi-Yau orientifolds.
+To compute the nonperturbative superpotential in such a compactification, one needs
+to identify the seven-brane gauge groups that generate gaugino condensates, and also find
+all the rigid divisors that support Euclidean D3-brane superpotential terms. The leading
+superpotential terms then take the form
+W = Wflux (z, τ ) +
+
+X
+
+
+
+AD (z, τ ) exp − c2πD TD .
+
+(1.1)
+
+D
+
+Here Wflux (z, τ ) is the classical Gukov-Vafa-Witten flux superpotential [2], which depends
+on the complex structure moduli z and the axiodilaton τ . The sum runs over nonperturbative contributions supported on divisors D with complexified volumes TD , either from
+Euclidean D3-branes when D is suitably rigid, or from strong gauge dynamics on a stack
+of seven-branes wrapping D. In the former case cD = 1, while in the latter cD is the dual
+Coxeter number of the gauge theory. The Pfaffian prefactors AD (z, τ ) in general depend
+on the complex structure moduli and the axiodilaton.
+Computing the dependence of the Pfaffians AD (z, τ ) on the moduli remains challenging,
+but for divisors whose uplifts to F-theory have trivial intermediate Jacobian, the AD are
+sections of the trivial bundle over moduli space [3, 4]. This constancy with respect to the
+moduli simplifies the study of moduli stabilization (cf. e.g. [4]), and for this reason we will
+ensure that every Pfaffian occurring in our studies is constant.
+Recent advances have made it possible to find quantized fluxes for which1 W0 :=
+1
+
+To avoid writing |W0 | throughout, we have defined W0 to be positive, and we write instead hWflux i
+for the rare cases where phase information is relevant.
+
+2
+
+h|Wflux |i  1 [5–9]. However, the problem of finding such fluxes is Diophantine in character, and the computation becomes extremely expensive for h2,1  1. Prior to the present
+work, examples had been found only for h2,1 = 2 and 3, but one learns from the KreuzerSkarke list [10] that the smallest value of h1,1 for a Calabi-Yau threefold hypersurface with
+h2,1 ≤ 3 is 21.2
+Thus, in the cases where one can find fluxes yielding exponentially small values of the
+flux superpotential, the Kähler moduli space is high-dimensional. As a result, in seeking
+supersymmetric AdS4 vacua in such geometries one encounters certain challenges. First,
+one needs to construct explicit orientifolds at h1,1  1. Second, one needs to count
+fermion zero-modes on Euclidean D3-branes in such orientifolds, and find cases in which
+there are enough nonperturbative superpotential terms. Third, one needs to actually find
+supersymmetric vacua in this high-dimensional moduli space, consisting of exponentially
+many chambers of the Kähler cone. Finally, establishing control of the α0 expansion in
+such vacua involves computing Gopakumar-Vafa invariants of curves at large h1,1 .
+In this paper we overcome these obstacles. We exhibit compactifications in which the
+superpotential takes the form (1.1), containing at least h1,1 independent nonperturbative
+terms, all with constant Pfaffians, and with W0 as small as 10−95 . The examples are explicit
+orientifolds of Calabi-Yau threefold hypersurfaces with 4 ≤ h2,1 ≤ 7 and 51 ≤ h1,1 ≤ 214,
+in which all tadpoles are cancelled. We show that with very mild assumptions about
+the numerical values of the Pfaffians, these compactifications admit supersymmetric AdS4
+vacua. All closed string moduli are explicitly stabilized, near weak string coupling, large
+complex structure, and large Einstein-frame volumes. All seven-branes occur in so(8)
+stacks, and we argue that the seven-brane moduli are therefore automatically stabilized in
+the presence of three-form fluxes. By computing the genus-zero Gopakumar-Vafa invariants
+to high degree, we give strong evidence that the leading worldsheet instanton corrections
+to the Kähler potential are well-controlled.
+Because our constructions unite a number of nontrivial components, the critical reader
+may wonder which components are most likely to ‘fail’, i.e. which are the least understood,
+or the most vulnerable to higher-order corrections of some form. To address this question,
+we briefly summarize the status of our examples. The orientifolds, and the classical flux
+vacua with W0  1, are extremely well-controlled. In particular, we have computed the
+type IIA worldsheet instanton corrections to the prepotential up to curves of degree much
+higher than those that generate the racetrack of [5], and have verified that the omitted terms
+are indeed negligible. The D7-brane gauge sectors are all so(8) stacks with well-understood
+2
+
+We have found new solutions with h2,1 as large as 7, but h1,1 remains large: in the examples detailed
+in §6, h1,1 ≥ 51.
+
+3
+
+low-energy dynamics. The Euclidean D3-branes in our examples are straightforward: they
+wrap prime toric divisors D that are rigid, i.e. with h• (OD ) = (1, 0, 0), and intersect the O7planes transversely, so that the counting of fermion zero-modes is standard, see e.g. [11].
+b in fourfolds with h2,1 (D)
+b = 0, so that the
+Moreover, these divisors uplift to divisors D
+M5-brane partition function is a section of the trivial bundle, i.e. a pure constant, with
+no dependence on the complex structure moduli [3]. In sum, the superpotential is very
+well-characterized: we have shown explicitly that it takes the form proposed in [1], and
+the only presently-unknown parameters in the leading superpotential data are the constant
+prefactors AD of the nonperturbative terms, which we term Pfaffian numbers.
+We lack a theory of the Pfaffian numbers, but will show that as long as they are not
+exponentially large or small, our compactifications admit supersymmetric AdS4 vacua. Setting all the AD → 1 leads to a relative error in the expectation values of the Kähler moduli
+that is of order log(AD )/ log(W0 ), and so for sufficiently small W0 , as in our examples, the
+numerical values of the Pfaffians become irrelevant.
+Crucially, because W0 is exponentially small, the string coupling gs is stabilized at
+very weak coupling. Perturbative corrections in gs , and the effects of Euclidean D(-1)branes, can then be neglected. We further argue that because of the smallness of gs , and
+correspondingly the weakness of the N = 2 → N = 1 breaking effects of fluxes and Dbranes, the leading corrections in the α0 expansion are not perturbative3 corrections, but
+are instead N = 2 corrections from worldsheet instantons wrapping curves.
+In sum, of all the possible corrections to the vacuum structure that one obtains from
+the superpotential (1.1) and the leading-order Kähler potential, we find that the most
+significant ones are the contributions of worldsheet instantons to the Kähler potential.
+Evaluating such worldsheet instantons in a Calabi-Yau threefold is conceptually straightforward: one need only compute the genus-zero Gopakumar-Vafa invariants of curves, for
+example by means of mirror symmetry [13]. In practice, however, systematic computation
+of Gopakumar-Vafa invariants in compact Calabi-Yau threefolds with many Kähler moduli
+has not yet been achieved, to the best of our knowledge: except in special cases, threefolds
+with h1,1  10 have remained inaccessible.4 Yet in our ensemble of vacua, h1,1 is no smaller
+than 51, and in fact h1,1 ∼ O(100) in many examples. In order to ensure convergence of
+the α0 expansion in our solutions, we apply improved methods — to appear in [15] — for
+computing genus-zero Gopakumar-Vafa invariants in compact Calabi-Yau threefold hypersurfaces. We compute these invariants systematically, to rather high degree, and we apply
+specialized techniques to identify and study the smallest curves that are not collapsible.
+3
+4
+
+Except for the famous term at order α03 [12], which we show is negligible.
+See for example the recent work [14].
+
+4
+
+With the aid of these new computational tools, we establish control of the worldsheet instanton corrections, and a fortiori of the (largely unknown) perturbative-in-α0 corrections
+that are suppressed by one or more additional powers of gs  1.
+The construction of flux vacua employed here has been shown [6, 7] to be compatible
+with the existence of near-conifold regions, including Klebanov-Strassler throat regions [16]
+that could plausibly host supersymmetry-breaking anti-D3-branes [17]. However, establishing the validity of the supergravity approximation in such regions, for the Kähler moduli
+expectation values obtained in our vacua, will require separate treatment. Moreover, introducing supersymmetry breaking leads to a further host of issues. The search for de Sitter
+vacua based on our solutions is therefore left as a task for the future.
+The pioneering works [18–20] already presented evidence for the existence of supersymmetric AdS4 vacua of KKLT type, so we should explain what has been gained in our
+approach. First of all, in [18–20] the methods for finding flux vacua with W0  1 were less
+powerful, and the smallest value obtained was O(10−2 ), whereas we have found examples
+with W0 as small as5 10−95 . Second, the constructions of [18–20] relied on special structures:
+a key example in [18] stabilized the complex structure moduli on the locus invariant under
+the Greene-Plesser symmetry [22], which presents certain subleties; a very high degree of
+symmetry among the various divisors is crucial in [19]; and the approach of [20] is restricted
+to a class of resolved orbifolds that generalize [19]. Finally, and for us most significantly,
+the constructions of [18–20] required considerable insights into the detailed properties of a
+few examples. Our approach, building on the software package CYTools [23], amounts to a
+general method that can be applied to the entire Kreuzer-Skarke database, and in principle
+generate vast numbers of vacua. In this work we have presented only an initial harvest at
+h2,1 ≤ 7, but extending our findings to larger h2,1 is a purely computational task.
+
+1.1
+
+Plan of the paper
+
+The organization of this paper is as follows. In §2 we set our notation, explain how we
+construct orientifolds, and review how we select quantized fluxes that yield small W0 ,
+following [5]. We find classical solutions in which the F-terms of the complex structure
+moduli and axiodilaton vanish, and these moduli are stabilized at weak string coupling and
+large complex structure. At this level the Kähler moduli remain unstabilized. Then, in
+§3, we explain how we identify orientifolds in which there are at least h1,1 nonperturbative
+superpotential terms from Euclidean D3-branes or strong gauge dynamics on rigid prime
+toric divisors. We further detail how we select geometries in which the Pfaffian prefactor
+5
+
+See §7 for a comparison of our findings to the statistical predictions of [21].
+
+5
+
+of each such term is a constant.
+At this point we have proved that the effective superpotential for the Kähler moduli in
+our ensemble of compactifications takes the form6
+W = W0 +
+
+X
+
+
+
+T
+ADI exp − c2π
+DI + . . . ,
+D
+
+(1.2)
+
+I
+
+DI
+
+with W0  1. Here the DI are the h1,1 + 4 prime toric divisors of the Calabi-Yau threefold
+hypersurface, and the ADI are constants, at least h1,1 of which are nonzero, according
+to standard counting of fermion zero-modes. We parameterize the Kähler moduli by the
+complexified volumes Ti of a basis {Di } of h1,1 prime toric divisors for which ADi 6= 0.
+In order to find supersymmetric vacua, we must then find points in the Kähler moduli
+space at which the F-terms for the Kähler moduli vanish. Such points take the form7
+Re(Ti ) ≈
+
+ci
+log(W0−1 ) + . . . ,
+2π
+
+(1.3)
+
+where the ellipsis denotes corrections that will be computed in §4. The Einstein-frame
+volumes of the basis divisors are then large, because W0 is exponentially small.
+Demonstrating that one or more points obeying (the appropriately corrected form of)
+(1.3) are in fact inside the Kähler moduli space is the subject of §4 and §5. First, in §4,
+we examine perturbative and nonperturbative corrections to the Kähler potential for the
+Kähler moduli, and argue that because of the smallness of gs in our vacua, the leading
+effects occur at string tree level, and result from worldsheet instantons wrapping small
+curves. Then, in §5.2 we give an algorithm for finding vacua at large h1,1 . In order to
+explicitly include the aforementioned worldsheet instanton effects, and more generally to
+ensure control of the α0 expansion, we compute the Gopakumar-Vafa invariants of a vast
+set of curves in our examples (§5.3), and then determine the radius of convergence (§5.4).
+In §6 we give the details of a few examples that result from applying this procedure
+to the Kreuzer-Skarke list, for h2,1 ≤ 7. We discuss the implications of our findings in §7,
+and we conclude, traditionally, in §8. Appendix A contains comments on the prospects for
+an uplift to de Sitter space. A brief summary and discussion of our results appears in the
+companion paper [24].
+6
+
+The ellipsis in (1.2) denotes subleading corrections: from Euclidean D(-1)-brane contributions to the
+flux superpotential, and from further nonperturbative contributions to the superpotential for the Kähler
+moduli, resulting in particular from Euclidean D3-branes on autochthonous divisors. These corrections
+are shown to be negligible in §2.3 and §3.3, respectively.
+7
+Throughout this paper, log denotes the natural logarithm.
+
+6
+
+2
+
+Classical flux vacua
+
+In this section we set our notation and terminology, and then show how we find orientifolds
+and classical flux vacua.
+
+2.1
+
+Setup
+
+e its mirror threefold. Let {ω i }h1,1 (X) be
+Let X be a Calabi-Yau threefold, and denote by X
+i=1
+R
+h1,1 (X)
+a basis of H 4 (X, Z), and let {ωi }i=1
+be a dual basis of H 2 (X, Z), with X ω i ∧ ωj = δ i j .
+We adopt a notation where a p-form class and its Poincaré-dual cycle class are denoted by
+the same symbol, to be understood from the context.
+Let J be the string-frame Kähler class of X, taking values in the Kähler cone KX ⊂
+H 1,1 (X, R). The Mori cone M(X) ⊂ H2 (X, R) is the cone dual to KX . We may expand
+J=
+
+X
+
+ti ωi
+
+(2.1)
+
+i
+h1,1 (X)
+
+in terms of Kähler parameters {ti }i=1 .
+h2,1 (X)
+Let {αA , βA }A=0 be a symplectic basis of the middle cohomology H 3 (X, Z), with
+R A
+α ∧ βB = δ A B , and let Ω be the holomorphic three-form of X. Then, it is useful to
+X
+represent Ω by a period vector
+~ :=
+Π
+
+!
+R
+Ω
+∧
+β
+A
+RX
+=
+A
+Ω
+∧
+α
+X
+
+FA
+zA
+
+!
+,
+
+(2.2)
+
+and more generally to represent closed three-forms via (2h2,1 (X)
+! + 2)-dimensional vectors.
+0 I
+Furthermore, we introduce a symplectic pairing Σ :=
+.
+−I 0
+Locally, in a suitable patch, the periods z A serve as homogeneous complex coordinates
+on the complex structure moduli space of X, and away from the locus z 0 = 0 we may
+normalize Ω such that z 0 = 1. Henceforth, we do so and let a = 1, ..., h2,1 (X). The dual
+periods Fa are determined in terms of the z a by the prepotential F(z) via Fa (z) = ∂za F(z),
+and F0 = 2F − z a ∂za F. In this paper we will restrict ourselves to the large complex
+structure (LCS) patch, where
+F(z) = Fpoly (z) + Finst (z) ,
+
+7
+
+(2.3)
+
+with
+e
+1
+1
+1
+ζ(3)χ(X)
+Fpoly (z) = − κ
+eabc z a z b z c + ãab z a z b + c̃a z a +
+.
+3!
+2
+24
+2(2πi)3
+e and
+Here κ
+eabc are the triple intersection numbers of the mirror threefold X,
+
+Z
+Z
+κ
+eaab a ≥ b
+1
+e =
+e ,
+e ∧ β̃a , ãab ≡
+, and χ(X)
+c3 (X)
+c̃a =
+c2 (X)
+2 κ
+e
+e
+X
+X
+eabb a < b
+
+(2.4)
+
+(2.5)
+
+h2,1 (X)
+e Z) mirror dual to the set of three-forms βa ∈ H 3 (X, Z),
+where {β̃a }a=1 is a basis of H 2 (X,
+e and c3 (X)
+e are the second and third Chern classes, respectively, of X.
+e The type
+and c2 (X)
+IIA worldsheet instanton corrections are given by
+
+Finst (z) = −
+
+1
+(2πi)3
+
+X
+
+
+
+Nq̃ Li3 e2πi q̃·z ,
+
+(2.6)
+
+e
+q̃∈M(X)
+
+P
+n
+k
+where Lik (q) := ∞
+n=1 q /n is the polylogarithm, the q̃ represent effective curve classes in
+e Z) ≃ H2 (X,
+e Z) expressed in a basis {α̃a }h2,1 (X) mirror dual to the set of three-forms
+H 4 (X,
+a=1
+a
+3
+e
+α ∈ H (X, Z), and Nq̃ are the genus-zero Gopakumar-Vafa invariants of X.
+Type IIB string theory compactified on X gives four-dimensional N = 2 supergravity
+coupled to h2,1 (X) vector multiplets and h1,1 (X) + 1 hypermultiplets. Throughout this
+paper we will consider orientifold projections of O3/O7 type, defined by holomorphic involutions I. The induced action of I on cohomology groups H p,q (X, Q) allows us to define
+the even/odd eigenspaces H±p,q (X, Q), and we will make the additional restriction on I
+2,1
+that h+
+(X) = h1,1
+− (X) = 0, so that all the geometric moduli survive the projection. This
+results in an effective N = 1 supergravity theory coupled to h2,1 (X) complex structure
+moduli, the axiodilaton τ , and h1,1 (X) Kähler moduli, all in chiral multiplets. Their scalar
+components can be parameterized by the z a and τ := C0 +ie−φ , and the Kähler parameters
+R
+ti and four-form axions X C4 ∧ ωi , where C4 is the self-dual four-form of type IIB string
+theory. We postpone a discussion of the proper choice of holomorphic coordinates to §4.
+Each of our compactifications contains some number NO7 of O7-planes wrapping mutually non-intersecting divisors DαO7 , α = 1, . . . , NO7 . We choose to cancel the D7-brane
+charge tadpole of the O7-planes locally, by placing four D7-branes on top of each O7plane. This gives rise to seven-brane stacks with gauge algebras so(8). As usual, potential Freed-Witten anomalies on seven-branes [25] are cancelled by turning on half-integral
+
+8
+
+worldvolume fluxes on the D7-branes,
+1
+1
+Fα = ı∗α [DαO7 ] ,
+2π
+2
+
+α = 1, ..., NO7 ,
+
+(2.7)
+
+1
+where ı∗α denotes the pullback to DαO7 ⊂ X. The gauge-invariant field strengths 2π
+Fα =
+1
+F − ı∗α B2 can then be set to zero by choosing a 12 Z-valued B2 background
+2π α
+
+B2 =
+
+
+1X
+[Dα ] ∈ H 2 X, Z/2 ,
+2 α
+
+(2.8)
+
+B2 ∧ ω i ,
+
+(2.9)
+
+and for later reference we define
+Z
+
+i
+
+b :=
+
+γ i := 2bi ∈ Z .
+
+X
+
+The configuration described so far carries a net D3-brane charge QD3 = − 41 χf , where χf
+is the Euler characteristic of the fixed locus of I in X. This tadpole can be cancelled by
+including ND3 ≥ 0 mobile D3-branes and turning on quantized three-form fluxes (F3 , H3 ),
+represented by integer vectors (f~, ~h), so that8
+1
+ND3 +
+2
+
+Z
+
+1
+1
+H3 ∧ F3 = ND3 + f~t Σ ~h = χf .
+2
+4
+X
+
+(2.10)
+
+The classical superpotential, which is perturbatively exact in the gs and α0 expansions
+[26, 27], is entirely determined by the pair (F3 , H3 ) [2, 28],
+a
+
+Wflux (τ, z ) =
+
+q Z
+2
+π
+
+(F3 − τ H3 ) ∧ Ω(z) =
+
+q
+
+X
+
+2 ~t
+Π Σ (f~ − τ ~h) ,
+π
+
+(2.11)
+
+but receives nonperturbative corrections from Euclidean D(-1)-branes,
+ED(−1)
+Wflux
+=
+
+∞
+X
+
+Bk (z)e2πikτ ,
+
+(2.12)
+
+k=1
+
+which can be computed in F-theory, where they are naturally thought of as part of the
+flux superpotential [2]. Throughout this work we can consistently omit the terms (2.12):
+8
+
+In our conventions, a D3-brane stuck on an orientifold plane has D3-brane charge 1/2.
+
+9
+
+see (2.30) below. The tree-level Kähler potential reads [29]
+ Z
+
+ 3 
+
+
+Ktree = −2 log 2 2 VE − log −i(τ − τ̄ ) − log −i
+Ω∧Ω ,
+
+(2.13)
+
+X
+
+with
+
+3
+1
+VE := Im(τ ) 2 κijk ti tj tk
+6
+
+Z
+and
+
+~†ΣΠ
+~.
+Ω∧Ω=Π
+
+(2.14)
+
+X
+
+The nonperturbative superpotential for the Kähler moduli is given by (1.1),
+Wnp =
+
+X
+
+
+
+2π
+AD (z, τ ) exp − cD TD ,
+
+(2.15)
+
+D
+
+up to higher-order corrections that are proportional to products of terms appearing in
+(2.15), and can be safely neglected in this work.
+
+2.2
+
+Orientifolds of Calabi-Yau hypersurfaces
+
+The Calabi-Yau threefolds considered in this paper are hypersurfaces X in toric fourfolds V
+whose toric fans Σ arise from triangulating four-dimensional reflexive polytopes ∆◦ ; all such
+polytopes have been enumerated by Kreuzer and Skarke in [10]. Specifically, we consider
+regular, star triangulations of ∆◦ in which points interior to facets are omitted, but each
+point not interior to a facet is a vertex of a simplex in the triangulation. Such triangulations
+define partial desingularizations of V in which a generic hypersurface X is smooth. Let
+Σ(1) be the set of edges (one-dimensional cones) of Σ, and denote by {x1 , ..., xn } the
+homogeneous coordinates associated with the edges: these are the generators of the Cox
+ring. We have h1,1 (V ) = n − 4, and we define
+DI := {xI = 0} ⊂ V .
+
+(2.16)
+
+The prime toric divisors DI generate H6 (V, Z), and over Z+ they generate the cone of
+effective divisors on V . The inherited prime toric divisors of X,
+DI := DI ∩ X ,
+
+(2.17)
+
+are effective divisors in H4 (X, Z). The DI generate all of H4 (X, Z) — i.e. the Picard group
+of X is inherited from the Picard group of V , so that h1,1 (X) = h1,1 (V ) — if and only if ∆◦
+has the property that every 2-face of ∆◦ that has interior points is dual to a 1-face of the
+polar dual polytope ∆ that has no interior points. We call a model with this property ∆◦ 10
+
+favorable. Even in cases that are not ∆◦ -favorable, the h1,1 (X) + 4 irreducible components
+of the DI , which we will call the prime toric divisors of X, furnish an overcomplete set
+of effective generators of H4 (X, Z). We note also that in general there can exist effective
+divisor classes on X that cannot be written as non-negative linear combinations of the
+prime toric divisors. Such divisor classes are called autochthonous.
+A (partial) triangulation of the polar dual polytope ∆ defines a toric variety Ve whose
+e is the mirror of X: in particular, h2,1 (X) = h1,1 (X).
+e We call a
+Calabi-Yau hypersurface X
+model ∆-favorable if h2,1 (X) = h1,1 (Ve ), which occurs if and only if every 2-face of ∆ with
+interior points is dual to a 1-face of ∆◦ without interior points.
+Each orientifold model will be constructed using a holomorphic involution I : X → X
+that can be defined via restricting an involution Ib : V → V to the hypersurface X, and
+b X ) = X. The subgroup of the automorphism
+tuning the hypersurface such that im(I|
+group Aut(V, C) that is connected to the identity, Aut0 (V, C), is obtained by mapping the
+homogeneous coordinates xI to general sections of OV (DI ) [30]. For simplicity we restrict to
+involutions Ib ∈ Aut0 (X, C), as it is these that lead to h1,1
+− (V ) = 0. A general Z2 conjugacy
+0
+class of Aut (V, C) can be represented by negating a subset {xI1 , ..., xIk } ⊂ {x1 , ..., xn } of
+the homogeneous coordinates xI ,
+I : xIα 7→ −xIα ,
+
+α = 1, . . . , k .
+
+(2.18)
+
+2,1
+As stated earlier, for simplicity we will restrict to involutions for which h+
+(X) = 0, a very
+large class of which can be found systematically [31]. More general orientifold models will
+be discussed in [32].
+
+2.3
+
+Flux vacua
+
+We now construct classical flux vacua with exponentially small W0 = h|Wflux |i, following [5].
+We make use of the form F = Fpoly + Finst of the prepotential near LCS,9 which was
+explained below (2.3), and write
+(pert)
+
+Wflux = Wflux
+
+(inst)
+
++ Wflux ,
+
+(2.19)
+
+where the first term is obtained by approximating Fa by ∂za Fpoly , and the second term is
+the correction to this approximation from Finst . We now seek to solve
+(pert)
+
+Dτ,za Wflux (τ, z a ) = 0 ,
+9
+
+For recent work on flux compactifications in this regime see e.g. [33].
+
+11
+
+(2.20)
+
+which is possible provided that we can find flux choices (f~, ~h) — which we write as
+f~ =
+
+c
+
+a
+
+24
+
+a
+
+b
+
+M , aab M , 0, M
+2,1
+
+in terms of a pair (M, K) ∈ Zh
+
+2,1
+
+× Zh
+
+a
+
+
+
+,
+
+~h = (0, Ka , 0, 0) ,
+
+(2.21)
+
+— that fulfill the following constraints:
+
+χ
+
+(a) 0 ≤ − 21 M · K ≤ 4f , i.e. the D3-brane charge tadpole constraint;
+(b) pa := (e
+κabc M c )−1 Kb ∈ KXe , i.e. p lies in the Kähler cone of the mirror threefold;
+(c) K · p = 0 .
+Such solutions, termed perturbatively flat vacua, have a few key properties: along the
+one-complex-dimensional valley z = pτ , the F-flatness condition (2.20) is satisfied, and
+(pert)
+Wflux (τ, pτ ) ≡ 0, and the type IIA worldsheet instanton corrections to the flux superpotential, which take the form
+Wflux (τ ) = −ζ
+
+X
+
+
+
+M · q̃ Nq̃ Li2 e
+
+2πiτ q̃·p
+
+
+
+,
+
+(2.22)
+
+e
+q̃∈M(X)
+
+become exponentially suppressed at large Im(τ ). In (2.22) we have defined the useful
+constant
+1
+(2.23)
+ζ := 3/2 5/2 .
+2 π
+Now suppose one finds a pair (q̃1 , q̃2 ) of generators of the semigroup of effective curves
+e such that:
+on X,
+(d) p · q̃1 < 1 and p · q̃2 < 1;
+(e) 0 <  := p · (q̃2 − q̃1 ) < 1;
+(f) at large Im(τ ) along z = pτ , the instanton terms from q̃1 and q̃2 in (2.22) are
+parametrically larger than all other terms in (2.22).
+Using condition (f), at large Im(τ ) along z = pτ we have
+!
+Wflux (τ ) ≈ −ζ
+
+M · q̃1 Nq̃1 e2πiτ q̃1 ·p + M · q̃2 Nq̃2 e2πiτ q̃2 ·p .
+
+(2.24)
+
+Now if furthermore the pair (q̃1 , q̃2 ) has a suitable hierarchy between the superpotential
+coefficients,
+(M · q̃1 )(p · q̃1 ) Nq̃1
+δ := −
+, |δ| < 1 ,
+(2.25)
+(M · q̃2 )(p · q̃2 ) Nq̃2
+12
+
+then (2.24) is a racetrack superpotential with a minimum at weak string coupling and large
+complex structure.
+Specifically, setting the F-terms of the complex structure moduli and the axiodilaton
+to zero, we find
+1
+e2πiτ ≈ δ   1 ,
+(2.26)
+where we have approximated the F-term Dτ W by ∂τ W , which becomes accurate at small
+gs . In the vacuum we have
+W0 = |Wflux | ≈ ζ M · q̃1 Nq̃01 δ p·q̃1 / + M · q̃2 Nq̃02 δ p·q̃2 / ,
+
+(2.27)
+
+W0 ∼ δ p·q̃1 / ∼ δ p·q̃2 /  1 .
+
+(2.28)
+
+and so
+
+Viewed as functions of the quantized parameters — namely, the three-form fluxes M and
+e q̃1 and q̃2 ; and the Gopakumar-Vafa invariants
+K; the homology classes of curves in X,
+of these curves, Nq̃1 and Nq̃2 — the string coupling gs = 1/Im(τ ) is polynomially small,
+while the flux superpotential is exponentially small.
+In obtaining (2.26) and (2.27) we have consistently omitted the effects of other worldsheet instantons, by virtue of the condition (f) that we imposed above on the pair (q̃1 , q̃2 ).
+We have also omitted the effects of Euclidean D(-1)-branes, which from (2.12) give contributions to the superpotential of order exp(−2π/gs ). Let us now explain why this is justified.
+The worldsheet instanton terms in (2.24) have actions Si = 2πq̃i · p/gs for i = 1, 2, and in
+our flux vacua one has e−Si ∼ W0 . In terms of the parameter
+log(W0−1 )
+= p · q̃2 + O() = p · q̃1 + O() ,
+2π
+
+(2.29)
+
+ 1
+e−2π/gs = e−Si q̃i ·p ∼ (W0 )cτ  W0 ,
+
+(2.30)
+
+c−1
+τ := gs
+we can write
+
+where we have used the condition (d) that was imposed above. Thus, Euclidean D(-1)brane effects are parametrically sub-leading in comparison to the terms in (2.24) that
+determine the vacuum structure.
+The conditions for a perturbatively flat vacuum in (2.3) are Diophantine in nature,
+and so are difficult to solve in general. Nevertheless, in practice we have been able to find
+solutions to the constraints when h2,1 is relatively small.
+
+13
+
+3
+
+Nonperturbative superpotential
+
+3.1
+
+Rigid divisors
+
+A Euclidean D3-brane (ED3) wrapped on an effective divisor is half-BPS and can thus
+contribute to the superpotential provided the only exact fermion zero-modes are the two
+universal modes, i.e. the goldstini associated to the breaking of half the supercharges. In
+the absence of worldvolume flux and bulk three-form flux, the zero-modes take values in
+the cohomology groups H±• (D, OD ), and a superpotential term is therefore generated if D
+is smooth and
+h•+ (D) = (1, 0, 0) , and h•− (D) = (0, 0, 0) .
+(3.1)
+We call a divisor D that satisfies (3.1) a rigid divisor.10
+Equivalently, one can consider the dual F-theory compactification on an elliptically
+fibered Calabi-Yau fourfold πE : Y4 → B3 , where B3 ≃ X/I is the base manifold of the
+elliptic fibration. A Euclidean D3-brane on a divisor D uplifts to a Euclidean M5-brane
+b ⊂ Y4 . The fermion zero-modes take values in H • (D,
+b O b ),
+wrapped on a vertical divisor D
+D
+so the F-theory version of the rigidity condition (3.1) is
+b O b ) = (1, 0, 0, 0) .
+h• (D,
+D
+
+(3.2)
+
+b that satisfies (3.2) is likewise called a rigid divisor, and a smooth rigid divisor
+A divisor D
+b contributes to the superpotential [37]. In this paper it will suffice to study (3.1) and (3.2)
+D
+for prime toric divisors of Calabi-Yau hypersurfaces, for which smoothness is guaranteed.11
+We now turn our attention to non-abelian gauge theories on seven-branes. In the
+Calabi-Yau orientifolds considered in this paper, most O7-planes wrap rigid divisors, and
+as explained in §2.1, we cancel the D7-brane tadpole locally by placing four D7-branes
+on each O7-plane. As a result, for each so(8) stack on a rigid divisor D we obtain pure
+N = 1 so(8) super Yang-Mills (SYM) theory, whose holomorphic gauge coupling is given
+by TD /4π at high energy. At low energies the gauginos of pure N = 1 SYM condense and
+generate a nonperturbative superpotential term AD (z, τ )e−2πTD /cD .
+In some of our compactifications, a small subset of the O7-planes wrap divisors DN
+that have normal bundle deformations, with h• (DN ) = (1, 0, 1) or, in rare cases, h• (DN ) =
+(1, 0, 2). As the volume of DN is typically many times larger than that of the h1,1 small10
+
+More generally, worldvolume flux and bulk three-form flux will generically lift the zero-modes associated with h2± (D, OD ) and h1− (D, OD ) [34–36], but we will not rely on such lifting.
+11
+At a generic point in the complex structure moduli space of a smooth Calabi-Yau threefold X, the
+prime toric divisors DI are smooth, because their strata are inherited from the strata of X [38–40].
+
+14
+
+est rigid prime toric divisors, stabilization of the Kähler moduli does not require, and is
+negligibly affected by, potential gaugino condensation in the so(8) stack on DN , which can
+occur if fluxes lift all the normal bundle deformations.
+Indeed, we expect that normal bundle deformations of the seven-branes on DN are
+stabilized by background three-form fluxes. To rigidify a D7-brane on a divisor D one can
+turn on the worldvolume flux F2 = [C] − [C 0 ] [34] on the D7-brane, where C ⊂ D is a
+rigid holomorphic curve and C 0 is its orientifold image. This procedure cannot be applied
+to rigidify the so(8) stack, because every holomorphic curve C in an O7-plane is pointwise
+invariant under the orientifold action, and hence [C] = [C 0 ]. However, in a nontrivial H3
+background, where locally we can write H3 = dB2 , upon displacing a D7-brane away
+from an O7-plane on DN , the B2 field induced on the displaced D7-brane grows, which
+eventually leads to D7-brane monodromies [41–44]. As a result, the displaced D7-brane
+feels a monodromy potential
+Z
+q
+2π
+(3.3)
+d4 y e−φ det(gDN + ı∗DN B2 ) .
+VD7 = 8
+`s DN
+The minimum of this potential lies at the so(8) stack configuration, where B2 = 0:
+the O7-plane is a fixed locus of the orientifold involution I, and the orientifold acts as
+B2 (x) 7→ −B2 (I(x)). The displacement of the D7-brane also induces D3-brane charge on
+its worldvolume, and thus by conservation of D3-brane charge the bulk D3-brane charge
+density from fluxes, and their energy density, gets reduced within the region swept out by
+the moving D7-brane. The overall potential is positive semi-definite, and vanishes if and
+only if the induced ı∗DN B2 happens to be self-dual on DN [42, 44].12 In this paper we will
+not check this condition explicitly, but note that the anti-self dual part generically does
+not vanish, and seven-branes should be stabilized automatically. Moreover, even if they
+do turn out to be unstabilized at this level, they either stay exact moduli after inclusion
+of all perturbative and non-perturbative corrections — which seems implausible but would
+in any case not endanger the existence of our vacua — or they receive a potential from
+those corrections. In the latter case, due to the orientifold plane boundary conditions, the
+potential would have to be minimized or maximized in the so(8) configuration, and thus
+the D7-branes would be stabilized there by virtue of the unbroken supersymmetry.13
+Next, let us remark that the superpotential terms from gaugino condensation on confin12
+
+This is related to the non-generic situations described in [36] in which the normal bundle deformations
+of a Euclidean D3-brane do not get lifted by fluxes.
+13
+In our AdS vacua the potential could have a maximum with negative mass2 above the BreitenlohnerFreedman (BF) bound.
+
+15
+
+ing seven-brane gauge theories have a simple M/F-theory description, again described by a
+Euclidean M5-brane. Consider a smooth F-theory uplift ∆E of an irreducible discriminant
+locus ∆E of the elliptic fibration. We assume that a gauge group G is engineered on ∆E , and
+for simplicity we assume that there is no curve γ in ∆E where the gauge group G is enhanced
+to a larger group G0 . Then, π −1 (∆E ) = ∆E is topologically equivalent to a union of P1 ’s
+(corresponding to the Dynkin nodes of G) times ∆E . It follows that the fermion zero-modes
+of an M5-brane wrapped on ∆E are counted by h• (∆E , O∆E ) = c2 (G)h• (P1 × ∆E , OP1 ×∆E ).
+For a rigid ∆E , a Euclidean M5-brane wrapped on a Dynkin node P1 × D has the right
+number of zero-modes to contribute to the superpotential. Under the projection πE , the
+Dynkin node maps to a fractional divisor class [∆E ]/c2 (G). Hence, we conclude again
+that an so(8) stack on a rigid divisor D generates a nonperturbative superpotential term
+AD (z, τ )e−2πTD /6 .
+Finally, we would like to briefly comment on the matching between the zero-mode
+counting in the type IIB picture and the dual M/F-theory picture. Consider a blowdown
+of the elliptic fibration πE0 : Y40 → B3 such that the elliptic fiber, E, develops singularities
+at the discriminant locus. We note that odd-dimensional cycles of E can be viewed as
+orientifold-odd and even-dimensional cycles of E as orientifold-even, due to the −1 ∈
+SL(2, Z) monodromy picked up under encircling an so(8) stack. To compute the Hodge
+b denoted D
+b 0 , one can count orientifold-even cycles of D × E:
+numbers of the blowdown of D,
+i−1,0
+i−1,0
+0,0
+we have hi,0 (D × E) = hi,0
+(D) × h1,0 (E) = hi,0
+(D). Because
++ (D) × h (E) + h−
++ (D) + h−
+b 0 ),
+the blowup of the elliptic fiber along the discriminant locus ∆E |D does not change hi,0 (D
+we arrive at the identification14
+i−1,0
+b O b ) = hi,0
+hi (D,
+(D).
++ (D) + h−
+D
+
+3.2
+
+(3.4)
+
+Pfaffian prefactors
+
+The Pfaffian prefactor AD (z, τ ) of a nonperturbative superpotential term is related to the
+partition function of the corresponding M5-brane worldvolume theory in the F-theory upb of the divisor D, or equivalently to the partition function of the O(1) D3-brane
+lift D
+worldvolume theory on D in the type IIB orientifold. In general, AD (z, τ ) can be a section
+of a non-trivial line bundle on moduli space,15 so it can have zeros along divisors D in mod14
+b O b ) = hi (DB , OD ) +
+In the special case that B3 is smooth, it was shown in [45] that hi (D,
+B
+D
+hi−1 (DB , −∆E |DB ) for a divisor DB ⊂ B3 . This formula is equivalent to (3.4) under the identifications
+i,0
+i
+i
+hi,0
+− (D) ≡ h (DB , −∆E |DB ) and h+ (D) ≡ h (DB , ODB ).
+15
+The moduli space in question is the complex structure moduli space of the fourfold, or equivalently
+the axiodilaton and complex structure moduli space of X.
+
+16
+
+uli space. Along such D, the corresponding nonperturbative superpotential term no longer
+contributes to the potential for the Kähler moduli, while in the immediate neighborhood
+of D the contribution is suppressed; either case could impact the vacuum structure.
+The stabilization of the complex structure moduli and axiodilaton by fluxes leads to
+expectation values hzi, hτ i, and the generic situation is that these expectation values do
+not lie on D, or exponentially near D. If we now define
+
+Avac
+D := AD hzi, hτ i ,
+
+(3.5)
+
+then the expectation values Avac
+D are simply (unknown) complex numbers, and the vacuum
+configuration for the Kähler moduli could be expressed in terms of their values.
+Even so, one could worry that a conspiracy might cause some of the Avac
+D to be exponentially small in the classical flux vacua of §2.3 that yield W0  1. This would jeopardize
+a search for AdS vacua.16 For the avoidance of doubt, we will ensure that zeros of the
+Pfaffian cannot arise in our examples, by selecting compactifications in which the Pfaffians
+of all leading rigid prime toric divisors are pure numbers, i.e. sections of the trivial line
+bundle on moduli space. Let us now explain how this can be achieved.
+3.2.1
+
+General properties of the Pfaffian
+
+Around LCS and weak string coupling, the AD (z, τ ) enjoy an expansion
+AD (z, τ ) =
+
+∞
+X
+
+(k)
+AD (z)e2πikτ =
+
+∞
+X X
+
+(q̃,k) 2πi(q̃·z+kτ )
+
+AD
+
+e
+
+.
+
+(3.6)
+
+q̃∈M(X̃) k=0
+
+k=0
+(k)
+
+Here AD (z) is the Pfaffian of a Euclidean D3-brane with a fixed gauge bundle of instanton
+(k)
+(q̃,k)
+number k, and each of the AD (z) enjoys its own expansion around LCS.17 The AD are a
+priori unknown complex numbers. We note that the above expansion can be reinterpreted
+via mirror symmetry as a poly-instanton expansion including Euclidean D2-branes and
+worldsheet instantons in a type IIA O6 orientifold.
+16
+
+We are not aware of any reasoning that predicts that such a conspiracy should actually occur in
+string theory, but we can predict that the solutions presented here would be criticized on this basis if the
+possibility were not strictly excluded.
+(k)
+17
+In general, the expansion of the AD (z) around LCS may contain terms that are polynomial in the
+z a , which are not displayed in (3.6). Such terms are absent along perturbatively flat vacua due to the
+unbroken discrete shift symmetry preserved by the fluxes of (2.21) [5].
+
+17
+
+It is convenient to write the leading terms in (3.6) in the more schematic form
+(0,0)
+
+AD (z, τ ) = AD
+
+(1,0)
+
+(0,1)
+
++ AD e2πiτ + AD e2πiz + . . .
+
+(3.7)
+
+The type IIB zero-mode counting — i.e., the rigidity condition imposed on D in §3.1 —
+implies that AD (z, τ ) does not vanish identically. However, at this stage one cannot exclude
+(0,0)
+that AD = 0.18 In such a case, Avac
+D would be extremely small, as our flux vacua occur
+at weak string coupling and near LCS.
+To avoid this outcome, we will ensure that the following three relations hold:
+(a) AD (z, τ ) is not identically zero;
+(j,k)
+
+= 0 ∀j > 0 ,
+
+(j,k)
+
+= 0 ∀k > 0 ,
+
+(b) AD
+(c) AD
+
+(0,0)
+
+which together imply that AD 6= 0. In sum, by enforcing (a), (b), and (c) we guarantee
+that Avac
+D is not systematically suppressed near weak coupling and LCS.
+b must be rigid.
+In fact we have already imposed condition (a), by insisting that D
+(k)
+To impose (b), we recall from standard zero-mode counting that the AD (z) are nonzero
+for gauge bundles F ∈ H−1,1 (D, Z) that do not descend via restriction from nontrivial
+(0)
+1,1
+classes in H 2 (X, Z). In particular, if h−
+(D) = 0 then only AD (z) is non-vanishing, and
+19
+thus h1,1
+− (D) = 0 implies condition (b).
+(0)
+Finally, to impose (c), we will arrange that AD (z) is actually independent of z. We
+are aware of two mechanisms for ensuring this, which we now discuss in turn.
+3.2.2
+
+Pure rigid divisors
+
+In [3] it was shown that the partition function of the worldvolume theory of an M5-brane
+b is an elliptic theta function of the complex structure moduli of
+wrapping a divisor D
+b R)/H 3 (D,
+b Z). As the complex structure moduli
+the intermediate Jacobian J := H 3 (D,
+of J depend on the complex structure moduli of Y4 , in principle by computing J one
+b = 0, then the corresponding M5-brane
+can determine AD (z, τ ). In particular, if h2,1 (D)
+18
+This situation would be mirror dual to a single Euclidean D2-brane on a special Lagrangian three-cycle
+with non-trivial Betti number b1 .
+(0,0)
+19
+Note that condition (b) is not actually necessary for ensuring that AD 6= 0: a rigid O(1) Euclidean
+(0)
+(0)
+D3-brane has Pfaffian AD (z) which, via zero-mode counting, is not identically zero. If AD (z) is also
+(0,0)
+z-independent then it already follows that AD 6= 0, even if h1,1
+− (D) 6= 0. We are imposing (b) here
+(0,0)
+purely to simplify the reasoning that leads to AD 6= 0.
+
+18
+
+partition function is a section of the trivial line bundle over the complex structure moduli
+space of the fourfold, and so the Pfaffian AD is a pure (complex) number [3]. We will call
+b with h2,1 (D)
+b = 0 a pure rigid divisor. By extension, if D ⊂ X descends
+a rigid divisor D
+b in the fourfold, we will call D a pure rigid divisor.
+from a pure rigid divisor D
+To impose the condition of pure rigidity, the first step is to compute the dimension
+b in an elliptic Calabi-Yau fourfold. For each Calabi-Yau
+of J for a vertical divisor D
+orientifold compactification considered in this paper, we have constructed the dual elliptic
+b and
+Calabi-Yau fourfold, by first obtaining the base B3 := X/I as a hypersurface in V /I,
+further defining the Calabi-Yau fourfold as a codimension-two complete intersection in a
+b 20 Next, one can generalize the
+toric sixfold V6 given by a toric twofold fibration over V /I.
+results of the early works [38, 39, 47–49] to obtain combinatorial formulas for the Hodge
+numbers of prime toric divisors in Y4 [50]. Equipped with these formulas, one can compute
+b [38, 50].
+h2,1 (D)
+b We again consider a blowdown
+Let us briefly explain the type IIB perspective on h2,1 (D).
+b 0 ) is counted by
+of the elliptic fibration πE : Y40 → B3 . Then h2,1 (D
+2,1
+2,0
+2
+0
+b 0 ) = h1,0
+h2,1 (D
++ (D)b (E)+h+ (D)b (E)+h− (D)
+
+b1 (E) D rigid 1,1
+b1 (E)
+1,1
++h−
+(D)
+= h− (D) , (3.8)
+2
+2
+
+1,1
+and indeed we had concluded above that the Pfaffian AD (z, τ ) is τ -independent if h−
+(D) =
+1,1
+0. As h− (D) is insensitive to the intersection locus with seven-branes, a natural interpretation is that h1,1
+− (D) encodes the dependence of the Pfaffian on the bulk complex structure
+moduli of X/I and the dilaton τ , though we will not rely on such an interpretation in our
+b
+models. Upon blowing up along the discriminant locus of the elliptic fibration, h2,1 (D)
+b 0 ). Thus, we interpret the difference h2,1 (D)
+b − h2,1 (D
+b 0)
+can in general be larger than h2,1 (D
+
+as encoding the dependence of the Pfaffian on the D7-brane moduli.21 For this paper,
+b directly in F-theory.
+however, we will compute h2,1 (D)
+3.2.3
+
+Inflexible rigid divisors
+
+b = 0 is sufficient to imply property (c) above, and indeed (b) at
+The condition h2,1 (D)
+the same time, because the axiodilaton τ is of course a complex structure modulus of the
+fourfold. In every example presented in this paper, all of the leading contributions to the
+b =0
+nonperturbative superpotential come from pure rigid prime toric divisors, with h2,1 (D)
+b O b ) = (1, 0, 0, 0).
+and h• (D,
+D
+20
+21
+
+See e.g. [46].
+For related work see [4].
+
+19
+
+However, a condition that can be checked directly in the type IIB compactification
+implies (c) but not (b), as we now explain. Though we will not make use of it here, in
+future model-building this alternative may be useful, as the uplift to F-theory is not always
+easy to analyze.
+One can forbid z-dependence of the Pfaffian by imposing that D has no complex structure deformations: in terms of the tangent bundle TD of D, one requires that h1 (TD ) = 0.
+In this case, the complex structure of D is necessarily independent of the bulk complex
+structure moduli z, and thus the partition function of the Euclidean D3-brane worldvolume
+theory cannot depend on z. We call a divisor D obeying h1 (TD ) = 0 inflexible.
+The constraint h1 (TD ) = 0 is satisfied by a considerable majority of prime toric divisors
+D in Calabi-Yau threefold hypersurfaces X with h1,1 (X)  1. At large h1,1 (X) almost all
+prime toric divisors of X arise from points interior to 1-faces and 2-faces of the reflexive
+polytope ∆◦ . It is straightforward to see that divisors from points interior to 2-faces are
+toric surfaces themselves, and thus trivially satisfy h1 (TD ) = 0. In general, divisors from
+points interior to 1-faces are P1 -fibrations over curves of genus g, where g is determined
+by the number of points interior to the dual 2-face in the dual polytope ∆. As explained
+in §2.2, for convenience we impose ∆-favorability in our models, and in particular we have
+g = 0 for all 1-face divisors. Because P1 fibrations over P1 are likewise toric, we again
+find h1 (TD ) = 0 for all divisors from points interior to 1-faces. The only divisors that
+need to be checked case by case are those arising from vertices of ∆◦ . Their complex
+structure deformations are inherited from those of X, i.e. h1 (TD ) = h1 (TX |D ), so all one
+needs to do is inspect the anti-canonical polynomial f along D. The surviving monomials
+correspond to the points of the facet of ∆ dual to the vertex, and rigidity of D is in one-toone correspondence with absence of interior points in the facet. After setting to zero the
+toric coordinate associated to D one can still use the action of an algebraic torus (C∗ )3 to
+gauge fix three coefficients of f |D , and finally use the freedom of overall rescaling of f |D .
+Thus, h1 (TD ) = 0 if and only if there are exactly four points in the dual facet, i.e. if and
+only if the facet is a simplex.
+In summary, prime toric divisors Df corresponding to points interior to 2-faces f of
+◦
+∆ are always rigid and inflexible, and in ∆-favorable models, prime toric divisors De
+corresponding to points interior to 1-faces e are likewise always rigid and inflexible. A
+prime toric divisor Dv corresponding to a vertex v is inflexible if and only the dual facet is
+a simplex, and is rigid if and only if the dual facet has no interior points. Equipped with
+these results, we are able to check the condition h1 (TD ) = 0 in our models.
+
+20
+
+3.2.4
+
+Pfaffian numbers
+(0,0)
+
+The complex numbers22 ADI ≡ ADI associated to pure rigid prime toric divisors DI are
+the only unknowns in the leading data of the effective supergravity theories studied in this
+paper. A few comments are in order regarding their properties.
+Although in all our models we have proved that the ADI are numbers, one could worry
+that one or more of them is actually the number 0, which after all is a famous section of
+the trivial line bundle.23 We have excluded the main physical reasons for such a zero —
+namely, integrals over moduli space, extra fermion zero modes, and cancellations [53–55] —
+and so the ADI are generically nonzero by the usual standards of instanton calculus. Even
+so, computing their values directly, perhaps along the lines of [56,57], would be worthwhile.
+Moreover, one might wonder whether the ADI could be hierarchical, because similar
+prefactors are often related to BPS state counts, which can in principle involve large numbers. However, changing the ADI leads to relative corrections in the vevs of the Kähler
+moduli of order log(ADI )/ log(W0 ). In our examples, W0−1 far exceeds any number that
+could reasonably appear in a BPS state count at low degrees, and so we expect our approximation to be excellent. Even so, after finding supersymmetric vacua for the reference
+value ADI = 1 ∀I, we have repeated our analysis with ADI ∈ {10−4 , 104 }, and recovered
+the existence of vacua.
+Let us further point out that because the ADI remain unchanged as we select fluxes to
+explore vacua with smaller and smaller W0 , there is no possibility of a conspiracy in which
+the ADI become ill-behaved as W0 → 0 and thus destroy the vacuum structure.24
+Finally, we remark that thus far we have ensured that the ADI do not depend on the
+closed string moduli and the seven-brane moduli. However, in some of our compactifications, mobile D3-branes will be present, and all of the ADI do necessarily depend on all the
+D3-brane position moduli. As a D3-brane approaches a rigid divisor DI , the corresponding
+nonperturbative superpotential term tends to zero: linearly in the separation for Euclidean
+D3-branes, and with fractional power c−1
+DI for gaugino condensation [58–62]. Thus, the Fflat configuration for the D3-brane position moduli has the D3-branes stabilized away from
+22
+
+Note that as we can neglect Euclidean D3-brane corrections to the Kähler potential, nothing is lost
+by using the axion shift symmetries Ti → Ti + δTi with δTi ∈ iR to absorb the complex phases in h1,1
+Pfaffian numbers, but in some examples we find h1,1 + 1, h1,1 + 2, or h1,1 + 3 leading contributions, and
+in such cases there are one, two, or three phases remaining, respectively.
+23
+See e.g. [51, 52].
+24
+Likewise, the mass of the perturbatively-flat direction z = pτ is comparable to the masses of the Kähler
+moduli [5], and if some of the ADI were to vary along z = pτ , the stabilization of the perturbatively-flat
+direction and of the Kähler moduli would be entangled. Because the ADI are constant this possibility
+does not arise in our examples.
+
+21
+
+the vanishing loci ADI = 0 [63]. In the following it will be understood that the Pfaffians
+ADI are evaluated at the F-flat minimum for the D3-brane moduli.25
+
+3.3
+
+Autochthonous divisors
+
+The most obvious corrections to the superpotential of (1.1) come from multi-instantons
+or, potentially, from Euclidean D3-branes wrapped on divisors that can be written as nonnegative linear combinations of two or more prime toric divisors. At points in moduli space
+where the one-instanton and gaugino condensation terms that we have already incorporated
+in (1.1) are small, such corrections are parametrically sub-leading.
+However, as we now explain, another class of Euclidean D3-brane contributions deserves
+a more detailed analysis: as recalled in §2.2, a Calabi-Yau threefold hypersurface X in a
+toric variety V inherits effective divisors D from divisors D of V via intersection with X,
+i.e. D = D ∩X. Effective divisors on X that are not inherited are termed autochthonous.26
+Methods for identifying the classes of autochthonous divisor will be presented elsewhere
+[65]. For the present work, it suffices to remark that computing all effective divisor classes
+in a Calabi-Yau threefold with large h1,1 is not currently feasible, and so we will study
+the nonperturbative superpotential terms that result from Euclidean D3-branes that wrap
+inherited divisors, which are very easy to identify from toric data.
+One might then ask whether rigid autochthonous divisors could support Euclidean D3brane superpotential terms that alter the vacuum structure that we will compute herein
+based on inherited divisors. Fortunately, a peculiarity of the KKLT construction obviates
+computing all autochthonous contributions. To see this, we consider a toy example, in
+which X is a Calabi-Yau orientifold, D1 and D2 are inherited prime toric divisors on X, and
+2D1 −D2 is an autochthonous — and hence, by definition, effective, and thus also calibrated
+— divisor. If we find a point in the Kähler cone KX where vol(D1 ) = vol(D2 ) ≡ T , then
+vol(2D1 − D2 ) = T as well, and a Euclidean D3-brane wrapping vol(2D1 − D2 ) makes at
+most a contribution comparable to those of the effective divisors, not parametrically larger.
+Now we recall that any divisor, including an autochthonous one, is always expressible in
+R
+Note that if 21 X H3 ∧ F3 ∈ 21 Z then one needs to introduce a ‘half’ D3-brane stuck either on one of
+the seven-brane stacks or on one of the O3-planes. When this is necessary, we will place the half D3-brane
+on a seven-brane stack on a divisor D that is not relevant for Kähler moduli stabilization, thus adding a
+chiral multiplet (or a half-hypermultiplet if D = K3) in the 8 of SO(8) and two neutral chiral multiplets
+(a hypermultiplet if D = K3) parameterizing the position of the half D3-brane along the seven-branes:
+see e.g. [64].
+26
+Through the inclusion of X in V , an autochthonous divisor DA on X corresponds to an effective
+subvariety of complex dimension two in V , but unlike an inherited effective divisor, this subvariety is not
+the intersection D ∩ X for any effective divisor D on V .
+25
+
+22
+
+terms of an integer (but not necessarily positive integer) linear combination of prime toric
+divisors. Moreover, in the vacua that we will find below, the (Einstein frame) volumes
+of a subset of h1,1 (X) prime toric divisors take integer values, up to an overall factor
+log(W0−1 )/2π: those hosting so(8) stacks of seven-branes have volumes c2 (so(8)) = 6 times
+larger than those hosting Euclidean D3-branes. If, at this point in moduli space, the other
+four prime toric divisors also have integer volumes, then in fact all divisors have integer
+volumes, again up to an overall factor. In such a case, just as in the toy example, the
+volume of an autochthonous divisor in the vacuum is k × log(W0−1 )/2π, with k ∈ Z. As the
+Calabi-Yau threefold is smooth inside the Kähler cone we have k > 0. Euclidean D3-branes
+on autochthonous divisors with k > 1 are exponentially negligible. Morevoer, it is easy to
+show that neglecting Euclidean D3-branes on autochthonous divisors with k = 1 produces
+an O(1) error in the vevs of the Kähler moduli. As these are of order log(W0−1 )  1,
+omitting k = 1 autochthonous divisors produces an error only at subleading order in
+log(W0−1 )−1  1.
+This very general argument shows that autochthonous divisors can never make parametrically large contributions to the superpotential in our vacua. However, we have also
+constructed a class of autochthonous divisors that can be found from polytope data [65]:
+all such divisors turn out to be very large in our examples, no less than 100 times larger
+than the leading prime toric divisors, and so can be completely neglected.
+
+4
+
+Kähler potential and Kähler coordinates
+
+In the preceding sections, we have detailed a process for constructing flux compactifications
+on Calabi-Yau orientifolds in which the superpotential takes the form (1.1), with at least
+h1,1 nonperturbative superpotential terms, all with constant Pfaffians. We will call such a
+configuration a compactification with KKLT superpotential.
+A nontrivial question is whether such a compactification actually admits a supersymmetric AdS4 vacuum: specifically, does there exist a point in the Kähler moduli space of X
+where the F-terms of all h1,1 Kähler moduli vanish and the α0 expansion is well-controlled?
+This question hinges on the form of the Kähler potential KK,τ for the Kähler moduli Ti
+and the axiodilaton τ , to which we now turn.
+At tree level we have that
+
+exp −KK,τ /2 tree ∝ e−2φ Vst (t) ,
+
+23
+
+1
+Re(Ti )|tree = e−φ κijk tj tk ,
+2
+
+(4.1)
+
+where
+
+3
+1
+Vst := κijk ti tj tk = Im(τ )− 2 VE
+(4.2)
+6
+is the string-frame volume of the Calabi-Yau threefold X, cf. (2.13), and Ti are the holomorphic Kähler coordinates. Here, e−2φ Vst is simply the four-dimensional dilaton obtained
+by dimensionally reducing the ten-dimensional Einstein-Hilbert term in string frame, and
+eφ ≡ gs .
+The Kähler potential KK,τ receives perturbative and nonperturbative corrections in the
+0
+α and gs expansions. In particular, nonperturbative corrections arise from Euclidean D(1)-branes; worldsheet instantons, and more generally Euclidean (p, q) strings, wrapped on
+two-cycles; Euclidean D3-branes wrapped on four-cycles; and Euclidean (p, q) fivebranes
+wrapped on the Calabi-Yau threefold X. We can write
+
+∞
+
+
+1 X k [k]
+gs V (t, z) + O e−2π/gs ,
+exp −KK,τ /2 = 2
+gs k=0
+Z
+
+∞
+
+χ(Di )
+1 X k [k]
+C4 ∧ ωi −
+C0 +
+gs Ti (t, z) + O e−2π/gs ,
+Ti = −i
+24
+gs k=0
+X
+
+where each of the V [k] and Ti
+
+[k]
+
+(4.3)
+(4.4)
+
+enjoys a separate α0 expansion.27 In particular, we have
+V [0] = Vst + ∆V [0] ,
+
+(4.5)
+
+where ∆V [0] encodes perturbative corrections in the α0 expansion, as well as nonperturbative corrections from worldsheet instantons, all at string tree level, which will be given in
+(4.11) below.
+
+4.1
+
+Corrections at string tree level
+
+In our class of vacua the string coupling gs is parametrically small,
+gs = c−1
+τ ·
+
+2π
+  1,
+log W0−1
+
+(4.6)
+
+where cτ > 1 is a model-dependent number defined in (2.29) that is determined by the
+overall magnitude of the racetrack coefficients p · qi in (2.27), and is usually O(1). Therefore, at least for sufficiently small W0 , we may restrict ourselves to the k = 0 terms in
+(4.3) and (4.4). However, as Einstein frame four-cycle volumes will turn out to also scale
+27
+
+For a related discussion of the perturbative expansion in gs and α0 , see [66].
+
+24
+
+
+as log W0−1 /2π, the string frame four-cycle volumes do not become large in the limit of
+small W0 . Thus the α0 expansion of V [0] is not in general well-approximated by the lowestorder term Vst , and likewise for Re(Ti ). This, however, does not pose an insurmountable
+problem, as we now explain.
+The perturbative contributions to V [0] come from α0 corrections to the ten-dimensional
+effective action, more specifically the NS-NS sector,
+2π
+NS−NS
+SIIB
+= 8
+`s
+
+Z
+
+
+
+√
+1
+2
+2
+−2φ
+R + 4(∂φ) − |H3 | + ... ,
+d x −g e
+2
+10
+
+(4.7)
+
+where ... stands for terms with more than two derivatives in the metric, dilaton and twoform. Corrections to the effective action from brane sources (i.e. open strings) and from the
+R-R sector are dressed by a relative suppression factor of gs , so these effects can contribute
+only to V [k] (t, z) with k ≥ 1. To see this one recalls that the Kähler potential at closed
+string tree level can be computed from a worldsheet CFT two-point function on the sphere,
+−χ(S 2 )
+which is dressed by gs
+= gs−2 , while orientifolding introduces open strings whose tree
+level contribution to the Kähler potential comes from a disk amplitude, dressed by a factor
+−χ(disk)
+gs
+= gs−1 : see e.g. [59, 67, 68]. Equivalently, one recovers this from the fact that both
+D-brane and O-plane tensions in string frame are proportional to gs−1 . As usual, string
+loop corrections are even more suppressed, as they come from torus, annulus, Klein bottle
+and Möbius strip amplitudes, all of which have χ = 0.
+In our solutions the dilaton is constant, ∂φ = 0, so no correction proportional to ∂φ
+contributes to the Kähler potential. Finally, in our solutions we also have that [28]
+gs
+√ 1
+d y g |H3 |2 =
+2
+2
+X
+
+Z
+? H3 = gs F3 ,
+
+⇒
+
+6
+
+Z
+
+flux
+H3 ∧ F3 = gs ND3
+,
+
+(4.8)
+
+X
+
+flux
+and as a consequence corrections from fluxes can be neglected if gs ND3
+is suitably small.
+−2
+In conclusion, at O(gs ) we are left with pure curvature corrections, as the effect of
+fluxes and orientifolding (open strings) are invisible at this order. Thus, all sources of
+breaking from N = 2 to N = 1 supersymmetry contribute only to V [k] with k ≥ 1, and
+we can therefore accurately compute the curvature corrections assuming eight unbroken
+supercharges! In fact, these corrections are known exactly, at least in principle, by virtue of
+mirror symmetry. A quick way to get to the result is to compare with the mirror dual type
+e which is well-known to geometrize worldsheet
+IIA O6 orientifold [69, 70] of the mirror X,
+
+25
+
+instantons of X. We have
+i
+V (t, z) ≡ V (t) = −
+8
+[0]
+
+[0]
+
+Z
+Ω̃ ∧ Ω̃ ,
+
+(4.9)
+
+e
+X
+
+e is the mirror threefold, and Ω̃ is the holomorphic three-form of X
+e normalized
+where X
+such that the fundamental period around LCS is equal to unity.28 Moreover, also by
+[0]
+comparing to the mirror dual O6 orientifold one learns that the Ti := Ti are identified
+with appropriate periods of Ω̃.29 We may write V [0] (t) using a prepotential F̃(z̃ i ) of the
+e replaced by those of X, i.e.
+form (2.3), with all geometric quantities of X
+z a → z̃ i ≡ iti + bi ,
+
+κ̃abc → κijk ,
+
+...
+
+(4.10)
+
+Here, bi = 21 γ i is the half-integral B2 -field in the type IIB duality frame, as defined in (2.8).
+Specifically, we have30
+1
+ζ(3)χ(X)
+V [0] = κijk ti tj tk −
+6
+4(2π)3
+!
+
+
+
+
+X
+1
+, (4.11)
++
+Nq Li3 (−1)γ·q e−2πq·t + 2πq · t Li2 (−1)γ·q e−2πq·t
+2(2π)3
+q∈M(X)
+
+
+X
+1
+χ(Di )
+1
+γ·q −2πq·t
+Ti = κijk tj tk −
++
+q
+N
+Li
+(−1)
+e
+.
+(4.12)
+i
+q
+2
+2
+24
+(2π)2
+q∈M(X)
+
+The perturbative expansion of V [0] consists only of the classical term, namely Vst , and the
+famous BBHL correction [12] at order α03 . However, there are infinitely many instanton
+corrections whose amplitudes are given by the genus-zero Gopakumar-Vafa invariants of
+X [77, 78], which can be computed using mirror symmetry [13, 79–82]. A comment is in
+order regarding the range of validity of (4.11). It is tempting to continue the expressions
+V [0] and Ti through flop transitions between topologically distinct phases. At the transition
+locus an effective curve C shrinks to zero volume and one has to distinguish between two
+28
+
+Note that the part of the N = 1 Kähler potential for the Kähler moduli that is inherited from the
+N = 2 parent theory is related to the hyper-Kähler potential of the hypermultiplet sector of type IIB on X,
+which via the c-map is related to the Kähler potential for the vector multiplets of type IIA on X [71–73].
+This is of course consistent with (4.9).
+29
+The appropriate Z-linear combination of periods is straightforward to identify by matching the polynomial corrections of the periods at LCS with the α0 -corrected action [74–76] for Euclidean D3-branes
+wrapped on the basis divisors at large volume.
+30
+Strictly speaking the formula (4.11) for Ti holds only if the basis divisors can host Euclidean D3-branes
+with vanishing gauge-invariant worldvolume flux in our B2 field background, i.e. if c1 (Di )/2 − ı∗Di B2 is
+integer-valued for all i. In our examples we have checked that this is true.
+
+26
+
+qualitatively distinct cases.
+R
+First, if C does not intersect any O7-planes, we have C B2 = 0, so one encounters
+logarithmic branch cuts
+t
+Li2 (e−2πt )
+log(t) + hol. ,
+=
+2
+(2π)
+2π
+
+Li3 (e−2πt )
+t2
+log(t) + hol. ,
+=
+−
+(2π)3
+4π
+
+(4.13)
+
+emerging at zero curve volume t. Thus, upon continuing to negative t one naı̈vely picks
+up a non-vanishing imaginary part, which is puzzling because the Ti were constructed to
+give the real parts of gs Ti . However, no matter how small the string coupling gs is, before
+the point t = 0 is reached an infinite tower of instanton corrections from Euclidean (p, q)strings with arbitrary (p, q) become unsuppressed, invalidating (4.11).31 As an aside, one
+often finds that h1,1
+− (D) of a rigid divisor D jumps across flop transitions of the above type.
+This suggests that the dilaton dependence of the Pfaffian AD (z, τ ) can likewise jump. We
+speculate that upon interpolating from one phase to the next, one needs to resum Euclidean
+(p, q) string corrections to the definition of the Kähler coordinates, along the lines of [83],
+in such a way that the Euclidean D(-1)-brane corrections to (4.11) are modified, and such
+that eK/2 |AD (τ, z)e−2πTD | can be evaluated in either phase, with agreement at the flop
+transition locus.32 In any event, our analysis does not depend on the resolution of this
+puzzle.
+Second, if C does intersect an O7-plane transversely in a single point, or is contained
+R
+in the O7-plane with intersection number −1, one has C B2 = 12 , and contributions from
+wrapped (p, q)-strings are parametrically suppressed at small gs except for (p, q) = (1, 0),
+i.e. worldsheet instantons. Indeed, in this case there are no branch cuts,33
+1
+log(2)t
+Li2 (−e−2πt )
+=− +
++ O(t2 ) ,
+2
+(2π)
+48
+2π
+
+Li3 (−e−2πt )
+3ζ(3)
+t
+=−
++
++ O(t2 ) ,
+3
+3
+(2π)
+32π
+48
+
+(4.14)
+
+so one can continue (4.11) to negative t. Moreover, such transitions make sense physically: the divisor wrapped by the O7-plane intersecting C undergoes a blow-up/blowdown transition and an O3-plane gets absorbed/emitted in a way that preserves D3-brane
+31
+
+One should be able to likewise determine these from N = 2 data, i.e. the hyper-Kähler potential of
+the hypermultiplet sector [71], because fluxes remain dilute and, by assumption, orientifold planes do not
+intersect C, but we will not do so here.
+32
+Alternatively, one might conclude that the N = 1 quasi-moduli space actually ends at the flop
+transition locus, fracturing the Calabi-Yau moduli space into disconnected components. This appears
+unlikely to us, because it certainly does not occur with N = 2 supersymmetry, and the N = 2 → N = 1
+supersymmetry breaking from fluxes and O-planes becomes arbitrarily weak in the conifold region in the
+limit that the curve shrinks.
+33
+For an early related observation, see [84].
+
+27
+
+charge [19, 85]. Moreover, upon continuing to large negative t one arrives again at an
+expression of the form (4.11), but with all geometric quantities replaced by those of the
+flopped phase, as needed for consistency. This follows immediately from the polylogarithm
+identity
+Li2 (−e−2πt )
+1
+Li2 (−e−2π(−t) ) 1 2
+,
+(4.15)
+=
+−
++ t −
+2
+2
+(2π)
+(2π)
+2
+24
+and likewise for Li3 (−e−2πt ), in beautiful agreement with the well-known transformation
+properties of χ(Di ) and κijk under flop transitions. In accordance with the above, we have
+not found examples where h1,1
+− (D) of a rigid divisor jumps across a flop transition of this
+type.
+Let us pause to stress an important point. Suppose we are faced with a series of
+corrections in the α0 expansion, and we seek to know whether their contributions to the
+Kähler potential ruin the vacuum structure that was computed at leading order. If the
+corrections have unknown coefficients, then a conservative requirement is that all effective
+curves should have large volumes in string units: a curve of volume, say, 2`2s might be
+problematic, and it might not. But when we can actually compute the coefficients of the
+leading series of corrections, a weaker — and at the same time, much more precise —
+condition suffices: the curve volumes need only lie within the radius of convergence of the
+series. Because the leading corrections in (4.11) are determined by GV invariants, which
+we can compute (see §5.3), we will be able to ensure control of the α0 expansion in this
+sharper manner: see §5.4.
+
+4.2
+
+Corrections beyond string tree level
+
+The leading additional correction to (4.11), which is suppressed by a further power of
+the string coupling, comes from the backreaction of three-form fluxes F3 and H3 , and its
+flux
+, as explained above. Similarly, the corrections from
+magnitude is proportional to gs−1 ND3
+D-brane sources are expected to be of order gs−1 Q where Q is the corresponding (locally
+uncancelled) brane charge. As seven-brane charges are cancelled locally in our vacua,
+the only relevant corrections come from fluxes and D3-branes, and from the induced D3brane charge on seven-branes and O3-planes, so the leading correction induced by fluxes
+is suppressed in comparison to the tree level result by a factor [28, 86]
+gN =1 := gs |ND3 | .
+
+28
+
+(4.16)
+
+Here ND3 is the D3-brane tadpole, and we have assumed that string frame volumes are all
+O(1). More precisely, one should evaluate the D3-brane charge densities along four-cycles
+ωi
+gN
+=1 := gs
+
+ωi
+ωi
+|ND3
+|ND3
+|
+|
+=
+,
+Vol(ωi )
+VolE (ωi )
+
+(4.17)
+
+where Vol(ωi ) and VolE (ωi ) are the string frame and Einstein frame volumes, respectively,
+ωi
+of divisors ωi , and ND3
+are the D3-brane charges on ωi . The corrections suppressed by
+ωi
+the gN =1 are the corrections from warping in the ten-dimensional solution [28, 86], which
+indeed become negligible when all Einstein frame volumes are large in comparison to the
+ωi
+locally uncancelled D3-brane charges.34 We will impose that gN
+=1 < 1 in our solutions,
+and also that
+|ND3 |
+X
+< 1,
+(4.18)
+gN
+2
+=1 := gs
+V3
+ωi
+the
+to control the overall importance of warping throughout X. For fixed ND3 and ND3
+X,ωi
+−1
+control factors gN =1 scale as log(W0 ) , so they become parametrically small in the limit
+X,ωi
+of small W0 . However, as ND3 = O(100) in some of our examples, the conditions gN
+=1 < 1
+become nontrivial constraints nevertheless, and we will carefully check them.
+X,ωi
+The fact that the control parameters gs and gN
+=1 are very small in our examples
+provides strong evidence that our vacua are well-controlled. One could check this more
+explicitly by computing the leading string loop corrections to the Kähler potential. In
+carrying out such a computation — which is beyond the scope of this work — special
+attention should be paid to corrections from curves C ∼
+= P1 that are close to undergoing a
+flop transition, and thus have small volumes in string units. As explained in the previous
+section, such curves come in two different classes.
+In the first class, C does not intersect any seven-branes. In the limit that such a C
+shrinks to a point, the local neighborhood of the singular geometry contains no brane
+sources. For this reason, and because fluxes are negligible at short distances, the breaking
+of supersymmetry from N = 2 to N = 1 becomes arbitrarily weak in the limit of vanishing
+curve volume. Thus, corrections to the Kähler potential coming from a small curve of this
+type are simply inherited from the hypermultiplet moduli space metric of the N = 2 parent
+theory. Such corrections are captured by (4.11) at string tree level, while the corrections
+beyond string tree level are known [72, 83, 87, 88] and can be shown to be negligible in our
+examples.
+In the second class, a stack of seven-branes intersects the shrinking curve C. Cancellation of Freed-Witten anomalies in such a background requires the existence of a discrete
+34
+
+See Appendix A for further analysis of this point.
+
+29
+
+B-field, and the presence of this B-field ensures that the limit of vanishing curve volume is
+a non-singular locus in the N = 2 moduli space. Thus, there are no important corrections
+to the Kähler potential at string tree level. One easily shows that this result extends to all
+orders in gs in the parent N = 2 Calabi-Yau compactification.
+We conclude that for both classes of curves, the string loop corrections to the Kähler
+potential that are inherited from the N = 2 parent theory can be neglected in our examples,
+to all orders in gs . It remains to consider genuine N = 1 corrections to the Kähler potential
+for curves C that intersect seven-branes. If such corrections were to diverge at small curve
+volume, then the vacuum structure that we have described thus far would be endangered.
+However, such a divergence would be quite remarkable: as discussed in the previous section,
+transitioning through the locus of vanishing curve volume appears to make perfect sense
+even in the N = 1 theory with O-planes and D-branes [19, 85], while divergent corrections
+at small curve volume would remove the transition locus to infinite distance in moduli
+space. Nevertheless, an actual proof of the absence of such divergent corrections, say at
+order gs0 , would be desirable. We leave this interesting task for future work.
+
+5
+
+Computational methods
+
+Having determined the leading data of the effective N = 1 supergravity in our ensemble
+of compactifications, we now discuss the search for supersymmetric vacua therein.
+
+5.1
+
+Iterative solution
+
+We have just established that in our vacua, where gs  1 but string-frame volumes are of
+order unity, the Kähler potential for the holomorphic Kähler moduli Ti is determined by
+the k = 0 terms of (4.3), which are given in (4.11), and which incorporates perturbative
+and worldsheet instanton corrections in the α0 expansion, at string tree level. In particular,
+the dependence of V [0] on Re(Ti ) is not as simple as in (4.1), which includes only the leading
+term in both the gs and α0 expansions.
+Fortunately, the vacuum conditions that arise from the superpotential of (1.1) are rather
+insensitive to the precise form of V [0] (Re T ), and we will be able to iteratively incorporate
+the small effects of the α0 corrections in (4.11). This is seen as follows. We have the
+F-flatness conditions
+!
+i
+X
+2π
+t
+2π
+−
+T
+− 2π
+T
+j
+Aj e cj
+,
+(5.1)
+DTi W (T ) = − Ai e ci i − gs [0] W0 +
+ci
+2V
+j
+30
+
+where we have used the fact that the basis of H4 (X, Z) is chosen to be a set of h1,1 divisors
+Di that contribute to the superpotential via Euclidean D3-branes or gaugino condensation,
+and we neglect, for now, commensurate contributions from further rigid divisors (cf. §3.3).
+Let us define
+ti ci
+.
+(5.2)
+i := −gs A−1
+i
+2V [0] 2π
+Then, using
+|i | . gs ∼ log(W0 )−1  1 ,
+(5.3)
+we can iteratively solve (5.1) to obtain
+"
+!#
+X
+X
+c
+ci
+i
+Ti =
+log(W0−1 ) −
+log i 1 +
+Aj j +
+Aj Ak j k + . . .
+,
+2π
+2π
+j
+k,j
+
+(5.4)
+
+and one finds a solution35
+(0)
+
+Ti = Ti
+
++ δTi ,
+
+ci
+log(W0−1 )
+2π
+
+(5.5)
+
+
+!
+log log(W0−1 )
+ 1,
+log(W0−1 )
+
+(5.6)
+
+(0)
+
+Ti
+
+:=
+
+with a relative correction
+(0)
+
+δTi /Ti
+
+=O
+
+that vanishes in the limit W0 → 0, and is of order a few percent in our examples. It
+is straightforward to perturb (5.1) by a further commensurate instanton, e.g. from an
+autochthonous divisor (cf. §3.3) or another prime toric divisor, to see that the vevs of the
+Ti get perturbed by at most an O(1) factor that likewise becomes negligible for small W0 .
+In the above argument we have imagined following a discrete series of flux vacua leading
+i
+to smaller W0 , and we have implicitly assumed that there is no conspiracy that causes 2Vt [0]
+i
+to scale as log(W0−1 ) in the limit W0 → 0. This is well-justified: the values 2Vt [0] in a series
+of vacua are independent of the choice of background fluxes, except through the effects
+of the (computable) O(1) changes in the coefficients cτ defined in (2.29). We expect such
+changes in cτ to be independent of the scaling of W0 along a series of vacua, and this is
+indeed borne out in our examples.
+We conclude that a full solution of the F-flatness conditions (5.1) should exist near
+35
+
+Note that the axion vevs Im(Ti ) are determined by the complex phases of the Ai and thus cannot be
+determined without precise knowledge of the Ai .
+
+31
+
+ci
+the candidate point Ti ≈ 2π
+log(W0−1 ), absent a conspiracy in the moduli space metric.36
+Even so, we would much prefer to prove the existence of a vacuum — and to compute the
+vacuum energy and the moduli masses — by means of a reliable computation of the Kähler
+potential near such a point. For this reason, we will select vacua at points where we can
+compute the worldsheet instanton corrections to V [0] and Re(Ti ) rather systematically, and
+thus accurately compute the Kähler potential: see §5.4.
+
+5.2
+
+Algorithm for F-flat solutions
+
+As explained in §5.1, the F-flatness conditions for the Kähler moduli are solved for
+Re(Ti ) ≈
+
+
+ci
+log W0−1 ∀i .
+2π
+
+(5.7)
+
+We now turn to finding solutions of this form and verifying that they lie in a region of
+parametric control, where the assumptions that led to (5.7) are justified a posteriori.
+As a first step, we consider solving (5.7) using the tree-level expression Ti → g1s 12 κijk tj tk
+of (4.1). When h1,1  1, the Kähler cone KX typically has exponentially many subcones,
+or chambers: for example, flopping a suitable curve in X leads one to a new chamber, where
+new possibilities for flops may arise.37 Given a compactification with KKLT superpotential,
+a randomly chosen triangulation of ∆◦ will typically correspond to a chamber of KX in
+which there does not exist a supersymmetric AdS4 vacuum. We will therefore need to
+search through the secondary fan to find a triangulation in which such a vacuum does
+exist. Because the number of chambers is exponentially large at large h1,1 , a brute force
+search would be ineffective.
+We will now describe an effective algorithm for finding points in the extended Kähler
+cone KX where the basis divisors have the desired values. First, as both log(W0 ) and gs
+enter only as overall factors in the F-term equation (5.7), we may instead solve the equation
+1
+κ tj tk = ci , which is independent of the choice of fluxes. Second, we will illustrate the
+2 ijk
+algorithm in a simplified case in which all dual Coxeter numbers ci are set to one, but the
+generalization is immediate.
+We wish to find a point in the extended Kähler cone where a basis set of h1,1 linearly
+independent prime toric divisors Di , i = 1, . . . , h1,1 , have unit volumes, while the remaining
+four divisors have larger (or equal) volumes. The first challenge is to identify choices of
+36
+
+One further possible conspiracy is that quantum effects might become strong enough to ‘cap off’
+moduli space before a candidate point is reached. While conceivable, we find it hard to envision a scenario
+where no nearby solution with similar properties would exist.
+37
+See e.g. [89] for a recent exploration at large h1,1 .
+
+32
+
+basis divisors with the property that once their volumes are set to unity, the volumes of
+the remaining four divisors are strictly positive. This is equivalent to requiring that the
+constant vector τ? = (1, . . . , 1) is contained in the dual of the cone of effective divisors,
+E(X)◦ . The number of possible basis choices — chosen from subsets of h1,1 prime toric
+divisors that all contribute to the superpotential — is finite, and is often small enough to
+allow for a brute force search.
+Once an appropriate basis is identified, the next task is to find the Kähler parameters t?
+that result in unit divisor volumes τ? . One might be tempted to parameterize the extended
+Kähler cone by the divisor volumes τ i and aim to prove that it contains τ? . However, to the
+best of our knowledge, there does not exist an algorithm to construct the corresponding
+phase of the Calabi-Yau hypersurface given only τ i . In contrast, t? naturally corresponds
+to a point in the secondary fan, from which one can obtain a fine, regular, star triangulation
+(FRST), defining a toric fan and a Calabi-Yau hypersurface.
+We start by picking a random point hinit in the subset of the secondary fan of FRSTs,
+which we denote by G. Such a point is naturally associated to a point in the extended
+Kähler cone, tinit , with basis divisor volumes τinit . Consider any point on the straight line
+between τinit and τ? ,
+τα = (1 − α)τinit + ατ?
+(5.8)
+parameterized by 0 ≤ α ≤ 1. Since E ◦ (X) is convex, τinit ∈ E(X)◦ and τ? ∈ E(X)◦ implies
+that τα ∈ E(X)◦ . Our strategy is to start from a randomly chosen τinit and move towards
+τ? on this line.38
+The corresponding path between tinit and t? is not straight, since the divisor volumes
+τ (t) are quadratic functions of the Kähler parameters ti with coefficients κijk that jump
+across phases. However, τ (t) are continuous and once differentiable, giving rise to a path
+that is continuous, with no cusps. This enables us to follow the path efficiently.
+Then, our final task is to devise a numerical algorithm that starts from tinit and follows
+the continuous path towards t? . We first divide the path into N  1 small sections, by
+considering the set of points defined by α = m/N , m = 0, . . . , N , denoting the corresponding points in E(X)◦ and K(X) by τm and tm , respectively. Following the path is then
+38
+
+Note that this algorithm can fail to converge in some examples, e.g. if there is an unknown autochthonous divisor that has negative volume at the candidate point. Conversely, if the algorithm succeeds,
+all possible autochthonous divisors have positive volume.
+
+33
+
+reduced to moving from tm to tm+1 . Let tm+1 = tm + ε. Then,
+1
+i
+τm
+= κijk tjm tkm ,
+2
+1
+i
+i
+τm+1
+= κijk (tjm + εj )(tkm + εk ) = τm
++ κijk tjm εk + O(ε2 ) .
+2
+
+(5.9)
+(5.10)
+
+Determining ε then requires solving the linear system
+i
+i
+κijk tj εk = τm+1
+− τm
+.
+
+(5.11)
+
+Once a point 21 κijk tj tk = ci has been found, the solution for the ti must be scaled
+−1
+
+by a factor cτ 2 = (p · q̃2 )1/2 — see (2.29) — and the perturbative and non-perturbative
+corrections in (4.11) need to be incorporated systematically. Clearly, this can only be done
+inside the radius of convergence of the type IIB worldsheet instanton expansion, where
+at most finitely many curves contribute sizeable corrections. Assuming a solution exists39
+within the radius of convergence, it can be found iteratively as follows. We start with the
+zeroth-order solution
+ci
+1
+κijk tj(0) tk(0) = .
+(5.12)
+2
+cτ
+Then, we define ti(n) for n > 0 recursively as the solution to the quadratic equation
+1
+ci
+χ(Di )
+1
+κijk tj(n) tk(n) =
++
+−
+2
+cτ
+24
+(2π)2
+
+X
+
+
+
+qi Nq Li2 (−1)γ·q e−2πq·t(n−1) ,
+
+(5.13)
+
+q∈M(X)
+
+as a function of the ti(n−1) . At each n one may approximate the instanton sum by keeping
+only the terms that make a contribution larger than a fixed small threshold. If a solution
+exists, one should be able to find it this way, to arbitrary precision, by iterating to high
+enough n.
+
+5.3
+
+Gopakumar-Vafa invariants
+
+In order to carry out the algorithm that we have just described, we need to compute the
+genus-zero Gopakumar-Vafa invariants N of X. For a general threefold X these can be
+obtained via mirror symmetry, by computing the expansion of the period vector of the
+e around LCS [79, 80, 82]. The results of [13, 81] can in principle be used
+mirror threefold X
+to do so algorithmically, using publicly-available code [90], once the triple intersection form
+39
+
+Verifying this assumption is the subject of §5.4.
+
+34
+
+of X and a simplicial cone containing the Mori cone M(X) are in hand.
+However, with presently-available software it is not feasible to systematically compute
+GV invariants in threefolds with h1,1  10, and in particular to do so at the high degrees
+needed for our purposes. In [15] we will present improved methods that allowed us to
+compute GV invariants in the regime of interest. Here we will restrict ourselves to reviewing
+a few facts that are relevant for the present work.
+First, along certain rational rays r in the Mori cone, the GV invariants come in infinite
+families: for kq ∈ r, there are infinitely many k ∈ N for which Nkq 6= 0. We call such a
+curve class q a potent curve, and we call r a potent ray. Along such rays, the GV invariants
+typically grow exponentially: see §5.4. We denote by M∞ (X) the closure of the cone over
+all potent rays.
+Second, along special rays, often outside of M∞ (X), the GV invariants come in isolated
+sets associated with a curve class q and a finite number of its multiples: we have Nkq 6= 0
+for finitely many k ∈ N (and often, for only one such k). We call such a curve class q a
+nilpotent curve, and we call r a nilpotent ray. Nilpotent curve classes that lie outside of
+M∞ (X) are collapsible P1 ’s.
+The dual of M∞ (X) contains the extended Kähler cone [91], and sufficiently far out
+in this cone the instanton expansion converges, even if a number of collapsible curves are
+arbitrarily small. If a candidate solution t ∈ KX of the F-flatness conditions lies at a point
+in the (extended) Kähler cone where some number of collapsible curves are small, we can
+simply evaluate the di-logarithms in (5.13) to account for these.
+Although small collapsible curves are relatively innocuous, small curves in M∞ (X) are
+not. We will need to check that all curves in M∞ (X) are large: at least, large enough so
+that at most a few contribute appreciably to the right-hand side of (5.13). In other words,
+we will need to ensure that there exists a solution to the F-flatness conditions within the
+radius of convergence of the instanton expansion. We now turn to this final check.
+
+5.4
+
+Radius of convergence
+
+The LCS singularity is never the only singularity in moduli space, so the worldsheet instanton expansion generally has a finite radius of convergence around any point. Along
+any fixed direction t = λt0 in the Kähler cone KX , with λ > 0, there should exist λc > 0
+such that the expansion converges for all λ > λc and diverges for all λ < λc .
+The coefficients of the instanton terms in the prepotential are governed by the GV
+
+35
+
+invariants Nq ,
+Finst (λ) ∝
+
+X
+
+
+Nq Li3 e−2πλ q·t0 ,
+
+(5.14)
+
+q∈M(X)
+
+and the arguments of the polylogarithm become arbitrarily small far out in the Mori cone.
+To analyze the asymptotic behavior we first normalize t0 such that dq := q · t0 ∈ N, and
+for k ∈ N we define
+X
+Nk :=
+Nq .
+(5.15)
+q: dq =k
+
+Then we consider
+FΣ (λ) :=
+
+∞
+X
+
+Nk (e−2πλ )k .
+
+(5.16)
+
+k=1
+
+By the ratio test we have
+e2πλc = lim
+
+Nk
+
+k→∞ Nk−1
+
+,
+
+(5.17)
+
+and thus, GV invariants grow exponentially at large degree,
+Nk ∼ e2πλc k ,
+
+as k → ∞ .
+
+(5.18)
+
+This growth is a consequence of our assumption that the radius of convergence is finite.
+Conversely, one can estimate the radius of convergence of the instanton expansion
+by computing GV invariants. Although this approach does not give a formal proof of
+control, being reliant on extrapolation to curves of arbitrarily large degree, it is still rather
+powerful. The growth rate of GV invariants as a function of degree has been observed40
+to asymptote very quickly to an exponential rate, which then gives a reliable estimate of
+the radius of convergence. For example, in the case of the quintic, the leading estimate
+(1)
+1
+1
+is λc = 2π
+log(N1 ) = 2π
+log(2875) ≈ 1.27, whereas the actual radius of convergence is
+λc ≈ 1.208 [79].
+Though it is in general not feasible to compute GV invariants systematically to high
+degree at large h1,1 , due to the sheer number of curve classes, it is possible to compute
+to very high degree inside low-dimensional faces of the Mori cone. Moreover, by finding
+an appropriate phase where a given face of M∞ (X) is also a face of M(X) one can
+compute GV invariants in many low-dimensional faces of M∞ (X). In this way one can in
+principle compute the GV invariants along a large number of rays in M∞ (X), forming a
+full-dimensional cone, and we can test whether at a candidate point in moduli space the
+worldsheet expansion truncated to that sector converges. This approach can never fully
+40
+
+See e.g. [79, 92–94].
+
+36
+
+prove control over the instanton expansion, as in principle there could exist a ray somewhere
+in the interior of M∞ (X) with rapidly growing GV invariants. However, in examples one
+usually observes that the growth rate of GV invariants in the interior of M∞ (X) is a simple
+interpolation without extrema between the growth rates of the generators of M∞ (X).
+Therefore, we do expect to be able to estimate control over the instanton expansion by
+inspecting the curve classes of low-dimensional faces, as we will do in our examples.
+Although the above approach will allow us to estimate the contributions of potent
+curves, we will also need to incorporate nilpotent curves, to which we now turn. Finding
+lattice points in the Mori cone at large h1,1 is a difficult task by itself, and when further
+restricting the search to curves with non-vanishing GV invariants it becomes seemingly insurmountable. However, we have devised a method that begins by finding curves inherited
+from the toric ambient variety, which by a slight abuse of terminology we refer to as toric
+curves. Many such curves turn out to have non-vanishing GV invariants. In fact, the set
+of toric curves generally contains the Hilbert basis of the Mori cone in the examples with
+small h1,1 where a fully systematic comparison is possible. This is extremely helpful for
+our purposes, because the Hilbert basis contains the smallest (and hence most important)
+effective curves.
+Our approach is then as follows. From the set of toric curves we pick those with
+volumes41 less than, say, 2, which gives us a few hundred curves. We remove the curves
+that can be written as sums of others, and so are not Hilbert basis elements, and can then
+compute the GV invariants of the remainder. In examples at small h1,1 we have found that
+the curves found in this way account for the great majority of curves with non-vanishing
+GV invariants below the volume threshold in question.
+In the examples described below, we are able to systematically compute GV invariants
+of all effective curves with volumes . 0.1, and, among the O(100, 000) curves included,
+the O(10) curves with non-vanishing GV invariants are none other than the toric curves!
+Along with the fact that all of the small toric curves have O(1) GV invariants, we expect
+to have captured the most important contributions to the instanton expansion. Thus, we
+can find the leading few hundred terms instead of the O(10) that we would have been able
+to obtain with a more direct approach.
+41
+
+For this purpose we scale the Kähler parameters homogeneously, corresponding to cτ = 1, so that the
+details of the flux vacuum are immaterial.
+
+37
+
+6
+
+Examples
+
+Our procedure for constructing vacua can be applied to a very large number of geometries.
+In principle the approach is valid for a fair fraction of all the threefolds resulting from the
+Kreuzer-Skarke list. However, with present tools the search for flux vacua becomes costly
+for h2,1 & 10, as the flux lattice dimension is then at least 20.42 At the same time, explicitly
+checking convergence of the worldsheet instanton corrections to the Kähler potential by
+computing genus-zero Gopakumar-Vafa invariants to high degrees becomes expensive for
+h1,1 & 50, and requires special methods for h1,1  100.
+In this work we have restricted our attention to polytopes that admit simple orientifolds
+in which there are at least h1,1 pure rigid prime toric divisors. For h2,1 ≤ 4 the search over
+flux quanta is inexpensive, and one can find hundreds of supersymmetric AdS4 vacua with
+W0 . 10−10 in minutes on a laptop. Most of the polytopes that we have checked do in fact
+admit such vacua.
+In a few polytopes one can easily find extremely small values, W0 . 10−50 . In a larger
+class of polytopes, such values emerge after a more determined search, while in other
+polytopes we have not yet found such enormous hierarchies.
+In this section we present a few illustrative vacua. Each example is defined by a
+pair of reflexive polytopes (∆◦ , ∆) and triangulations defining toric varieties (V, Ve ) and
+e chosen such that our flux vacua lie in the Kähler
+their Calabi-Yau hypersurfaces (X, X),
+e and the Kähler moduli are stabilized at a point in the Kähler cone of X.
+cone of X
+Each orientifold is defined by negating a toric coordinate xi → −xi , and in all cases
+
+2,1
+1
+1,1
+2,1
+h1,1
+− (X) = h+ (X) = 0, so the D3-brane tadpole is equal to 2 h (X) + h (X) + 1. Key
+data such as Hodge numbers and W0 values are listed below, but as the Kähler moduli
+spaces are high-dimensional, it would be impractical to list full polytope data, intersection
+numbers, Kähler moduli vevs, curve volumes, etc. These data are all available, in CYTools
+format, as supplemental materials associated to the arXiv e-print.
+42
+
+Approaches such as those of [95, 96] might aid in finding flux vacua at larger h2,1 .
+
+38
+
+6.1
+
+Vacuum with (h2,1 , h1,1 ) = (5, 113)
+
+We begin with the reflexive polytope ∆ whose vertices are the columns of
+
+
+1 −3 −3 0 0
+0 −2 −1 0 0
+
+
+0 0 −1 0 1
+0 0
+0 1 0
+
+
+0 −5 −2
+1 −3 −1
+
+.
+0 0
+1
+0 −1 −1
+
+(6.1)
+
+Besides the origin and points interior to facets, ∆ contains one further point interior to a
+1-face. The polar dual of ∆, denoted ∆◦ , has vertices
+
+
+
+1 −1 −1 −1 −1 −1 −1 −1 −1
+−1 −1 2 −1 −1 −1 2
+2
+2
+
+
+
+,
+−1 5 −1 −1 −1 5 −1 2
+2
+−1 9
+0 −1 3 −1 −1 −1 0
+
+(6.2)
+
+and has 108 further integer points interior to 1-faces and 2-faces. Partial FRST’s of ∆◦ and
+∆ define toric varieties V and Ve , respectively, and the corresponding generic anti-canonical
+e with
+hypersurfaces define a mirror pair of smooth Calabi-Yau threefolds X and X
+e = 113 ,
+h1,1 (X) = h2,1 (X)
+
+e = 5.
+h2,1 (X) = h1,1 (X)
+
+(6.3)
+
+The threefold X is both ∆-favorable and ∆◦ -favorable, and so is X̃. We denote by DI ,
+I = 1, . . . , 117, the prime toric divisors of X, with D1 , . . . , D9 corresponding to the vere
+tices listed in (6.2). Likewise, D̃I˜, I˜ = 1, ..., 8, will denote the prime toric divisors of X
+corresponding to the vertices in (6.1).
+We consider a type IIB O3/O7 orientifold of X defined by the involution of V ,
+Ib : x1 7→ −x1 .
+
+(6.4)
+
+A few key properties of this orientifold, independent of the choice of FRST, are:
+2,1
+• h1,1
+− (X) = h+ (X) = 0, and thus no geometric moduli are projected out.
+
+• There is an O7-plane on the divisor D1 with h• (D1 , OD1 ) = (1, 0, 2).
+• There are 25 O7-planes wrapping other prime toric divisors, all of which are rigid.
+• There are 48 O3-planes at the triple intersections of certain prime toric divisors.
+39
+
+
+χ
+• The D3-brane tadpole is equal to 4f = 12 h1,1 (X) + h2,1 (X) + 1 = 60.
+As stated in §2, we cancel the D7-brane tapole locally, so each of the rigid divisors hosting
+an O7-plane actually hosts a confining N = 1 pure Yang-Mills theory with gauge algebra
+so(8), and in the absence of fluxes the divisor D1 hosts an N = 1 Yang-Mills theory with
+the same gauge algebra and two adjoint chiral multiplets.
+Our first task will be to find flux vacua of the form described in §2. The prime toric
+e will be our chosen basis of H4 (X),
+e and our basis of
+divisors {D̃1 , D̃2 , D̃3 , D̃4 , D̃5 } of X
+curves will be its dual basis. One can now search for flux vacua in any of the LCS cones
+defined by triangulations of ∆. In a suitable triangulation the triple intersection numbers
+and second Chern classes are
+
+
+
+
+89 0 16 12 7
+8 −2 −2 −2
+
+
+
+0 0 0 0
+
+
+
+0
+1
+0
+
+
+
+
+(6.5)
+κ̃1ab = 
+0 3 0  , κ̃2ab = 
+,
+
+0
+1
+
+
+0 3
+
+0
+−3
+ 
+146
+
+
+ 
+!
+ −4 
+0 0 0
+ 
+0 0
+
+
+
+(6.6)
+, κ̃555 = −1 , c̃a = 
+κ̃3ab =  0 0 , κ̃4ab =
+ 24  ,
+0
+ 
+0
+ 24 
+14
+where for fixed a0 = 1, ..., 5 we display only the κ̃a0 ab with a0 ≤ a ≤ b.
+One readily verifies that the flux choice43
+
+T
+M = 0 2 4 11 −8 ,
+
+
+T
+K = 8 −15 11 −2 13 ,
+
+(6.7)
+
+satisfies the conditions for a perturbatively flat vacuum, along which the dilaton is related
+to the complex structure moduli via
+z = pτ ,
+
+p=
+
+
+
+7
+58
+
+15
+58
+
+101
+116
+
+151
+58
+
+−13
+116
+
+
+
+.
+
+(6.8)
+
+The D3-brane charge in fluxes is equal to − 21 M·K = 56, so there are four mobile D3-branes.
+e systematically, and the leading instantons
+We have computed the GV invariants of X
+43
+
+This example is also presented in the companion paper [24].
+
+40
+
+along the perturbatively flat valley have charges q̃i equal to the columns of
+
+
+
+3
+
+0
+
+0
+,
+
+0
+1
+
+0
+
+−2
+
+1
+
+
+0
+1
+
+(6.9)
+
+and the corresponding GV invariants are
+
+
+
+
+Nq̃i = −2 252 .
+
+(6.10)
+
+The resulting flux superpotential is
+
+
+
+
+7
+43
+7
+Wflux (τ ) = 8 ζ −2 e2πiτ · 29 + 252 e2πiτ · 28 + O e2πiτ · 116 ,
+
+(6.11)
+
+where the constant ζ was defined in (2.23). The effective Kähler potential for the flat
+direction parameterized by τ can be approximated near LCS by
+ Z
+
+
+
+
+Keff Im(τ ) = − log Im(τ ) − log −i
+Ω∧Ω
+X
+
+
+
+= − 4 log Im(τ ) + K0 + O Im(τ )−3 ,
+
+
+with constant eK0 :=
+
+(6.12)
+
+
+4
+a b c −1
+κ̃
+p
+p
+p
+= 1170672/12843563. One then finds
+abc
+3
+gs ≈
+
+2π
+≈ 0.011 .
+116 log(261/2)
+
+(6.13)
+
+The vev of the flux superpotential is
+
+W0 ≈ 0.526 ×
+
+2
+252
+
+29
+
+≈ 6.46 × 10−62 .
+
+(6.14)
+
+The exponential smallness of W0 is manifestly a result of the hierarchy in the GV invariants
+appearing in (6.10), raised to the power of the racetrack exponent 29 appearing in (6.11).
+The GV invariants are of course intrinsic to the geometry, while the 7/28 : 7/29 racetrack
+results from the choice of fluxes in (6.7), through the perturbatively flat direction (6.8)
+that these fluxes leave open.
+Our next task is to stabilize the Kähler moduli. For this purpose, we first note that
+41
+
+the 25 rigid O7-planes support so(8) stacks that contribute superpotential terms with dual
+Coxeter numbers ci ≡ c2 (so(8)) = 6. There are an additional 91 rigid prime toric divisors,
+b
+of which 83 are pure regardless of triangulation, while 8 have the property that h2,1 (D)
+depends on the triangulation.44 These 8 require careful examination.
+The divisors in question are D3 , D7 , D8 , D9 , D43 , D44 , D45 , and D46 , and correspond to
+points (3, 7, 8, 9, 43, 44, 45, 46) in a 2-face Θ(2) ⊂ ∆◦ with g(Θ(2) ) = 1. The points (3, 7, 8, 9)
+are vertices of ∆◦ , while (43, 44, 45, 46) are interior to 1-faces: see Figure 1.
+Let us define n(i) to be the number of lines interior to Θ(2) that are connected to the
+point i. Then we compute [50],
+b 3 ) = 1 + n(3) , h2,1 (D
+b 7 ) = n(7) , h2,1 (D
+b 8 ) = n(8) , h2,1 (D
+b 9 ) = n(9) ,
+h2,1 (D
+
+(6.15)
+
+and for any point i ∈ (43, 44, 45, 46) we obtain
+b i ) = n(i) − 1 .
+h2,1 (D
+
+(6.16)
+
+The triangulation depicted in Figure 1 corresponds to a phase in which we have found
+a solution to the F-flatness conditions for the Kähler moduli. In this phase, of the eight
+divisors corresponding to points in Θ(2) , only D7 , D9 , D43 , D44 , D45 , and D46 support
+leading contributions to the nonperturbative superpotential. In particular, in this phase
+the volumes of D3 and D8 exceed the volumes of the leading contributors by a factor ∼ 30,
+so any potential instantons from D3 or D8 would be completely negligible. Comparing
+Figure 1 to (6.15) and (6.15), we see that D7 , D9 , D43 , D44 , D45 , and D46 are all pure in
+this phase. Thus we have 25 + 83 + 6 = 114 superpotential terms with constant Pfaffians,
+all of which make commensurate contributions to the potential for the Kähler moduli, and
+omitting all divisors that are not pure and rigid is self-consistent.
+In sum, taking the triangulation of Θ(2) shown in Figure 1, we have specified a compactification with KKLT superpotential, as defined in §4, and have found a supersymmetric
+AdS4 vacuum therein.
+At the corresponding point t? in Kähler moduli space, the volume of X in string units
+[0]
+[0] −3/2
+is Vst ≈ 945.18, while the Einstein-frame volume of X is VE = Vst gs
+≈ 8.1 × 105 . The
+divisors supporting the leading Euclidean D3-branes have Einstein-frame volumes ≈ 22,
+while the divisors hosting gaugino condensates are six times larger.
+We now examine the volumes of curves at t? . There are 238 curves that are complete
+44
+
+This issue will not arise in the further examples presented below: the leading prime toric divisors
+there will be pure and rigid in all triangulations.
+
+42
+
+3
+
+7
+
+44
+
+43
+
+46
+
+45
+
+9
+
+8
+
+Figure 1: A triangulation of Θ(2) .
+intersections of toric divisors and have volumes ≤ 1, and we have incorporated these curves
+in (5.13). Moreover, by computing GV invariants systematically we have determined that
+these 238 curves include all the effective curves with volume ≤ 0.05 that contribute to the
+Kähler potential and the definition of the holomorphic coordinates (4.11). Based on the
+distribution of curve volumes, we expect not to have missed curves with volumes . 0.5.
+As
+Li2 (e−π )
+≈ 0.0011 ,
+(6.17)
+(2π)2
+we thus understand all relevant contributions to (4.11) from worldsheet instantons, provided that our solution point is in fact inside the radius of convergence of the instanton
+expansion. While we cannot compute the GV invariants along all rays in M∞ (X) in a
+completely systematic manner, we have found 1728 random rays inside low-dimensional
+faces of M∞ (X), spanning a 101-dimensional cone, and computed their GV invariants to
+very high degree. For each such ray, we clearly see that the associated series of worldsheet
+instanton corrections converges and is negligible overall. This is shown in Figure 2, where
+we plot the quantity
+ξn := Nnq e−2πn q·t ,
+(6.18)
+on a log scale.
+Indeed, the smallest potent curve Cmin in M∞ (X) has
+tmin ≈ 1.19 ,
+
+N =3
+
+and contributes 3 ·
+
+Li2 (e−2π·1.19 )
+≈ 4.3 × 10−5 .
+(2π)2
+
+(6.19)
+
+To illustrate the asymptotic behavior we select a potent curve C 0 and compute GV
+
+43
+
+invariants along the corresponding ray.45 The GV invariants of C 0 , 2C 0 , . . . 10C 0 are
+3
+−6
+27
+−192
+1695
+−17064
+188454
+−2228160
+27748899
+−360012150 .
+Skipping ahead, the GV invariant of 100 C 0 is
+− 914611581237831371226973974768573574187506334613679143225790266973695127
+51047337367692277761351484717813209296148860000 .
+The growth rate with degree is evidently exponential, and the computation out to
+100 C 0 shows that the rate is very stable. We therefore have high confidence in assessing
+the impact of the curves in our sample.
+We also note that perturbative corrections in α0 , and worldsheet instanton corrections,
+have negligible effect on the F-term of the dilaton Dτ W , because
+Ti ti
+∂τ K = igs × 2 −
+2V [0]
+
+
+
+≈ 0.0056i ,
+
+(6.20)
+
+scales as gs ≈ 0.01  1. Thus, even after accounting for nontrivial α0 corrections to the
+Kähler potential, we may approximate Dτ W by ∂τ W . Overall, worldsheet instantons affect
+the Kähler potential marginally,
+[0]
+
+V [0] ≡ Vst + δV [0] ,
+
+[0]
+
+Vst ≈ 945.18 ,
+
+δV [0] ≈ −0.23 ,
+
+(6.21)
+
+X,ωi
+at the solution of the F-term equations. Furthermore, the parameters gN
+=1 defined in
+(4.17) and (4.18), which measure the strength of unknown N = 1 corrections to the
+Kähler potential, are indeed small,
+X
+gN
+=1 ≈ 0.0069 ,
+
+ωi
+max (gN
+=1 ) ≈ 0.014 .
+i
+
+(6.22)
+
+Because W0 is very small, the arguably largest sub-leading correction to our computa45
+
+For reference, the corrected volume of C 0 is 2.01.
+
+44
+
+Figure 2: Convergence of worldsheet instanton sum for (h2,1 , h1,1 ) = (5, 113). Left: We plot
+the log-magnitude log(ξn ), cf. (6.18), of the n-th term in the instanton series associated
+with a sample of 1728 potent rays in M∞ (X), spanning a 101-dimensional cone. Right: a
+histogram of the slopes of log(ξn ) with respect to n for the set of potent rays. It is apparent
+that the sum converges.
+tion of the Kähler moduli expectation values, cf. (5.6), is also small,
+
+
+log log(W0−1 )
+≈ 0.04 .
+log(W0−1 )
+
+(6.23)
+
+Thus, at last, we have found a controlled supersymmetric AdS4 vacuum, with vacuum
+energy
+V0 = −3eK |W |2 ≈ −3eK W02 ≈ −3eK0
+
+gs7
+· W02 ≈ −1.68 × 10−144 Mpl4 .
+(4V 0 )2
+
+45
+
+(6.24)
+
+A second flux vacuum with (h2,1 , h1,1 ) = (5, 113)
+Let us now consider a different choice of flux vectors in the same geometry,
+T
+M = 0 2 4 13 −8 ,
+
+
+
+
+K = 0 −14 9 −1 10
+
+T
+
+,
+
+(6.25)
+
+which again satisfy the conditions for a perturbatively flat vacuum. For this new choice
+we obtain
+
+
+1
+83
+1
+141
+81
+73
+9
+,
+(6.26)
+p = 70
+− 140 280 40 − 280 , − M · K =
+2
+2
+so there are 17 mobile D3-branes and a single ‘half’ D3-brane. The leading instantons
+along the perturbatively flat valley have charges q̃i equal to the columns of
+
+
+1
+
+1
+
+0
+
+
+0
+0
+
+
+3
+
+0
+
+0
+
+
+0
+1
+
+(6.27)
+
+and their GV invariants are
+
+
+Nq̃i = −2 252 .
+
+(6.28)
+
+The resulting flux superpotential is
+
+
+34
+2πiτ · 280
+
+Wflux (τ ) = ζ 4 e
+
++ 2016 e
+
+35
+2πiτ · 280
+
+
+
+
+
++O e
+
+9
+2πiτ · 70
+
+
+
+,
+
+(6.29)
+
+and one finds eK0 = 5488000/20186543 and
+gs ≈ 0.0036 .
+
+(6.30)
+
+The vev of the flux superpotential is
+1008
+×ζ ×
+W0 ≈
+17
+
+
+
+8820
+17
+
+−35
+
+≈ 1.13 × 10−95 .
+
+(6.31)
+
+In going from the previous flux vacuum to this one, all that changes in the superpotential is
+the value of W0 . Moreover, string frame volumes are stabilized at different values because
+
+46
+
+Figure 3: Convergence of worldsheet instanton sum for the second vacuum in (h2,1 , h1,1 ) =
+(5, 113). Left: We plot the log-magnitude log(ξn ), cf. (6.18), of the n-th term in the
+instanton series associated with a sample of 1728 potent rays in M∞ (X), spanning a 101dimensional cone. Right: a histogram of the slopes of log(ξn ) with respect to n for the set
+of potent rays. It is apparent that the sum converges, but the instanton series decays more
+slowly towards large degree in comparison to the first flux vacuum in (h2,1 , h1,1 ) = (5, 113),
+cf. Figure 2.
+the value of cτ has slightly increased. We find
+[0]
+
+V [0] ≡ Vst + δV [0] ,
+
+[0]
+
+Vst ≈ 388.70 ,
+
+δV [0] ≈ −0.25 ,
+
+(6.32)
+
+and the Einstein-frame volume of X is VE ≈ 1.8 × 106 . Convergence of the instanton sum
+can be seen in Figure 3. Finally, the vacuum energy is
+V0 = −3eK |W |2 ≈ −3.31 × 10−214 Mpl4 .
+
+47
+
+(6.33)
+
+6.2
+
+Vacuum with (h2,1 , h1,1 ) = (7, 51)
+
+The vertices of ∆ are the columns of
+
+
+1
+0
+
+
+0
+0
+
+1 −2 −2 0 −2
+0 −1 −1 1 1
+1 −1 1 0 −1
+1 1 −1 0 −1
+
+0
+0
+0
+1
+
+
+0
+0
+
+.
+1
+0
+
+(6.34)
+
+b I ) = 0.
+In this example there are h1,1 +2 = 53 rigid prime toric divisors DI ⊂ X with h2,1 (D
+The D3-brane tadpole is 30, and a suitable flux choice is
+T
+M = 4 4 0 −3 2 0 −2 ,
+
+T
+K = −4 −4 −3 2 −3 3 3 ,
+
+
+
+
+
+(6.35)
+
+leading to a perturbatively flat vacuum where
+z = pτ ,
+
+p=
+
+
+
+13
+6
+
+1
+3
+
+− 23
+
+1
+
+7
+10
+
+8
+5
+
+11
+10
+
+
+
+.
+
+(6.36)
+
+The D3-brane charge in fluxes is − 21 M · K = 25, so there are five mobile D3-branes. The
+leading instantons along the perturbatively flat valley have charges corresponding to the
+columns of
+
+
+0
+1
+0
+1
+
+
+−1 1
+0
+0
+
+
+0
+0
+0
+1
+
+
+
+
+(6.37)
+1
+1,
+−1 1
+
+
+
+0
+0 −1 0 
+
+ 1 −2 0
+0
+
+
+0
+0
+0 −2
+and their GV invariants are
+
+
+Nq̃ = −2 −4 56 −4 .
+
+(6.38)
+
+The remaining flux superpotential is
+
+
+
+
+8
+9
+1
+Wflux (τ ) = ζ 2 e2πiτ · 30 + 320 e2πiτ · 30 + O e2πiτ · 3 ,
+
+48
+
+(6.39)
+
+Figure 4: Convergence of worldsheet instanton sum for (h2,1 , h1,1 ) = (7, 51). Left: We plot
+the log-magnitude log(ξn ), cf. (6.18), of the n-th term in the instanton series associated
+with a sample of 758 potent rays in M∞ (X), spanning a 48-dimensional cone. Right: a
+histogram of the slopes of log(ξn ) with respect to n for the set of potent rays. It is apparent
+that the sum converges.
+which stabilizes the dilaton with vev
+gs ≈
+
+2π
+≈ 0.040 ,
+30 log(180)
+
+(6.40)
+
+and the resulting vev of the flux superpotential is
+W0 ≈ 40 × ζ × (180)−9 ≈ 4.1 × 10−21 .
+
+(6.41)
+
+We find a solution to the F-flatness conditions for the Kähler moduli with V [0] ≈ 141.4,
+and the Einstein-frame volume of X is VE ≈ 2.4 × 105 .
+Convergence of the worldsheet instanton expansion at this point in Kähler moduli space
+is shown in Figure 4, and the instanton corrections shift V [0] by δV [0] ≈ −0.1. The control
+parameters defined in (4.17) and (4.18) are
+X
+gN
+=1 ≈ 0.045 ,
+
+ωi
+max (gN
+=1 ) ≈ 0.011 .
+i
+
+(6.42)
+
+Thus we have a controlled supersymmetric AdS4 vacuum with vacuum energy
+V0 = −3eK |W |2 ≈ −3.1 × 10−57 Mpl4 .
+49
+
+(6.43)
+
+6.3
+
+Vacuum with (h2,1 , h1,1 ) = (5, 81)
+
+The vertices of ∆ are the columns of
+
+
+1 −2 −2 −2 −2
+0 −1 −1 0
+0
+
+
+0 −1 0 −1 0
+0 1
+0
+0 −1
+
+0
+0
+0
+1
+
+
+0 0
+1 1
+
+.
+0 1
+0 −1
+
+0
+0
+1
+0
+
+(6.44)
+
+b I ) = 0.
+In this example there are h1,1 +3 = 84 rigid prime toric divisors DI ⊂ X with h2,1 (D
+The D3-brane tadpole is 44, and a suitable flux choice is
+T
+M = 3 −5 2 −2 −5 ,
+
+
+
+
+K = −5 5 −4 −1 5
+
+T
+
+,
+
+(6.45)
+
+leading to a perturbatively flat vacuum where
+z = pτ ,
+
+p=
+
+
+
+13
+8
+
+59
+24
+
+5
+4
+
+5
+4
+
+5
+12
+
+
+
+.
+
+(6.46)
+
+, so there are eight mobile D3-branes and
+The D3-brane charge in fluxes is − 21 M · K = 71
+2
+a single ‘half’ D3-brane. The leading instantons along the perturbatively flat valley have
+charges given by the columns of
+
+1
+0 0 1
+
+
+0
+0 0 −1
+
+
+−1 1 0 0  ,
+
+
+
+
+ 0 −1 0 1 
+0
+1 1 0
+
+
+(6.47)
+
+with GV invariants
+
+
+
+Nq̃ = 2 2 2 56 .
+
+(6.48)
+
+The remaining flux superpotential is
+
+
+
+
+9
+10
+5
+Wflux (τ ) = −ζ 2 e2πiτ · 24 + 324 e2πiτ · 24 + O e2πiτ · 6 ,
+
+(6.49)
+
+which stabilizes the dilaton with vev
+hτ i ≈ i
+
+24 log(−180)
+≈ 19.84i − 12 ,
+2π
+
+50
+
+(6.50)
+
+Figure 5: Convergence of worldsheet instanton sum for (h2,1 , h1,1 ) = (5, 81). Left: We plot
+the log-magnitude log(ξn ), cf. (6.18), of the n-th term in the instanton series associated
+with a sample of 727 potent rays in M∞ (X), spanning a 76-dimensional cone. Right: a
+histogram of the slopes of log(ξn ) with respect to n for the set of potent rays. It is apparent
+that the sum converges.
+and the resulting vev of the flux superpotential is
+W0 ≈ 36 × ζ × 180−10 ≈ 2.04 × 10−23 .
+
+(6.51)
+
+We find a solution to the F-flatness conditions for the Kähler moduli with V [0] ≈ 198.1,
+and the Einstein-frame volume of X is VE ≈ 1.7 × 105 . Convergence of the worldsheet
+instanton expansion at this point in Kähler moduli space is shown in Figure 5, and instanton
+corrections shift V [0] by an amount δV [0] ≈ −0.2. The control parameters defined in (4.17)
+and (4.18) are
+ωi
+X
+gN
+max (gN
+(6.52)
+=1 ≈ 0.0065 ,
+=1 ) ≈ 0.0071 .
+i
+
+Thus we have a controlled supersymmetric AdS4 vacuum with vacuum energy
+V0 = −3eK |W |2 ≈ −8.6 × 10−63 Mpl4 .
+
+51
+
+(6.53)
+
+6.4
+
+Vacuum with (h2,1 , h1,1 ) = (4, 214)
+
+The vertices of ∆ are given by
+
+
+
+−1 1 −1 −1 −1 −1 −1
+ 2 −1 −1 −1 −1 −1 −1
+
+
+
+
+−1 0
+1
+1
+2
+2
+3
+−1 0
+1
+2
+1
+3
+2
+
+(6.54)
+
+b I ) = 0.
+There are h1,1 + 2 = 216 rigid prime toric divisors DI ⊂ X, all of which have h2,1 (D
+The D3-brane tadpole is 110. We choose fluxes
+
+T
+M = 10 11 −11 −5 ,
+
+
+T
+K = −3 −5 8 6 ,
+
+(6.55)
+
+such that the corresponding perturbatively flat vacuum satisfies
+z = pτ ,
+
+p=
+
+
+
+293
+110
+
+163
+110
+
+163 13
+,
+110 22
+
+
+
+.
+
+(6.56)
+
+The D3-brane charge in fluxes is − 21 M · K = 203
+, so there are eight mobile D3-branes and
+2
+a single ‘half’ D3-brane. The leading instantons along the perturbatively flat valley have
+charges given by the columns of
+
+1
+0 −1 0
+−1 0
+1
+1
+
+
+
+
+−1 1
+1
+0
+1 −2 0 −2
+
+
+(6.57)
+
+and the GV invariants are
+
+
+Nq̃ = 1 −2
+
+
+252 −2 .
+
+(6.58)
+
+The remaining flux superpotential is
+
+
+
+
+33
+13
+32
+Wflux (τ ) = 5 ζ − e2πiτ · 110 + 512 e2πiτ · 110 + O e2πiτ · 22 ,
+
+(6.59)
+
+which stabilizes the dilaton with vev
+gs ≈
+
+2π
+≈ 0.009 ,
+110 log(528)
+52
+
+(6.60)
+
+Figure 6: Convergence of worldsheet instanton sum for (h2,1 , h1,1 ) = (4, 214). Left: We plot
+the log-magnitude log(ξn ), cf. (6.18), of the n-th term in the instanton series associated
+with a sample of 411 potent rays in M∞ (X), spanning a 118-dimensional cone. Right: a
+histogram of the slopes of log(ξn ) with respect to n for the set of potent rays. It is apparent
+that the sum converges.
+and the resulting vev of the flux superpotential is
+W0 ≈ 80 × ζ × 528−33 ≈ 2.3 × 10−90 .
+
+(6.61)
+
+We find a solution to the F-flatness conditions for the Kähler moduli with V [0] ≈ 4711, and
+the Einstein-frame volume of X is VE ≈ 5.4 × 106 .
+Convergence of the worldsheet instanton expansion at this point in Kähler moduli space
+is shown in Figure 6, and the instanton corrections shift V [0] by δV [0] ≈ −0.4. The control
+parameters defined in (4.17) and (4.18) are
+X
+gN
+=1 ≈ 0.0036 ,
+
+ωi
+max (gN
+=1 ) ≈ 0.0022 .
+i
+
+(6.62)
+
+Finally, the supersymmetric AdS4 vacuum has vacuum energy
+V0 = −3eK |W |2 ≈ −5.5 × 10−203 Mpl4 .
+
+53
+
+(6.63)
+
+7
+
+Discussion
+
+The vacua that we have constructed are novel incarnations of the ideas of Kachru, Kallosh,
+Linde, and Trivedi, with one important distinction: the mechanism of [5]46 for producing
+an exponentially small flux superpotential leaves an imprint in the pattern of moduli expectation values.
+Recall that we began by finding quantized three-form fluxes f~, ~h for which there exists
+an exactly flat direction in the joint axiodilaton and complex structure moduli space of a
+Calabi-Yau threefold X, at the level of the perturbative prepotential for these moduli. We
+termed such a configuration a perturbatively flat vacuum. The true prepotential includes
+nonperturbative corrections that can be understood as worldsheet instantons of type IIA
+e For the type IIB theory these are, of course,
+string theory on the mirror threefold X.
+classical effects, and they affect the classical Gukov-Vafa-Witten flux superpotential via
+(2.6). Taking fluxes f~, ~h that yield a perturbatively flat vacuum and evaluating the true
+flux superpotential along the flat direction and near large complex structure, the result
+is then exponentially small. Typically such a configuration is a runaway, but for suitably
+restricted f~, ~h the worldsheet instanton terms form a racetrack that stabilizes the moduli
+along the flat direction.
+One feature of this mechanism is that the dilaton is stabilized near weak coupling and
+the complex structure moduli are stabilized near large complex structure. In particular,
+gs ∝ 1/log(W0−1 ). Because the F-flatness conditions for the Kähler moduli stabilize the
+divisors at Einstein-frame volumes Re(Ti ) ∝ log(W0−1 ), we find a solution in which the
+string-frame volumes of divisors and curves are not parametrically large or small, even
+though their Einstein-frame volumes are large. As we carefully explained in §4, control of
+the α0 expansion then depends on whether the smallest effective curves in X happen to be
+large enough for the worldsheet instanton series to converge. Specifically, these worldsheet
+instanton contributions to the Kähler potential are automatically accounted for by the
+classical Kähler potential of the mirror O6 orientifold in type IIA, and can thus be computed
+accurately by computing the periods of the mirror threefold.47 Because the radius of
+convergence can be inferred from the asymptotic growth of genus-zero Gopakumar-Vafa
+invariants, we were able to establish control in examples by computing these invariants.
+Another feature is that one complex direction in the axiodilaton and complex structure
+46
+
+For related earlier work, see [18, 97].
+Note that we are studying type IIB worldsheet instantons on X and, separately, type IIA worldsheet
+e the former as corrections to the Kähler potential for the Kähler moduli, and the latter as
+instantons on X,
+corrections to the flux superpotential, via the prepotential for the complex structure moduli, in the type
+IIB compactification of interest.
+47
+
+54
+
+moduli space — the perturbatively flat direction — receives a mass of order W0 , which is
+also the mass scale of the Kähler moduli.
+Neither of these features is required by the KKLT mechanism per se, nor were they
+foreseen for other reasons, but they are characteristic of our class of constructions.
+The statistics of the cosmological constants in our vacua deserve some comment. We
+have found solutions with vacuum energy of magnitude 10−200 in Planck units, without a
+search of commensurate cost.48 The methods that we have developed to construct orientifolds, identify rigid divisors, find F-flat solutions, and compute Gopakumar-Vafa invariants, all at large h1,1 , are fairly novel, and we believe they could be of use in the future.
+However, these are pieces of technology for studying compactifications in general, and not
+specifically for finding vacua with small vacuum energy. Indeed, it is almost incidental
+that h1,1  1 in our examples: except for considerations of the D3-brane charge tadpole,
+increasing h1,1 has no evident benefit in our constructions.
+But the core problem in searching for small vacuum energy in a landscape of flux vacua
+is (expected to be) that of choosing the right fluxes. One might naively anticipate that to
+find a flux superpotential of order 10−100 , one will have to search in a very high-dimensional
+lattice, say of dimension ∼ O(100), and explore a vast number of choices. In our work
+this is not the case. We have h2,1 = 4 in an example with W0 ≈ 10−90 , so the lattice is
+eight-dimensional, and the search for flux vectors takes just minutes on a laptop.
+An underlying reason is that by finding fluxes that allow for perturbatively flat vacua,
+we have arranged that the sum over all perturbative — and hence, possibly large —
+contributions to the superpotential actually vanishes, and what remains is suppressed by
+exponentials in the mirror worldsheet instanton expansion around large complex structure.
+Thus, our construction includes a fine-tuned and exact cancellation of a vast array of orderunity perturbative contributions to the superpotential. The possibility of such an exact
+cancellation hinges on the quantization of parameters in string theory: the superpotential, in particular, is determined by essentially integer data. Because of this cancellation,
+everything appearing in the final expression for the vacuum energy is proportional to a nonperturbative effect, either a Euclidean D3-brane or strong gauge dynamics on a four-cycle
+e
+in X, or a worldsheet instanton of type IIA wrapping a curve in X.
+In this sense, our construction of exponentially small flux superpotentials, and exponentially small vacuum energy, is natural, in the sense of dimensional transmutation.49
+48
+For discussions of the complexity of related problems, see e.g. [98], as well as the analysis in [99] of
+the simpler landscape of [100].
+49
+Of course, solving the cosmological constant problem would require exponentially small vacuum energy
+after supersymmetry breaking, which we have certainly not achieved!
+
+55
+
+One might wonder if a similar mechanism is at work in our universe, perfectly cancelling
+perturbative contributions to the vacuum energy and lifting it to the observed value in a
+nonperturbative fashion.
+There is of course some tuning of discrete data in our solutions: we had to choose
+X with suitable patterns of Gopakumar-Vafa invariants in order to support a racetrack of
+worldsheet instantons, and find fluxes allowing compatible perturbatively flat vacua. But a
+polynomial degree of tuning of such integers leads to exponential hierarchies in the vacuum
+energy: for example, in a threefold with (h2,1 , h1,1 ) = (5, 113) we found
+
+W0 ∝
+
+2
+252
+
+29
+
+≈ 10−61 .
+
+(7.1)
+
+In this example the numbers 2 and 252 arise as the Gopakumar-Vafa invariants of the
+two leading curves, while the exponent 29 results from the 7/28 : 7/29 racetrack (6.11) of
+worldsheet instantons on these curves, which is a consequence of the flux choice (6.7).50
+Our results suggest a new perspective on the abundance of vacua with small W0 in the
+type IIB flux landscape. The classic statistical treatment of [21] relied on approximating
+the fluxes as continuous. In this approximation, applied to a model where N is the total
+√
+number of flux vacua, the smallest value of W0 that one expects to find is of order 1/ N
+[21]. However, we have exhibited solutions in which W0 is hierarchically smaller than this
+prediction. The resolution of this mismatch is that our solutions critically rely on the values
+of flux integers: the conditions for a perturbatively flat vacuum, which are equations over
+the integers, are fulfilled in a set of measure zero within the space of continuous fluxes.
+Thus, our vacua are not captured in the statistics of [21]. A systematic treatment of the
+statistics of small W0 is an interesting task for the future.
+The alert reader will have recognized that the solutions presented here are completely
+unrealistic: the cosmological constant is negative and N = 1 supersymmetry is preserved.
+While it is possible that solutions in the class given here could be uplifted to de Sitter vacua,
+in order to exhibit maximal parametric control and maximal scale-separation we have
+focused on examples in which the magnitude of the superpotential is extremely small. Thus,
+the gravitino is far too light, as are the Kähler moduli and the previously-perturbativelyflat complex structure direction. Even if the cosmological constant were small and positive
+after uplifting, the degree of supersymmetry breaking would be unrealistically small, and
+moreover the moduli problem would almost surely be fatal for cosmology.
+50
+
+In the other four examples we presented, the racetracks took the form 34/280 : 35/280, 8/30 : 9/30,
+9/24 : 10/24, and 32/110 : 33/110.
+
+56
+
+Nevertheless, we view these solutions as stepping stones to realistic vacua. In this work
+we have restricted our attention to configurations in which we could establish control of
+corrections in the α0 expansion with our present knowledge of these corrections, and with
+our present ability to compute Gopakumar-Vafa invariants at large h1,1 . With improved
+capabilities one could doubtless explore a much wider parameter space, including examples
+in which W0  1 but, say, W0 & 10−10 . We have found hundreds of examples of this form,
+but sifting out those among them that are best-controlled is a task for the future. Uplifts
+of such vacua could in principle allow for realistic cosmology and particle physics.
+At the same time, our solutions are instructive in their own right, because they present
+a slightly different perspective on the cosmological constant problem in string theory than
+one finds following [21, 101, 102].
+
+8
+
+Conclusions
+
+We have demonstrated that supersymmetric AdS4 vacua with exponentially small vacuum
+energy can be constructed in large numbers in orientifolds of Calabi-Yau hypersurfaces in
+toric varieties.
+The geometry, orientifolding, quantized fluxes, and D-brane configurations in our constructions are all totally explicit. We enumerated nonperturbative superpotential terms
+that suffice to stabilize all the Kähler moduli, and we ensured that all Pfaffian prefactors
+AD of Euclidean D3-brane superpotential terms are constants, with no dependence on the
+moduli. Lacking a theory of the Pfaffians, we were not able to compute these numbers,
+but we nevertheless established that well-controlled vacua exist for a wide range of values
+of the AD .
+Our analysis relied on novel techniques that we have developed for constructing orientifold configurations and computing Gopakumar-Vafa invariants at large h1,1 , as well as for
+finding F-theory uplifts and computing the Hodge numbers of divisors therein. We hope
+to present more details of these methods in the near future [15, 31, 32, 50].
+There are several directions for future work. Computing the Pfaffian numbers AD would
+be valuable. It would be interesting to extend our construction beyond hypersurfaces in
+toric varieties, and to develop dual descriptions of similar vacua, in compactifications of
+F-theory, M-theory, or type IIA string theory. Exploring constraints on the conformal
+field theories dual to our solutions would also be worthwhile. Perhaps the most pressing
+question is whether some of our solutions can be uplifted to de Sitter vacua of string theory.
+
+57
+
+Acknowledgements
+We are grateful to Xin Gao, Yuval Grossman, Tom Hartman, Arthur Hebecker and Daniel
+Junghans for useful discussions, and to Daniel Harlow for encouraging comments. We thank
+Naomi Gendler, Ben Heidenreich, Tom Rudelius, and Mike Stillman for collaborations on
+related topics. The work of M.D., M.K., L.M., and A.R.-T. was supported in part by NSF
+grant PHY-1719877, and the work of L.M. and J.M. was supported in part by the Simons
+Foundation Origins of the Universe Initiative. This research was conducted with support
+from the Cornell University Center for Advanced Computing.
+
+A
+
+Comments on de Sitter vacua
+
+The supersymmetric AdS4 solutions that we have constructed clearly serve as stepping
+stones towards de Sitter vacua in type IIB compactifications. However, in the body of the
+paper we have not confronted the question of an uplift to de Sitter space: our intention
+was to first achieve optimal control in supersymmetric solutions.
+In this Appendix we briefly describe an observation that may be relevant for the question of control over the backreaction from seven-branes, as discussed in the recent literature [103–105]. The potential problem observed in [103] is that an anti-D3-brane uplift
+requires a tuning of a throat hierarchy [16, 28]
+a40 ∼ exp
+
+throat
+8π ND3
+−
+4
+3 Rthroat
+
+!
+,
+
+(A.1)
+
+throat
+is the D3-brane charge hosted in the throat, Rthroat is the Einstein-frame
+where ND3
+curvature radius at the bottom of the throat, and a0 is the warp factor at the tip of the
+4
+throat. For supergravity control of the infrared region of the throat one needs Rthroat
+&1
+[17]. For the uplift to compete with the F-term potential of the supersymmetric AdS4
+vacuum one further needs
+
+a40 ∼ |W0 |2
+
+⇒
+
+throat
+ND3
+3 log(W0−1 )
+3 Re(Ti )
+≈
+≈
+,
+4
+Rthroat
+2
+2π
+2 ci
+
+(A.2)
+
+i)
+throat
+and one would thus require ND3
+& Re(T
+. Moreover, if the dual Coxeter numbers ci
+ci
+51
+are not very large one might expect that the overall volume VE of the threefold X is
+
+51
+
+Recall that ci ∈ {1, 6} in our examples, and 6 counts as not very large for present purposes.
+
+58
+
+stabilized at
+3
+?
+VE ∼ Re(T )i 2 .
+
+(A.3)
+
+Now if (A.3) holds, one is forced into the regime
+2
+
+throat
+ND3
+& VE3 .
+
+(A.4)
+
+1
+throat 4
+also sets the transverse size of the throat, it would follow that one
+However, as ND3
+cannot consistently glue in the warped throat into a weakly-warped larger bulk threefold X.
+Attempting to shrink VE to the required small size then causes warp factor singularities,
+which are otherwise localized exponentially close to the seven-branes, to move into the
+bulk [103,104]. These singularities were discussed further in [105], where it was shown that
+nonperturbative effects in the α0 expansion can resolve the singularities, leaving behind
+a strongly-curved but non-singular region in X. Although it then follows that the bulk
+physics is regular, computing the Kähler potential in such a regime is a formidable task.
+The results of [105] lead to a slight puzzle: at least in the simple example where the
+seven-brane singularity emerges from a D7-brane stack wrapped on K3, one finds that the
+transverse distance between the classically singular locus and the position of the sevenbranes is of order
+!
+2πVol(K3)
+r0 ∼ RCY exp −
+,
+(A.5)
+|ND3,K3 |
+where ND3,K3 is the D3-brane charge hosted on the seven-brane stack and RCY is the
+radius of X. This result immediately generalizes to other seven-brane configurations.
+Thus, for a more general collection of seven-branes one would expect that singularities are
+exponentially controlled if all Einstein frame divisor volumes are larger than the D3-brane
+charges hosted on those divisors. In fact, this is precisely the constraint we have imposed
+in (4.17). However, more singular outcomes are possible in some cases, as a large number
+of sources of small amounts of D3-brane charge can source a macroscopic singularity via
+their collective charge seen at long distances, as discussed for the case of a gas of O3-planes
+in [104], but such singularities are generally evaded if the overall volume satisfies
+2
+
+total
+throat
+VE3  ND3
+> ND3
+,
+
+(A.6)
+
+which is precisely our constraint (4.18). Now we have come full circle and recovered again
+the tension between supergravity control (A.6) and the KKLT regime (A.4).
+Up to this point we have been reviewing the recent literature, but let us add a new
+
+59
+
+observation. In the models that we have constructed, the volume VE is much larger than
+predicted by (A.3). For example, in the vacuum detailed in §6.1 we found Re(T )i ≈ 22, so
+the naive guess (A.3) would predict VE ≈ 103, whereas we find VE ≈ 8.1 × 105 . In this
+case the relation (A.3) underestimates VE by a factor of ∼ 8000.
+This finding has nothing to do with the smallness of W0 , but is simply a generic,
+purely geometric property of Calabi-Yau threefolds at large h1,1 : when a full-dimensional
+collection of effective divisors have volumes of order unity, the overall volume can become
+quite large [106].
+To be concrete, in our example of §6.4 one can imagine that the entire D3-brane charge
+ND3 = 110 allowed by the D3-brane tadpole contributes to the formation of a warped
+216
+, and that the F3 flux on the
+throat, that a perturbatively flat vacuum arises with cτ = 110
+3
+conifold S is set to its critical value M = 12, thus marginally ensuring stability of the
+anti-D3-brane [17]. With the above parameters we have secretly guaranteed the KKLT
+fine-tuning
+!
+N
+8π
+cτ 23 110
+D3
+144
+= W02 ,
+(A.7)
+=
+W
+a40 ∼ exp −
+0
+3 gs M 2
+4
+independent of the actual value of W0 . In order to ensure that Rthroat
+> 1 we must have
+1
+gs > 144
+, so the smallest allowed value for W0 would be52
+
+
+
+W0min = exp
+
+2π 
+−
+≈ 4 × 10−198 .
+cτ gs
+
+(A.8)
+
+At a solution to the F-term equations we obtain
+
+VE ≈ 4711 ×
+
+log(1/W0 )
+2π
+
+ 32
+
+
+< 4711 ×
+
+log(1/W0min )
+2π
+
+ 32
+,
+
+(A.9)
+
+where the large prefactor 4711 is a concrete manifestation of the fact that setting volumes
+of low-dimensional cycles to moderate values can result in very large volumes of higherdimensional cycles when h1,1 is large [106].
+52
+
+Note that a more stringent constraint gs M 2 & 50 has been claimed [107], though it is not entirely
+clear to us that the effective field theory employed there is reliable in the relevant regime. Even so, using
+their constraint one still finds W0min ≈ 10−4 , which is quite small nevertheless. We note further that the
+radius of curvature in string units is R2 ∼ gs M , which is less than unity for M = 12 and gs = 1/144, but
+in this case the physics is controlled by the Klebanov-Strassler gauge theory instead [16], and we see no
+reason why metastable supersymmetry breaking should disappear in this regime.
+
+60
+
+Thus, instead of (A.4) one then finds
+2
+
+VE3 ≈ 281 ×
+
+log(1/W0 )
+ ND3 = 110 ,
+2π
+
+(A.10)
+
+even for rather modest values of W0 , and the warping control criteria of (4.17) and (4.18)
+are comfortably satisfied. We stress again that this has nothing to do with the smallness of
+the flux superpotential — even for the smallest allowed superpotential of (A.8), the ratio
+log(1/W0 )
+only reaches the modest value 0.67 — but instead results from the scaling of cycle
+2πND3
+volumes with h1,1 . While many curves in turn have small string frame volumes at this
+point in moduli space, we have argued that, in this instance, the Kähler potential receives
+no dangerous corrections from such curves: indeed, we showed explicitly that a large set
+of infinite towers of worldsheet instantons yield negligible corrections.
+In this work we have not actually constructed a warped throat in such an example,53
+but the above parameter values do not appear out of reach. We conclude that there is
+no evident obstacle to circumventing the problems pointed out in [104, 105], by finding an
+appropriate Calabi-Yau compactification that unifies the above scaling of (A.10) with an
+appropriately warped throat, even without realizing the contrived O3-plane configurations
+suggested in [104]. The tools to engineer such models have been developed in [6, 7], but
+using them to build a controlled KKLT de Sitter vacuum is a task for the future.
+
+References
+[1] S. Kachru, R. Kallosh, A. D. Linde and S. P. Trivedi, De Sitter vacua in string
+theory, Phys. Rev. D68 (2003) 046005, [hep-th/0301240].
+[2] S. Gukov, C. Vafa and E. Witten, CFT’s from Calabi-Yau four folds, Nucl. Phys.
+B584 (2000) 69–108, [hep-th/9906070].
+[3] E. Witten, Five-brane effective action in M theory, J. Geom. Phys. 22 (1997)
+103–133, [hep-th/9610234].
+[4] R. Blumenhagen, A. Collinucci and B. Jurke, On Instanton Effects in F-theory,
+JHEP 08 (2010) 079, [1002.1894].
+[5] M. Demirtas, M. Kim, L. McAllister and J. Moritz, Vacua with Small Flux
+Superpotential, Phys. Rev. Lett. 124 (2020) 211603, [1912.10047].
+53
+
+With the above parameters such a throat would have flux quanta (M, K) ∼ (12, 9), which does not
+seem unreasonable at all.
+
+61
+
+[6] R. Álvarez-Garcı́a, R. Blumenhagen, M. Brinkmann and L. Schlechter, Small Flux
+Superpotentials for Type IIB Flux Vacua Close to a Conifold, 2009.03325.
+[7] M. Demirtas, M. Kim, L. McAllister and J. Moritz, Conifold Vacua with Small Flux
+Superpotential, Fortsch. Phys. 68 (2020) 2000085, [2009.03312].
+[8] Y. Honma and H. Otsuka, Small flux superpotential in F-theory compactifications,
+Phys. Rev. D 103 (2021) 126022, [2103.03003].
+[9] F. Marchesano, D. Prieto and M. Wiesner, F-theory flux vacua at large complex
+structure, 2105.09326.
+[10] M. Kreuzer and H. Skarke, Complete classification of reflexive polyhedra in
+four-dimensions, Adv. Theor. Math. Phys. 4 (2002) 1209–1230, [hep-th/0002240].
+[11] R. Blumenhagen, M. Cvetic, S. Kachru and T. Weigand, D-Brane Instantons in
+Type II Orientifolds, Ann. Rev. Nucl. Part. Sci. 59 (2009) 269–296, [0902.3251].
+[12] K. Becker, M. Becker, M. Haack and J. Louis, Supersymmetry breaking and
+alpha-prime corrections to flux induced potentials, JHEP 06 (2002) 060,
+[hep-th/0204254].
+[13] S. Hosono, A. Klemm, S. Theisen and S.-T. Yau, Mirror symmetry, mirror map
+and applications to complete intersection Calabi-Yau spaces, AMS/IP Stud. Adv.
+Math. 1 (1996) 545–606, [hep-th/9406055].
+[14] F. Carta, A. Mininno, N. Righi and A. Westphal, Gopakumar-Vafa hierarchies in
+winding inflation and uplifts, JHEP 05 (2021) 271, [2101.07272].
+[15] M. Demirtas, M. Kim, L. McAllister, J. Moritz and A. Rios-Tascon, Towards
+Computational Mirror Symmetry, to appear.
+[16] I. R. Klebanov and M. J. Strassler, Supergravity and a confining gauge theory:
+Duality cascades and chi SB resolution of naked singularities, JHEP 08 (2000) 052,
+[hep-th/0007191].
+[17] S. Kachru, J. Pearson and H. L. Verlinde, Brane / flux annihilation and the string
+dual of a nonsupersymmetric field theory, JHEP 06 (2002) 021, [hep-th/0112197].
+[18] F. Denef, M. R. Douglas and B. Florea, Building a better racetrack, JHEP 06
+(2004) 034, [hep-th/0404257].
+62
+
+[19] F. Denef, M. R. Douglas, B. Florea, A. Grassi and S. Kachru, Fixing all moduli in a
+simple f-theory compactification, Adv. Theor. Math. Phys. 9 (2005) 861–929,
+[hep-th/0503124].
+[20] D. Lust, S. Reffert, E. Scheidegger, W. Schulgin and S. Stieberger, Moduli
+Stabilization in Type IIB Orientifolds (II), Nucl. Phys. B 766 (2007) 178–231,
+[hep-th/0609013].
+[21] F. Denef and M. R. Douglas, Distributions of flux vacua, JHEP 05 (2004) 072,
+[hep-th/0404116].
+[22] B. R. Greene and M. R. Plesser, Duality in Calabi-Yau Moduli Space, Nucl. Phys.
+B338 (1990) 15–37.
+[23] M. Demirtas, L. McAllister and A. Rios-Tascon, CYTools: A Software Package for
+Analyzing Calabi-Yau Manifolds, to appear.
+[24] M. Demirtas, M. Kim, L. McAllister, J. Moritz and A. Rios-Tascon, A Cosmological
+Constant That is Too Small, Phys. Rev. Lett. 128 (2022) 011602, [2107.09065].
+[25] D. S. Freed and E. Witten, Anomalies in string theory with D-branes, Asian J.
+Math. 3 (1999) 819, [hep-th/9907189].
+[26] M. Dine and N. Seiberg, Nonrenormalization theorems in superstring theory, Phys.
+Rev. Lett. 57 (Nov, 1986) 2625–2628.
+[27] C. P. Burgess, C. Escoda and F. Quevedo, Nonrenormalization of flux
+superpotentials in string theory, JHEP 06 (2006) 044, [hep-th/0510213].
+[28] S. B. Giddings, S. Kachru and J. Polchinski, Hierarchies from fluxes in string
+compactifications, Phys. Rev. D66 (2002) 106006, [hep-th/0105097].
+[29] T. W. Grimm and J. Louis, The Effective action of N = 1 Calabi-Yau orientifolds,
+Nucl. Phys. B 699 (2004) 387–426, [hep-th/0403067].
+[30] D. A. Cox, The Homogeneous coordinate ring of a toric variety, revised version,
+alg-geom/9210008.
+[31] M. Kim, L. McAllister and J. Moritz, work in progress.
+[32] M. Kim, J. Moritz et al., work in progress.
+63
+
+[33] T. W. Grimm, C. Li and I. Valenzuela, Asymptotic Flux Compactifications and the
+Swampland, 1910.09549.
+[34] M. Bianchi, A. Collinucci and L. Martucci, Magnetized E3-brane instantons in
+F-theory, JHEP 12 (2011) 045, [1107.3732].
+[35] M. Bianchi, A. Collinucci and L. Martucci, Freezing E3-brane instantons with
+fluxes, Fortsch. Phys. 60 (2012) 914–920, [1202.5045].
+[36] M. Bianchi, G. Inverso and L. Martucci, Brane instantons and fluxes in F-theory,
+JHEP 07 (2013) 037, [1212.0024].
+[37] E. Witten, Nonperturbative superpotentials in string theory, Nucl. Phys. B474
+(1996) 343–360, [hep-th/9604030].
+[38] V. I. Danilov and A. G. Khovanskii, Newton polyhedra and an algorithm for
+computing hodge–deligne numbers, Izvestiya Rossiiskoi Akademii Nauk. Seriya
+Matematicheskaya 50 (1986) 925–945.
+[39] V. V. Batyrev, Dual polyhedra and mirror symmetry for Calabi-Yau hypersurfaces
+in toric varieties, J. Alg. Geom. 3 (1994) 493–545, [alg-geom/9310003].
+[40] A. P. Braun, C. Long, L. McAllister, M. Stillman and B. Sung, The Hodge Numbers
+of Divisors of Calabi-Yau Threefold Hypersurfaces, Fortsch. Phys. 68 (2020)
+2000087, [1712.04946].
+[41] A. Hebecker, S. C. Kraus and L. T. Witkowski, D7-Brane Chaotic Inflation, Phys.
+Lett. B 737 (2014) 16–22, [1404.3711].
+[42] F. Marchesano, G. Shiu and A. M. Uranga, F-term Axion Monodromy Inflation,
+JHEP 09 (2014) 184, [1404.3040].
+[43] S. Bielleman, L. E. Ibanez, F. G. Pedro, I. Valenzuela and C. Wieck, Higgs-otic
+Inflation and Moduli Stabilization, JHEP 02 (2017) 073, [1611.07084].
+[44] M. Kim and L. McAllister, Monodromy Charge in D7-brane Inflation, JHEP 10
+(2020) 060, [1812.03532].
+[45] A. Grassi, Divisors on elliptic Calabi-Yau four folds and the superpotential in F
+theory. 1., J. Geom. Phys. 28 (1998) 289–319, [alg-geom/9704008].
+[46] A. Collinucci, New F-theory lifts, JHEP 08 (2009) 076, [0812.0175].
+64
+
+[47] L. Borisov, Towards the mirror symmetry for calabi-yau complete intersections in
+gorenstein toric fano varieties, alg-geom/9310001.
+[48] V. V. Batyrev and L. A. Borisov, On Calabi-Yau complete intersections in toric
+varieties, alg-geom/9412017.
+[49] A. Klemm, B. Lian, S. S. Roan and S.-T. Yau, Calabi-Yau fourfolds for M theory
+and F theory compactifications, Nucl. Phys. B 518 (1998) 515–574,
+[hep-th/9701023].
+[50] M. Kim, A Note on h2,1 of divisors of CY Fourfolds I, 2107.09779.
+[51] Bêl-bân-aplu, Kish tablet, 2700 B.P.
+[52] R. Kaplan, The Nothing That Is: A Natural History of Zero. Oxford: Oxford
+University Press. 2000.
+[53] C. Beasley and E. Witten, Residues and world sheet instantons, JHEP 10 (2003)
+065, [hep-th/0304115].
+[54] M. Cvetic, I. Garcia Etxebarria and J. Halverson, Three Looks at Instantons in
+F-theory – New Insights from Anomaly Inflow, String Junctions and Heterotic
+Duality, JHEP 11 (2011) 101, [1107.2388].
+[55] M. Cvetic, R. Donagi, J. Halverson and J. Marsano, On Seven-Brane Dependent
+Instanton Prefactors in F-theory, JHEP 11 (2012) 004, [1209.4906].
+[56] A. Sen, Normalization of Type IIB D-instanton Amplitudes, 2104.11109.
+[57] S. Alexandrov, A. Sen and B. Stefański, D-instantons in Type IIA string theory on
+Calabi-Yau threefolds, 2108.04265.
+[58] O. J. Ganor, A Note on zeros of superpotentials in F theory, Nucl. Phys. B 499
+(1997) 55–66, [hep-th/9612077].
+[59] M. Berg, M. Haack and B. Kors, Loop corrections to volume moduli and inflation in
+string theory, Phys. Rev. D 71 (2005) 026005, [hep-th/0404087].
+[60] D. Baumann, A. Dymarsky, I. R. Klebanov, J. M. Maldacena, L. P. McAllister and
+A. Murugan, On D3-brane Potentials in Compactifications with Fluxes and
+Wrapped D-branes, JHEP 11 (2006) 031, [hep-th/0607050].
+65
+
+[61] P. Koerber and L. Martucci, From ten to four and back again: How to generalize
+the geometry, JHEP 08 (2007) 059, [0707.1038].
+[62] A. P. Braun, M. Del Zotto, J. Halverson, M. Larfors, D. R. Morrison and
+S. Schäfer-Nameki, Infinitely many M2-instanton corrections to M-theory on
+G2 -manifolds, JHEP 09 (2018) 077, [1803.02343].
+[63] O. DeWolfe, L. McAllister, G. Shiu and B. Underwood, D3-brane Vacua in
+Stabilized Compactifications, JHEP 09 (2007) 121, [hep-th/0703088].
+[64] C. Vafa and B. Zwiebach, N=1 dualities of SO and USp gauge theories and T
+duality of string theory, Nucl. Phys. B 506 (1997) 143–156, [hep-th/9701015].
+[65] N. Gendler, M. Kim, L. McAllister, J. Moritz and M. Stillman, work in progress.
+[66] C. P. Burgess, M. Cicoli, D. Ciupke, S. Krippendorf and F. Quevedo, UV Shadows
+in EFTs: Accidental Symmetries, Robustness and No-Scale Supergravity, Fortsch.
+Phys. 68 (2020) 2000076, [2006.06694].
+[67] J. Polchinski, String theory. Vol. 2: Superstring theory and beyond. Cambridge
+Monographs on Mathematical Physics. Cambridge University Press, 12, 2007,
+10.1017/CBO9780511618123.
+[68] M. Berg, M. Haack and B. Kors, String loop corrections to Kahler potentials in
+orientifolds, JHEP 11 (2005) 030, [hep-th/0508043].
+[69] T. W. Grimm and J. Louis, The Effective action of type IIA Calabi-Yau
+orientifolds, Nucl. Phys. B 718 (2005) 153–202, [hep-th/0412277].
+[70] O. DeWolfe, A. Giryavets, S. Kachru and W. Taylor, Type IIA moduli stabilization,
+JHEP 07 (2005) 066, [hep-th/0505160].
+[71] M. Rocek, C. Vafa and S. Vandoren, Hypermultiplets and topological strings, JHEP
+02 (2006) 062, [hep-th/0512206].
+[72] D. Robles-Llana, F. Saueressig and S. Vandoren, String loop corrected
+hypermultiplet moduli spaces, JHEP 03 (2006) 081, [hep-th/0602164].
+[73] A. Neitzke, B. Pioline and S. Vandoren, Twistors and black holes, JHEP 04 (2007)
+038, [hep-th/0701214].
+
+66
+
+[74] K. Dasgupta, D. P. Jatkar and S. Mukhi, Gravitational couplings and Z(2)
+orientifolds, Nucl. Phys. B 523 (1998) 465–484, [hep-th/9707224].
+[75] C. P. Bachas, P. Bain and M. B. Green, Curvature terms in D-brane actions and
+their M theory origin, JHEP 05 (1999) 011, [hep-th/9903210].
+[76] A. Fotopoulos, On (alpha-prime)**2 corrections to the D-brane action for
+nongeodesic world volume embeddings, JHEP 09 (2001) 005, [hep-th/0104146].
+[77] R. Gopakumar and C. Vafa, M theory and topological strings. 1., hep-th/9809187.
+[78] R. Gopakumar and C. Vafa, M theory and topological strings. 2., hep-th/9812127.
+[79] P. Candelas, X. C. De La Ossa, P. S. Green and L. Parkes, A Pair of Calabi-Yau
+manifolds as an exactly soluble superconformal theory, AMS/IP Stud. Adv. Math. 9
+(1998) 31–95.
+[80] P. Candelas, X. De La Ossa, A. Font, S. H. Katz and D. R. Morrison, Mirror
+symmetry for two parameter models. 1., AMS/IP Stud. Adv. Math. 1 (1996)
+483–543, [hep-th/9308083].
+[81] S. Hosono, A. Klemm, S. Theisen and S.-T. Yau, Mirror symmetry, mirror map
+and applications to Calabi-Yau hypersurfaces, Commun. Math. Phys. 167 (1995)
+301–350, [hep-th/9308122].
+[82] P. Candelas, A. Font, S. H. Katz and D. R. Morrison, Mirror symmetry for two
+parameter models. 2., Nucl. Phys. B429 (1994) 626–674, [hep-th/9403187].
+[83] D. Robles-Llana, F. Saueressig, U. Theis and S. Vandoren, Membrane instantons
+from mirror symmetry, Commun. Num. Theor. Phys. 1 (2007) 681–711,
+[0707.0838].
+[84] P. S. Aspinwall, B. R. Greene and D. R. Morrison, Measuring small distances in
+N=2 sigma models, Nucl. Phys. B 420 (1994) 184–242, [hep-th/9311042].
+[85] F. Carta, J. Moritz and A. Westphal, A landscape of orientifold vacua, JHEP 05
+(2020) 107, [2003.04902].
+[86] S. B. Giddings and A. Maharana, Dynamics of warped compactifications and the
+shape of the warped landscape, Phys. Rev. D 73 (2006) 126003, [hep-th/0507158].
+
+67
+
+[87] H. Ooguri and C. Vafa, Summing up D instantons, Phys. Rev. Lett. 77 (1996)
+3296–3298, [hep-th/9608079].
+[88] D. Robles-Llana, M. Rocek, F. Saueressig, U. Theis and S. Vandoren,
+Nonperturbative corrections to 4D string theory effective actions from SL(2,Z)
+duality and supersymmetry, Phys. Rev. Lett. 98 (2007) 211602, [hep-th/0612027].
+[89] M. Demirtas, L. McAllister and A. Rios-Tascon, Bounding the Kreuzer-Skarke
+Landscape, Fortsch. Phys. 68 (2020) 2000086, [2008.01730].
+[90] A. Klemm and M. Kreuzer, Instanton.
+[91] N. Gendler, B. Heidenreich, L. McAllister, J. Moritz and T. Rudelius, work in
+progress.
+[92] A. Klemm and E. Zaslow, Local mirror symmetry at higher genus, AMS/IP Stud.
+Adv. Math. 23 (2001) 183–207, [hep-th/9906046].
+[93] M.-x. Huang, A. Klemm, M. Marino and A. Tavanfar, Black holes and large order
+quantum geometry, Phys. Rev. D 79 (2009) 066001, [0704.2440].
+[94] R. Couso-Santamarı́a, R. Schiappa and R. Vaz, On asymptotics and resurgent
+structures of enumerative Gromov–Witten invariants, Commun. Num. Theor. Phys.
+11 (2017) 707–790, [1605.07473].
+[95] A. Cole, A. Schachner and G. Shiu, Searching the Landscape of Flux Vacua with
+Genetic Algorithms, JHEP 11 (2019) 045, [1907.10072].
+[96] I. Bena, J. Blåbäck, M. Graña and S. Lüst, Algorithmically solving the Tadpole
+Problem, 2103.03250.
+[97] A. Giryavets, S. Kachru, P. K. Tripathy and S. P. Trivedi, Flux compactifications
+on Calabi-Yau threefolds, JHEP 04 (2004) 003, [hep-th/0312104].
+[98] J. Halverson and F. Ruehle, Computational Complexity of Vacua and Near-Vacua
+in Field and String Theory, Phys. Rev. D 99 (2019) 046015, [1809.08279].
+[99] N. Bao, R. Bousso, S. Jordan and B. Lackey, Fast optimization algorithms and the
+cosmological constant, Phys. Rev. D 96 (2017) 103512, [1706.08503].
+[100] N. Arkani-Hamed, S. Dimopoulos and S. Kachru, Predictive landscapes and new
+physics at a TeV, hep-th/0501082.
+68
+
+[101] R. Bousso and J. Polchinski, Quantization of four form fluxes and dynamical
+neutralization of the cosmological constant, JHEP 06 (2000) 006,
+[hep-th/0004134].
+[102] S. Ashok and M. R. Douglas, Counting flux vacua, JHEP 01 (2004) 060,
+[hep-th/0307049].
+[103] F. Carta, J. Moritz and A. Westphal, Gaugino condensation and small uplifts in
+KKLT, JHEP 08 (2019) 141, [1902.01412].
+[104] X. Gao, A. Hebecker and D. Junghans, Control issues of KKLT, Fortsch. Phys. 68
+(2020) 2000089, [2009.03914].
+[105] F. Carta and J. Moritz, Resolving spacetime singularities in flux compactifications
+& KKLT, JHEP 08 (2021) , [2101.05281].
+[106] M. Demirtas, C. Long, L. McAllister and M. Stillman, The Kreuzer-Skarke
+Axiverse, JHEP 04 (2020) 138, [1808.01282].
+[107] I. Bena, E. Dudas, M. Graña and S. Lüst, Uplifting Runaways, Fortsch. Phys. 67
+(2019) 1800100, [1809.06861].
+
+69
+
+

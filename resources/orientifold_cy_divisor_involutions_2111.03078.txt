@@ -1,0 +1,4245 @@
+Orientifold Calabi-Yau Threefolds with
+Divisor Involutions and String Landscape
+
+arXiv:2111.03078v2 [hep-th] 15 Mar 2022
+
+Ross Altman∗ , Jonathan Carifio∗ , Xin Gao†,‡ , and Brent D. Nelson∗
+
+† College of Physics, Sichuan University, Chengdu, 610065, China
+∗ Department of Physics, Northeastern University, Boston, MA 02115, USA
+‡ Institute for Theoretical Physics, Heidelberg University,
+
+Philosophenweg 19, 69120, Heidelberg, Germany
+
+Abstract
+We establish an orientifold Calabi-Yau threefold database for h1,1 (X) ≤ 6 by
+considering non-trivial Z2 divisor exchange involutions, using a toric Calabi-Yau
+database (www.rossealtman.com/tcy). We first determine the topology for each
+individual divisor (Hodge diamond), then identify and classify the proper involutions
+which are globally consistent across all disjoint phases of the Kähler cone for each
+unique geometry. Each of the proper involutions will result in an orientifold CalabiYau manifold. Then we clarify all possible fixed loci under the proper involution,
+thereby determining the locations of different types of O-planes. It is shown that
+under the proper involutions, one typically ends up with a system of O3/O7-planes,
+and most of these will further admit naive Type IIB string vacua. The geometries
+with freely acting involutions are also determined. We further determine the splitting
+of the Hodge numbers into odd/even parity in the orbifold limit. The final result
+is a class of orientifold Calabi-Yau threefolds with non-trivial odd class cohomology
+∗
+(h1,1
+− (X/σ ) 6= 0).
+
+knowbodynos@gmail.com, jon.carifio@gmail.com, xingao@scu.edu.cn, b.nelson@neu.edu
+
+1
+
+Contents
+1 Introduction
+
+3
+
+2 Constructing Calabi-Yau Orientifolds
+2.1 Polytopes, Geometries, and Triangulations . . . . . . . . . . . . . . . . . .
+2.2 Topology of Toric Divisors . . . . . . . . . . . . . . . . . . . . . . . . . . .
+2.3 Holomorphic Divisor Exchange Involutions . . . . . . . . . . . . . . . . . .
+2.4 Classifications of the Fixed Orientifold Planes . . . . . . . . . . . . . . . .
+2.4.1 Invariant Calabi-Yau hypersurface polynomial . . . . . . . . . . . .
+2.4.2 Minimal generating set of homogeneous polynomials with definiteparity . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+2.4.3 Naive fixed point loci . . . . . . . . . . . . . . . . . . . . . . . . . .
+2.4.4 Stanley-Reisner ideal and Calabi-Yau transversality . . . . . . . . .
+2.4.5 Smoothness . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+2.4.6 Tadpole cancelation and string vacua . . . . . . . . . . . . . . . . .
+2.5 Hodge Number Splitting . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
+5
+5
+7
+8
+10
+11
+12
+13
+15
+16
+16
+17
+
+3 Illustrative Examples of the Algorithm
+3.1 Proper Involution with O3 and O7 planes . . . . . . . . . . . . . . . . . . .
+3.2 Improper Involution: Single Coordinate Exchange . . . . . . . . . . . . . .
+3.3 Free Action Involution . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
+19
+19
+27
+28
+
+4 Scanning Results
+4.1 Classification of Proper Involutions . . . . . . . . . . . . . . . . . . . . . .
+4.2 Classification of O-planes . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+4.3 String Landscape . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+4.4 Hodge Number Splitting . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
+31
+32
+32
+35
+37
+
+5 Conclusions and Outlook
+
+37
+
+A Pseudocode Description of Fixed-Point Algorithm
+
+39
+
+B Database Format of Results
+B.1 Database Fields . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+B.2 Example Entry . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
+46
+46
+47
+
+2
+
+1
+
+Introduction
+
+String compactification is crucial for high dimensional string theory to describe the four
+dimensional real world. The methods for doing so are best understood for supersymmetric
+compactifications, where without turning on more general fluxes, the compactification
+manifold must be a Calabi-Yau threefold, X. Compactifying a Type IIA or Type IIB
+string theory on a Calabi-Yau threefold results in an N = 2 supersymmetric theory in four
+dimensions. In order to break the theory further to an N = 1 supersymmetric theory in
+four dimensions, one must perform an orientifold projection on one of the two gravitinos of
+the theory. As a result, among the vast number of Calabi-Yau threefolds, those that permit
+such an orientifold under some proper Z2 involution, σ, are of great phenomenological
+interest. In this paper, we extend and improve on previous work [1] classifying nontrivial Z2 divisor exchange involutions in Calabi-Yau threefolds for h1,1 (X) ≤ 6, using a
+database [2] (www.rossealtman.com/tcy) constructed from the Kreuzer-Skarke dataset of
+reflexive four-dimensional polyhedra [3]. For a general review on flux compactification on
+these orientifold Calabi-Yau threefolds and the landscape of string vacua, see [4–11].
+In this work, we focus on Type IIB orientifold geometries where an orientifold projection
+O is generally composed of two parts. One is the worldsheet parity Ωp , and another one is
+a diffeomorphism map σ acting on the internal manifold, i.e, the involution. The involution
+σ is a non-trivial Z2 action on the Calabi-Yau space such that σ 2 = 1. In order for the
+orientifold action to still preserve some supersymmetry, the involution must be isometric
+and holomorphic [12, 13]. These conditions require that the pullback σ ∗ of the involution
+must always map (p, q)-forms to (p, q)-forms on X. In particular, the Kähler (1, 1)-form J
+must be preserved and the unique holomorphic (3, 0)-form Ω must be an eigenform of σ ∗
+with eigenvalues ±1.
+The geometry may contain some fixed loci under the involution σ, which will correspond
+to orientifold planes (O-planes). The precise structure of the orientifold projection O in
+Type IIB is determined according to the different O-plane systems relevant in D-brane
+constructions:
+(
+Ωp σ
+with σ ∗ (J) = J , σ ∗ (Ω3 ) = +Ω3 , O5/O9 system,
+O=
+(1)
+(−1)FL Ωp σ with σ ∗ (J) = J , σ ∗ (Ω3 ) = −Ω3 , O3/O7 system,
+where FL is the left-moving fermion number.
+If there is no fixed locus and the orientifold is smooth, such an involution describes
+a freely-acting Z2 . This, however, is non-trivial since under the orientifold action, the
+Calabi-Yau threefold may acquire new singularities. In general, the involution σ splits the
+cohomology groups H p,q (X/σ ∗ ) into eigenspaces of even and odd parity:
+H p,q (X/σ ∗ ) = H+p,q (X/σ ∗ ) ⊕ H−p,q (X/σ ∗ ).
+
+(2)
+
+In particular, Calabi-Yau orientifolds with non-trivial odd equivariant cohomology class
+H−1,1 (X/σ ∗ ) play an important role in string phenomenology. In Type IIB orientifold com∗
+pactifications with O3/O7-planes, when h1,1
+− (X/σ ) > 0, there are non-trivial involutively
+1,1
+odd moduli (ba , ca ), a = 1, · · · , h− (X/σ ∗ ), in the bosonic closed spectrum coming from
+the R-R and NS-NS two-form fields C2 and B2 respectively. These odd moduli can be
+3
+
+stabilized by D-term conditions [14] or by F-term conditions [15, 16]. In the Type IIB
+orientifold compactifications of both the KKLT [17] and Large Volume Scenario [18], these
+axion-like odd moduli can drive inflation [19–36] in the natural, monodromy, and aligned
+inflationary models, and play an important role in the recently discussed Weak Gravity
+Conjecture and Swampland Conjecture (first proposed in [37, 38] and see [39–41] for a
+detailed review). In addition to these moduli stabilization and inflationary models, many
+efforts have been made to combine the global issues with local issues, such as constructing
+global string compactifications that can simultaneously describe D-brane models of particle physics. One of the most serious obstacles to this is the tension between chirality and
+moduli-fixing by non-perturbative effects [42]. Several potential solutions, however, have
+already been proposed by carefully analyzing the Freed-Witten anomaly and Kähler cone
+condition [43], tuning on fluxed-instantons on the divisors [44, 45] or putting the D-brane
+at the singularity [46–53]. In most of these approaches, finding Calabi-Yau threefolds with
+∗
+a non-trivial odd cohomology h1,1
+− (X/σ ) is a crucial ingredient.
+A great deal of progress has been made in understanding the statistical structure of
+the moduli in many classes of Calabi-Yau threefolds, by brute force calculation and scans,
+without considering the orientifold involution explicitly, and how this relates to properties
+such as the axion landscape or Swiss cheese structure [54–61]. Recently, in the context
+of Complete Intersection Calabi-Yau 3-folds (CICYs) embedded in products of projective
+spaces [62], a landscape of orientifold vacua has been constructed [63, 64] from the most
+favorable description of the CICY 3-folds database [65]. More general free quotients have
+been classified and studied in the case of CICY 3- and 4-folds [66–69]. Free quotients in
+the toric case for h1,1 (X) ≤ 3 were systematically studied in [70] (See [71] for a recent
+review on these Calabi-Yau database).
+It would be a great step forward to provide, as an extension of our database of CalabiYau threefolds, a concrete classification of Calabi-Yau orientifold data, explicitly counting
+the even and odd moduli, determining the types and numbers of fixed O-plane loci. This
+is a primary motivating factor for this paper. In a previous work [1], divisor involutions in
+Calabi-Yau threefolds up to h1,1 (X) = 4 with maximal triangulations were classified. In
+this paper we will extend and improve this work in several respects:
+1. We push our classification upper bound to h1,1 (X) = 6 in the Calabi-Yau database [2]
+constructed from the Kreuzer-Skarke list [3].
+2. Instead of limiting ourselves to Calabi-Yau hypersurfaces in unique, fully desingularized toric varieties, we expand our analysis to hypersurfaces in all possible maximal
+projective crepant partial (MPCP) desingularizations. The number of toric triangulations we will analyze increases by two orders of magnitude from 2,968 [1] to 646,903
+independent phases.
+3. We determine all individual topologies of divisors in each of the toric Calabi-Yau
+threefolds. Furthermore, we improve our algorithm to determine the proper involution and identify the involutions which are globally consistent across all disjoint
+phases of the Kähler cone for each unique Calabi-Yau geometry.
+4. We identify all possible fixed loci under non-trivial actions, thereby determining the
+location of different types of O-planes relevant in D-brane constructions. We then
+4
+
+further classify the involutions as freely or non-trivially acting depending on whether
+there exists a fixed locus on the Calabi-Yau threefold under the involution.
+5. In the orientifold Calabi-Yau threefolds with an O3/O7-system, we then further
+classify the so-called “naive orientifold Type IIB string vacua” by considering the D3
+tadpole cancelation condition when putting eight D7-branes on top of the O7-plane.
+6. We determine the equivariant cohomology (Hodge number splitting) under these
+involutions in the Z2 -orbifold limit.
+Since we only consider favorable Calabi-Yau threefolds, we will not include coordinate
+reflections such as σ : xi ↔ −xi in this paper, as the corresponding divisor involution
+1,1
+σ ∗ : Di ↔ Di is manifestly trivial and will not contribute to h−
+(X/σ ∗ ). When the
+geometry is unfavorable, it contains a divisor with disconnected pieces like Pn ∪ · · · ∪ Pn ,
+dPn ∪ · · · ∪ dPn or others. Under the reflection, these pieces exchange to one another
+0,0
+and split to h0,0
++ (D) and h− (D), which will contribute to the odd equivariant cohomology
+1,1
+h− (X/σ ∗ ) [1, 72].
+The paper is organized as follows: In Section 2.1, we briefly review the construction
+of Calabi-Yau threefolds as hypersurfaces in toric varieties. Then, in Section 2.2 we show
+how to compute the Hodge numbers of all toric divisors on a given Calabi-Yau threefold,
+and classify these divisors according to topology, in a manner similar to [1]. We next
+identify all pairs of “Non-trivial Identical Divisors” (NID) and present the proper divisor
+involutions in Section 2.3. All fixed-point loci are then identified in Section 2.4, and this
+information is used to classify the involutions as either non-trivially or freely acting. As
+this is the heart of the current work, we take the time to describe our procedures in detail.
+We additionally provide a pseudocode description of the fixed point algorithm in Appendix
+A for those interested in the algorithm’s implementation. The cohomology class splitting
+under these involutions is then determined in Section 2.5. We illustrate the procedures via
+detailed examples in Section 3 and summarize our results in Section 4.
+
+2
+
+Constructing Calabi-Yau Orientifolds
+
+2.1
+
+Polytopes, Geometries, and Triangulations
+
+It is a well-known result of Batyrev [73] that Calabi-Yau threefolds can generically be
+obtained by taking the anticanonical hypersurface in an ambient four-dimensional Gorenstein toric Fano variety. In a previous work [2], the procedure for computationally extracting the topology of such a toric variety, as well as its restriction to the anticanonical
+hypersurface, from combinatorical information encoded in a 4-dimensional reflexive lattice
+polytope ∆, was outlined. In fact, a complete enumeration of all 4-dimensional reflexive
+polytopes exists due to Kreuzer and Skarke [3].
+In the context of toric geometry, when the toric divisor classes on the Calabi-Yau
+hypersurface X are all descended from the ambient space A, we say that it is a favorable
+geometry. Consider the short exact sequence and its dual sequence
+0 → T X → T A|X → NX/A → 0,
+∗
+0 → NX/A
+→ T ∗ A|X → T ∗ X → 0.
+5
+
+(3)
+
+This induces the long exact sequence in sheaf cohomology
+α
+
+∗
+· · · −→ H 1 (X, NX/A
+) −−−−−−−−→
+
+H 1 (X, T ∗ A|X ) −−−−−→
+
+H 1 (X, T ∗ X)
+(4)
+
+/
+
+β
+
+∗
+H 2 (X, NX/A
+) −−−−−−−−→
+
+H 2 (X, T ∗ A|X ) −−−−−→
+
+H 2 (X, T ∗ X) −→ · · · .
+
+By Dolbeault’s theorem, H 1 (X, T ∗ X) ∼
+= H 1,1 (X) ∼
+= coker(α) ⊕ ker(β). It has two
+contributions, the cokernel of the map α describes the descent of the Kähler moduli on A
+to Kähler moduli on X, while the kernel of the map β describes some new Kähler moduli
+on X which do not descend from A. If the kernel part is zero ker(β) = 0, the only divisors
+on X are those descending from A (possibly with additional linear relations) and we say
+the geometry is “favorable”1 . In this case h1,1 (X) = dim(H 1,1 (X)) ∼
+= dim(Pic(A)). The
+2
+∗
+simplest case of a favorable geometry is when h (X, N |X ) = 0 (or equivalently, when
+h1 (X, N |X ) = 0). In this paper, we restrict us to study these so-called favorable geometry
+and leave those unfavorable cases for future work.
+If we restrict ourselves to smooth manifolds, we must at least partially desingularize the
+ambient toric variety A by blowing up enough of its singular points that X is generically
+smooth, but without adding any discrepancies to its cohomology class. A method for
+doing such a maximal projective crepant partial (MPCP) desingularization involves the
+triangulation of the polar dual reflexive polytope ∆∗ , which contains at least one fine, star,
+regular triangulation (FSRT).
+When the Calabi-Yau hypersurfaces of two or more desingularizations share certain
+key topological invariants, then it can be shown that they are topologically equivalent
+and can be considered representations of the same Calabi-Yau threefold. In this case, the
+Kähler form of this Calabi-Yau threefold is allowed to reside within the Kähler cone of
+either representation, and we refer to these disjoint Kähler cone chambers as its phases.
+In order to allow the Kähler form to smoothly vary over its full range, the phases of the
+Kähler cone must be glued together in an appropriate manner. In practice, we use Wall’s
+theorem [76] to glue together the various phases of the complete Kähler cone corresponding
+to a distinct Calabi-Yau threefold geometry, which requires the checking of whether or
+not all singularities in the walls between these phases are avoided by the Calabi-Yau
+hypersurface.
+There are generally many MPCP desingularization configurations possible, each of
+which sets different topological restrictions on how X can be deformed within A. These
+deformations are parameterized by Kähler moduli, and the different configurations serve
+to divide up the space of moduli into discontinuous chambers. When passing from one
+chamber to another, some singular points are blown up, while others are blown down, so
+that the singularities cannot be consistently resolved at the boundary. This exchange is
+called a flop. Each distinct chamber defines a unique resolved ambient space Ã, and there
+are, in general, many more of these than the original ambient toric varieties A.
+1
+
+There exits a stronger notion of “Kähler favourability” where Kähler cones on X descend from an
+ambient space in which they are embedded [65]. This involve a careful set of arguments on the descent of
+the effective, nef and ample cones of divisors which we refer the reader to see [74, 75]. In some cases, the
+“favorable” geometry are not “Kähler favorable” since the Kähler cone of X is actually larger than the
+positive orthant one we calculated following [2].
+
+6
+
+It often happens, however, that the smooth Calabi-Yau hypersurface X does not intersect any of the singular points involved in a flop between chambers of the moduli space.
+If, in addition, the topology of X is invariant under the flop, then the singularity can be
+neglected for our purposes, and the chambers can be effectively glued and associated with
+a single unique, smooth hypersurface X.
+It is clear from the above discussion that obtaining an accurate count of unique, smooth
+Calabi-Yau geometries a priori is highly non-trivial. However, the calculations have been
+performed for geometries with Hodge number h1,1 (X) ≤ 6 [2].
+
+2.2
+
+Topology of Toric Divisors
+
+We will assume the ambient space A to be a resolved Gorenstein toric Fano variety
+with dimension n = 4 whose anticanonical divisor X = −KA is a Calabi-Yau threefold
+hypersurface. Denote xi as the weighted homogeneous coordinates used to define X inside
+the ambient space A. Then the divisor Di = {xi = 0} defines a 4-cycle on X which is dual
+to a 2-cycle ωi .
+In the context of toric geometry, a pair of “Non-trivial Identical Divisors” (NIDs) refers
+to a pair of divisors with distinct charges under the torus action, but whose intersections
+with the Calabi-Yau hypersurface have identical cohomology. In order to determine the
+Hodge number of an individual divisor on the Calabi-Yau threefold, we use the Koszul
+extension to the cohomCalg package [77, 78] with the HodgeDiamond module to calculate
+these quantities. However, in many situations relevant to our purposes, this module cannot
+give an explicit result.
+For an irreducible divisor D, the complex conjugation hp,q (D) = hq,p (D) and Hodge
+star hp,q (D) = h2−p,2−q (D) dualities constrain the independent Hodge numbers of D down
+to only h1,0 (D), h2,0 (D), and h1,1 (D). As a result, when Rwe encounter difficulties with
+cohomCalg, we first calculate the Euler number χ(D) = D c2 (D) of the divisor on the
+hypersurface, and then determine h1,0 (D) and h2,0 (D) by calculating the trivial line bundle
+cohomology of the divisor h• (D, OD ) = {h0,0 (D), h1,0 (D), h2,0 (D)} by chasing the Koszul
+sequence:
+0 → OA (−X − D) −→ OA (−X) ⊕ OA (−D) −→ OA −→ OD/X → 0 .
+
+(5)
+
+Then, using the expression
+2
+2
+X
+X
+
+i
+i
+χ(D) =
+(−1) dim HDR (D) =
+(−1)p+q dim (H q (D, Ωp )) ,
+i=0
+
+(6)
+
+p+q=0
+
+we can fix h1,1 (D) and get the full Hodge diamond for any divisor. The internal topology
+of these divisors plays an important role in string compactification and moduli stabilization. In our procedure for scanning divisor involutions, several divisors classifications are
+of particular phenomenological interest.2
+Completely rigid divisor: The Hodge numbers of these divisors are characterized by
+h• (D) = {h0,0 (D), h0,1 (D), h0,2 (D), h1,1 (D)} = {1, 0, 0, h1,1 (D)} such that h1,1 (D) 6= 0.
+2
+
+For the phenomenological relevance of these divisor types, see the discussion and references in [1].
+
+7
+
+This class of divisors is further subdivided into either the del Pezzo surfaces {P2 ≡ dP0 ,
+dPn , with n = 1, . . . , 8} (which may be shrinkable or non-shrinkable depending on the
+diagonalizability of its intersection tensor) with n = h1,1 (D) − 1, and the “non-shrinkable
+rigid divisors” with h1,1 (D) > 9.
+“Wilson” divisor: The Hodge numbers of these divisors are characterized by h• (D) =
+{h0,0 (D), h0,1 (D), h0,2 (D), h1,1 (D)} = {1, h1,0 , 0, h1,1 } with h1,0 (D), h1,1 (D) 6= 0. We will
+also further specify the “Exact-Wilson” divisor as h• (D) = {1, 1, 0, h1,1 } with h1,1 (D) 6= 0.
+Deformation divisor: These divisors are characterized simply by h2,0 (D) 6= 0.
+• A K3 divisor is a deformation divisor with Hodge numbers h• (D) = {1, 0, 1, 20}.
+• Another deformation divisor that appears often in our scan is similar to a K3 divisor,
+but with an extra h1,1 deformation degree of freedom, i.e. h• (D) = {1, 0, 1, 21}. We
+will refer to this as a type-1 special deformation divisor, SD1.
+• Another deformation divisor that appears in our classification has Hodge numbers
+h• (D) = {1, 0, 2, 30}, which we refer to as SD2.
+SD1 and SD2 appear to share similar properties, particularly in their volume forms.
+In our scan, we will first identify the Hodge numbers of all the toric divisors on the CalabiYau hypersurface X, which descend from the ambient space A. This calculation will be
+performed for each Calabi-Yau geometry in the database at www.rossealtman.com/tcy,
+where the Hodge diamond of each divisors in the defining Calabi-Yau manifold is presented.
+
+2.3
+
+Holomorphic Divisor Exchange Involutions
+
+The map σ : xi ↔ xj exchanging two homogeneous coordinates of the ambient toric
+variety A can be pulled back to a holomorphic involution on the corresponding toric
+divisor cohomology classes σ ∗ : Di ↔ Dj , which, on favorable manifolds, restricts in a
+straightforward way to the Calabi-Yau hypersurface X. We then define the even and odd
+parity eigendivisor classes D± ≡ Di ± Dj ∈ H±1,1 (X/σ ∗ ). In general, a given geometry can
+allow multiple disjoint involutions σ1 , σ2 , . . . , σn . In this case, the full involution is given
+by σ ≡ σ1 ◦ σ2 ◦ · · · ◦ σn .
+We consider two divisors Di , Dj to be identical if h• (Di ) ∼
+= h• (Dj ). They may nevertheless still be topologically distinct on X. This can readily be determined in favorable
+geometries by inspecting their toric C∗ weights. If an identical pair of divisors also share the
+same weights, then an involution σ exchanging them will act trivially on the hypersurface
+∗
+polynomial and will leave h1,1
+− (X/σ ) = 0.
+As mentioned earlier, from a phenomenological point of view, there are a variety of rea1,1
+sons to work on a Calabi-Yau manifold with non-trivial odd parity h−
+(X/σ ∗ ) > 0. Consequently, we consider only holomorphic divisor involutions between “Non-trivial Identical
+Divisor pairs” (NIDs) in this work. After identifying the NIDs, we will check which involutions between these divisors are consistent with the topology of the Calabi-Yau manifold.
+Since the hypersurface is embedded in a desingularized ambient variety A, we will require
+our orientifold involution to be an automorphism of A, leaving invariant the exceptional
+8
+
+divisors from resolved singularities. The information describing the desingularization is
+encoded in the Stanley-Reisner ideal ISR (A). As a consequence, the involution should be
+a symmetry of ISR (A). We then further distinguish the “proper” involutions which are
+symmetries of the linear ideal Ilin (A), encoding toric divisor redundancy. This ensures that
+the defining polynomial of the Calabi-Yau hypersurface generically remains homogeneous
+under the coordinate exchange without tuning any coefficients to zero. These involutions
+are then also symmetries of the graded Chow ring
+Z(D1 , · · · , Dk )
+.
+A• (A) ∼
+=
+Ilin (A) + ISR (A)
+
+(7)
+
+Due to the favorability condition on the Calabi-Yau threefold hypersurface we have
+A1 (A) ∼
+= H 1,1 (A) ∼
+= Pic(A) ∼
+= Pic(X) ∼
+= H 1,1 (X) ∼
+= A1 (X) ,
+
+(8)
+
+and thus the toric triple intersection tensor defined in the Chow ring A4 (X) of Calabi-Yau
+threefolds by
+Z
+Di ∧ Dj ∧ Dk ≡ Di · Dj · Dk · X
+
+dijk =
+
+and
+
+X = −KA =
+
+k
+X
+
+Di
+
+(9)
+
+i=1
+
+X
+
+will also remain invariant. If the involution involves non-rigid, deformation divisors, this
+condition will ensure that they can be exchanged in a consistent way.
+Let us consider a simple example with h1,1 (X) = 3. The triple intersection tensor can
+be written in the basis of divisor class {J1 , J2 , J3 } ∈ H 1,1 (X; Z) as
+Z
+(10)
+κijk = Ji ∧ Jj ∧ Jk ≡ Ji · Jj · Jk · X .
+X
+
+Suppose we have a proper involution σ ∗ : J2 ↔ J3 . Then, under the basis change
+{J1 , J2 , J3 } 7→ {J0 , J+ , J− }
+
+where
+
+J± = J2 ± J3 ,
+
+(11)
+
+the intersection numbers with an odd number of minus indices (κ00− , κ++− , κ0+− , κ−−− )
+should vanish identically. In this basis, we can write down the Kähler form J = t0 J0 +
+t+ J+ + t− J− . For a consistent orientifold, we must have both σ ∗ J = J and σ ∗ Ω3 = −Ω3 ,
+where Ω3 is the unique holomorphic (3,0)-form on X. The constraint onRthe Kähler form
+given by eq.(1) can be used to to show that the Kähler cone condition ( C i J > 0) will be
+consistently satisfied on the orientifold. The holomorphic (3,0)-form Ω3 can be constructed
+in terms of the projective coordinates using the techniques in Section 5.6 of [8],
+I
+ω · Πa V a
+1
+Ω=
+.
+(12)
+2πi P =0
+P
+Here P is the hypersurface polynomial and ω = R(x)dx1 ∧ · · · ∧ dxk , with R(x) a homogeneous rational function of the xi that makes ω/P have zero weight. Since the hypersurface
+polynomial always has weights equal to the sum of the toric divisor weights, for a toric CY
+9
+
+we can take R(x) ≡ 1. Finally, the V a are the holomorphic vector fields generating the
+gauge symmetries, determined in terms of the weights Qai :
+∂
+.
+(13)
+∂xi
+Since we will be restricting the hypersurface polynomial P to be invariant under σ, the
+numerator of the integrand, which we will here call Q, determines the parity. Its behavior
+under σ can be calculated in a straightforward manner.
+The procedure, then, is to first determine the Hodge numbers for all individual divisors
+in a given triangulation, scan the database of Calabi-Yau threefolds extracted from the
+Kreuzer-Skarke list up to h1,1 (X) = 6 and pick out the desingularized configurations (i.e.
+triangulations of reflexive 4D polytopes) that support an exchange of NIDs. We then
+identify all the “proper” involutions that allow for consistent orientifold geometries. Our
+results are available via the database search engine at www.rossealtman.com/tcy, and
+the statistics of this scan are summarized in Section 4. In the tables found in that section,
+we further classify the different involutions into exchanges that include completely rigid
+surfaces, Wilson surfaces, and some deformation surfaces.
+Before continuing, let us take the opportunity to distinguish between two types of
+involution:
+V a = Σi Qai xi
+
+• Triangulation-wise proper involution: The involutions present at the triangulation
+level - that is, within a single chamber of the Kähler cone of a given geometry.
+• Geometry-wise proper involution: The involutions which are globally consistent across
+all disjoint phases of the Kähler cone for each unique Calabi-Yau geometry. Each of
+the geometry-wise proper involutions may correspond to several triangulation-wise
+involutions which can span an entire CY geometry.
+
+2.4
+
+Classifications of the Fixed Orientifold Planes
+
+The next question to ask is whether there exist any point-wise fixed loci for a given
+involution on the Calabi-Yau threefold. If there is a fixed codimension-n subvariety defined
+by the simultaneous vanishing of n polynomials, then X will define an orientifold with an
+Om plane, where m = 3 + 2(3 − n). For a Calabi-Yau threefold, we must have 0 ≤ n ≤ 3,
+and so we can only have O9, O7, O5, or O3 planes. If we have none of these, and the
+hypersurface determined by the σ-invariant Calabi-Yau polynomial is smooth, then the
+involution is a free Z2 action on X.
+We now present an algorithm for identifying and classifying fixed-point sets under
+an orientifold of the type described in the previous section. We first define the MPCPdesingularized ambient 4D toric variety
+A=
+
+Ck r Z
+(C∗ )k−4 × G
+
+,
+
+(14)
+
+where Z is the locus of points in Ck ruled out by the Stanley-Reisner ideal ISR (A), and G
+is the fundamental group (i.e. trivial in most cases3 ). The geometry on this toric variety
+3
+
+In the total favorable Kreuzer-Skarke list with h1,1 (X) ≤ 6, there are only 14 of them which have
+non-trivial fundamental group. In this paper, we only consider the cases with trivial fundamental group.
+
+10
+
+can be described by the projective coordinates {x1 , ..., xk } and their toric C∗ equivalence
+classes
+(x1 , ..., xk ) ∼ (λWi1 x1 , ..., λWik xk ) ,
+
+(15)
+
+which define a projective weight matrix W.
+Throughout this section, we use the following notation:
+• k is the number of toric divisors
+• p is the number of (disjoint) coordinate exchanges (in Section 2.4.1)
+• k 0 = |G| is the number of definite parity polynomial generators (in Section 2.4.3)
+• W̃ is the weight matrix of the definite parity generators (in Section 2.4.3)
+• r is the rank of W̃ (in Section 2.4.3)
+2.4.1
+
+Invariant Calabi-Yau hypersurface polynomial
+
+Consider the smooth Calabi-Yau anticanonical hypersurface X = −KA defined by the
+vanishing of a homogeneous polynomial {P = 0}. The polynomial P can be expressed in
+terms of the known vertices m ∈ M, n ∈ N of the Newton and dual polytopes, respectively
+P =
+
+X
+
+am Mm = 0,
+
+where
+
+Mm =
+
+k
+Y
+
+hm,ni i+1
+
+xi
+
+.
+
+(16)
+
+i=1
+
+m∈∆
+
+An involution of the type that we are considering will consist of a set of p fully disjoint
+coordinate exchanges, σs : xis ↔ xjs , s = 1, . . . , p and σ = σ1 ◦ · · · ◦ σp . In order for the
+Calabi-Yau hypersurface to be invariant under σ, we must restrict to the subset of moduli
+space in which the defining polynomial is invariant. To check this, we define the set of
+monomials M = {Mm |m ∈ ∆}. Then for Mm , Mm0 ∈ M, we identify three cases:
+1. σ(Mm ) = Mm
+
+⇒
+
+am is generic,
+
+2. σ(Mm ) = Mm0 , m 6= m0
+3. σ(Mm ) 6∈ M
+
+⇒
+
+⇒
+
+am = am0 ,
+
+am = 0.
+
+Clearly, imposing these restrictions requires some tuning in the complex structure moduli space, but the end result is that P 7→ Psymm such that σ(Psymm ) = Psymm , in addition
+to σ ∗ J = J. It is important to note that this tuning may introduce singularities into the
+CY hypersurface. The MPCP desingularization of the ambient space A only guarantees
+resolution of singularities with codimension larger than two, and by Bertini’s theorem we
+can expect that the Calabi-Yau polynomial avoids them. However, now that we have required some coefficients to vanish, it is not necessarily the case that the hypersurface will
+avoid these singularities.
+We can now search for the set of points fixed under σ. We first locate the fixed-point
+set in the ambient space, and only later restrict this set to the Calabi-Yau hypersurface.4
+4
+
+This restriction can be done in a straightforward manner since we only consider favorable manifolds.
+
+11
+
+2.4.2
+
+Minimal generating set of homogeneous polynomials with definite-parity
+
+Any subvariety V can be described as an intersection of hypersurfaces, each generated
+by a single homogenous polynomial. When V is point-wise fixed under an involution σ,
+it must be contained within the eigenspace of σ. This, however, does not imply that each
+individual hypersurface is in the eigenspace of σ. Consider, for example, the following case:
+
+σ◦f =g
+V = {x ∈ A | f (x) = g(x) = 0}, with
+.
+(17)
+σ◦g =f
+Clearly, in this scenario the subvariety (i.e. intersection of hypersurfaces) remains fixed
+under the involution while each individual hypersurface does not5 , and therefore does not
+have a definitely parity under σ. In order to reduce the search space, and therefore the
+computational complexity of our scan, we restrict to only fixed point loci and corresponding
+orientifold planes whose hyperplane generators have definite parity under the involution
+σ. We leave the identification of the remaining orientifold planes to future work.
+With this in mind, we look for the minimal generating set G of homogeneous polynomials y(x1 , ..., xk ) that are (anti-)invariant under σ. Each of these generators then has
+definite parity σ(y) = ±y for each y ∈ G.
+Clearly, the monomials in M satisfying case (1) above are included in G. In addition, we
+define the subset G0 ⊂ {x1 , ..., xk } of the projective coordinates that are left unexchanged
+by σ. Then, for ease of notation, we can define the orthogonal decomposition
+G = G0 ∪ G+ ∪ G− .
+
+(18)
+
+In order to determine these generating polynomials, we note that because σ 2 = 1, any
+(anti-)invariant polynomial can be written in terms of monomials Ni as
+X
+X
+Q0,+ =
+ci Ni +
+dj (Nj + σ(Nj ))
+i
+
+Q− =
+
+X
+
+j
+
+dj (Nj − σ(Nj )), where σ(Ni ) = Ni and σ(Nj ) 6= Nj .
+
+(19)
+
+j
+
+Thus, G0 ∪ G+ will only contain monomial and binomial generators, and G− only binomial
+generators.
+The unexchanged coordinates in G0 are known a priori from our choice of involution, so
+we restrict our attention to finding the non-trivial even and odd parity generators in G+ and
+G− . To do this, we must consider not only σ, but the 2n − 1 non-trivial “sub-involutions”
+ρ ⊆ σ given by the non-empty subsets of {σ1 , ..., σn } of size 1 ≤ m ≤ n.
+For m = 1, ρ ≡ σs : xis ↔ xjs , and it is clear that G+ = {xis xjs } and G− = ∅. Since
+we are considering only exchanges of NIDs, we do not need to consider binomials (i.e.
+xis ± xjs ) as these are not homogeneous.
+For m > 1 sub-involutions, any invariant monomials are just products of the generators from m = 1 sub-involutions. Therefore, we will now turn our attention to binomial
+generators. In particular, we look for those of the form
+y± (a) = xai11 xai22 · · · xaimm ± xaj11 xaj22 · · · xajmm ,
+5
+
+(20)
+
+Note, however, that while these hypersurfaces are not individually point-wise fixed, they do individually satisfy the involution condition with σ 2 ◦ f = f and σ 2 ◦ g = g.
+
+12
+
+where a = (a1 , a2 , . . . , am ) ∈ Zm are such as to ensure that the binomial is homogeneous. If
+a contains negative entries, we simply multiply through by the necessary monomial factor
+to clear any denominators and obtain a proper binomial. The condition for homogeneity,
+in terms of the columns wis and wjs of the weight matrix W is given by
+a1 wi1 + a2 wi2 + · · · am wim = a1 wj1 + a2 wj2 + · · · + am wjm ,
+
+(21)
+
+which we rewrite as
+a1 (wi1 − wj1 ) + a2 (wi2 − wj2 ) + · · · + am (wim − wjm ) = 0 .
+
+(22)
+
+Let D be the matrix whose columns are the difference vectors ds = wis − wjs . The above
+equality implies that a lies in ker D ∩ Zm . The generators of ker D ∩ Zm as a Z-module give
+the exponents of binomial generators in G± , which we can see via the following argument:
+Let a, b ∈ ker D ∩ Zm , with associated binomials y± (a) = A ± B, y± (b) = C ± D,
+where A, B, C, D are monomials in the xi with σ(A) = B, σ(C) = D. Consider y+ (a + b)
+at some fixed point of σ. We need only consider the region where no xi in these expressions
+vanishes (if xi = 0 for some i, this point is already contained within the vanishing set of
+xi xσ(i) ∈ G+ and thus would not be a new fixed point). In this region, the vanishing of
+y+ (a + b) is equivalent to the vanishing of AC + BD. As y+ (a), y− (a) have the same
+weights with opposite parity, at least one must vanish at every fixed point. Thus at our
+fixed point we have A = ±B. As the same is true for y+ (b), y− (b), we also have C = ±D.
+If A = B, C = −D or A = −B, C = D, then AC = −BD and AC + BD vanishes
+trivially. Otherwise we have AC = BD, and AC+BD = 2AC. This vanishes iff A = B = 0
+or C = D = 0, which as we noted earlier lies in the vanishing set of xi xσ(i) for some xi .
+Hence any fixed points in the vanishing set of y+ (a + b) are contained within the vanishing
+sets of y± (a), y± (b), or the monomial elements of G+ , and we need not consider it further.
+A similar argument applies for y− (a + b).
+We repeat this procedure for each sub-involution ρ ⊆ σ. The sets G± are given by the
+union of the generators found for each of the sub-involutions.
+2.4.3
+
+Naive fixed point loci
+
+We first perform a version of the Segre embedding,6 transforming the projective coordinates into the (anti-)invariant generators {x1 , ..., xk } 7→ {y1 , ..., yk0 } ≡ G. The cardinality
+k 0 = |G| may be less than, equal to, or greater than k. We construct the weight matrix
+W̃ for these generators by taking appropriate linear combinations of the original weight
+matrix columns wi .
+In order for a codimension-1 subvariety D ⊂ X to be point-wise fixed under the involution σ ∗ , the corresponding coordinate exchange must force its defining polynomial to
+vanish, i.e. σ : y 7→ −y, so that D = {y = 0} is fixed. This implies that the defining
+polynomial y of every point-wise fixed codimension-1 subvariety must be generated by
+odd-parity generators in G− . In the case where G− is empty, there is no non-trivial fixed
+subvariety. Then, naively, the only locus in the ambient space (if it exists) fixed under σ
+is the set
+{xi1 = xi2 = · · · = xin = xj1 = xj2 = · · · = xjn = 0},
+6
+
+A similar Segre embedding is used in the F-theory lifts from Type IIB orientifold models [79].
+
+13
+
+which is trivially unaffected by σ. However, when G− is non-empty, this trivial locus is
+immediately a subspace of any generator y ∈ G− , and is therefore redundant.
+To determine the point-wise fixed loci for codimension larger than one, we must check
+whether the involution forces a subset of generators F ⊆ G to vanish simultaneously. The
+number of checks required can be reduced by noting that if a locus is not point-wise fixed,
+then no locus containing it will be either. For this reason, we consider only the subsets F
+where F ∩ G− 6= ∅.
+T
+It would seem, then, that the
+only
+point-wise
+fixed
+locus
+would
+be
+G
+:=
+y∈G− {y = 0}
+T
+while all other fixed loci F := y∈F {y = 0} correspond to the proper subsets F ( G− , and
+are therefore redundant. However, it is important to note that the torus C∗ actions provide
+r = rank(W̃) additional degrees of freedom for the generators to avoid being forced to zero.
+That is, there may be a toric equivalence class that neutralizes the odd parity of some set
+of generators, while adding odd parity to another set. In each subset of generators F, we
+check for this by solving the system of equations
+1i W̃2i
+ri
+λW̃
+· · · λW̃
+= σ(yi )/yi ,
+1 λ2
+r
+
+i = 1, ..., k 0 .
+
+(23)
+
+By the construction of the generator yi , the right-hand side is equal to ±1. The set is
+point-wise fixed if this equation is solvable in the λi .
+Since the right-hand side of each of these equations has unit magnitude, we only need
+to look for solutions with λi on the complex unit circle. As any element of the unit circle
+can be written λi = eiπui with 0 ≤ ui < 2, each of the equations above can be rewritten as
+a linear congruence in the x as
+
+0 (mod 2), yi ∈ G0 ∪ G+
+W̃1i u1 + · · · + W̃ri ur ≡
+.
+(24)
+1 (mod 2), yi ∈ G−
+We can rewrite this as a system of linear Diophantine equations as
+
+0, yi ∈ G0 ∪ G+
+W̃1i u1 + · · · + W̃ri ur − 2qi ≡
+1, yi ∈ G−
+
+(25)
+
+for qi ∈ Z. The fact that 0 ≤ ui < 2 means that 0 ≤ qi < W̃1i + · · · + W̃ri , and thus
+0
+there are only a finite number of vectors q := (q1 , ..., qk0 ) ∈ Zk for which the solvability
+of this linear system needs to be checked. This can easily be done using standard matrix
+techniques. If the system has a solution u := (u1 , ..., ur ) ∈ Qr for any of the allowed q
+vectors, then the set is point-wise fixed under σ.
+One may notice that the generators we have defined above are not all entirely independent. For example, consider an involution σ : x1 ↔ x2 , x3 ↔ x4 such that we get
+generators y1 = x1 x2 , y2 = x3 x4 , y3 = x1 x3 + x2 x4 , y4 = x1 x3 − x2 x4 . Then the generators
+are related via the consistency condition y32 = y42 + 4y1 y2 . This manifests in a constraint on
+the vanishing of the generators. For example, if y1 = y3 = 0, then y4 is necessarily equal to
+zero. When scanning the subsets F of vanishing generators, we implement a consistency
+check to filter out any spurious sets that violate these restrictions.
+Before moving forward, it is important to note that it is indeed sufficient to consider
+only the zero loci of the minimal generators, and not more general combinations. If we
+have y1 , y2 ∈ G with zero loci D1 = {y1 = 0} and D2 = {y2 = 0}, the vanishing of the
+14
+
+product is simply the union of the two subvarieties {y1 y2 = 0} = D1 ∪ D2 . Thus, D1 ∪ D2
+is only fixed when D1 and D2 are already fixed independently. We can also consider the
+vanishing of the sum (or difference) {y1 + y2 = 0}, such that both y1 and y2 have the same
+C∗ weights and the sum has definite parity. If either one vanishes, then both do, and the
+resulting subvariety lies on D1 ∩ D2 , so that clearly both must be fixed independently for
+their intersection to be fixed. Then, finally, we assume that neither generator vanishes.
+Because σ acts as a homomorphism on the generators, the definite parity condition ensures
+that y1 , y2 , and y1 + y2 must all have the same parity via
+
+y1 + y2 , y1 , y2 ∈ G0 ∪ G+
+σ(y1 + y2 ) = σ(y1 ) + σ(y2 ) =
+.
+(26)
+−(y1 + y2 ), y1 , y2 ∈ G−
+We saw above that determining whether or not a set is point-wise fixed under σ is dependent
+only on its weights and parity, so y1 + y2 defines a fixed locus only if D1 and D2 are fixed
+as well. The same argument applies to differences y1 − y2 .
+2.4.4
+
+Stanley-Reisner ideal and Calabi-Yau transversality
+
+All of our calculations have thus far depended only on the toric weights, but eq.(14)
+tells us that the ambient space A has a set of points Z ruled out by the Stanley-Reisner
+(SR) ideal ISR . Now that we have found all possible point-wise fixed loci for each subset
+of generators F, we must check that none of these lie in Z. ISR is defined as the squarefree ideal of non-intersections of toric divisors. For example, if D1 D2 ∈ ISR , then d12ij =
+D1 · D2 · Di · Dj = 0 for all i, j = 1, ..., k. However, the concept works equally well with the
+projective coordinates. One can say that if x1 x2 is in the SR ideal, then the simultaneously
+vanishing set {x1 = x2 = 0} will not exist in A. As our fixed sets will often consist of
+the zero loci of binomials, compatibility with the SR ideal cannot be generally read off in
+this way. We check compatibility with the Stanley-Reisner ideal by expressing the ideal
+and the generators as Boolean expressions. For each generator y ∈ G, we define a Boolean
+variable Y whose value is True when y = 0.
+To make this more clear, we give a few examples. The monomial y1 y2 , which is zero
+when y1 = 0 or y2 = 0, is assigned the Boolean expression Y1 ∨Y2 . We build the expressions
+for binomials from those of their constituent parts. For example, consider y1 y2 −y3 y4 . This
+expression is zero if both y1 y2 and y3 y4 are zero, or if neither of them are (which means
+that none of the individual yi = 0). We thus get the Boolean expression
+y1 y2 − y3 y4 7→ [(Y1 ∨ Y2 ) ∧ (Y3 ∨ Y4 )] ∨ [(¬Y1 ) ∧ (¬Y2 ) ∧ (¬Y3 ) ∧ (¬Y4 )] .
+
+(27)
+
+By this iterative method, we can create the Boolean expression for any polynomial. Although tedious, this process is easily automated. Using this method, we create the expressions for the SR ideal and the polynomial generators. If these Boolean expressions
+together form a contradiction, the fixed-point set does not intersect the Calabi-Yau and
+is thus discarded. Unfortunately, this Boolean approach will not catch every case. In the
+above example, if y1 y2 = y3 y4 6= 0, this method is insufficient and we need something more
+robust. However, this first pass will rule out many spurious cases.
+At least one coordinate in each element of the Stanley-Reisner ideal must be non-zero
+at each point in A. By finding the minimal generating sets of coordinates that, when set
+15
+
+non-zero, satisfy this condition, we can split A up into disjoint regions Ui . In each of these
+sectors, we implement this non-zero condition by setting the coordinates equal to unity.
+By working in these sectors, we ensure that any remaining fixed sets that contradict the
+SR ideal will be filtered out.
+We now check whether each set can be restricted to the Calabi-Yau hypersurface. For
+a given fixed set, we compute in each sector Ui the dimension of the ideal generated by
+the Calabi-Yau polynomial Psymm and the fixed set generators F ≡ {y1 , ..., yp }
+f ixed
+Iip
+= hUi , Psymm , y1 , ..., yp i .
+
+(28)
+
+f ixed
+If the dimension dim Iip
+< 0 for all Ui , then there is no Groebner basis, and we conclude
+that this set does not intersect the CY hypersurface.
+For each set that is not discarded, we repeat this calculation for the ideal with one fixed
+f ixed
+f ixed
+f ixed
+when
+set generator dim Ii1
+, and then two dim Ii2
+, etc. until dim Ii`f ixed = dim Iip
+adding more generators to the ideal no longer changes the dimension for any region Ui 7
+Then, the intersection {y1 = · · · = y` = 0} of these generators gives the final point-wise
+fixed locus, with redundancies eliminated. Since each generator is codimension-1 in X,
+the length ` of this set of generators is the codimension in X of the fixed point locus.
+An O3 plane corresponds to a codimension-3 point-wise fixed subvariey, an O5 plane has
+codimension-2, an O7 plane has codimension-1, and an O9 plane has codimension-0 (which
+means the entire CY is fixed under σ).
+
+2.4.5
+
+Smoothness
+
+Finally, we check whether the invariant Calabi-Yau hypersurface defined by Psymm is
+smooth. This is important to determine whether an involution is a free action. We do this
+by checking if there is any solution to the condition Psymm = dPsymm = 0 that is not ruled
+out by the Stanley-Reisner ideal. In practice, this is done by setting up the ideals
+Iismooth = hUi , Psymm ,
+
+∂Psymm
+∂Psymm
+, ...,
+i
+∂x1
+∂xk
+
+(29)
+
+for each region Ui allowed by the Stanley-Reisner ideal, and computing the dimension. If
+dim Iismooth < 0 for all Ui , then the invariant Calabi-Yau hypersurface is smooth. If no
+O-planes exist and the invariant Calabi-Yau hypersurface is smooth, then the involution
+defines a Z2 free action on X.
+2.4.6
+
+Tadpole cancelation and string vacua
+
+Since we are interested in the orientifold Type IIB string vacua, it is reasonable to
+consider the possible tadpole cancelation in the O3/O7 system. In this paper we are not
+concerned with the physics on the D7-branes and for the concrete orientifolds we will
+7
+Note that while this procedure will yield the correct dimension of the fixed point locus, it may occasionally overlook the existence of non-transversally intersecting generators. This may cause some points
+to be falsely identified as fixed, but does not affect the overall dimension of the set. Since, however, this
+will not lead to a misidentification of orientifold planes, a more thorough treatment will be left to future
+work.
+
+16
+
+always cancel the D7-brane tadpole by simply placing eight D7-branes on top of the O7plane. Clearly, for concrete model building this simple assumption has to be relaxed. The
+O7-planes and the D7-branes induce a D3-brane tadpole condition which simplifies to
+NO3 χ(DO7 )
+Nflux
+(30)
++ Ngauge =
++
+≡ − Qloc
+D3 .
+2
+4
+4
+R
+R
+P
+with Nflux = (2π)14 α0 2 H3 ∧ F3 , Ngauge = − a 8π1 2 Da trFa2 , and ND3 , NO3 the number
+of D3-branes, O3-planes respectively. The D3-tadpole cancelation condition requires the
+total D3-brane charge Qloc
+D3 of the seven-brane stacks and O3-planes to be an integer. It will
+serve as a consistency check that this number is indeed an integer. If the involution passes
+this naive tadpole cancellation check, we will denote our geometry as a “naive orientifold
+Type IIB string vacua”. Of course, when an involution results in a geometry with only
+O7-planes, it can automatically be classified as a naive string vacuum. The classification
+of these orientifold involutions is summarized in Tables 3-6.
+ND3 +
+
+2.5
+
+Hodge Number Splitting
+
+The orientifold involution σ exchanges two projective coordinates on X. The holomorphicity condition requires that the pullback σ ∗ maps (p, q)-forms on X to (p, q)-forms.
+This is also true at the level of cohomology as the Dolbeault operator ∂¯ commutes with the
+pullback σ ∗ . This implies that in the orientifold limit, the dimensions of Hodge numbers
+split as:
+H p,q (X/σ ∗ ) = H+p,q (X/σ ∗ ) ⊕ H−p,q (X/σ ∗ ) .
+
+(31)
+
+Because we work only with favorable geometries, the calculations are simplified by the
+fact that the toric classes of ambient space A always restrict in a straightforward way
+to the Calabi-Yau hypersurface, and the divisor classes are the same, as shown in eq.(8).
+∗
+In order to determine the h1,1
+± (X/σ ) splitting, we can always expand the Kähler form in
+terms of these divisor classes.
+To illustrate, we choose a toy example with h1,1 (X) = 3, admitting a proper orientifold
+involution σ ∗ : D2 ↔ D3 . Suppose the divisor classes {D1 , D2 , D3 } form a basis for
+H 1,1 (X; Z). Then, the Kähler form can be expanded as the linear combination
+J = t1 J1 + t2 J2 + t3 J3 = t1 D1 + t2 D2 + t3 D3 ,
+
+(32)
+
+with t1 , t2 , t3 ∈ Z. But the Kähler form must obey the constraint of even parity under the
+orientifold involution, and must therefore only have components in H+1,1 (X), so that
+J = σ ∗ J = t1 D1 + t2 D3 + t3 D2 = t1 J1 + t3 J2 + t2 J3 .
+
+(33)
+
+Then, comparing eq.(32) and eq.(33), we note that we must have t2 = t3 = t+ , for some
+t+ ∈ Z. Defining the even and odd parity eigendivisors D± = D2 ± D3 , we can write
+J = t1 D1 + t+ D+ .
+
+(34)
+
+Thus, on the orientifold X/σ ∗ , there are only two independent directions in the Kähler
+moduli space, D1 and D+ , while D− ∈ H−1,1 (X/σ ∗ ) does not appear in the Kähler form. We
+17
+
+1,1
+∗
+∗
+therefore find the equivariant cohomology h1,1
++ (X/σ ) = 2 and h− (X/σ ) = 1. This can
+8
+only be done in a consistent way when σ is a proper involution respecting the linear ideal
+Ilin , which addresses the redundancies among the toric divisor classes. Since the involution
+exchanges pairs of NIDs, one can always expand the Kähler form in the orientifold-invariant
+basis, depending on some pairs of the divisors involved in the involution.
+In addition to the even and odd parity splitting of h1,1 (X/σ ∗ ), in principle we can apply
+the Lefschetz fixed point theorem (for a brief introduction, see [80] and the Appendix
+∗
+of [81]) to determine the h2,1
+− (X/σ ) in the Z2 -orbifold limit. In general the Z2 involution
+σ induces a fixed-point set F. Due to the hodge number splitting eq.(31), we can define
+the Leftschetz number of σ ∗ as L(σ ∗ , X):
+X
+L(σ ∗ , X) ≡
+(−)i (bi+ − bi− ) = χ(F) ,
+(35)
+i
+
+where bi± are the split Betti numbers and the the right-hand side is the Euler number of
+the fixed locus F. There is a very useful theorem to calculate the Euler number of the
+Z2 -orbifold space:
+χ(X/σ ∗ ) =
+
+ X
+1
+L(σ ∗ , X) + χ(X) =
+(−)i (bi+ ),
+2
+i
+
+(36)
+
+which is the average of the Lefschetz number and the Euler number of X. For the divisor
+exchange involution σ ∗ , we have further:9
+1,1
+∗
+∗
+h2,1
+− (X/σ ) = h− (X/σ ) +
+
+L(σ ∗ , X) − χ(X)
+,
+4
+
+(37)
+
+where
+
+R
+
+ χ(O7) = RO7 c2 (O7) ,
+L(σ ∗ , X) = χ(F) ⊃
+χ(O5) = O5 c1 (O5) ,
+
+R
+
+χ(O3) = O3 c0 (O3) = NO3 .
+
+(38)
+
+It is interesting to see that for an O3/O7-system with eight D7 on top of the O3-planes,
+the Lefschetz number divided by 4 is exactly the Qloc
+D3 in eq.(30) for tadpole cancellation.
+∗
+If the involution is a free action, L(σ , X) = 0 and eq.(36) reduces to the standard
+form in which the Euler characteristic of a free action quotient group obeys χ(X/σ ∗ ) =
+χ(X)/ |σ ∗ |, where |σ ∗ | = 2 is the order of the group action defined by σ ∗ ∼
+= Z2 . These
+results are enumerated in Table 6.
+2,1
+However, the full Hodge number such as h±
+is only well-defined in the smooth case.
+2,1
+In the orbifold limit, h± may contain some ambiguity - for example, it may be negative or
+fractional even when the tadpole cancellation is satisfied. So one can consider resolving the
+8
+
+In fact, in the case of a proper involution, it is extremely rare that we can write down an involution
+exchanging only a single pair of NIDs. However, for clarity, we use this simple toy example only to illustrate
+the underlying concept.
+∗
+2,1
+1,1
+9
+For a reflection σ, the formula changes to h−
+= h−
++ L(σ ,X)−χ(X)
+− 1. The difference is due to
+4
+the fact that the equivariant cohomology fora reflection is h• (X, O) = {1+ , 0, 0, 1− } while for a divisor
+exchange involution it is h• (X, O) = {1+ , 0, 0, 1+ }.
+
+18
+
+possible conifold singularities in the orbifold limit to get a smooth geometry and therefore
+1,1
+a well-defined h2,1
+± . On the other hand, the h− we obtain are robust and not affected
+by blowing up the singularity. Since most of the string model-building in which people
+1,1
+are interested is in the orbifold limit, in this paper we only present the robust h−
+(X/σ ∗ )
+2,1
+∗
+results and leave determining h± (X/σ ) in the smooth case for a future work.
+
+3
+
+Illustrative Examples of the Algorithm
+
+In this section, we demonstrate three explicit examples of finding and classifying the
+point-wise fixed sets of a Calabi-Yau orientifold, following the method described in the
+previous section. The example in Section 3.1 has nonempty G+ , G− and demonstrates our
+method in full. Additionally, the involution allows us to compute the split Hodge numbers
+on the orientifold. The example in Section 3.2 demonstrates a potential free action which
+has fixed points in the ambient space, but not on the Calabi-Yau hypersurface itself.
+Finally, the example in Section 3.3 demonstrates the only proper, smooth, geometry-wide
+free action found by our scan.
+
+3.1
+
+Proper Involution with O3 and O7 planes
+
+Our first example is from the database of Calabi-Yau threefolds at www.rossealtman.
+com/tcywith Hodge numbers h1,1 (X) = 4, h2,1 (X) = 64. It can be identified by its index
+in the database:
+Polytope ID Geometry ID Triangulation ID
+566
+1
+1
+Although we will examine this example within the context of this particular triangulation,
+this involution is valid in each chamber of this geometry’s Kähler cone. This example
+defines an MPCP desingularized ambient toric variety with weight matrix W given by
+x1 x2 x3 x4 x5 x6 x7 x8
+0 0 0 1 0 1 0 0
+0 0 1 0 0 0 1 0
+0 1 0 0 1 0 0 1
+1 0 0 1 0 0 1 1
+
+(39)
+
+and Stanley-Reisner (SR) ideal
+ISR = hx1 x8 , x3 x7 , x4 x6 , x1 x4 x7 , x2 x3 x5 , x2 x5 x6 , x2 x5 x8 i.
+
+(40)
+
+The Hodge numbers of the corrsponding individual toric divisors Di ≡ {xi = 0} are
+h• (D1 ) = {1, 0, 0, 9}
+h• (D2 ) = h• (D4 ) = h• (D5 ) = h• (D7 ) = {1, 0, 1, 21}
+h• (D3 ) = h• (D6 ) = {1, 0, 0, 12}
+h• (D8 ) = {1, 0, 2, 30} .
+19
+
+(41)
+
+For this example, there is only one proper involution exchanging NIDs, which leaves the
+SR ideal together with Linear ideal invariant, and thereby intersection numbers invariant.
+This proper NID involution is formed by exchanging two pair of coordinates:
+σ : x3 ↔ x6 ,
+
+x4 ↔ x7 .
+
+(42)
+
+From eq.(41) we see that this is an exchange of two dP9 divisors and two exact Wilson
+divisors.
+As is necessary for a consistent orientifold, the volume form eq.(12) has a definite parity
+under σ. For completeness, we demonstrate our calculation of the parity. For this example,
+the vector fields eq.(13) can be read off from the toric data eq.(39), and are:
+∂
+∂
++ x6
+∂x4
+∂x6
+∂
+∂
+V 2 = x3
++ x7
+∂x3
+∂x7
+∂
+∂
+∂
+V 3 = x2
++ x5
++ x8
+∂x2
+∂x5
+∂x8
+∂
+∂
+∂
+∂
++ x4
++ x7
++ x8
+.
+V 4 = x1
+∂x1
+∂x4
+∂x7
+∂x8
+V 1 = x4
+
+(43)
+
+Performing the contractions with ω is straightforward, and yields
+Q = x5 x6 x7 x8 dx1 ∧ dx2 ∧ dx3 ∧ dx4 + x4 x6 x7 x8 dx1 ∧ dx2 ∧ dx3 ∧ dx5 − x4 x5 x7 x8 dx1 ∧ dx2 ∧ dx3 ∧ dx6
+− x4 x5 x6 x7 dx1 ∧ dx2 ∧ dx3 ∧ dx8 + x3 x6 x7 x8 dx1 ∧ dx2 ∧ dx4 ∧ dx5 + x3 x5 x6 x8 dx1 ∧ dx2 ∧ dx4 ∧ dx7
+− x3 x5 x6 x7 dx1 ∧ dx2 ∧ dx4 ∧ dx8 + x3 x4 x7 x8 dx1 ∧ dx2 ∧ dx5 ∧ dx6 + x3 x4 x6 x8 dx1 ∧ dx2 ∧ dx5 ∧ dx7
+− x3 x4 x5 x8 dx1 ∧ dx2 ∧ dx6 ∧ dx7 + x3 x4 x5 x7 dx1 ∧ dx2 ∧ dx6 ∧ dx8 + x3 x4 x5 x6 dx1 ∧ dx2 ∧ dx7 ∧ dx8
+− x2 x6 x7 x8 dx1 ∧ dx3 ∧ dx4 ∧ dx5 − x2 x4 x7 x8 dx1 ∧ dx3 ∧ dx5 ∧ dx6 − x2 x4 x6 x7 dx1 ∧ dx3 ∧ dx5 ∧ dx8
++ x2 x3 x6 x8 dx1 ∧ dx4 ∧ dx5 ∧ dx7 − x2 x3 x6 x7 dx1 ∧ dx4 ∧ dx5 ∧ dx8 + x2 x3 x4 x8 dx1 ∧ dx5 ∧ dx6 ∧ dx7
+− x2 x3 x4 x7 dx1 ∧ dx5 ∧ dx6 ∧ dx8 − x2 x3 x4 x6 dx1 ∧ dx5 ∧ dx7 ∧ dx8 − x1 x6 x7 x8 dx2 ∧ dx3 ∧ dx4 ∧ dx5
++ x1 x5 x6 x7 dx2 ∧ dx3 ∧ dx4 ∧ dx8 − x1 x4 x7 x8 dx2 ∧ dx3 ∧ dx5 ∧ dx6 − x1 x4 x5 x7 dx2 ∧ dx3 ∧ dx6 ∧ dx8
++ x1 x3 x6 x8 dx2 ∧ dx4 ∧ dx5 ∧ dx7 + x1 x3 x5 x6 dx2 ∧ dx4 ∧ dx7 ∧ dx8 + x1 x3 x4 x8 dx2 ∧ dx5 ∧ dx6 ∧ dx7
+− x1 x3 x4 x5 dx2 ∧ dx6 ∧ dx7 ∧ dx8 − x1 x2 x6 x7 dx3 ∧ dx4 ∧ dx5 ∧ dx8 − x1 x2 x4 x7 dx3 ∧ dx5 ∧ dx6 ∧ dx8
++ x1 x2 x3 x6 dx4 ∧ dx5 ∧ dx7 ∧ dx8 + x1 x2 x3 x4 dx5 ∧ dx6 ∧ dx7 ∧ dx8 .
+
+With this explicit expression for Q in terms of the xi , we can find its image under
+σ by exchanging {x3 ↔ x6 , x4 ↔ x7 ; dx2 ↔ dx4 , dx7 ↔ dx8 }. As an example, the
+first term in Q is x5 x6 x7 x8 dx1 ∧ dx2 ∧ dx3 ∧ dx4 . After applying σ, this term becomes
+x3 x4 x5 x8 dx1 ∧ dx2 ∧ dx6 ∧ dx7 . This is the negative of the first term in the fourth line
+of the expression for Q above. These calculations, as well as the preceding contractions,
+are tedious to perform but easily automated. We find that the resulting form is exactly
+the negative of Q, and thus the volume form has odd parity under σ, i.e. σ ∗ Ω3 = − Ω3 .
+So we would expect if there are any fixed points under the involution, it should be O3 or
+O7-planes, or both.
+
+20
+
+Orientifold Planes
+Since the projective coordinates x1 , x2 , x5 , and x8 are not affected by the involution,
+they are included in our list of (anti-)invariant polynomial generators
+G0 = {x1 , x2 , x5 , x8 } .
+
+(44)
+
+If we define σ1 : x3 ↔ x6 and σ2 : x4 ↔ x7 , such that σ = σ1 ◦ σ2 , then we have the three
+sub-involutions: σ1 , σ2 , and σ. We now explore these cases:
+1. σ1 : x3 ↔ x6
+Because we only consider NIDs, x3 and x6 have different weights and cannot be
+combined into a homogenous binomial. Thus, we are left only with the invariant
+monomial x3 x6 .
+⇒ G+ = {x3 x6 }, G− = ∅
+2. σ2 : x4 ↔ x7
+For the same reason, we are left only with the invariant monomial x4 x7 .
+⇒ G+ = {x7 x8 }, G− = ∅
+3. σ : x3 ↔ x6 , x4 ↔ x7
+Any invariant monomials in this case are just products of the ones we found above.
+However, we must now consider binomial generators of the form
+n
+m n
+xm
+3 x4 ± x6 x7
+
+(45)
+
+for m, n ∈ Z. The homogeneity of this binomial is determined by the following
+condition on the weights
+m(Wi3 − Wi4 ) + n(Wi6 − Wi7 ) = 0 .
+
+(46)
+
+Thus, the vector (m, n) ∈ Z2 lies in the kernel of the matrix of difference vectors
+Wi2 − Wi4 Wi7 − Wi8
+−1
+1
+1
+−1
+0
+0
+0
+0
+
+(47)
+
+The kernel is generated by the vector (m, n) = (1, 1), so that our binomial generators10 are given by x3 x4 ± x6 x7 . This implies that G+ = {x3 x4 + x6 x7 } and
+G− = {x3 x4 − x6 x7 }.
+Note that all the (anti-)invariant polynomial generations in G = G0 ∪ G+ ∪ G− are given by
+y1 = x1 , y2 = x2 , y3 = x5 , y4 = x8 , y5 = x3 x6 ,
+y6 = x4 x7 , y7 = x3 x4 + x6 x7 , y8 = x3 x4 − x6 x7 .
+10
+
+(48)
+
+Note that if the kernel was generated by (m, n) = (1, −1), then the binomial generators would be
+−1
+given by x3 x−1
+4 ± x6 x7 . If we multiply through by x4 x7 , we get x3 x7 ± x4 x6 . This just implies that we
+assumed the wrong positions of x4 and x7 , so they must be switched in the binomial.
+
+21
+
+This coordinate transformation defines the Segre embedding with consistency condition
+y72 = y82 + 4y5 y6 and new weight matrix
+y1 y2 y3 y4 y5 y6 y7 y8
+0 0 0 0 1 1 1 1
+0 0 0 0 1 1 1 1
+0 1 1 1 0 0 0 0
+1 0 0 1 0 2 1 1
+
+(1)
+(2)
+(3)
+(4)
+
+(49)
+
+However, this matrix only has rank 3, and is redundant. We see that row (3) = 2 × (2) −
+3 × (1), so we eliminate this row
+y1 y2 y3 y4 y5 y6 y7 y8
+0 0 0 0 1 1 1 1 λ1
+0 1 1 1 0 0 0 0 λ2
+1 0 0 1 0 2 1 1 λ3
+
+(50)
+
+The involution σ can be rewritten simply in these coordinates as y8 7→ −y8 . Thus, we
+see that F1 = {y8 = 0} is a point-wise fixed, codimension-1 subvariety. This defines an O7
+plane on the orientifold of X. By inspecting eq.(42), we may, in addition, naively assume
+the fixed point set F0 = {x3 = x4 = x6 = x7 = 0}, which is trivially unaffected by the
+involution. However, F0 is a subset of F1 , and is therefore redundant. The redundancy of
+this trivial fixed point set is a general feature of any involution which admits odd parity
+binomial generators in G− .
+By taking advantage of the toric degrees of freedom, however, there may be other
+non-trivial fixed sets in addition to F1 . We therefore check whether any subset F of the
+generators can neutralize the odd parity of y8 , becoming fixed themselves in the process.
+This scan can be simplified by noting that if a set of points is not fixed, then neither is any
+set containing it. Thus, if the simultaneous vanishing of a set of generators is not fixed,
+then neither is the vanishing of any subset. We therefore begin our scan with the largest set
+of generators and work our way down. The largest set we can choose has four generators,
+since their simultaneous vanishing defines a set of isolated points on the ambient space A.
+Consider the subset {y1 , y2 , y3 , y7 } ≡ F2 ⊂ G. In order for the locus F2 = {y1 = y2 =
+y3 = y7 = 0} to be fixed, we must use the three independent C∗ actions to neutralize the
+odd parity of y8 while leaving everything else invariant (as y8 is the only non-zero generator
+with negative parity). This constraint is defined by the toric equivalence class
+(y4 , y5 , y6 , −y8 ) ∼ (λ2 λ3 y4 , λ1 y5 , λ1 λ23 y6 , λ1 λ3 y8 )
+= (y4 , y5 , y6 , y8 )
+
+(51)
+
+where λ1 , λ2 , λ3 ∈ C∗ . This can be written more simply as the system of multiplicative
+equations
+λ2 λ3 = 1
+λ1 λ23 = 1
+
+λ1 = 1
+λ1 λ3 = −1 .
+
+(52)
+
+Simple inspection reveals that this system can clearly be solved with solution (λ1 , λ2 , λ3 ) =
+(1, −1, −1), but we will continue with our algorithm, as the computer algorithm, following
+22
+
+our analysis in a systematic manner, would not be able to arrive at this conclusion at this
+juncture.
+By defining λ1 = eiπu , λ2 = eiπv , λ3 = eiπw as explicit values on the complex unit circle
+with u, v, w ∈ Q, and noting that 0 ≤ u, v, w < 2 is the primitive domain of unique values,
+we can replace the multiplicative equations with linear congruences
+v + w ≡ 0 (mod 2)
+u + 2w ≡ 0 (mod 2)
+
+u≡0
+u+w ≡1
+
+(mod 2)
+(mod 2) .
+
+(53)
+
+Finally, by adding in the auxiliary variables q1 , ..., q4 ∈ Z, we can write this as a linear
+system of Diophantine equalities
+v + w − 2q1 = 0
+u + 2w − 2q7 = 0
+
+u − 2q2 = 0
+u + w − 2q8 = 1 .
+
+(54)
+
+Since 0 ≤ u, v, w < 2, we notice that the vector (q1 , ..., q4 ) ∈ Z4 is in the lattice Λ ⊂ Z4
+defined by
+0 ≤ q1 , q4 < 2
+0 ≤ q2 < 1
+0 ≤ q3 < 3 .
+(55)
+This gives us a finite range to scan over, and the search is relatively fast. For each point
+(q1 , ..., q4 ) ∈ Λ, we search for a solution to eq.(54). If any solution is found for any lattice
+point, then the set of generators F has a point-wise fixed vanishing locus. As we saw
+earlier, this particular system can indeed be solved, and so F2 = {y1 = y2 = y3 = y7 = 0}
+defines a point-wise fixed set. We do not find any additional point-wise fixed sets that are
+not subsets of F1 and F2 .
+We must now check that the fixed sets intersect the Calabi-Yau hypersurface transversally, so that they are not redundant. The orientifold-symmetric Calabi-Yau polynomial
+
+23
+
+has the form
+Psymm = a1 x41 x32 x23 x26 + a2 x41 x22 x23 x5 x26 + a3 x41 x2 x23 x25 x26 + a4 x41 x23 x35 x26 + a5 x31 x32 x23 x4 x6
++ a5 x31 x32 x3 x26 x7 + a6 x31 x22 x23 x4 x5 x6 + a6 x31 x22 x3 x5 x26 x7 + a7 x31 x2 x23 x4 x25 x6
++ a7 x31 x2 x3 x25 x26 x7 + a8 x31 x23 x4 x35 x6 + a8 x31 x3 x35 x26 x7 + a9 x31 x22 x23 x26 x8
++ a10 x31 x2 x23 x5 x26 x8 + a11 x31 x23 x25 x26 x8 + a12 x21 x32 x23 x24 + a12 x21 x32 x26 x27
++ a13 x21 x22 x23 x24 x5 + a13 x21 x22 x5 x26 x27 + a14 x21 x2 x23 x24 x25 + a14 x21 x2 x25 x26 x27
++ a15 x21 x23 x24 x35 + a15 x21 x35 x26 x27 + a16 x21 x32 x3 x4 x6 x7 + a17 x21 x22 x3 x4 x5 x6 x7
++ a18 x21 x2 x3 x4 x25 x6 x7 + a19 x21 x3 x4 x35 x6 x7 + a20 x21 x22 x23 x4 x6 x8 + a20 x21 x22 x3 x26 x7 x8
++ a21 x21 x2 x23 x4 x5 x6 x8 + a21 x21 x2 x3 x5 x26 x7 x8 + a22 x21 x23 x4 x25 x6 x8 + a22 x21 x3 x25 x26 x7 x8
++ a23 x21 x2 x23 x26 x28 + a24 x21 x23 x5 x26 x28 + a25 x1 x32 x3 x24 x7 + a25 x1 x32 x4 x6 x27
++ a26 x1 x22 x3 x24 x5 x7 + a26 x1 x22 x4 x5 x6 x27 + a27 x1 x2 x3 x24 x25 x7 + a27 x1 x2 x4 x25 x6 x27
++ a28 x1 x3 x24 x35 x7 + a28 x1 x4 x35 x6 x27 + a29 x1 x22 x23 x24 x8 + a29 x1 x22 x26 x27 x8
++ a30 x1 x2 x23 x24 x5 x8 + a30 x1 x2 x5 x26 x27 x8 + a31 x1 x23 x24 x25 x8 + a31 x1 x25 x26 x27 x8
++ a32 x1 x22 x3 x4 x6 x7 x8 + a33 x1 x3 x4 x25 x6 x7 x8 + a34 x1 x2 x23 x4 x6 x28 + a34 x1 x2 x3 x26 x7 x28
++ a35 x1 x23 x4 x5 x6 x28 + a35 x1 x3 x5 x26 x7 x28 + a36 x1 x23 x26 x38 + a37 x32 x24 x27 + a38 x22 x24 x5 x27
++ a39 x2 x24 x25 x27 + a40 x24 x35 x27 + a41 x22 x3 x24 x7 x8 + a41 x22 x4 x6 x27 x8 + a42 x2 x3 x24 x5 x7 x8
++ a42 x2 x4 x5 x6 x27 x8 + a43 x3 x24 x25 x7 x8 + a43 x4 x25 x6 x27 x8 + a44 x2 x23 x24 x28 + a44 x2 x26 x27 x28
++ a45 x23 x24 x5 x28 + a45 x5 x26 x27 x28 + a46 x2 x3 x4 x6 x7 x28 + a47 x3 x4 x5 x6 x7 x28
++ a48 x23 x4 x6 x38 + a48 x3 x26 x7 x38 .
+(56)
+The fixed point set F2 = {y1 = y2 = y3 = y7 = 0} can be written in terms of the
+original projective coordinates {x1 = x2 = x5 = 0} ∩ {x3 x4 = −x6 x7 }. If we make these
+substitutions in Psymm , it reduces to
+Psymm = a48 (x23 x4 x6 x38 + x3 x26 x7 x38 )
+= a48 x3 x6 x38 y7 .
+
+(57)
+
+As we are considering the subset where x1 = x2 = x5 = 0, and the Stanley-Reisner
+ideal forbids x2 = x3 = x5 = 0, then x3 cannot vanish. Similarly, x2 = x5 = x6 = 0 is
+forbidden and so x6 cannot vanish. Finally, x2 = x5 = x8 = 0 is forbidden, so x8 cannot
+vanish. Thus, the only way for Psymm to vanish is to have y7 = 0.
+Hence, Psymm = 0 implies y7 = 0 due to the SR constraints, and y8 is redundant when
+restricting the fixed set to X. The reduced set is then F20 = {y1 = y2 = y3 = 0}.
+In practice, we combine the transversality and SR ideal checks by performing Groebner
+basis calculations to check the dimension of the ideal Iijf ixed as in eq.(28) for Ui a region
+allowed by the Stanley-Reisner ideal.
+Iijf ixed = hUi , Psymm , Fj i
+
+24
+
+(58)
+
+where given the ISR , the allowed regions in this case are
+U1 =
+U3 =
+U5 =
+U7 =
+U9 =
+U11 =
+U13 =
+U15 =
+U17 =
+
+hx1 − t1 , x2 − t2 , x3 − t3 , x4 − t4 i
+hx1 − t1 , x2 − t2 , x4 − t4 , x7 − t7 i
+hx1 − t1 , x3 − t3 , x4 − t4 , x5 − t5 i
+hx1 − t1 , x3 − t3 , x6 − t6 , x8 − t8 i
+hx1 − t1 , x5 − t5 , x6 − t6 , x7 − t7 i
+hx2 − t2 , x4 − t4 , x7 − t7 , x8 − t8 i
+hx3 − t3 , x4 − t4 , x5 − t5 , x8 − t8 i
+hx3 − t3 , x6 − t6 , x7 − t7 , x8 − t8 i
+hx5 − t5 , x6 − t6 , x7 − t7 , x8 − t8 i ,
+
+U2 =
+U4 =
+U6 =
+U8 =
+U10 =
+U12 =
+U14 =
+U16 =
+
+hx1 − t1 , x2 − t2 , x3 − t3 , x6 − t6 i
+hx1 − t1 , x2 − t2 , x6 − t6 , x7 − t7 i
+hx1 − t1 , x3 − t3 , x5 − t5 , x6 − t6 i
+hx1 − t1 , x4 − t4 , x5 − t5 , x7 − t7 i
+hx2 − t2 , x3 − t3 , x4 − t4 , x8 − t8 i
+hx2 − t2 , x6 − t6 , x7 − t7 , x8 − t8 i
+hx3 − t3 , x4 − t4 , x6 − t6 , x8 − t8 i
+hx4 − t4 , x5 − t5 , x7 − t7 , x8 − t8 i
+(59)
+
+for auxiliary variables t1 , ..., t8 ∈ C. In order to simplify the calculation, however, we set
+t1 = ... = t8 = 1. If the dimension dim I > 0, and removing any generator from Fi changes
+the dimension, then we know that Fi intersects X transversally and is allowed by the SR
+ideal.
+Finally, we can tell from the number of intersecting codimension-1 subvarieties in each
+of the fixed sets F1 and F20 that they have complex codimension 1 and 3 in X respectively.
+This implies that F1 is an O7 plane, while F20 is an O3 plane locus.
+These fixed point sets intersect the respective σ-invariant hypersurface so that we get
+a number of O7 and O3-planes. The homology class of the single O7 plane is
+D(O7F1 ) = D3 + D4 ,
+
+(60)
+
+with Euler characteristic χ(D(O7)) = 39. In order to determine the number of O3-planes,
+we can use the intersection form to compute the triple intersection numbers as
+O3F20 : D1 D2 D5 = 1
+
+(61)
+
+so that in total there is one O3-plane. Using eq.(30) the contribution to the D3-brane
+tadpole is
+ND3 +
+
+NO3 χ(DO7 )
+1 + 39
+Nflux
++ Ngauge =
++
+=
+= 10 .
+2
+4
+4
+4
+
+(62)
+
+Thus Qloc
+D3 = −10 and this is a “naive orientifold Type IIB string vacua”.
+Hodge Splitting
+We now turn to the procedure for computing the splitting of the Hodge numbers on the
+Calabi-Yau orientifold. The linear ideal, which fixes toric divisor redundancies, is given by
+Ilin =
+
+h −D1 − D2
++
+0
++ 0
+− D1
+0
++
+0
++ 0
+
+− D3
++ D3
+− D3
++ 0
+
+−
++
+−
++
+
+D4
+D4
+D4
+D4
+25
+
++ 0
++ 0
+− D5
++ D5
+
++
+−
++
+−
+
+D6
+D6
+D6
+D6
+
++ D7 + D8 ,
+− D7
+0,
++ D7 + D8 ,
++ 0 − D8 i ,
+
+(63)
+
+and a basis in H 1,1 (X; Z) is given by J1 = D4 , J2 = D5 , J3 = D6 , J4 = D8 .
+By the definition of the holomorphic involution eq.(1), the Kähler form is even and
+must therefore belong to H+1,1 (X/σ ∗ ) under the involution
+σ ∗ : D3 ↔ D6 ,
+
+D4 ↔ D7 .
+
+(64)
+
+In a case with favorable geometry, as in this example, the calculation is simplified by the
+fact that the toric divisor classes of the ambient space A always restrict in a straightforward
+way to the Calabi-Yau threefold hypersurface via eq.(8). We can therefore expand the
+Kähler form in terms of these divisor classes
+J = t1 J1 + t2 J2 + t3 J3 + t4 J4 = t1 D5 + t2 D6 + t3 D7 + t4 D8
+
+(65)
+
+with t1 , t2 , t3 , t4 ∈ Z. But the Kähler form must obey the constraint of even parity under
+the orientifold involution, and must therefore only have components in H+1,1 (X), so that
+J = σ ∗ J = t1 D5 + t2 D3 + t3 D4 + t4 D8 = t1 J1 + t2 D3 + t3 D4 + t4 J4 .
+
+(66)
+
+In order to relate eq.(65) and eq.(66), we must be able to write D3 and D4 (restricted
+8
+P
+to the CY hypersurface X =
+Di ) in terms of our chosen basis. This can be done by
+i=1
+
+reducing D3 and D4 by the linear ideal Ilin (also restricted to the CY hypersurface). We
+find that on X, D3 and D4 are uniquely given by11
+D3 = J1 + J3 − J4
+
+D4 = −J1 + J2 + J4 .
+
+(67)
+
+J = (t1 + t2 − t3 )J1 + t3 J2 + t2 J3 + (−t2 + t3 + t4 )J4 .
+
+(68)
+
+and
+
+Plugging these into eq.(66), we deduce
+
+Now, comparing eq.(65) and eq.(68), we obtain the following system of linear equations
+t1 + t2 − t3 = t1 ,
+t2 = t3 ,
+
+t3 = t2 ,
+−t2 + t3 + t4 = t4 ,
+
+(69)
+
+for which the only independent solution is t2 = t3 . Thus, we see that only 3 directions
+∗
+in the Kähler moduli space are independent, and so h1,1
++ (X/σ ) = 3, and by extension
+∗
+h1,1
+− (X/σ ) = 1. This will be the case for any choice of integral basis on the Kähler moduli
+space. In fact, choosing even and odd parity eigendivisors D±,1 = D3 ± D6 , D±,2 =
+D4 ± D7 , the Kähler form can be written
+J = (t1 − t2 )J1 + (t4 + t2 )J4 + t2 (D+,1 − D+,2 ) = (t1 − t+ )J1 + (t4 + t+ )J4 + t+ (D+ ) ,
+(70)
+where the latter equality makes the redefinitions t+ = t2 and D+ = D+,1 − D+,2 = (D3 +
+D6 ) − (D4 + D7 ). The even parity of the Kähler form is now manifest. In this example,
+the involution σ ∗ induces an O7 plane and an O3 plane, and so is not a free action and we
+have the Hodge number splitting12
+∗
+h1,1
++ (X/σ ) = 3,
+
+∗
+h1,1
+− (X/σ ) = 1 .
+
+11
+
+(71)
+
+We do this calculation using the symbolic algebraic geometry software packages Singular [82] and
+Sage [83].
+12
+We can apply Lefschetz fixed point theorem to compute h2,1
+− as eq.(37) in the orbifold limit. Then we
+χO7 +NO3 −χ(X)
+1,1
+2,1
+have h2,1
+=
+h
++
+.
+Since
+χ
+=
+39
+and
+N
+=
+1, we get h−
+= 41.
+O7
+O3
+−
+−
+4
+
+26
+
+3.2
+
+Improper Involution: Single Coordinate Exchange
+
+In this section, we demonstrate an explicit example of a Calabi-Yau orientifold for
+which an involution with a single coordinate exchange exists with an empty fixed-point
+locus, which makes the involution a would-be free-action. However, this single coordinate
+exchange will violate the Ilin and fails to keep the defining hypersurface polynomial homogenous. As discussed around eq.(7-9) this may fail to leave the the intersection numbers
+invariant. This turns out to be a general feature of single coordinate exchange involutions
+at low h1,1 (X), and we will see why that is. In fact, we do not begin to see proper fixed-point
+free involutions until h1,1 (X) = 6 with upwards of four disjoint coordinate exchanges.
+We have chosen an example from the database of Calabi-Yau threefolds with Hodge
+numbers h1,1 (X) = 4, h2,1 (X) = 82. It can be identified by its index in the database:
+Polytope ID Geometry ID Triangulation ID
+917
+2
+1
+This example defines an MPCP desingularized ambient toric variety with weight matrix
+W given by
+x1 x2 x3 x4 x5 x6 x7 x8
+0 0 0 1 0 1 3 1
+0 0 1 1 1 0 3 0
+0 1 0 0 1 0 2 0
+1 1 0 1 0 2 5 0
+
+(72)
+
+ISR = hx1 x3 , x1 x6 , x3 x4 , x6 x8 , x1 x2 x5 , x2 x5 x7 , x4 x7 x8 i .
+
+(73)
+
+and Stanley-Reisner ideal
+
+For this example there is only one involution exchanging NIDs that leaves the SR
+ideal invariant. However, it is not “proper”; it fails to leave the the intersection numbers
+invariant. In the interest of keeping this example simple, we will carry on with this choice
+of “improper” involution. This involution is given by
+σ : x2 ↔ x5 .
+
+(74)
+
+Since the projective coordinates x1 , x3 , x4 , x6 , x7 , and x8 are not affected by the involution,
+they are included in our list of (anti-)invariant polynomial generators
+G0 = {x1 , x3 , x4 , x6 , x7 , x8 } .
+
+(75)
+
+In this case, there is only one sub-involution, σ itself. Because we only consider NIDs, x2
+and x5 have different weights and cannot be combined into a homogenous binomial. Thus,
+we are left only with the invariant monomial x2 x5 . This implies that the even and odd
+parity generator sets are G+ = {x2 x5 } and G− = ∅.
+Now, all the (anti-)invariant polynomial generations in G = G0 ∪ G+ ∪ G− are given by
+y1 = x1 ,
+
+y 2 = x3 ,
+
+y3 = x4 ,
+
+y4 = x6 ,
+27
+
+y5 = x 7 ,
+
+y6 = x8 ,
+
+y 7 = x2 x5 .
+
+There are no generators with odd parity under the involution which are manifestly fixed. It
+is for this reason that single coordinate exchange involutions are fixed-point free. Naively,
+however, we may still have the fixed set F0 = {x2 = x5 = 0}. Note that this set is allowed
+by the Stanley-Reisner ideal and does, in fact, exist in the ambient space. However, the
+orientifold-symmetric Calabi-Yau polynomial has the form
+Psymm = a1 x27 + a1 x21 x22 x44 x25 x6 x8 + a3 x41 x22 x23 x24 x25 x6 x38 + a4 x21 x22 x23 x24 x25 x26 x28 + a5 x31 x22 x3 x34 x25 x6 x28
++ a6 x51 x22 x33 x4 x25 x6 x48 + a7 x61 x22 x23 x24 x25 x48 + a8 x22 x43 x25 x46 x28 + a9 x2 x24 x5 x6 x7
++ a10 x21 x2 x24 x5 x7 x8 + a11 x31 x2 x3 x4 x5 x7 x28 + a12 x51 x22 x3 x34 x25 x38 + a13 x81 x22 x43 x25 x68
++ a14 x61 x22 x43 x25 x6 x58 + a15 x41 x22 x44 x25 x28 + a16 x41 x2 x23 x5 x7 x38 + a17 x71 x22 x33 x4 x25 x58
++ a18 x1 x2 x3 x4 x5 x6 x7 x8 + a19 x1 x22 x3 x34 x25 x26 x8 + a20 x1 x22 x33 x4 x25 x36 x28 + a21 x31 x22 x33 x4 x25 x26 x38
++ a22 x2 x23 x5 x26 x7 x8 + a23 x21 x2 x23 x5 x6 x7 x28 + a24 x41 x22 x43 x25 x26 x48 + a25 x22 x23 x24 x25 x36 x8
++ a26 x21 x22 x43 x25 x36 x38 + a27 x22 x44 x25 x26 ,
+where ai ∈ C are arbitrary coefficients. On the ambient space fixed set, where {x2 = x5 =
+0}, this reduces simply to
+Psymm = a1 x27 .
+
+(76)
+
+Thus, the vanishing with the Calabi-Yau polynomial on this set is equivalent to the vanishing of x7 . However, as x2 x5 x7 is an element of the Stanley-Reisner ideal, x7 cannot vanish
+on this set. Hence, the region where the Calabi-Yau hypersurface intersects the fixed-point
+locus of the ambient space is ruled out, giving us what is potentially a free action on the
+orientifold, provided that it is also non-singular by checking the dimension of ideal Iismooth
+eq.(29) for each disjoint region Ui allowed by the Stanley-Reisner ideal.
+We now turn to the procedure for computing the splitting of the Hodge numbers on the
+Calabi-Yau orientifold. The linear ideal, which fixes toric divisor redundancies, is given by
+Ilin = h −D1
+0
+−D1
+0
+
+− D2
++ 0
+− D2
++ D2
+
+− D3
++ 0
++ D3
++ 0
+
+−
++
+−
++
+
+D4
+D4
+D4
+D4
+
+− D5
++ 2D5
++ 3D5
+− D5
+
+− D6
++ 2D6
++ 4D6
+− D6
+
++ D7
+− D7
+− D7
++ 0
+
+− D8 ,
++ 0,
+(77)
++ 0,
++ 0 i.
+
+As we saw before, x2 and x5 have different weights and cannot be combined into a homogenous binomial. So we only need to consider the coordinate exchange x2 ↔ x5 in
+the defining polynomial of the Calabi-Yau hypersurface. The involution fails to keep the
+defining polynomial homogeneous without tuning any coefficients to zero. For example
+the monomial x4 x25 x26 x7 in the original defining polynomial with degree ||6, 6, 4, 10|| will be
+changed to monomial x4 x22 x26 x7 with degree ||6, 2, 4, 14|| after the involution. This violates
+the linear ideal Ilin and it is also the reason why the triple intersection number changes
+under such an involution.
+
+3.3
+
+Free Action Involution
+
+In this section, we demonstrate an explicit example of a Calabi-Yau orientifold for
+which the involution is a free action. Additionally, this is the sole example we found in
+28
+
+which the resulting orientifold is smooth. This example has Hodge numbers h1,1 (X) =
+6, h2,1 (X) = 46. It can be identified by its index in the database
+Polytope ID Geometry ID Triangulation ID
+7916
+1
+1
+As this geometry consists of only one triangulation, this involution spans the entire geometry. This example defines an MPCP desingularized ambient toric variety with weight
+matrix W given by
+x1 x2 x3 x4 x5 x6 x7 x8 x9 x10
+0 0 0 0 1 1 0 0 0
+0
+0 0 0 1 0 0 1 0 0
+0
+0 0 1 0 0 0 0 1 0
+0
+0 1 0 0 0 0 0 0 1
+0
+1 0 0 0 0 0 0 0 0
+1
+1 0 0 1 1 0 0 1 1
+0
+
+(78)
+
+with the Stanley-Reisner ideal
+ISR =hx1 x10 , x2 x9 , x3 x8 , x4 x7 , x5 x6 , x1 x4 x5 , x1 x4 x8 , x1 x4 x9 , x1 x5 x8 ,
+x1 x5 x9 , x1 x8 x9 , x2 x3 x6 , x2 x3 x7 , x2 x3 x10 , x2 x6 x7 , x2 x6 x10 , x2 x7 x10 ,
+x3 x6 x7 , x3 x6 x10 , x3 x7 x10 , x4 x5 x8 , x4 x5 x9 , x4 x8 x9 , x5 x8 x9 , x6 x7 x10 i,
+
+(79)
+
+and all toric divisors have the same Hodge numbers, h• (Di ) = {1, 0, 0, 11}. In fact, this
+example is the only one which leads to a free action involving five coordinate exchanges,
+and is given by
+σ : x1 ↔ x10 , x2 ↔ x9 , x3 ↔ x8 , x4 ↔ x7 , x5 ↔ x6 .
+
+(80)
+
+Orientifold Planes
+This involution eq.(80) affects all ten projective coordinates, and thus G0 = ∅. Computing the (anti-)invariant polynomials, we find the following:
+G+ ={x1 x10 , x2 x9 , x3 x8 , x4 x7 , x5 x6 , x1 x2 + x9 x10 , x1 x3 + x8 x10 ,
+x1 x6 + x5 x10 , x1 x7 + x4 x10 , x2 x8 + x3 x9 , x2 x4 + x7 x9 , x2 x5 + x6 x9 ,
+x3 x4 + x7 x8 , x3 x5 + x6 x8 , x4 x6 + x5 x7 },
+
+(81)
+
+G− ={x1 x2 − x9 x10 , x1 x3 − x8 x10 , x1 x6 − x5 x10 , x1 x7 − x4 x10 ,
+x2 x8 − x3 x9 , x2 x4 − x7 x9 , x2 x5 − x6 x9 , x3 x4 − x7 x8 , x3 x5 − x6 x8
+, x4 x6 − x5 x7 }.
+
+(82)
+
+We note that all of the monomial elements of G+ are also members of the StanleyReisner ideal. As all of these monomials have the form xi xσ(i) , they thus cannot vanish in
+the ambient space. Also, recall that for our pairs of binomial generators, at least one must
+29
+
+vanish at any fixed point as the expressions have the same weights but opposite parity.
+(For example, for this involution at least one of x1 x2 ± x9 x10 must vanish at any fixed
+point).
+This means that there are 210 possible fixed sets, corresponding to a sign choice in each
+of the 10 pairs of binomial generators. Scanning over these sets, there are many choices
+whose weights allow them to be fixed. However, all of these choices lead to sets which fail
+to intersect the ambient space due to the coordinate restrictions imposed by the StanleyReisner ideal. Since this involution is indeed a free action, there is no fixed locus and
+therefore no O-plane. This manifold can also be considered as one of the “naive orientifold
+Type IIB string vacua”.
+Hodge Splitting
+We now turn to the procedure for computing the splitting of the Hodge numbers on the
+Calabi-Yau orientifold. The linear ideal, which fixes toric divisor redundancies, is given by
+Ilin = h
+
+−D1
+−D1
+−D1
+−D1
+
+−
+−
+−
++
+
+D2
+D2
+D2
+0
+
+− D3
+− D3
++ 0
+− D3
+
+− D4
++ 0
+− D4
+− D4
+
++
+−
++
++
+
+0
+D5
+D5
+D5
+
++ 0
++ D6
+− D6
+− D6
+
++ D7
++ 0
++ D7
++ D7
+
++
++
++
++
+
+D8
+D8
+0
+D8
+
++ D9
++ D9
++ D9
++ 0
+
++ D10 ,
++ D10 ,
+(83)
++ D10 ,
++ D10 i ,
+
+and a basis in H 1,1 (X; Z) is given by J1 = D5 , J2 = D6 , J3 = D7 , J4 = D8 , J5 = D9 , J6 =
+D10 . In this example the involution acts on the divisor classes as
+σ ∗ : D1 ↔ D10 , D2 ↔ D9 , D3 ↔ D8 , D4 ↔ D7 , D5 ↔ D6 ,
+
+(84)
+
+thus all five of the exchanges in this example are of non-shrinkable rigid divisors. This
+case is favorable, and we can thus expand the Kähler form in terms of these divisor classes
+J = t1 J1 + t2 J2 + t3 J3 + t4 J4 + t5 J5 + t6 J6 , with t1 , ...t6 ∈ Z. The constraint that the Kähler
+form must only have components in H+1,1 (X) implies
+J = σ ∗ J = t1 D6 + t2 D5 + t3 D4 + t4 D3 + t5 D2 + t6 D1
+
+(85)
+
+As in previous examples, we rewrite D1 , D2 , D3 , and D4 in terms of our chosen basis
+using the linear ideal. Performing the algebra, and plugging the relations into eq.(85), we
+obtain
+J = (t2 + t3 − t4 − t5 + t6 )J1 + (t1 − t3 + t4 + t5 − t6 )J2 + t3 J3 + t4 J4 + t5 J5 + t6 J6 . (86)
+Note that the last four terms are unchanged from the original expansion of the Kähler
+form and we get
+t2 + t3 − t4 − t5 + t6 = t1 ,
+
+t1 − t3 + t4 + t5 − t6 = t2 .
+
+(87)
+
+Solving for t1 in the latter equation shows that these are in fact the same, and hence
+∗
+we can write either t1 or t2 in terms of the other Kähler moduli. Hence h1,1
++ (X/σ ) = 5
+1,1
+∗
+and h− (X/σ ) = 1. Choosing the independent even-parity eigendivisors D1+, = D5 +
+D6 , D+,2 = D4 + D7 , D+,3 = D3 + D8 , D+,4 = D2 + D9 , D+,5 = D1 + D10 , we can write the
+Kähler form in the manifestly even-parity form
+J = t+,1 D+,1 + t+,2 D+,2 + t+,3 D+,3 + t+,4 D+,4 + t+,5 D+,5 ,
+30
+
+(88)
+
+with coefficients t+,i given by
+1
+1
+t+,1 = t1 + (−t3 + t4 + t5 − t6 ), t+,2 = t3 ,
+2
+2
+1
+1
+1
+t+,3 = t4 , t+,4 = t5 , t+,5 = t6 .
+2
+2
+2
+
+(89)
+
+Finally we check whether the locus {Psymm = 0} is smooth by computing the dimension
+dim Iismooth as eq.(29) for each disjoint region Ui allowed by the Stanley-Reisner ideal. We
+find that the maximum dimension is −1, so that {Psymm = 0} is smooth. The involution
+considered in eq.(80) is indeed a free action. Furthermore, the Hodge number splits under
+the Lefschetz fixed point theorem:
+1,1
+∗
+∗
+h2,1
+− (X/σ ) = h− (X/σ ) +
+
+χ(X)
+L(σ, X) − χ(X)
+1,1
+= h−
+(X/σ ∗ ) −
+= 21 ,
+4
+4
+
+(90)
+
+and then the Hodge number of this smooth Calabi-Yau threefold splits as:
+1,1
+2,1
+2,1
+∗
+∗
+∗
+∗
+h1,1
++ (X/σ ) = 5, h− (X/σ ) = 1; h+ (X/σ ) = 25, h− (X/σ ) = 21 .
+
+(91)
+
+∗
+Since the manifold is smooth, there is no ambiguity in defining h2,1
+− (X/σ ) and eq.(37)
+gives the true Hodge number splitting.
+
+4
+
+Scanning Results
+
+In a systematic scan within the database [2] up to h1,1 = 6, we analyzed 22,974 favorable polytopes, from which we obtain 646,903 MPCP triangulations. As discussed in
+Section 2.1, some subset of the triangulations of a dual polytope encode identical topological information, with the primary difference being the content of the Kähler cone.
+In such cases, we must glue them together into a larger Kähler cone corresponding to a
+single Calabi-Yau geometry. This gluing results in 100,368 distinct favorable Calabi-Yau
+geometries. However, due to computational restraints, we were unable to examine every
+triangulation. The percentages of geometries scanned are shown in Table.1.
+h1,1 (X)
+
+1
+
+2
+
+3
+
+4
+
+5
+
+6
+
+Total
+
+# of Favorable Polytopes
+
+5
+
+36
+
+243
+
+1185
+
+4897
+
+16608
+
+22974
+
+# of Favorable
+Triangulations
+
+5
+
+48
+
+525
+
+5330
+
+56714
+
+584281
+
+646903
+
+# of Favorable Geometries
+
+5
+
+39
+
+305
+
+2000
+
+13494
+
+84525
+
+100368
+
+% of Favorable
+Triangulations Scanned
+
+80
+
+100
+
+99.8
+
+99.66
+
+99.41
+
+99.01
+
+99.01
+
+Table 1: The favorable polytopes, triangulations, geometries for h1,1 (X) ≤ 6.
+
+31
+
+4.1
+
+Classification of Proper Involutions
+
+According to the definition of orientifold projection eq.(1), each of the proper involutions will lead to an orientifold Calabi-Yau threefold. As a result, we will classify various
+properties of orientifold Calabi-Yau threefolds in the Z2 orbifold limit according to different
+kinds of proper involutions.
+We first consider the so-called “triangulation-wise” involutions. In Section 2.3, we
+outline the procedure for obtaining the desired Non-trivial Identical Divisor (NID) involutions. In total, we find 107,171 such involutions present at the triangulation level which
+exist within a single chamber of the Kähler cone of a given geometry. Of these, after considering the favorable triangulations and trivial fundamental group, 28,463 are “proper”
+in the sense that they preserve the intersection structure of X and allow for consistent
+orientifold geometries as described in Section 2.3. We also find that 8,449 favorable CY
+geometries admit a consistent involution within at least one chamber of their Kähler cones.
+These 28,463 triangulation-wise proper involutions are distributed in 25,375 different triangulations.
+After considering the gluing of Kähler cones corresponding to a single Calabi-Yau geometry, we refer to those involutions which span all disjoint phases of the Kähler cone
+for a unique Calabi-Yau geometry as “geometry-wise” proper NID involutions. We find a
+total of 5,660 geometry-wise proper involutions, each of which may correspond to several
+triangulation-wise involutions. We find that there are only 1,401 favorable polytopes and
+4,482 favorable geometries which contain a geometry-wise proper NID involution, which account for 6.1% and 4.47% of scanned polytopes and geometries respectively. These results
+are summarized in Table.2.
+Each of the geometry-wise proper NID involutions may exchange several pairs of topologically distingushed divisors. Thus we enumerate the number of different pairs of Nontrivial Identical Divisors for each of the involutions as shown in Table 3. We note that it
+is very rare for an involution to exchange both del Pezzo, K3, and exact-Wilson divisors
+simultaneously for small h1,1 (X).
+As an example, consider h1,1 (X) = 2. There are 36 polytopes which contains 48
+MPCP triangulations. After gluing the Kähler cone of several triangulations with the
+same topology, we end up with 39 distinguished Calabi-Yau manifolds (Table 1). Among
+them only one polytope, which contains a single triangulation, (and thereby corresponds
+to a single geometry) contains a proper involution (which is both a triangulation-wise and
+geometry-wise involution). In fact, there are 6 different kinds of involutions acting on the
+geometry which result in 6 different orientifold Calabi-Yau manifolds (Table 2). Each of
+these 6 involutions exchanges three pairs of Special Deformation (SD2) divisors, which
+results in a total of 18 exchanged pairs of SD2 surfaces (Table 3).
+
+4.2
+
+Classification of O-planes
+
+The fixed points of the involution correspond to orientifold planes, which acquire
+charges that must be cancelled by appropriate configurations of D3 and D7 branes in
+order to avoid anomalies in our theory. We scan for these orientifold planes in Section 2.4
+by seeking the fixed points in the ambient toric manifold and restricting down to components transversal with the involution-invariant part of the Calabi-Yau hypersurface. Note
+32
+
+h1,1 (X)
+
+1
+
+2
+
+3
+
+4
+
+5
+
+6
+
+Total
+
+Triangulation-wise proper NID exchange involutions
+# of Polytopes
+contains Involutions
+
+0
+
+1
+
+25
+
+166
+
+712
+
+2172
+
+3076
+
+# of Geometries contains
+Involutions
+
+0
+
+1
+
+26
+
+273
+
+1559
+
+6590
+
+8449
+
+# of Triangulations
+contains Involutions
+
+0
+
+1
+
+31
+
+405
+
+3372
+
+21566
+
+25375
+
+# of Involutions
+
+0
+
+6
+
+51
+
+516
+
+4085
+
+23805
+
+28463
+
+Geometry-wise proper NID exchange involutions
+# of Polytope
+contains Involutions
+
+0
+
+1
+
+16
+
+96
+
+330
+
+958
+
+1401
+
+# of Geometries contains
+Involutions
+
+0
+
+1
+
+17
+
+183
+
+911
+
+3370
+
+4482
+
+# of Involutions
+
+0
+
+6
+
+28
+
+259
+
+1219
+
+4148
+
+5660
+
+% of Polytope
+contains Involutions
+
+0
+
+2.78
+
+6.58
+
+8.10
+
+6.74
+
+5.77
+
+6.10
+
+% of Geometries contains
+Involutions
+
+0
+
+2.56
+
+5.57
+
+9.15
+
+6.75
+
+3.99
+
+4.47
+
+Table 2: Statistic counting on the triangulation/geometry-wide Non-trivial Identical Divisors exchange involutions in favorable polytopes, triangulations and geometries.
+than in all but one case, the fixed sets allowed by a geometry-wise proper involution across
+an entire consistent CY geometry are either individual O3, O5, or O7 planes, or combinations of O3 and O7 planes. In one case, discussed in Section 3.3, we find a freely acting Z2
+involution. In every case, the parity of the volume form under σ is in agreement with the
+orientifold planes found by our algorithm, i.e, σ ∗ Ω = −Ω for O3, O7, and O3/O7 cases,
+and σ ∗ Ω = Ω for O5 cases. The results of this scan can be found in Table 4.13 It shows
+that 23,961 out of the total 28,430 (84.3% of) triangulation-wise proper involutions and
+4,108 out of the total 5,660 (72.6%) geometry-wise proper involutions will end up with an
+orientifold Calabi-Yau threefold with an O3/O7-plane system.
+As a consistency check, we note that there are no simultaneous O3 and O5-planes
+existing under a single involution, as well as no O7 and O5-planes coexisting. Of course, it
+then follows that there are no instances of an orientifold Calabi-Yau threefold containing
+O3, O5 and O7-plane under a single involution.
+We note that our results (in particular, only finding one free action) are in agreement
+13
+
+For h1,1 (X) = 6, due to the calculation time limit, we did not obtain the fixed loci for 33 triangulationwise involutions, which account for 0.14% of the 23805 triangulation-wise proper involutions in h1,1 (X) = 6.
+So to classify O-planes and naive Type IIB string vacua (Tables 4, 5), we only take into account the 23772
+triangulation-wise involutions for h1,1 (X) = 6.
+
+33
+
+Number of pairs of Non-trivial Identical Divisors (NID) under involutions
+h1,1 (X)
+
+1
+
+2
+
+3
+
+4
+
+5
+
+6
+
+Total
+
+Triangulation-wise proper Involutions
+# of Involutions
+
+0
+
+6
+
+51
+
+516
+
+4085
+
+23805
+
+28463
+
+del Pezzo surface dPn , n ≤ 8
+
+0
+
+0
+
+12
+
+238
+
+2233
+
+14507
+
+17090
+
+Rigid surface dPn , n > 8
+
+0
+
+0
+
+14
+
+512
+
+5659
+
+32481
+
+38666
+
+(exact-)Wilson surface
+
+0 (0)
+
+0 (0)
+
+5 (0)
+
+40 (5)
+
+177 (80)
+
+744 (411)
+
+966 (496)
+
+K3 surface
+
+0
+
+0
+
+65
+
+300
+
+619
+
+1976
+
+2960
+
+SD1 surface
+
+0
+
+0
+
+9
+
+47
+
+418
+
+2190
+
+2664
+
+SD2 surface
+
+0
+
+18
+
+8
+
+33
+
+109
+
+459
+
+627
+
+del Pezzo and K3
+
+0
+
+0
+
+0
+
+9
+
+98
+
+572
+
+679
+
+del Pezzo and (Exact-)Wilson
+
+0 (0)
+
+0 (0)
+
+1 (0)
+
+28 (0)
+
+95 (9)
+
+667 (286)
+
+791 (295)
+
+K3 and (Exact-)Wilson
+
+0 (0)
+
+0 (0)
+
+8 (0)
+
+12 (4)
+
+43 (7)
+
+101 (9)
+
+156 (20)
+
+del Pezzo, K3 and (Exact-)Wilson
+
+0 (0)
+
+0 (0)
+
+0 (0)
+
+0 (0)
+
+28 (0)
+
+87 (2)
+
+115 (2)
+
+Geometry-wise proper Involutions
+# of Involutions
+
+0
+
+6
+
+28
+
+259
+
+1219
+
+4148
+
+5660
+
+del Pezzo surface dPn , n ≤ 8
+
+0
+
+0
+
+8
+
+107
+
+634
+
+2660
+
+3409
+
+Rigid surface dPn , n > 8
+
+0
+
+0
+
+8
+
+259
+
+1973
+
+6198
+
+8438
+
+(Exact-)Wilson surface
+
+0 (0)
+
+0 (0)
+
+5 (0)
+
+28 (2)
+
+48 (4)
+
+136 (75)
+
+217 (81)
+
+K3 surface
+
+0
+
+0
+
+28
+
+215
+
+219
+
+527
+
+989
+
+SD1 surface
+
+0
+
+0
+
+8
+
+23
+
+102
+
+216
+
+349
+
+SD2 surface
+
+0
+
+18
+
+6
+
+18
+
+39
+
+84
+
+165
+
+del Pezzo and K3
+
+0
+
+0
+
+0
+
+0
+
+26
+
+156
+
+182
+
+del Pezzo and (Exact-)Wilson
+
+0 (0)
+
+0 (0)
+
+1 (0)
+
+19 (0)
+
+40 (1)
+
+109 (40)
+
+169 (41)
+
+K3 and (Exact-)Wilson
+
+0 (0)
+
+0 (0)
+
+8 (0)
+
+12 (4)
+
+13 (4)
+
+23 (3)
+
+56 (11)
+
+del Pezzo, K3 and (Exact-)Wilson
+
+0 (0)
+
+0 (0)
+
+0 (0)
+
+0 (0)
+
+4 (0)
+
+16 (2)
+
+20 (2)
+
+Table 3: Number of pairs of NIDs exchanged under triangulation/geometry-wise proper
+involutions.
+with [70]. In that work, a search for freely-acting discrete symmetries of a more general
+variety was performed for h1,1 (X) ≤ 3, with free actions being found for five toric CalabiYaus. Of these five, two do not admit any Z2 symmetries, while the Z2 symmetries of the
+other three consist entirely of coordinate reflections of the form xi ↔ −xi . In particular,
+none of these cases support an NID involution. This is consistent with our results, which
+34
+
+found no NID involutions below h1,1 (X) = 6.
+As an example, consider h1,1 (X) = 3. There are 25 polytopes with 31 triangulations
+containing 51 triangulation-wise proper involutions. Among these involutions, 9, 20 and
+31 will result in O3, O5 and O7-plane loci respectively. Among them, there are 9 involutions which contain both O3- and O7- planes simultaneously. These 51 triangulation-wise
+involutions reduce to 28 geometry-wise proper involutions when requiring the involution
+span all disjoint phases of the Kähler cone for a unique Calabi-Yau geometry. In these 28
+involutions, 4 contain O3 loci, 16 contain O5 loci, 12 contain O7 loci, while 4 contain a
+combination of O3 and O7-planes (Table 4).
+Classification of O-plane fixed point locus
+h1,1 (X)
+
+1
+
+2
+
+3
+
+4
+
+5
+
+6
+
+Total
+
+Triangulation-wise proper Involutions
+# of Involutions
+
+0
+
+6
+
+51
+
+516
+
+4085
+
+23772
+
+28430
+
+O3
+
+0
+
+0
+
+9
+
+253
+
+2640
+
+18193
+
+21083
+
+O5
+
+0
+
+6
+
+20
+
+157
+
+1006
+
+3279
+
+4468
+
+O7
+
+0
+
+0
+
+31
+
+328
+
+3005
+
+20137
+
+23501
+
+O3 and O7
+
+0
+
+0
+
+9
+
+222
+
+2566
+
+17826
+
+20623
+
+Free Action
+
+0
+
+0
+
+0
+
+0
+
+0
+
+1
+
+1
+
+Geometry-wise proper Involutions
+# of Involutions
+
+0
+
+6
+
+28
+
+259
+
+1219
+
+4148
+
+5660
+
+O3
+
+0
+
+0
+
+4
+
+82
+
+557
+
+2611
+
+3254
+
+O5
+
+0
+
+6
+
+16
+
+106
+
+488
+
+929
+
+1545
+
+O7
+
+0
+
+0
+
+12
+
+124
+
+691
+
+3082
+
+3909
+
+O3 and O7
+
+0
+
+0
+
+4
+
+53
+
+523
+
+2475
+
+3055
+
+Free Action
+
+0
+
+0
+
+0
+
+0
+
+0
+
+1
+
+1
+
+Table 4:
+Classification of O-plane fixed point locus and free actions under the
+triangulation/geometry-wise proper involutions.
+
+4.3
+
+String Landscape
+
+Under the assumption of placing eight D7-branes on top of the O7-plane to cancel the
+D7-tadpole, we also count the naive orientifold Type IIB string vacua with an O3/O7system by considering cases that satisfy D3-tadpole cancellation, i.e, Qloc
+D3 in eq.(30) is an
+integer. If under an involution there is only an O7-plane involved, we just count it as one
+naive Type IIB string vacuum. It turns out that for most of the Calabi-Yau threefolds
+admitting a proper involution, they will end up with an O3/O7-system and obtain a naive
+orientifold Type IIB string vacua. The results are summarized in Table 5. It shows that
+35
+
+20,715 (72.9%) of triangulation-wise proper involutions and 3,334 (58.9%) of geometry-wise
+proper involutions result in a naive Type IIB string vacuum.
+In the O5/O9-system, if we take account that the D5-tadpole is cancelled automatically
+by the involution, in principle we can count all the configurations with O5 as naive string
+vacua also. Then 25,183 (88.6% of) triangulation-wise proper involutions and 4,879 (86.2%)
+of geometry-wise involutions will end up with a naive type IIB string vacuum. We did not
+count these vacua in the present work.
+For example, for h1,1 (X) = 3 there are 51 triangulation-wise and 28 geometry-wise
+involutions, respectively. Under the triangulation-wise involutions, there are 9 orientifold
+geometries containing both O3 and O7-planes which satisfy the naive D3-tadpole cancellation. There are 22 geometries containing only O7-planes and, as explained before, we
+take all of them as naive string vacua. In total there are 31 naive string vacua among the
+triangulation-wise involutions. Similarly, among the geometry-wise involutions, there are
+four Calabi-Yau threefolds with O3/O7-planes and eight Calabi-Yau threefolds with only
+O7-planes which satisfy the D3-tadople cancellation condition, adding up to a total of 12
+naive orientifold Type IIB string vacua (Table 5).
+Naive Orientifold Type IIB String Vacua with O3/O7-system
+h1,1 (X)
+
+1
+
+2
+
+3
+
+4
+
+5
+
+6
+
+Total
+
+Triangulation-wise proper Involutions
+# of Involutions
+
+0
+
+6
+
+51
+
+516
+
+4085
+
+23772
+
+28430
+
+Contains O3 & O7
+
+0
+
+0
+
+9
+
+206
+
+2346
+
+15234
+
+17795
+
+Contains Only O3
+
+0
+
+0
+
+0
+
+31
+
+74
+
+355
+
+460
+
+Contains Only O7
+
+0
+
+0
+
+22
+
+102
+
+386
+
+1950
+
+2460
+
+Total String Vacua
+
+0
+
+0
+
+31
+
+339
+
+2806
+
+17539
+
+20715
+
+Geometry-wise proper Involutions
+# of Involutions
+
+0
+
+6
+
+28
+
+259
+
+1219
+
+4148
+
+5660
+
+Contains O3 & O7
+
+0
+
+0
+
+4
+
+48
+
+455
+
+1874
+
+2381
+
+Contains Only O3
+
+0
+
+0
+
+0
+
+29
+
+34
+
+136
+
+199
+
+Contains Only O7
+
+0
+
+0
+
+8
+
+68
+
+149
+
+529
+
+754
+
+Total String Vacua
+
+0
+
+0
+
+12
+
+145
+
+638
+
+2539
+
+3334
+
+Table 5: Classification of naive orientifold Type IIB string vacua under the
+triangulation/geometry-wise proper involutions.
+For those 20,715 triangulation-wise and 3,334 geometry-wise naive orientifold Tyep IIB
+string vacua with an O3/O7-system, the distribution of Qloc
+D3 is shown in Fig. 1. It shows
+that most of the involutions end up with an orientifold Calabi-Yau threefold with Qloc
+D3
+around −8 in our scan. Again, the geometry-wise involutions put a strong constraint on
+the geometry and reduce dramatically the number of possible geometries. Here we again
+36
+
+see that Qloc
+D3 is generally around −8. For triangulation-wise involutions, the smallest and
+loc
+largest QD3 are −30 and 3 respectively, while for geometry-wise involutions, the range of
+integer Qloc
+D3 shrinks to [−30, 0].
+1400
+# of Geometry-wise involutions
+
+# of Triangulation-wise involutions
+
+12 000
+10 000
+8000
+6000
+4000
+2000
+0
+
+1200
+1000
+800
+600
+400
+200
+0
+
+-30
+
+-20
+
+-10
+
+0
+
+-30
+
+QD3
+
+-20
+
+-10
+
+0
+
+QD3
+
+Figure 1: Distribution of Qloc
+D3 under triangulation/geometry-wise proper involutions for
+naive orientifold Type IIB string vacua for h1,1 (X) ≤ 6.
+
+4.4
+
+Hodge Number Splitting
+
+Finally, in Section 2.5, we discuss the decomposition of the Kähler moduli space into
+odd and even parity equivariant cohomology H 1,1 (X/σ ∗ ) = H+1,1 (X/σ ∗ )⊕H−1,1 (X/σ ∗ ). The
+constraint that the Kähler form must be invariant σ ∗ J = J ensures that we can always
+find the dimension of the even parity space, and then by deduction, the dimension of the
+∗
+odd party space h1,1
+− (X/σ ), which, as has been discussed, must be non-trivial in our case.
+The results of this Kähler moduli space splitting can be found in Table 6. By utilizing the
+∗
+Lefschetz fixed point theorem eq.(37) we can further determine the h2,1
+± (X/σ ) splitting
+2,1
+in the orbifold limit. The value of h±
+(X/σ ∗ ) may get changed by a possible conifold
+1,1
+1,1
+resolution while h− (X/σ ∗ ) is robust. In this paper, we only present the robust h−
+(X/σ ∗ )
+2,1
+∗
+results and leave the results of h± (X/σ ) after blowing up the singularities for a future
+work. The entire procedure is explicitly performed in Section 3. As an example, for
+h1,1 (X) = 3 there are 51 triangulation-wise and 28 geometry-wise involutions, respectively.
+Under these involutions, the Hodge numbers of the orientifold Calabi-Yau threefolds all
+∗
+split with h1,1
+− (X/σ ) = 1.
+
+5
+
+Conclusions and Outlook
+
+In this paper, we extend and improve on a previous study [1] of the database [2]
+(www.rossealtman.com/tcy) of Calabi-Yau threefolds with h1,1 (X) ≤ 6, by asking for the
+existence of a holomorphic Z2 orientifold involution σ. First, we determined the topology
+of each divisor in defining the Calabi-Yau threefold by calculating its Hodge diamond.
+By requiring that the pullback of σ to cohomology classes exchange only toric divisors
+with identical surface topology, but separate cohomology on the Calabi-Yau, we ensure
+1,1
+that the orientifold has non-trivial odd equivariant cohomology h−
+(X/σ ∗ ) 6= 0. We also
+37
+
+Hodge number splitting
+h1,1 (X)
+
+1
+
+2
+
+3
+
+4
+
+5
+
+6
+
+Total
+
+Triangulation-wide proper Involutions
+# of Involutions
+
+0
+
+6
+
+51
+
+516
+
+4085
+
+23805
+
+28463
+
+1
+
+–
+
+6
+
+51
+
+477
+
+3682
+
+20985
+
+25201
+
+2
+
+–
+
+–
+
+0
+
+39
+
+483
+
+2618
+
+3140
+
+3
+
+–
+
+–
+
+–
+
+0
+
+0
+
+202
+
+202
+
+4
+
+–
+
+–
+
+–
+
+–
+
+0
+
+0
+
+0
+
+5
+
+–
+
+–
+
+–
+
+–
+
+–
+
+0
+
+0
+
+# of h1,1
+−
+
+Geometry-wide proper Involutions
+# of Involutions
+
+0
+
+6
+
+28
+
+259
+
+1219
+
+4148
+
+5660
+
+1
+
+–
+
+6
+
+28
+
+277
+
+1048
+
+3413
+
+4772
+
+2
+
+–
+
+–
+
+0
+
+32
+
+171
+
+661
+
+864
+
+3
+
+–
+
+–
+
+–
+
+0
+
+0
+
+74
+
+74
+
+4
+
+–
+
+–
+
+–
+
+–
+
+0
+
+0
+
+0
+
+5
+
+–
+
+–
+
+–
+
+–
+
+–
+
+0
+
+0
+
+# of h1,1
+−
+
+Table 6: Classification of h1,1 (X/σ ∗ ) splitting under the triangulation/geometry-wise
+proper involutions.
+classified the different kinds of Non-trivial Identical Divisors for each of the involutions and
+showed that consistency of this involution across the full Kähler cone is very restrictive. We
+further determined all possible fixed-point loci, i.e, the locations of O3, O5 and O7-planes,
+for each of the proper involutions. By checking the D3 tadpole cancellation condition, a
+class of naive Type IIB string vacua with O3/O7-system was obtained. We found that
+under the proper involutions one ends up with a majority of O3/O7-planes systems, most
+of which further admit a naive Type IIB string vacuum. Moreover, one free action was
+identified. We further calculated the Hodge number splitting to even/odd cohomology
+in the orbifold limit. This dataset of orientifold Calabi-Yau threefolds, with all possible
+proper divisor exchange involutions, the classification and counts of orientifold planes under
+the involution, together with the non-trivial Hodge number splitting in the orbifold limit,
+represent a rich phenomenological starting point for the construction of concrete string
+models for both particle physics and cosmology.
+In this paper we considered only involutions of type σ ∗ J = J, which result in Type IIB
+string vacua. A natural extension is to consider anti-holomorphic involutions σ ∗ J = − J to
+classify the Type IIA vacua. We leave examination of these involutions to a future work.
+As discussed in the Introduction, although reflections xi ↔ −xi will in general not generate
+non-trivial h1,1
+− (X) in a favorable geomtry, it might still be very interesting to classify their
+point-wise fixed loci and free actions on the Calabi-Yau hypersurface under the reflection.
+38
+
+This will lead to a primary classification of the Type II string vacua landscape of the
+Kreuzer-Skarke database in our upcoming work [84].
+Additionally, it would be ideal to extend these analyses beyond our current computational limit into the region h1,1 (X) ≥ 7 of the Kreuzer-Skarke database. There has recently
+been progress on the triangulation of polytopes with large h1,1 (X) [55, 60, 85], although
+limitations on these techniques still preclude examining all possible MPCP triangulations
+for a general given polytope. Due to the large size of the Kreuzer-Skarke database, it is
+therefore natural to expect that in addition to the formal progress, supervised machine
+learning techniques will be necessary to understand the landscape, an approach applied to
+counting MPCP triangulations in [86]. We will explore applying machine learning techniques to orientifold Calabi-Yau threefolds under divisor exchange involutions in a coming
+work [87].
+In this paper, we focused on orientifold Calabi-Yaus under an involution without resolving the singularity, i.e, in the Z2 orbifold limit, which is mostly considered in the literature
+for string model building. For other string applications, we can consider the resolution
+of the conifold singularities as considered early in the CICY case [88, 89] and recently in
+the CICY landscape [63, 64]. This will yield sets of CY threefolds that can be reached via
+conifold transitions, and possibly result in some new threefolds beyond the Kreuzer-Skarke
+list. We leave the resolution of conifold singularity for a future work.
+Besides the Kreuzer-Skarke and CICY database, it was found that one can relax the
+condition that the configuration matrix or weighted matrix entries be non-negative to
+construct a new class of Calabi-Yau manifold, called “generalized Complete Intersection
+Calabi-Yau” (gCICYs) [90] and its toric variations [91,92]. Some new mathematical aspects
+[93–95] and physical applications [96, 97] of these geometries have recently been studied.
+Examining involutive, or more general quotient, symmetries of these new manifolds as well
+could prove interesting.
+
+Acknowledgments
+We would like to thank James Halverson, Ralph Blumenhagen, Andres Collinucci,
+James Gray, Fengjun Xu, Hao Zou for helpful discussions and correspondence. XG was
+supported in part by the Humboldt Resaerch Fellowship and NSFC under grant numbers
+12005150. BDN and JC were supported by the National Science Foundation under grant
+PHY-1913328.
+
+A
+
+Pseudocode Description of Fixed-Point Algorithm
+
+In this appendix we provide a pseudocode description of the fixed point classification
+algorithm described in Section 2.4. The input consists of a proper NID exchange involution
+σ for a CY hypersurface X in a toric variety A described by a fine, regular, star triangulation of a reflexive 4d polytope ∆◦ . The output is the set of fixed loci together with
+their codimensionality (classification into O7, O5, O3). We focus only on the calculations
+specific to this procedure, ignoring well-known procedures like finding the kernel or rank
+
+39
+
+of a matrix. In addition, we have favored algorithmic simplicity over optimization in our
+descriptions of these algorithms.
+The first calculation we describe is finding monomials with definite parity under the
+involution. This process is described in the routine below. The input is σ, which for
+these calculations can be expressed as a list of pairs, with each pair being the indices of
+exchanged coordinates, along with the resolved weight matrix W . The output is the sets
+G0 , G+ , G− of invariant monomials.
+
+40
+
+Algorithm 1: INVARIANT GENERATORS(σ, W )
+let G0 , G+ , G− be empty lists
+k ← σ.length
+3 m ← W.rows
+4 n ← W.columns
+/* Construct G0
+5 G0 ← {x0 , ..., xn }
+6 for p ← 0 to k do
+7
+for q ← 0 to 1 do
+8
+i ← σ[p][q]
+9
+if xi ∈ G0 then
+10
+remove xi from G0
+11
+end
+12
+end
+13 end
+/* Add monomials to G+
+14 for p ← 0 to k do
+15
+i ← σ[p][0]
+16
+j ← σ[p][1]
+17
+append xi xj to G+
+18 end
+/* Construct the matrix of difference vectors
+19 let D be a new matrix of size m × k
+20 for p ← 0 to k do
+21
+i ← σ[p][0]
+22
+j ← σ[p][1]
+23
+for r ← 0 to m do
+24
+Dpr = Wri − Wrj
+25
+end
+26 end
+/* Add binomials to G+ , G−
+27 let M be a basis for the integer kernel of D, with vectors as columns
+28 if M is nonempty then
+29
+for i ← 0 to M.columns do
+30
+T1 ← 1
+31
+T2 ← 1
+32
+for j ← 0 to k do
+33
+a = σ[j][0]
+34
+b = σ[j][1]
+35
+v = Mji
+36
+if v >= 0 then
+|v|
+37
+T 1 = T 1 ∗ xa
+1
+2
+
+38
+39
+40
+
+|v|
+
+T 2 = T 2 ∗ xb
+else
+|v|
+T 1 = T 1 ∗ xb
+|v|
+
+T 2 = T 2 ∗ xa
+42
+end
+43
+end
+44
+append T 1 + T 2 to G+ if not already a member
+45
+append T 1 − T 2 to G− if not already a member
+46
+end
+47 end
+48 return G0 , G+ , G−
+41
+
+41
+
+*/
+
+*/
+
+*/
+
+*/
+
+The next procedure describes the check to determine whether or not the toric weights
+allow a locus, defined by the vanising of a list of homogeneous polynomials F, to be fixed.
+As noted in Section 2.4, this is trivially true if F ∩ G− = ∅ and so such cases need not be
+checked.
+Algorithm 2: WEIGHT FIXED(F, W, G0 , G+ , G− )
+m = W.rows
+n = F.length
+let M be a matrix of size m × n
+for i ← 0 to n do
+set column i of M to be the toric weight vector of F[i]
+let b be an array of zeros of size n
+for i ← 0 to n do
+if F[i] ∈ G− then
+b[i] = 1
+let s be an array of size n
+for i ← 0 to n do
+s[i] = M1i + · · · + Mmi
+let Q be the set Q = {(q1 , . . . , qn ) ∈ Zn , 0 ≤ qi < s[i]}
+r = rank(M)
+for q ∈ Q do
+let Maug be the augmented matrix M |(2q + b)
+raug = rank(Maug )
+if r == raug then
+return true
+return false
+
+As discussed in Section 2.4, the invariant generators are not independent, with some
+subset of the generators being related by consistency conditions. The following algorithm
+determines whether or not a given the fixed set determined by the vanishing of a list of
+homogeneous polynomials F is consistent. We do this by computing the dimension of an
+ideal with the nonvanishing invariant polynomials set to 1.
+Algorithm 3: CONSISTENT(F, G0 , G+ , G− )
+G = G0 ∪ G+ ∪ G−
+let L be an empty list
+for p ∈ G do
+if p ∈ F then
+append p to L
+else
+append p − 1 to L
+return dim(hLi) ≥ 0
+
+Thus, given the sets G0 , G+ , G− of definite-parity polynomials, we can find all fixed-point
+loci allowed by the toric weights via the following routine.
+
+42
+
+Algorithm 4: FIXED LOCI WEIGHTS(W, G0 , G+ , G− )
+G = G0 ∪ G+ ∪ G−
+let L be an empty list
+let S be the power set of G
+for F ∈ S do
+skip = false
+for T ∈ L do
+if T ⊂ S then
+skip = true
+break
+if skip then
+continue
+if CONSISTENT(F, G0 , G+ , G− ) and WEIGHT FIXED(F, W, G0 , G+ , G− ) then
+append F to L
+return L
+
+In order to check whether any given locus in the weighted projective space intersects
+the ambient space, we first determine the minimal generating sets such that, when each
+coordinate in a set is non-zero, the Stanley-Reisner conditions are satisfied. We call these
+sets sectors. In a sense, this finds a minimal list of sets that cover the ambient space.
+We express the Stanley-Reisner ideal ISR as a list of lists of integers. For example, if
+x0 x2 x3 ∈ ISR , we have a list element {0, 2, 3}.
+Given ISR , we can find the sectors using the following routine. Depending on one’s
+chosen programming language, removing an element from a container mid-loop may invalidate iterators. Thus it may be safer to keep an auxiliary array of the indices of elements
+to be removed, and then run a separate loop after to remove these elements.
+
+43
+
+Algorithm 5: SECTORS(ISR )
+n = ISR .length
+let S be the power set of {0, ..., n − 1}
+/* Keep only index sets that contain at least one element
+/* from each list in ISR
+let T be an empty list
+for S ∈ S do
+keep = true
+for j ← 0 to n − 1 do
+if S ∩ ISR [j] == ∅ then
+keep = false
+break
+
+*/
+*/
+
+if keep then
+append S to T
+/* Remove any lists that are supersets of others
+for T1 ∈ T do
+for T2 ∈ T do
+if T1 ⊂ T2 then
+remove T2 from T
+
+*/
+
+/* Construct the polynomials corresponding to the sectors
+let U be an empty list
+for T ∈ T do
+let L be an empty list
+for i ∈ T do
+append xi − 1 to L
+append L to U
+return U
+
+*/
+
+The Calabi-Yau hypersurface X is defined by the vanishing of a homogeneous polynomial P . In order for X to be invariant under σ, we must restrict to the subset of moduli
+space in which P is invariant. This gives us a “symmetrized” polynomial Ps . The requisite
+steps for creating Ps are described in Section 2.4.1.
+Once the sectors U and the homogeneous hypersurface polynomial Ps have been determined, we can check whether a given fixed locus defined by the vanishing of a list of
+homogeneous polynomials F intersects that ambient space, by verifying that it intersects
+at least one of the sectors. At the same time, we check that the set intersects the hypersurface, defined by Ps = 0. This is done via the following routine, which also returns the
+ideal dimensions in the case that the intersection is nonempty, as these will be useful in
+finding the codimension.
+
+44
+
+Algorithm 6: INTERSECTS HYPERSURFACE(F, U, Ps )
+/* Check whether or not F intersects X in at least one sector
+let D be an empty list
+intersect ← false
+for U ∈ U do
+I = hU, Ps , Fi
+d = dimI
+if d ≥ 0 then
+intersect = true
+append d to D
+return intersect, D
+
+*/
+
+Once we have determined that a fixed locus meets the hypersurface, we calculate its
+codimension using the following routine. Note that the outermost for loop will, at worst,
+terminate in its final iteration (when S is equal to F). To save calculation time, one can
+check whether S.length == F.length before the inner for loop, and return the value beforehand if so. We have omitted this check for algorithmic clarity.
+Algorithm 7: CODIMENSION(F, U, Ps , D)
+let S be the power set of F, as a list
+sort S in order of increasing set size
+for i ← 0 to S.length do
+same ← true
+S = S[i]
+for j ← 0 to U.length do
+I = hU[j], Ps , S, i
+ds = dimI
+if ds 6= D[j] then
+same = false
+if same then
+codim = 9 − 2 ∗ S.length
+return codim
+
+The final check is whether the σ-invariant hypersurface defined by the vanishing of Ps
+is smooth. We do this by checking whether the polynomial and its partial derivatives can
+all vanishing simultaneously, via the following algorithm.
+Algorithm 8: SMOOTH(Ps , U)
+smooth ← true
+for U ∈ U do
+∂Ps
+s
+Ismooth = hU, Ps , ∂P
+∂x1 , ..., ∂xk i
+if dim(Ismooth ) ≥ 0 then
+smooth = false
+break
+return smooth
+
+Combining these routines, we can express our full algorithm for determining the fixedpoint loci, their codimensions, and whether or not the hypersurface is smooth. The full
+algorithm is sketched below. The input consists of the involution σ, the Stanley-Reisner
+45
+
+ideal ISR , the hypersurface polynomial P and the weight matrix W . The algorithm is
+given below.
+Algorithm 9: FIXED LOCI(σ, ISR , Ps , W )
+G0 , G+ , G− = INVARIANT GENERATORS(σ, W )
+G = G0 ∪ G+ ∪ G−
+U = SECTORS(ISR )
+let LF , Lc , Ls be empty lists
+let S be the power set of G
+for F ∈ S do
+if FIXED LOCI WEIGHTS(W, G0 , G+ , G− ) then
+X, D ← INTERSECTS HYPERSURFACE(F, U, Ps )
+if X then
+append F to LF
+append CODIMENSION(F, U, Ps , D) to Lc
+append SMOOTH(Ps , U) to Ls
+return LF , Lc , Ls
+
+B
+
+Database Format of Results
+
+In this appendix we describe the format in which the results of this scan will be stored
+in the database located at www.rossealtman.com/tcy. The cohomology of each divisors
+(Hodge diamond) in defining the Calabi-Yau are also presented. A thorough description
+of the general structure and other contents of this website can be found in Section 3 of [2].
+
+B.1
+
+Database Fields
+
+The entry for each involution will contain the following fields:
+• Polytope #, Geometry #, Triangulation #: Identification numbers for the
+polytope, geometry (within the polytope), and triangulation (within the geometry),
+inherited from the existing database.
+• Involution #: An identification number for the involution (within the triangulation)
+• h11, h21: The Hodge numbers h1,1 and h2,1 of the polytope
+• Invol: The involution, written in terms of its exchanged divisors, in a Mathematicastyle list
+• Geometry-wise Invol: Whether the involution is Geometry-wise proper involution
+• Volume Parity: The parity of the volume form under the involution (0 if the parity
+is not definite)
+• # Sym CY Terms: The number of terms remaining in the symmetrized hypersurface polynomial
+
+46
+
+• Sym CY Poly: A list of the terms, without coefficients, of the symmetrized hypersurface polynomial
+• h11+, h11-: The split Hodge numbers of the orientifold
+• OPlanes: A list of the orientifold planes found by the scan. Each orientifold plane
+will have two fields:
+– ODim: The dimension of the orientifold plane (3, 5, or 7)
+– OIdeal: The (reduced) list of polynomials whose vanishing define the orientifold
+plane
+• Naive String Vacua: Whether the orientifold Calabi-Yau admits the naive Type
+IIB string vacua criteria
+
+B.2
+
+Example Entry
+
+As an example, we display this information for the example from Section 3.1.
+• Polytope #: 566
+• Geometry #: 1
+• Triangulation #: 1
+• Involution #: 1
+• h11: 4
+• h21: 64
+• Invol: {D3 -> D6,D6 -> D3,D4 -> D7,D7 -> D4}
+• Geometry-wise Invol: true
+• Volume Parity: -1
+• # Sym CY Terms: 48
+• Sym CY Poly: In this case, all of the terms are symmetric, so this is the same as CY Poly. We
+avoid repeating it for brevity.
+• h11+: 3
+• h11-: 1
+• OPlanes:
+[
+{ "OIDEAL" : [ "x3*x4-x6*x7" ], "ODIM" : 7 },
+{ "OIDEAL" : [ "x1", "x2", "x5" ], "ODIM" : 3 }
+]
+• Naive String Vacua: True
+
+47
+
+References
+[1] X. Gao and P. Shukla, “On Classifying the Divisor Involutions in Calabi-Yau Threefolds,” JHEP 11
+(2013) 170, arXiv:1307.1139 [hep-th].
+[2] R. Altman, J. Gray, Y.-H. He, V. Jejjala, and B. D. Nelson, “A Calabi-Yau Database: Threefolds
+Constructed from the Kreuzer-Skarke List,” JHEP 02 (2015) 158, arXiv:1411.1418 [hep-th].
+[3] M. Kreuzer and H. Skarke, “Complete classification of reflexive polyhedra in four-dimensions,”
+Adv.Theor.Math.Phys. 4 (2002) 1209–1230, arXiv:hep-th/0002240 [hep-th].
+[4] M. Grana, “Flux compactifications in string theory: A Comprehensive review,” Phys.Rept. 423
+(2006) 91–158, arXiv:hep-th/0509003 [hep-th].
+[5] H. Jockers, “The Effective Action of D-branes in Calabi-Yau Orientifold Compactifications,”
+Fortsch. Phys. 53 (2005) 1087–1175, arXiv:hep-th/0507042.
+[6] M. R. Douglas and S. Kachru, “Flux compactification,” Rev. Mod. Phys. 79 (2007) 733–796,
+arXiv:hep-th/0610102.
+[7] D. Lust, S. Reffert, E. Scheidegger, W. Schulgin, and S. Stieberger, “Moduli Stabilization in Type
+IIB Orientifolds (II),” Nucl.Phys. B766 (2007) 178–231, arXiv:hep-th/0609013 [hep-th].
+[8] F. Denef, “Les Houches Lectures on Constructing String Vacua,” Les Houches 87 (2008) 483–610,
+arXiv:0803.1194 [hep-th].
+[9] R. Blumenhagen, V. Braun, T. W. Grimm, and T. Weigand, “GUTs in Type IIB Orientifold
+Compactifications,” Nucl.Phys. B815 (2009) 1–94, arXiv:0811.2936 [hep-th].
+[10] L. E. Ibanez and A. M. Uranga, String theory and particle physics: An introduction to string
+phenomenology. Cambridge University Press, 2, 2012.
+[11] A. Hebecker, “Lectures on Naturalness, String Landscape and Multiverse,” arXiv:2008.10625
+[hep-th].
+[12] B. S. Acharya, M. Aganagic, K. Hori, and C. Vafa, “Orientifolds, mirror symmetry and
+superpotentials,” arXiv:hep-th/0202208 [hep-th].
+[13] I. Brunner and K. Hori, “Orientifolds and mirror symmetry,” JHEP 11 (2004) 005,
+arXiv:hep-th/0303135 [hep-th].
+[14] H. Jockers and J. Louis, “D-terms and F-terms from D7-brane fluxes,” Nucl. Phys. B 718 (2005)
+203–246, arXiv:hep-th/0502059.
+[15] X. Gao and P. Shukla, “F-term Stabilization of Odd Axions in LARGE Volume Scenario,” Nucl.
+Phys. B 878 (2014) 269–294, arXiv:1307.1141 [hep-th].
+[16] M. Cicoli, A. Schachner, and P. Shukla, “Systematics of type IIB moduli stabilisation with odd
+axions,” arXiv:2109.14624 [hep-th].
+[17] S. Kachru, R. Kallosh, A. Linde, and S. P. Trivedi, “De sitter vacua in string theory,” Phys. Rev.
+D68 (2003) 046005, hep-th/0301240.
+[18] V. Balasubramanian, P. Berglund, J. P. Conlon, and F. Quevedo, “Systematics of moduli
+stabilisation in Calabi-Yau flux compactifications,” JHEP 0503 (2005) 007, arXiv:hep-th/0502058
+[hep-th].
+[19] T. W. Grimm, “Axion inflation in type II string theory,” Phys.Rev. D77 (2008) 126007,
+arXiv:0710.3883 [hep-th].
+[20] L. McAllister, E. Silverstein, and A. Westphal, “Gravity Waves and Linear Inflation from Axion
+Monodromy,” Phys.Rev. D82 (2010) 046003, arXiv:0808.0706 [hep-th].
+[21] R. Flauger, L. McAllister, E. Pajer, A. Westphal, and G. Xu, “Oscillations in the CMB from Axion
+Monodromy Inflation,” JCAP 06 (2010) 009, arXiv:0907.2916 [hep-th].
+
+48
+
+[22] A. Hebecker, S. C. Kraus, D. Lust, S. Steinfurt, and T. Weigand, “Fluxbrane Inflation,” Nucl. Phys.
+B 854 (2012) 509–551, arXiv:1104.5016 [hep-th].
+[23] M. Arends, A. Hebecker, K. Heimpel, S. C. Kraus, D. Lust, C. Mayrhofer, C. Schick, and
+T. Weigand, “D7-Brane Moduli Space in Axion Monodromy and Fluxbrane Inflation,” Fortsch.
+Phys. 62 (2014) 647–702, arXiv:1405.0283 [hep-th].
+[24] R. Blumenhagen and E. Plauschinn, “Towards Universal Axion Inflation and Reheating in String
+Theory,” Phys. Lett. B736 (2014) 482–487, arXiv:1404.3542 [hep-th].
+[25] F. Marchesano, G. Shiu, and A. M. Uranga, “F-term Axion Monodromy Inflation,” JHEP 09 (2014)
+184, arXiv:1404.3040 [hep-th].
+[26] A. Hebecker, S. C. Kraus, and L. T. Witkowski, “D7-Brane Chaotic Inflation,” Phys. Lett. B 737
+(2014) 16–22, arXiv:1404.3711 [hep-th].
+[27] I. Ben-Dayan, F. G. Pedro, and A. Westphal, “Hierarchical Axion Inflation,” Phys. Rev. Lett. 113
+(2014) 261301, arXiv:1404.7773 [hep-th].
+[28] C. Long, L. McAllister, and P. McGuirk, “Aligned Natural Inflation in String Theory,” Phys. Rev.
+D90 (2014) 023501, arXiv:1404.7852 [hep-th].
+[29] X. Gao, T. Li, and P. Shukla, “Combining Universal and Odd RR Axions for Aligned Natural
+Inflation,” JCAP 1410 (2014) 048, arXiv:1406.0341 [hep-th].
+[30] I. Ben-Dayan, F. G. Pedro, and A. Westphal, “Towards Natural Inflation in String Theory,” Phys.
+Rev. D92 no. 2, (2015) 023515, arXiv:1407.2562 [hep-th].
+[31] G. Shiu, W. Staessens, and F. Ye, “Large Field Inflation from Axion Mixing,” JHEP 06 (2015) 026,
+arXiv:1503.02965 [hep-th].
+[32] D. Escobar, A. Landete, F. Marchesano, and D. Regalado, “D6-branes and axion monodromy
+inflation,” JHEP 03 (2016) 113, arXiv:1511.08820 [hep-th].
+[33] R. Blumenhagen, D. Herschmann, and F. Wolf, “String Moduli Stabilization at the Conifold,”
+JHEP 08 (2016) 110, arXiv:1605.06299 [hep-th].
+[34] A. Landete, F. Marchesano, G. Shiu, and G. Zoccarato, “Flux Flattening in Axion Monodromy
+Inflation,” JHEP 06 (2017) 071, arXiv:1703.09729 [hep-th].
+[35] R. Blumenhagen, I. Valenzuela, and F. Wolf, “The Swampland Conjecture and F-term Axion
+Monodromy Inflation,” JHEP 07 (2017) 145, arXiv:1703.05776 [hep-th].
+[36] A. Hebecker, S. Leonhardt, J. Moritz, and A. Westphal, “Thraxions: Ultralight Throat Axions,”
+JHEP 04 (2019) 158, arXiv:1812.03999 [hep-th].
+[37] C. Vafa, “The String landscape and the swampland,” arXiv:hep-th/0509212.
+[38] N. Arkani-Hamed, L. Motl, A. Nicolis, and C. Vafa, “The String landscape, black holes and gravity
+as the weakest force,” JHEP 06 (2007) 060, arXiv:hep-th/0601001.
+[39] T. D. Brennan, F. Carta, and C. Vafa, “The String Landscape, the Swampland, and the Missing
+Corner,” PoS TASI2017 (2017) 015, arXiv:1711.00864 [hep-th].
+[40] G. Obied, H. Ooguri, L. Spodyneiko, and C. Vafa, “De Sitter Space and the Swampland,”
+arXiv:1806.08362 [hep-th].
+[41] E. Palti, “The Swampland: Introduction and Review,” Fortsch. Phys. 67 no. 6, (2019) 1900037,
+arXiv:1903.06239 [hep-th].
+[42] R. Blumenhagen, S. Moster, and E. Plauschinn, “Moduli Stabilisation versus Chirality for MSSM
+like Type IIB Orientifolds,” JHEP 0801 (2008) 058, arXiv:0711.3389 [hep-th].
+[43] A. Collinucci, M. Kreuzer, C. Mayrhofer, and N.-O. Walliser, “Four-modulus ’Swiss Cheese’ chiral
+models,” JHEP 0907 (2009) 074, arXiv:0811.4599 [hep-th].
+
+49
+
+[44] T. W. Grimm, M. Kerstan, E. Palti, and T. Weigand, “On Fluxed Instantons and Moduli
+Stabilisation in IIB Orientifolds and F-theory,” Phys.Rev. D84 (2011) 066001, arXiv:1105.3193
+[hep-th].
+[45] M. Kerstan and T. Weigand, “Fluxed M5-instantons in F-theory,” Nucl. Phys. B864 (2012)
+597–639, arXiv:1205.4720 [hep-th].
+[46] M. Cicoli, C. Mayrhofer, and R. Valandro, “Moduli Stabilisation for Chiral Global Models,” JHEP
+1202 (2012) 062, arXiv:1110.3333 [hep-th].
+[47] V. Balasubramanian, P. Berglund, V. Braun, and I. Garcia-Etxebarria, “Global embeddings for
+branes at toric singularities,” JHEP 1210 (2012) 132, arXiv:1201.5379 [hep-th].
+[48] M. Cicoli, S. Krippendorf, C. Mayrhofer, F. Quevedo, and R. Valandro, “D-Branes at del Pezzo
+Singularities: Global Embedding and Moduli Stabilisation,” JHEP 1209 (2012) 019,
+arXiv:1206.5237 [hep-th].
+[49] M. Cicoli, S. Krippendorf, C. Mayrhofer, F. Quevedo, and R. Valandro, “D3/D7 Branes at
+Singularities: Constraints from Global Embedding and Moduli Stabilisation,” arXiv:1304.0022
+[hep-th].
+[50] M. Cicoli, F. Muia, and P. Shukla, “Global Embedding of Fibre Inflation Models,” JHEP 11 (2016)
+182, arXiv:1611.04612 [hep-th].
+[51] M. Cicoli, I. Garcı̀a-Etxebarria, C. Mayrhofer, F. Quevedo, P. Shukla, and R. Valandro, “Global
+Orientifolded Quivers with Inflation,” JHEP 11 (2017) 134, arXiv:1706.06128 [hep-th].
+[52] M. Cicoli, D. Ciupke, V. A. Diaz, V. Guidetti, F. Muia, and P. Shukla, “Chiral Global Embedding
+of Fibre Inflation Models,” JHEP 11 (2017) 207, arXiv:1709.01518 [hep-th].
+[53] M. Cicoli, I. n. G. Etxebarria, F. Quevedo, A. Schachner, P. Shukla, and R. Valandro, “The
+Standard Model Quiver in de Sitter String Compactifications,” arXiv:2106.11964 [hep-th].
+[54] J. Gray, Y.-H. He, V. Jejjala, B. Jurke, B. D. Nelson, and J. Simon, “Calabi-Yau Manifolds with
+Large Volume Vacua,” Phys. Rev. D 86 (2012) 101901, arXiv:1207.5801 [hep-th].
+[55] C. Long, L. McAllister, and P. McGuirk, “Heavy Tails in Calabi-Yau Moduli Spaces,” JHEP 10
+(2014) 187, arXiv:1407.0709 [hep-th].
+[56] Y.-H. He, V. Jejjala, and L. Pontiggia, “Patterns in Calabi–Yau Distributions,” Commun. Math.
+Phys. 354 no. 2, (2017) 477–524, arXiv:1512.01579 [hep-th].
+[57] R. Galvez, “Kahler Moduli Inflation in Type IIB Compactifications: A random tumble through the
+Calabi-Yau landscape,” Phys. Rev. D94 no. 10, (2016) 103521, arXiv:1603.06631 [hep-th].
+[58] C. Long, L. McAllister, and J. Stout, “Systematics of Axion Inflation in Calabi-Yau Hypersurfaces,”
+JHEP 02 (2017) 014, arXiv:1603.01259 [hep-th].
+[59] R. Altman, Y.-H. He, V. Jejjala, and B. D. Nelson, “New large volume Calabi-Yau threefolds,”
+Phys. Rev. D 97 no. 4, (2018) 046003, arXiv:1706.09070 [hep-th].
+[60] M. Demirtas, C. Long, L. McAllister, and M. Stillman, “The Kreuzer-Skarke Axiverse,” JHEP 04
+(2020) 138, arXiv:1808.01282 [hep-th].
+[61] J. Halverson, C. Long, B. Nelson, and G. Salinas, “Towards string theory expectations for photon
+couplings to axionlike particles,” Phys. Rev. D 100 no. 10, (2019) 106010, arXiv:1909.05257
+[hep-th].
+[62] P. Candelas, A. Dale, C. Lutken, and R. Schimmrigk, “Complete Intersection Calabi-Yau
+Manifolds,” Nucl. Phys. B 298 (1988) 493.
+[63] F. Carta, J. Moritz, and A. Westphal, “A landscape of orientifold vacua,” JHEP 05 (2020) 107,
+arXiv:2003.04902 [hep-th].
+
+50
+
+[64] F. Carta, A. Mininno, N. Righi, and A. Westphal, “Thraxions: Towards Full String Models,”
+arXiv:2110.02963 [hep-th].
+[65] L. B. Anderson, X. Gao, J. Gray, and S.-J. Lee, “Fibrations in CICY Threefolds,” JHEP 10 (2017)
+077, arXiv:1708.07907 [hep-th].
+[66] V. Braun, “On Free Quotients of Complete Intersection Calabi-Yau Manifolds,” JHEP 04 (2011)
+005, arXiv:1003.3235 [hep-th].
+[67] J. Gray, A. S. Haupt, and A. Lukas, “All Complete Intersection Calabi-Yau Four-Folds,” JHEP
+1307 (2013) 070, arXiv:1303.1832 [hep-th].
+[68] P. Candelas, A. Constantin, and C. Mishra, “Hodge Numbers for CICYs with Symmetries of Order
+Divisible by 4,” Fortsch. Phys. 64 no. 6-7, (2016) 463–509, arXiv:1511.01103 [hep-th].
+[69] A. Constantin, J. Gray, and A. Lukas, “Hodge Numbers for All CICY Quotients,” JHEP 01 (2017)
+001, arXiv:1607.01830 [hep-th].
+[70] A. Braun, A. Lukas, and C. Sun, “Discrete Symmetries of Calabi–Yau Hypersurfaces in Toric
+Four-Folds,” Commun. Math. Phys. 360 no. 3, (2018) 935–984, arXiv:1704.07812 [hep-th].
+[71] Y.-H. He, “Calabi-Yau Spaces in the String Landscape,” arXiv:2006.16623 [hep-th].
+[72] R. Blumenhagen, X. Gao, T. Rahn, and P. Shukla, “A Note on Poly-Instanton Effects in Type IIB
+Orientifolds on Calabi-Yau Threefolds,” JHEP 06 (2012) 162, arXiv:1205.2485 [hep-th].
+[73] V. V. Batyrev, “Dual Polyhedra and Mirror Symmetry for Calabi-Yau Hypersurfaces in Toric
+Varieties,” J.Algebraic Geom. 3 (1993) no.3 493–535, alg-geom/9310003.
+[74] K. Oguiso and T. Peternell, “Calabi-Yau threefolds with positive second Chern class,” Comm. Anal.
+Geom. 6 (1998) 153–172.
+[75] V. Lazic, K. Oguiso, and T. Peternell, “The Morrison-Kawamata Cone Conjecture and Abundance
+on Ricci flat manifolds,” arXiv:1611.00556 [math.ag].
+[76] C. Wall, “Classification problems in differential topology. V,” Invent.Math 1 (1966) 335–374.
+[77] R. Blumenhagen, B. Jurke, T. Rahn, and H. Roschy, “Cohomology of Line Bundles: A
+Computational Algorithm,” J. Math. Phys. 51 (2010) 103525, arXiv:1003.5217 [hep-th].
+[78] “cohomCalg package.” Download link:
+Http://wwwth.mppmu.mpg.de/members/blumenha/cohomcalg/, 2010. High-performance line
+bundle cohomology computation based on [77].
+[79] A. Collinucci, “New F-theory lifts. II. Permutation orientifolds and enhanced singularities,” JHEP
+04 (2010) 076, arXiv:0906.0003 [hep-th].
+[80] P. Shanahan, The Atiyah-Singer Index Theorem: An Introduction. Springer-Verlag Berlin
+Heidelberg, 1978.
+[81] R. Blumenhagen, A. Collinucci, and B. Jurke, “On Instanton Effects in F-theory,” JHEP 08 (2010)
+079, arXiv:1002.1894 [hep-th].
+[82] W. Decker, G.-M. Greuel, G. Pfister, and H. Schönemann, “Singular 3-1-6 — A computer algebra
+system for polynomial computations,”. http://www.singular.uni-kl.de.
+[83] W. Stein et al., Sage Mathematics Software (Version 9.1). The Sage Development Team, 2020.
+http://www.sagemath.org.
+[84] R. Altman, J. Carifio, X. Gao, and B. D. Nelson, “Type II Orientifold Vacua in Kreuzer-Skarke
+Database,” work in progress.
+[85] M. Demirtas, L. McAllister, and A. Rios-Tascon, “Bounding the Kreuzer-Skarke Landscape,”
+Fortsch. Phys. 68 (2020) 2000086, arXiv:2008.01730 [hep-th].
+
+51
+
+[86] R. Altman, J. Carifio, J. Halverson, and B. D. Nelson, “Estimating Calabi-Yau Hypersurface and
+Triangulation Counts with Equation Learners,” JHEP 03 (2019) 186, arXiv:1811.06490 [hep-th].
+[87] X. Gao and H. Zou, “Applying machine learning to the Calabi-Yau orientifolds with string vacua,”
+Phys. Rev. D 105 no. 4, (2022) 046017, arXiv:2112.04950 [hep-th].
+[88] P. Candelas and X. C. de la Ossa, “Comments on Conifolds,” Nucl. Phys. B 342 (1990) 246–268.
+[89] P. Candelas, P. S. Green, and T. Hubsch, “Rolling Among Calabi-Yau Vacua,” Nucl. Phys. B 330
+(1990) 49.
+[90] L. B. Anderson, F. Apruzzi, X. Gao, J. Gray, and S.-J. Lee, “A new construction of Calabi–Yau
+manifolds: Generalized CICYs,” Nucl. Phys. B 906 (2016) 441–496, arXiv:1507.03235 [hep-th].
+[91] P. Berglund and T. Hübsch, “On Calabi–Yau generalized complete intersections from Hirzebruch
+varieties and novel K3-fibrations,” Adv. Theor. Math. Phys. 22 (2018) 261–303, arXiv:1606.07420
+[hep-th].
+[92] P. Berglund and T. Hubsch, “A Generalized Construction of Calabi-Yau Models and Mirror
+Symmetry,” SciPost Phys. 4 no. 2, (2018) 009, arXiv:1611.10300 [hep-th].
+[93] P. Candelas, A. Constantin, and C. Mishra, “Calabi-Yau Threefolds with Small Hodge Numbers,”
+Fortsch. Phys. 66 no. 6, (2018) 1800029, arXiv:1602.06303 [hep-th].
+[94] A. Garbagnati and B. van Geemen, “A remark on generalized complete intersections,” Nucl. Phys.
+B 925 (2017) 135–143, arXiv:1708.00517 [math.AG].
+[95] Q. Jia and H. Lin, “Calabi-Yau generalized complete intersections and aspects of cohomology of
+sheaves,” J. Math. Phys. 61 no. 5, (2020) 052301, arXiv:1809.04714 [hep-th].
+[96] L. B. Anderson, F. Apruzzi, X. Gao, J. Gray, and S.-J. Lee, “Instanton superpotentials, Calabi-Yau
+geometry, and fibrations,” Phys. Rev. D 93 no. 8, (2016) 086001, arXiv:1511.05188 [hep-th].
+[97] M. Larfors, D. Passaro, and R. Schneider, “Heterotic Line Bundle Models on Generalized Complete
+Intersection Calabi Yau Manifolds,” arXiv:2010.09763 [hep-th].
+
+52
+
+

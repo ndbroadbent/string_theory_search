@@ -82,6 +82,19 @@ To compute periods, need:
 
 See FORMULAS.md for complete formula reference.
 
+### IMPORTANT: Always Download Relevant Papers
+When you find a relevant arXiv paper or other academic PDF during research:
+1. **ALWAYS download it** to `resources/` with a descriptive filename including the arXiv ID
+2. Format: `resources/<descriptive_name>_<arxiv_id>.pdf`
+3. Example: `curl -L "https://arxiv.org/pdf/2111.03078.pdf" -o resources/orientifold_cy_divisor_involutions_2111.03078.pdf`
+4. **No exceptions** - papers referenced in code/docs should be locally available
+5. Add paper description to this file or relevant docs
+6. **ALWAYS convert to .txt** for searchability:
+   ```bash
+   pdftotext resources/paper_name.pdf resources/paper_name.txt
+   ```
+   This enables `rg` (ripgrep) searching across all papers
+
 ### First-time setup:
 ```bash
 # Create venv with homebrew Python 3.11

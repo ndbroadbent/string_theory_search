@@ -1,0 +1,1211 @@
+1
+
+25. Cosmological Parameters
+
+25. Cosmological Parameters
+Revised August 2023 by O. Lahav (UCL) and A.R. Liddle (ULisboa).
+
+25.1 Parametrizing the Universe
+Rapid advances in observational cosmology have led to the establishment of a precision cosmological model, with many of the key cosmological parameters determined to one or two significant
+figure accuracy. Particularly prominent are measurements of cosmic microwave background (CMB)
+anisotropies, with the highest precision observations being those of the Planck Satellite [1,2], which
+supersede the landmark WMAP results [3, 4]. However the most accurate model of the Universe
+requires consideration of a range of observations, with complementary probes providing consistency
+checks, lifting parameter degeneracies, and enabling the strongest constraints to be placed.
+The term ‘cosmological parameters’ now has a wide scope, and may include the parameterization
+of some functions as well as simple numbers describing properties of the Universe. The original usage
+referred to the parameters describing the global dynamics of the Universe, such as its expansion
+rate and curvature. Now we wish to know how the matter budget of the Universe is built up
+from its constituents: baryons, photons, neutrinos, dark matter, and dark energy. We also need
+to describe the nature of perturbations in the Universe, through global statistical descriptors such
+as the matter and radiation power spectra. There may be additional parameters describing the
+physical state of the Universe, such as the ionization fraction as a function of time during the
+era since recombination. Typical comparisons of cosmological models with observational data now
+feature between five and ten parameters.
+25.1.1 The global description of the Universe
+Ordinarily, the Universe is taken to be a perturbed Robertson–Walker space-time, with dynamics governed by Einstein’s equations. This is described in detail in the Big-Bang Cosmology
+chapter in this volume. Using the density parameters Ωi for the various matter species and ΩΛ for
+the cosmological constant, the Friedmann equation can be written
+X
+i
+
+Ωi + ΩΛ − 1 =
+
+k
+R2 H 2
+
+,
+
+(25.1)
+
+where the sum is over all the different species of material in the Universe. This equation applies at
+any epoch, but later in this article we will use the symbols Ωi and ΩΛ to refer specifically to the
+present-epoch values.
+The complete present-epoch state of the homogeneous Universe can be described by giving the
+current-epoch values of all the density parameters and the Hubble constant h (the present-day
+Hubble parameter being written H0 = 100h km s−1 Mpc−1 ). A typical collection would be baryons
+Ωb , photons Ωγ , neutrinos Ων , and cold dark matter Ωc (given charge neutrality, the electron
+density is guaranteed to be too small to be worth considering separately and is effectively included
+with the baryons). The spatial curvature can then be determined from the other parameters using
+Eq. (25.1). The total present matter density Ωm = Ωc + Ωb may be used in place of the cold dark
+matter density Ωc .
+These parameters also allow us to track the history of the Universe, at least back until an epoch
+where interactions allow interchanges between the densities of the different species; this is believed
+to have last happened at neutrino decoupling, shortly before Big-Bang Nucleosynthesis (BBN). To
+probe further back into the Universe’s history requires assumptions about particle interactions, and
+perhaps about the nature of physical laws themselves.
+S. Navas et al. (Particle Data Group), Phys. Rev. D 110, 030001 (2024)
+31st May, 2024 10:15am
+
+2
+
+25. Cosmological Parameters
+
+The standard neutrino sector has three flavors. For neutrinos of mass in the range 5 × 10−4 eV
+to 1 MeV, the density parameter in neutrinos is predicted to be
+Ων h2 =
+
+P
+
+mν
+,
+93.12 eV
+
+(25.2)
+
+where the sum is over all families with mass in that range (higher masses need a more sophisticated
+calculation). We use units with c = 1 throughout. Results on atmospheric and Solar neutrino
+oscillations [5] imply non-zero mass-squared differences between the three neutrino flavors. These
+oscillation experiments cannot tell us the absolute neutrino masses, but within the normal assumption of a mass hierarchy suggest a lower limit of approximately 0.06 eV for the sum of the neutrino
+masses (see the Neutrino chapter).
+Even a mass this small has a potentially observable effect on the formation of structure, as
+neutrino free-streaming damps the growth of perturbations. Analyses commonly now either assume
+a neutrino mass sum fixed at this lower limit, or allow the neutrino mass sum to be a variable
+parameter. To date there is no decisive evidence of any effects from either neutrino masses or
+an otherwise non-standard neutrino sector, and observations impose quite stringent limits; see the
+Neutrinos in Cosmology chapter. However, we note that the inclusion of the neutrino mass sum as
+a free parameter can affect the derived values of other cosmological parameters.
+25.1.2 Inflation and perturbations
+A complete model of the Universe must include a description of deviations from homogeneity,
+at least statistically. Indeed, the most powerful probes of the parameters described above come
+from the evolution of perturbations, so their study is naturally intertwined with the determination
+of cosmological parameters.
+There are many different notations used to describe the perturbations, both in terms of the
+quantity used and the definition of the statistical measure. We use the dimensionless power spectrum ∆2 as defined in the Big Bang Cosmology section (also denoted P in some of the literature).
+If the perturbations obey Gaussian statistics, the power spectrum provides a complete description
+of their properties.
+From a theoretical perspective, a useful quantity to describe the perturbations is the curvature
+perturbation R, which measures the spatial curvature of a comoving slicing of the space-time.
+A simple case is the Harrison–Zeldovich spectrum, which corresponds to a constant ∆2R . More
+generally, one can approximate the spectrum by a power law, writing
+∆2R (k) = ∆2R (k∗ )
+
+
+
+k ns −1
+,
+k∗
+
+
+(25.3)
+
+where ns is known as the spectral index, always defined so that ns = 1 for the Harrison–Zeldovich
+spectrum, and k∗ is an arbitrarily chosen scale. The initial spectrum, defined at some early epoch
+of the Universe’s history, is usually taken to have a simple form such as this power law, and we will
+see that observations require ns close to one. Subsequent evolution will modify the spectrum from
+its initial form.
+The simplest mechanism for generating the observed perturbations is the inflationary cosmology,
+which posits a period of accelerated expansion in the Universe’s early stages [6, 7]. It is a useful
+working hypothesis that this is the sole mechanism for generating perturbations, and it may further
+be assumed to be the simplest class of inflationary model, where the dynamics are equivalent to
+that of a single scalar field φ with canonical kinetic energy slowly rolling on a potential V (φ). One
+may seek to verify that this simple picture can match observations and to determine the properties
+of V (φ) from the observational data. Alternatively, more complicated models, perhaps motivated
+31st May, 2024
+
+25. Cosmological Parameters
+
+3
+
+by contemporary fundamental physics ideas, may be tested on a model-by-model basis (see more
+in the Inflation chapter in this volume).
+Inflation generates perturbations through the amplification of quantum fluctuations, which
+are stretched to astrophysical scales by the rapid expansion. The simplest models generate two
+types, density perturbations that come from fluctuations in the scalar field and its corresponding
+scalar metric perturbation, and gravitational waves that are tensor metric fluctuations. The former
+experience gravitational instability and lead to structure formation, while both generate CMB
+anisotropies. Defining slow-roll
+parameters (with primes indicating derivatives with respect to the
+p
+scalar field, and mPl ≡ ~c/G the Planck mass) as
+m2
+ = Pl
+16π
+
+
+
+V0
+V
+
+2
+
+,
+
+η=
+
+m2Pl V 00
+,
+8π V
+
+(25.4)
+
+which should satisfy , |η|  1, the spectra can be computed using the slow-roll approximation as
+∆2R (k) ≃
+
+8 V
+3m4Pl  k=aH
+
+,
+
+∆2t (k) ≃
+
+128
+.
+V
+3m4Pl k=aH
+
+(25.5)
+
+In each case, the expressions on the right-hand side are to be evaluated when the scale k is equal to
+the Hubble radius during inflation. The symbol ‘≃’ here indicates use of the slow-roll approximation,
+which is expected to be accurate to a few percent or better.
+From these expressions, we can compute the spectral indices [8]:
+ns ≃ 1 − 6 + 2η
+
+;
+
+nt ≃ −2 .
+
+(25.6)
+
+Another useful quantity is the ratio of the two spectra, defined by
+r≡
+
+∆2t (k∗ )
+.
+∆2R (k∗ )
+
+(25.7)
+
+We have
+r ≃ 16 ≃ −8nt ,
+
+(25.8)
+
+which is known as the consistency equation.
+One could consider corrections to the power-law approximation, which we discuss later. However, for now we make the working assumption that the spectra can be approximated by such power
+laws. The consistency equation shows that r and nt are not independent parameters, and so the
+simplest inflation models give initial conditions described by three parameters, usually taken as
+∆2R , ns , and r, all to be evaluated at some scale k∗ , usually the ‘statistical center’ of the range
+explored by the data. Alternatively, one could use the parametrization V , , and η, all evaluated
+at a point on the putative inflationary potential.
+After the perturbations are created in the early Universe, they undergo a complex evolution
+up until the time they are observed in the present Universe. When the perturbations are small,
+this can be accurately followed using a linear theory numerical code such as CAMB or CLASS [9].
+This works right up to the present for the CMB, but for density perturbations on small scales nonlinear evolution is important and can be addressed by a variety of semi-analytical and numerical
+techniques. However the analysis is made, the outcome of the evolution is in principle determined
+by the cosmological model and by the parameters describing the initial perturbations, and hence
+can be used to determine them.
+Of particular interest are CMB anisotropies. Both the total intensity and two independent
+polarization modes are predicted to have anisotropies. These can be described by the radiation
+angular power spectra C` as defined in the CMB article in this volume, and again provide a complete
+description if the density perturbations are Gaussian.
+31st May, 2024
+
+25. Cosmological Parameters
+
+4
+
+25.1.3 The standard cosmological model
+We now have most of the ingredients in place to describe the cosmological model. Beyond those
+of the previous subsections, we need a measure of the ionization state of the Universe. The Universe
+is known to be highly ionized at redshifts below 5 or so (otherwise radiation from distant quasars
+would be heavily absorbed in the ultra-violet), and the ionized electrons can scatter microwave
+photons, altering the pattern of observed anisotropies. The most convenient parameter to describe
+this is the optical depth to scattering τ (i.e., the probability that a given photon scatters once); in
+the approximation of instantaneous and complete reionization, this could equivalently be described
+by the redshift of reionization zi .
+As described in Sec. 25.4, models based on these parameters are able to give a good fit to
+the complete set of high-quality data available at present, and indeed some simplification is possible. Observations are consistent with spatial flatness, and the inflation models so far described
+automatically generate negligible spatial curvature, so we can set k = 0; the density parameters
+then must sum to unity, and so one of them can be eliminated. The neutrino energy density is
+often not taken as an independent parameter; provided that the neutrino sector has the standard
+interactions, the neutrino energy density, while relativistic, can be related to the photon density
+using thermal physics arguments, and a minimal assumption takes the neutrino mass sum to be
+that of the lowest mass solution to the neutrino oscillation constraints, namely 0.06 eV. In addition,
+there is no observational evidence for the existence of tensor perturbations (with the upper limits
+now starting to become constraining on models), and so r could be set to zero. This leaves seven
+parameters, which is the smallest set that can usefully be compared to the present cosmological
+data. This model is referred to by various names, including ΛCDM, the concordance cosmology,
+and the standard cosmological model.
+Of these parameters, only Ωγ is accurately measured directly. The radiation density is dominated by the energy in the CMB, and the COBE satellite FIRAS experiment determined its
+temperature to be T = (2.7255 ± 0.0006) K [10],1 corresponding to Ωγ = 2.47 × 10−5 h−2 . It typically can be taken as fixed when fitting other data. Hence the minimum number of cosmological
+parameters varied in fits to data is six, though as described below there may additionally be many
+‘nuisance’ parameters necessary to describe astrophysical processes influencing the data.
+In addition to this minimal set, there is a range of other parameters that might prove important
+in future as the datasets further improve, but for which there is so far no direct evidence, allowing
+them to be set to specific values for now. We discuss various speculative options in the next
+section. For completeness at this point, we mention one other interesting quantity, the helium
+fraction, which is a non-zero parameter that can affect the CMB anisotropies at a subtle level. It is
+usually fixed in microwave anisotropy studies, but the data are approaching a level where allowing
+its variation may become mandatory.
+In conventional parameter estimation, a set of parameters is chosen by hand and the aim is
+to constrain their values. The higher-level inference problem of model selection instead compares
+different choices of parameter sets, as is necessary to assess whether observations are pointing
+towards inclusion of new physical effects. Bayesian inference offers an attractive framework for
+cosmological model selection, setting a tension between model predictiveness and ability to fit the
+data [11], and its use is becoming widespread.
+25.1.4 Derived parameters
+The parameter list of the previous subsection is sufficient to give a complete description of cosmological models that agree with observational data. However, it is not a unique parameterization,
+1
+
+All quoted uncertainties in this article are 1σ/68% confidence and all upper limits are 95% confidence. Cosmological parameters sometimes have significantly non-Gaussian uncertainties. Values from original sources have been
+rounded according to the conventions of this volume.
+31st May, 2024
+
+5
+
+25. Cosmological Parameters
+
+and one could instead use parameters derived from that basic set. Parameters that can be obtained
+from the set given above include the age of the Universe, the present horizon distance, the present
+neutrino background temperature, the epoch of matter–radiation equality, the epochs of recombination and decoupling, the epoch of transition to an accelerating Universe, the baryon-to-photon
+ratio, and the baryon-to-dark-matter density ratio. In addition, the physical densities of the matter
+components, Ωi h2 , are often more useful than the density parameters. The density perturbation
+amplitude can be specified in many different ways other than the large-scale primordial amplitude,
+for instance, in terms of its effect on the CMB, or by specifying a short-scale quantity, a common
+choice being the present linear-theory mass dispersion in a radius of 8 h−1 Mpc, known as σ8 .
+Different types of observation are sensitive to different subsets of the full cosmological parameter
+set, and some are more naturally interpreted in terms of some of the derived parameters of this
+subsection than on the original base parameter set. In particular, most types of observation feature
+degeneracies whereby they are unable to separate the effects of simultaneously varying specific
+combinations of several of the base parameters.
+
+25.2 Extensions to the standard model
+At present, there is no positive evidence in favor of extensions of the standard model. These
+are becoming increasingly constrained by the data, though there always remains the possibility of
+trace effects at a level below present observational capability.
+25.2.1 More general perturbations
+The standard cosmology assumes adiabatic, Gaussian perturbations. Adiabaticity means that
+all types of material in the Universe share a common perturbation, so that if the space-time is
+foliated by constant-density hypersurfaces, then all fluids and fields are homogeneous on those slices,
+with the perturbations completely described by the variation of the spatial curvature of the slices.
+Gaussianity means that the initial perturbations obey Gaussian statistics, with the amplitudes
+of waves of different wavenumbers being randomly drawn from a Gaussian distribution of width
+given by the power spectrum. Note that gravitational instability generates non-Gaussianity; in this
+context, Gaussianity refers to a property of the initial perturbations, before they evolve.
+The simplest inflation models, based on one dynamical field, predict adiabatic perturbations
+and a level of non-Gaussianity that is too small to be detected by any experiment so far conceived.
+For present data, the primordial spectra are usually assumed to be power laws.
+25.2.1.1 Non-power-law spectra
+For typical inflation models, it is an approximation to take the spectra as power laws, albeit
+usually a good one. As data quality improves, one might expect this approximation to come under
+pressure, requiring a more accurate description of the initial spectra, particularly for the density
+perturbations. In general, one can expand ln ∆2R as
+ln ∆2R (k) = ln ∆2R (k∗ ) + (ns,∗ − 1) ln
+
+k
+1 dns
+k
++
+ln2
++ ··· ,
+k∗ 2 d ln k ∗
+k∗
+
+(25.9)
+
+where the coefficients are all evaluated at some scale k∗ . The term dns /d ln k|∗ is often called
+the running of the spectral index [12]. Once non-power-law spectra are allowed, it is necessary to
+specify the scale k∗ at which the spectral index is defined.
+25.2.1.2 Isocurvature perturbations
+An isocurvature perturbation is one that leaves the total density unperturbed, while perturbing
+the relative amounts of different materials. If the Universe contains N fluids, there is one growing
+adiabatic mode and N − 1 growing isocurvature modes (for reviews see Ref. [7] and Ref. [13]).
+These can be excited, for example, in inflationary models where there are two or more fields that
+31st May, 2024
+
+6
+
+25. Cosmological Parameters
+
+acquire dynamically-important perturbations. If one field decays to form normal matter, while
+the second survives to become the dark matter, this will generate a cold dark matter isocurvature
+perturbation.
+In general, there are also correlations between the different modes, and so the full set of perturbations is described by a matrix giving the spectra and their correlations. Constraining such a
+general construct is challenging, though constraints on individual modes are beginning to become
+meaningful, with no evidence that any other than the adiabatic mode must be non-zero.
+25.2.1.3 Seeded perturbations
+An alternative to laying down perturbations at very early epochs is that they are seeded throughout cosmic history, for instance by topological defects such as cosmic strings. It has long been
+excluded that these are the sole original of structure, but they could contribute part of the perturbation signal, current limits being just a few percent [14]. In particular, cosmic defects formed in
+a phase transition ending inflation is a plausible scenario for such a contribution.
+25.2.1.4 Non-Gaussianity
+Multi-field inflation models can also generate primordial non-Gaussianity (reviewed, e.g., in
+Ref. [7]). The extra fields can either be in the same sector of the underlying theory as the inflaton,
+or completely separate, an interesting example of the latter being the curvaton model [15]. Current
+upper limits on non-Gaussianity are becoming stringent, but there remains strong motivation to
+push down those limits and perhaps reveal trace non-Gaussianity in the data. If non-Gaussianity is
+observed, its nature may favor an inflationary origin, or a different one such as topological defects.
+25.2.2 Dark matter properties
+Dark matter properties are discussed in the Dark Matter chapter in this volume. The simplest
+assumption concerning the dark matter is that it has no significant interactions with other matter,
+and that its particles have a negligible velocity as far as structure formation is concerned. Such
+dark matter is described as ‘cold,’ and candidates include the lightest supersymmetric particle, the
+axion, and primordial black holes. As far as astrophysicists are concerned, a complete specification
+of the relevant cold dark matter properties is given by the density parameter Ωc , though those
+seeking to detect it directly need also to know its interaction properties.
+Cold dark matter is the standard assumption and gives an excellent fit to observations, except
+possibly on the shortest scales where there remains some controversy concerning the structure of
+dwarf galaxies and possible substructure in galaxy halos. It has long been excluded for all the dark
+matter to have a large velocity dispersion, so-called ‘hot’ dark matter, as it does not permit galaxies
+to form; for thermal relics the mass must be above about 1 keV to satisfy this constraint, though
+relics produced non-thermally, such as the axion, need not obey this limit. However, in future
+further parameters might need to be introduced to describe dark matter properties relevant to
+astrophysical observations. Suggestions that have been made include a modest velocity dispersion
+(warm dark matter) and dark matter self-interactions. There remains the possibility that the dark
+matter is comprised of two separate components, e.g., a cold one and a hot one, an example being
+if massive neutrinos have a non-negligible effect.
+25.2.3 Relativistic species
+The number of relativistic species in the young Universe (omitting photons) is denoted Neff . In
+the standard cosmological model only the three neutrino species contribute, and its baseline value
+is assumed fixed at 3.044 (the small shift from 3 is because of a slight predicted deviation from a
+thermal distribution [16]). However other species could contribute, for example an extra neutrino,
+possibly of sterile type, or massless Goldstone bosons or other scalars. It is hence interesting to
+study the effect of allowing this parameter to vary, and indeed although 3.044 is consistent with
+31st May, 2024
+
+7
+
+25. Cosmological Parameters
+
+the data, most analyses currently suggest a somewhat higher value (e.g., Ref. [17]).
+25.2.4 Dark energy and modified gravity
+While the standard cosmological model given above features a cosmological constant, in order to
+explain observations indicating that the Universe is presently accelerating, further possibilities exist
+under the general headings of ‘dark energy’ and ‘modified gravity’. These topics are described in
+detail in the Dark Energy chapter in this volume. This article focuses on the case of the cosmological
+constant, since this simple model is a good match to existing data. We note that more general
+treatments of dark energy/modified gravity will lead to weaker constraints on other parameters.
+25.2.5 Complex ionization history
+The full ionization history of the Universe is given by the ionization fraction as a function
+of redshift z. The simplest scenario takes the ionization to have the small residual value left
+after recombination up to some redshift zi , at which point the Universe instantaneously reionizes
+completely. Then there is a one-to-one correspondence between τ and zi (that relation, however,
+also depending on other cosmological parameters). An accurate treatment of this process will track
+separate histories for hydrogen and helium. While currently rapid ionization appears to be a good
+approximation, as data improve a more complex ionization history may need to be considered.
+25.2.6 Varying ‘constants’
+Variation of the fundamental constants of Nature over cosmological times is another possible
+enhancement of the standard cosmology. There is a long history of study of variation of the
+gravitational constant GN , and more recently attention has been drawn to the possibility of small
+fractional variations in the fine-structure constant. There is presently no observational evidence for
+the former, which is tightly constrained by a variety of measurements. Evidence for the latter has
+been claimed from studies of spectral line shifts in quasar spectra at redshift z ≃ 2 [18], but this is
+presently controversial and in need of further observational study.
+25.2.7 Cosmic topology
+The usual hypothesis is that the Universe has the simplest topology consistent with its geometry,
+for example that a flat Universe extends forever. Observations cannot tell us whether that is true,
+but they can test the possibility of a non-trivial topology on scales up to roughly the present Hubble
+scale. Extra parameters would be needed to specify both the type and scale of the topology; for
+example, a cuboidal topology would need specification of the three principal axis lengths and
+orientation. At present, there is no evidence for non-trivial cosmic topology [19].
+
+25.3 Cosmological Probes
+The goal of the observational cosmologist is to utilize astronomical information to derive cosmological parameters. The transformation from the observables to the parameters usually involves
+many assumptions about the nature of the data, as well as of the dark sector. Below we outline the
+physical processes involved in each of the major probes, and the main recent results. The first two
+subsections concern probes of the homogeneous Universe, while the remainder consider constraints
+from perturbations.
+In addition to statistical uncertainties we note three sources of systematic uncertainties that will
+apply to the cosmological parameters of interest: (i) due to the assumptions on the cosmological
+model and its priors (i.e., the number of assumed cosmological parameters and their allowed range);
+(ii) due to the uncertainty in the astrophysics of the objects (e.g., light-curve fitting for supernovae
+or the mass–temperature relation of galaxy clusters); and (iii) due to instrumental and observational
+limitations (e.g., the effect of ‘seeing’ on weak gravitational lensing measurements, or beam shape
+on CMB anisotropy measurements).
+These systematics, the last two of which appear as ‘nuisance parameters’, pose a challenging
+31st May, 2024
+
+8
+
+25. Cosmological Parameters
+
+problem to the statistical analysis. We attempt a statistical fit to the whole Universe with 6
+to 12 parameters, but we might need to include hundreds of nuisance parameters, some of them
+highly correlated with the cosmological parameters of interest (for example time-dependent galaxy
+biasing could mimic the growth of mass fluctuations). Fortunately, there is some astrophysical
+prior knowledge on these effects, and a small number of physically-motivated free parameters would
+ideally be preferred in the cosmological parameter analysis.
+25.3.1 Measures of the Hubble constant
+In 1929, Edwin Hubble discovered the law of expansion of the Universe by measuring distances to nearby galaxies. The slope of the relation between the distance and recession velocity is defined to be the present-epoch Hubble constant, H0 . Astronomers argued for decades
+about the systematic uncertainties in various methods and derived values over the wide range
+< H < 100 km s−1 Mpc−1 .
+40 km s−1 Mpc−1 ∼
+0 ∼
+One of the most reliable results on the Hubble constant came from the Hubble Space Telescope
+(HST) Key Project [20]. This study used the empirical period–luminosity relation for Cepheid
+variable stars, and calibrated a number of secondary distance indicators: Type Ia Supernovae (SNe
+Ia); the Tully–Fisher relation; surface-brightness fluctuations; and Type II Supernovae. Various
+systematics are under investigation, for example JWST is helping understanding of the effect of
+field crowding. This approach has been further extended, e.g. using HST observations of Cepheids
+in the hosts of 42 SNe Ia and exploiting Gaia EDR3 parallaxes, the SH0ES team derived H0 =
+(73.0 ± 1.0) km s−1 Mpc−1 [21].
+Three other methods have been used recently. One is a calibration of the tip of the red-giant
+branch applied to Type Ia supernovae, the Carnegie–Chicago Hubble Programme (CCHP), finding
+H0 = (69.8 ± 0.6 (stat.) ± 1.6 (sys.)) km s−1 Mpc−1 [22]. The second uses the method of time
++4.1
+delay in gravitationally-lensed quasars; Birrer et al. [23] find H0 = 67.4−3.2
+km s−1 Mpc−1 from
+a sample of 40 lenses. A third method that came to fruition recently is based on gravitational
+waves; the ‘bright standard siren’ method applied to the binary neutron star GW170817 yields
+−1 Mpc−1 [24]. Adding two ‘dark standard siren’ systems shifts this to H =
+H0 = 70+12
+0
+−8 km s
+−1 Mpc−1 [25], still dominated by the single bright siren system. The 47 sources in the
+73+11
+km
+s
+−8
+third Gravitational-Wave Transient Catalog (GWTC-3), again combined with the bright siren,
+−1 Mpc−1 [26]. When many more gravitational-wave events
+yield the similar result H0 = 68+12
+−8 km s
+have been acquired, the future uncertainties on H0 from standard sirens will get smaller.
+The determination of H0 by the Planck Collaboration [2] gives a lower value than most of the
+above methods, H0 = (67.4 ± 0.5) km s−1 Mpc−1 . As they discuss, there is a strong degeneracy
+of H0 with other parameters, particularly Ωm and the neutrino mass. It is worth noting that
+using the ‘inverse distance ladder’ method gives a result H0 = (67.8 ± 1.3) km s−1 Mpc−1 [27],
+close to the Planck result. The inverse distance ladder relies on absolute-distance measurements
+from baryon acoustic oscillations (BAOs) to calibrate the intrinsic magnitude of the SNe Ia (rather
+than nearby Cepheids and parallax). This measurement was derived from 207 spectroscopicallyconfirmed Type Ia supernovae from the Dark Energy Survey (DES), an additional 122 low-redshift
+SNe Ia, and measurements of BAOs. A combination of DES Year 3 (Y3) clustering and weak
+lensing with BAO and BBN (assuming ΛCDM) gives H0 = (67.6 ± 0.9) km s−1 Mpc−1 [28]. The
+completed Extended Baryon Oscillation Spectroscopic Survey (eBOSS) [29] inverse distance ladder
+result, within an assumed extended cosmological model, is H0 = (68.2 ± 0.8) km s−1 Mpc−1 , also
+close to the Planck value.
+The tension between the H0 values from Planck and the traditional cosmic distance-ladder
+methods, with the SH0ES result deviating from Planck by about 5σ, is under intense investigation
+for potential systematic effects. There is possibly a trend for higher H0 derived from the nearby
+31st May, 2024
+
+25. Cosmological Parameters
+
+9
+
+Universe and a lower H0 from the early Universe, which has led some researchers to propose a timevariation of the dark energy component or other exotic scenarios. Ongoing studies are addressing
+the question of whether the Hubble tension is due to systematics in at least one of the probes, or
+a signature of new physics. Figure 25.1 shows a selection of recent H0 values, summarizing the
+current status of the Hubble constant tension. See Ref. [30] for a review.
+Planck 2018 – CMB
+
+DES Year 3 – 3x2pt+BAO+BBN
+
+SH0ES 2022 – Cepheids
+
+CCHP – TRGB
+
+TDCOSMO + SLACS – Time delays
+
+60
+
+65
+
+70
+H0 [km s−1 Mpc−1 ]
+
+75
+
+80
+
+Figure 25.1: A selection of recent H0 measurements from the various projects as described in
+the text. The standard-siren determinations are omitted as they are too wide for the plot. Figure
+courtesy of Pablo Lemos.
+
+25.3.2 Supernovae as cosmological probes
+Empirically, the peak luminosity of SNe Ia can be used as an efficient distance indicator
+(e.g., Ref. [31]), thus allowing cosmology to be constrained via the distance–redshift relation. The
+favorite theoretical explanation for SNe Ia is the thermonuclear disruption of carbon–oxygen white
+dwarfs. Although not perfect ‘standard candles,’ it has been demonstrated that by correcting for
+a relation between the light-curve shape, color, and luminosity at maximum brightness, the dispersion of the measured luminosities can be greatly reduced. There are several possible systematic
+effects that may affect the accuracy of the use of SNe Ia as distance indicators, e.g., evolution with
+redshift and interstellar extinction in the host galaxy and in the Milky Way.
+In the late 1990s two major studies, the Supernova Cosmology Project and the High-z Supernova
+Search Team, found evidence for an accelerating Universe [32], interpreted as due to a cosmological
+constant or a dark energy component. When combined with the CMB data (which indicate near
+flatness, i.e., Ωm + ΩΛ ≃ 1), the best-fit values were Ωm ≃ 0.3 and ΩΛ ≃ 0.7. Most results in
+the literature are consistent with the w = −1 cosmological constant case. The leading sample
+currently is the Pantheon+ compilation [33]. This set of 1550 spectroscopically-confirmed SNe Ia
+gives Ωm = 0.334 ± 0.018 (stat+sym) for an assumed flat ΛCDM model, while in combination with
++0.2
+the CMB, for a flat wCDM model these data give w = −0.98−0.3
+[34]. Future experiments (e.g.
+DES year 5 SNIa) will refine constraints on the cosmic equation of state w(z).
+31st May, 2024
+
+10
+
+25. Cosmological Parameters
+
+25.3.3 Cosmic microwave background
+The physics of the CMB is described in detail in the CMB chapter in this volume. Before
+recombination, the baryons and photons are tightly coupled, and the perturbations oscillate in
+the potential wells generated primarily by the dark matter perturbations. After decoupling, the
+baryons are free to collapse into those potential wells. The CMB carries a record of conditions at
+the time of last scattering, often called primary anisotropies. In addition, it is affected by various
+processes as it propagates towards us, including the effect of a time-varying gravitational potential
+(the integrated Sachs-Wolfe effect), gravitational lensing, and scattering from ionized gas at low
+redshift.
+The primary anisotropies, the integrated Sachs–Wolfe effect, and the scattering from a homogeneous distribution of ionized gas, can all be calculated using linear perturbation theory. Available
+codes include CAMB and CLASS [9], the former widely used embedded within the analysis package
+CosmoMC [35] and in higher-level analysis packages such as CosmoSIS [36], CosmoLike [37], and
+Cobaya [38]. Gravitational lensing is also calculated in these codes. Secondary effects, such as
+inhomogeneities in the reionization process, and scattering from gravitationally-collapsed gas (the
+Sunyaev–Zeldovich or SZ effect), require more complicated, and more uncertain, calculations.
+The upshot is that the detailed pattern of anisotropies depends on all of the cosmological
+parameters. In a typical cosmology, the anisotropy power spectrum [usually plotted as `(`+1)C` /2π]
+features a flat plateau at large angular scales (small `), followed by a series of oscillatory features
+at higher angular scales, the first and most prominent being at around one degree (` ≃ 200). These
+features, known as acoustic peaks, represent the oscillations of the photon–baryon fluid around
+the time of decoupling. Some features can be closely related to specific parameters—for instance,
+the location in multipole space of the set of peaks probes the spatial geometry, while the relative
+heights of the peaks probe the baryon density—but many other parameters combine to determine
+the overall shape.
+The 2018 data release from the Planck satellite [1] gives the most powerful results to date on
+the spectrum of CMB temperature anisotropies, with a precision determination of the temperature
+power spectrum to beyond ` = 2000. The Atacama Cosmology Telescope (ACT) and South Pole
+Telescope (SPT) experiments extend these results to higher angular resolution, though without fullsky coverage. Planck and the polarization-sensitive versions of ACT and SPT give the current state
+of the art in measuring the spectrum of E-polarization anisotropies and the correlation spectrum
+between temperature and polarization. These are consistent with models based on the parameters
+we have described, and provide accurate determinations of many of those parameters [2]. Primordial
+B-mode polarization has not been detected (although the gravitational lensing effect on B modes
+has been measured).
+The data provide an exquisite measurement of the location of the set of acoustic peaks, determining the angular-diameter distance of the last-scattering surface. In combination with other
+data this strongly constrains the spatial geometry, in a manner consistent with spatial flatness and
+excluding significantly-curved Universes. CMB data give a precision measurement of the age of the
+Universe. The CMB also gives a baryon density consistent with, and at higher precision than, that
+coming from BBN. It affirms the need for both dark matter and dark energy. It shows no evidence
+for dynamics of the dark energy, being consistent with a pure cosmological constant (w = −1).
+The density perturbations are consistent with a power-law primordial spectrum, and there is no
+indication yet of tensor perturbations. The current best-fit for the reionization optical depth from
+CMB data, τ = 0.054, is in line with models of how early structure formation induces reionization.
+Planck also made the first all-sky map of the CMB lensing field, which probes the entire matter
+distribution in the Universe and adds some additional constraining power to the CMB-only datasets.
+The recent ACT results [39] demonstrate very well the reconstruction of the mass power spectrum
+31st May, 2024
+
+11
+
+25. Cosmological Parameters
+
+at intermediate redshifts from CMB gravitational lensing. These measurements are consistent with
+Planck, supporting ΛCDM (see more in the CMB chapter).
+25.3.4 Galaxy clustering
+The power spectrum of density perturbations is affected by the nature of the dark matter.
+Within the ΛCDM model, the power spectrum shape depends primarily on the primordial power
+spectrum and on the combination Ωm h, which determines the horizon scale at matter–radiation
+equality, with a subdominant dependence on the baryon density. The matter distribution is most
+easily probed by observing the galaxy distribution, but this must be done with care since the galaxies
+do not perfectly trace the dark matter distribution. Rather, they are a ‘biased’ tracer of the dark
+matter [40]. The need to allow for such bias is emphasized by the observation that different types of
+galaxies show bias with respect to each other. In particular, scale-dependent and stochastic biasing
+may introduce a systematic effect on the determination of cosmological parameters from redshift
+surveys [41]. Prior knowledge from simulations of galaxy formation or from gravitational lensing
+data could help to quantify biasing. Furthermore, the observed 3D galaxy distribution is in redshift
+space, i.e., the observed redshift is the sum of the Hubble expansion and the line-of-sight peculiar
+velocity, leading to linear and non-linear dynamical effects that also depend on the cosmological
+parameters. On the largest length scales, the galaxies are expected to trace the location of the
+dark matter, except for a constant multiplier b to the power spectrum, known as the linear bias
+parameter. On scales smaller than 20 Mpc or so, the clustering pattern is ‘squashed’ in the radial
+direction due to coherent infall, which depends approximately on the parameter β ≡ Ω0.6
+m /b (on
+these shorter scales, more complicated forms of biasing are not excluded by the data). On scales of
+a few Mpc, there is an effect of elongation along the line of sight (colloquially known as the ‘finger
+of God’ effect) that depends on the galaxy velocity dispersion.
+25.3.4.1 Baryon acoustic oscillations
+The power spectra of the 2-degree Field (2dF) Galaxy Redshift Survey and the Sloan Digital
+Sky Survey (SDSS) are well fit by a ΛCDM model and both surveys showed first evidence for baryon
+acoustic oscillations (BAOs) [42, 43]. When eBOSS is combined with Planck, Pantheon Type Ia
+Supernovae and other probes the result is wp = −1.020 ± 0.032 at the pivot redshift zp = 0.29 [29].
+Similar results for w were obtained e.g. by the WiggleZ survey [44]. Preliminary results from the
+DESI galaxy redshift survey [45] confirm the detection of the BAOs, in agreement with previous
+surveys.
+25.3.4.2 Redshift distortion
+There is continuing interest in Kaiser’s ‘redshift distortion’ effect [46]. This distortion depends
+on cosmological parameters via the perturbation growth rate in linear theory f (z) = d ln δ/d ln a ≃
+Ωγm (z), where γ ≃ 0.55 for the ΛCDM model and may be different for modified gravity models. By
+measuring f (z) it is feasible to constrain γ and rule out certain modified gravity models [47,48]. We
+note the degeneracy of the redshift-distortion pattern and the geometric distortion (the so-called
+Alcock–Paczynski effect [49]), e.g., as illustrated by the WiggleZ survey [50] and eBOSS [29].
+25.3.4.3 Limits on neutrino mass from galaxy surveys and other probes
+Large-scale structure data place constraints on Ων due to the neutrino free-streaming effect [51].
+Presently there is no clear detection, and upper limits on neutrino mass are commonly estimated
+by comparing the observed galaxy power spectrum with a four-component model of baryons, cold
+dark matter, a cosmological constant, and massive neutrinos. Such analyses also assume that the
+primordial power spectrum is adiabatic, scale-invariant, and Gaussian. Potential systematic effects
+include biasing of the galaxy distribution and non-linearities of the power spectrum. An upper limit
+can also be derived from CMB anisotropies alone, while combination with additional cosmological
+31st May, 2024
+
+12
+
+25. Cosmological Parameters
+
+datasets can improve the results.
+The most recent results on neutrino mass upper limits and other neutrino properties are summarized in the Neutrinos in Cosmology chapter in this volume. The latest cosmological data constrain
+the sum of neutrino masses to be below 0.13 eV [28], consistent with Refs. [2, 29, 39]. Since the
+lower limit on this sum from oscillation experiments (assuming normal hierarchy) is 0.06 eV it is
+expected that future cosmological surveys will soon detect effects from neutrino mass. Also, current
+cosmological datasets are in good agreement with the standard value for the effective number of
+neutrino species Neff = 3.044.
+25.3.5 Clustering in the inter-galactic medium
+It is commonly assumed, based on hydrodynamic simulations, that the neutral hydrogen in the
+inter-galactic medium (IGM) can be related to the underlying mass distribution. It is then possible
+to estimate the matter power spectrum from the absorption observed in quasar spectra, the so-called
+Lyman-α forest. The usual procedure is to measure the power spectrum of the transmitted flux,
+and then to infer the mass power spectrum. Photo-ionization heating by the ultraviolet background
+radiation and adiabatic cooling by the expansion of the Universe combine to give a simple powerlaw relation between the gas temperature and the baryon density. It also follows that there is a
+power-law relation between the optical depth τ and ρb . Therefore, the observed flux F = exp(−τ )
+is strongly correlated with ρb , which itself traces the mass density. The matter and flux power
+spectra can be related by a biasing function that is calibrated from simulations. There are two
+variants of Lyman-alpha analyses: 1-dimensional power spectra from individual lines-of-sight that
+probe small (∼Mpc) scales; and 3-dimensional Lyman-alpha BAO analyses that measure large-scale
+correlations (over ∼100 Mpc scales) using neighboring quasar lines-of-sight.
+The latest BOSS and eBOSS datasets have provided measurements of the BAO scale both in
+the Lyman-α absorption and in its cross-correlation with quasars at an effective redshift z = 2.3
+[29, 52]. The results agree within 1.5-σ with the Planck CMB flat-Λ estimation for BAO scale.
+Such measurements will improve with the Dark Energy Spectroscopic Instrument (DESI) and other
+future spectroscopic surveys. The Lyman-α flux power spectrum has also been used to constrain
+the nature of dark matter, for example limiting the amount of warm dark matter [53].
+
+25.3.6 Weak gravitational lensing
+Images of background galaxies are distorted by the gravitational effect of mass variations along
+the line of sight. Deep gravitational potential wells, such as galaxy clusters, generate ‘strong lensing’
+leading to arcs, arclets, and multiple images, while more moderate perturbations give rise to ‘weak
+lensing.’ Weak lensing is now widely used to measure the mass power spectrum in selected regions
+of the sky (see Ref. [54] for reviews). Since the signal is weak, the image of deformed galaxy shapes
+(the ‘shear map’) must be analyzed statistically to measure the power spectrum, higher moments,
+and cosmological parameters. There are various systematic effects in the interpretation of weak
+lensing, e.g., due to atmospheric distortions during observations, the redshift distribution of the
+background galaxies (usually depending on the accuracy of photometric redshifts), the intrinsic
+correlation of galaxy shapes, and non-linear modeling uncertainties.
+Weak-lensing measurements from the Kilo-Degree Survey (KiDS) [55], the Subaru Hyper-Suprime-Cam (HSC) [56], and DES [57] have constrained the clumpiness parameter S8 ≡ σ8 (Ωm /0.3)0.5 .
+Each of these surveys has yielded S8 lower than that derived from Planck. Figure 25.2 shows
+the Ωm –S8 constraints derived from a joint KiDS/DES analysis [58] versus the CMB constraint
+from Planck, where the tension is significantly reduced, to 1.7σ, as compared to previous analyses.
+Results from weak lensing from DES, combined with other probes, are described in the next section.
+31st May, 2024
+
+25. Cosmological Parameters
+
+13
+
+0.90
+
+anck
+ES Y3 + KiDS-1000
+DS-1000
+ES Y3
+
+S8
+
+0.85
+
+P lanck
+DES Y3 + KiDS-1000
+KiDS-1000
+DES Y3
+
+0.80
+
+0.75
+
+0.70
+0.4
+
+0.5
+
+0.2
+
+0.3
+
+0.4
+
+0.5
+
+m
+
+Figure
+25.2:and
+Marginalized
+posterior
+contours
+(inner
+confidence
+95% confidence
+mological parameters
+f8 (left)
+(8 (right) with
+the matter
+density
+⌦m in68%
+flat-⇤CDM.
+Welevel,
+adoptouter
+a Hybrid
+from DES Y3 (green)
+and
+KiDS-1000
+(yellow)
+and
+conduct
+a
+joint-survey
+analysis
+of
+DES
+Y3
++
+KiDS-1000
+level) in the Ωm –S8 plane. The plot shows KiDS weak lensing alone, DES Y3 weak lensing alone,
+mpared to a re-analysis
+of the
+Planck
+Collaboration
+(2020)CMB.
+CMBFigure
+observations
+(blue)
+using a common
+set ofthe DES and
+DES and
+KiDS
+combined,
+and Planck
+courtesy
+of Alexandra
+Amon and
+alised posterior KiDS
+contours
+show
+the
+68%
+(inner)
+and
+95%
+(outer)
+credible
+intervals.
+collaborations.
+
+marginal, maximum
+DES parameters in green and the KiDS parameters in yele 4, it is worth
+not-Other probes
+low. We can compare the constraints from the individual and
+25.3.7
+MAP and mean isOther
+ex- probesjoint-survey
+analyses. Analysing the surveys independently
+that have been used to constrain cosmological parameters, but that are not
+��������2 mocks
+in
+we
+find:
+presently competitive in terms of accuracy, are the integrated Sachs-Wolfe effect [59, 60], the numignificant skew
+the or composition ofDES
++0.43[61], and
+KiDS
++0.54velocities that probe the
+berindensity
+galaxy
+clusters
+galaxy
+peculiar
+= 0.32
+= 0.65
+(14)
+IA
+0.88 .
+potential projection
+mass fluctuations in the localIA
+Universe [62]. 0.37
+DES
+nalising over a neuInprobes
+a joint-survey
+25.4 Bringing
+togetheranalysis, we find IA reduces to accomabout the truth (see
+a reduction
+in (8 relative
+to the
+DES-only
+preferred
+Although it modate
+contains two
+ingredients—dark
+matter and
+dark
+energy—which
+have not yet been
+follows we quote
+the
+KiDS
+value,experiments,
+and the same
+eﬀect,model
+but in
+reverse,
+for IAaccepted
+:
+verified by laboratory
+the ΛCDM
+is almost
+universally
+by cosmologists
+the reader to as
+Table
+4 description of the present data. The approximate values of some
+the best
+of the key parameters
+Joint h ≃ 0.70.+0.52
++0.29
+maximum marginal
+are Ωb ≃ 0.05, Ωc ≃DES,
+0.25,Joint
+ΩΛ =
+≃ 0.70,
+a HubbleKiDS,
+constant
+The .spatial
+0.02and
+= 1.04 0.54
+(15)geometry is
+0.58
+IA
+IA
+
+very close to flat (and usually assumed to be precisely flat), and the initial perturbations Gaussian,
+This scale-invariant.
+increases the oﬀset between the survey-preferred IA
+adiabatic, and nearly
+amplitude,
+but the
+constraints
+formally
+ss density
+The most powerful data source
+is the
+CMB, whichremain
+on its own
+supportsconsistent
+all these main tenets.
+with
+a
+Hellinger
+oﬀset
+of
+1.47f.
+As
+the
+intrinsic
+alignment
+Values for some parameters, as given in Ref. [2], are reproduced in Table 25.1. These particular
+eutrino mass results
+density
+is known
+toconstraints
+depend on
+factors
+(see the by
+discuspresume signal
+a flat Universe.
+The
+aremany
+somewhat
+strengthened
+adding additional
+
+on (2020) we inveswith ⌃< a = 0.06eV,
+by oscillation expers hierarchy (Capozzi
+o be fairly insensitive
+
+sion in Appendix C.2), we do not expect identical intrinsic
+31sttwo
+May, surveys,
+2024
+alignment signals in the
+hence our use of independent IA parameters. That said, as DES and KiDS have
+broadly similar redshift distributions and depths, with the to-
+
+25. Cosmological Parameters
+
+14
+
+datasets, BAO being shown in the Table as an example, though most of the constraining power
+resides in the CMB data. Similar constraints at lower precision were previously obtained by the
+WMAP collaboration, and more recently by SPT.
+Table 25.1: Parameter constraints reproduced from Ref. [2] (Table 2,
+column 5), with some additional rounding. Both columns assume the
+ΛCDM cosmology with a power-law initial spectrum, no tensors, spatial
+flatness, a cosmological constant as dark energy, and the sum of neutrino
+masses fixed to 0.06 eV. Above the line are the six parameter combinations
+actually fit to the data (θMC is a measure of the sound horizon at last
+scattering); those below the line are derived from these. The first column
+uses Planck primary CMB data plus the Planck measurement of CMB
+lensing. This column gives our present recommended values. The second
+column adds in data from a compilation of BAO measurements described
+in Ref. [2]. The perturbation amplitude ∆2R (denoted As in the original
+paper) is specified at the scale 0.05 Mpc−1 . Uncertainties are shown at
+68% confidence.
+Planck TT,TE,EE+lowE+lensing
+
++BAO
+
+Ωb h2
+Ωc h2
+100 θMC
+ns
+τ
+ln(1010 ∆2R )
+
+0.02237 ± 0.00015
+0.1200 ± 0.0012
+1.0409 ± 0.0003
+0.965 ± 0.004
+0.054 ± 0.007
+3.044 ± 0.014
+
+0.02242 ± 0.00014
+0.1193 ± 0.0009
+1.0410 ± 0.0003
+0.966 ± 0.004
+0.056 ± 0.007
+3.047 ± 0.014
+
+h
+σ8
+Ωm
+ΩΛ
+
+0.674 ± 0.005
+0.811 ± 0.006
+0.315 ± 0.007
+0.685 ± 0.007
+
+0.677 ± 0.004
+0.810 ± 0.006
+0.311 ± 0.006
+0.689 ± 0.006
+
+If the assumption of spatial flatness is lifted, it turns out that the primary CMB on its own constrains the spatial curvature fairly weakly, due to a parameter degeneracy in the angular-diameter
+distance. However, inclusion of other data readily removes this degeneracy. Simply adding the
+Planck lensing measurement, and with the assumption that the dark energy is a cosmological
+P
+constant, yields a 68% confidence constraint on Ωtot ≡
+Ωi + ΩΛ = 1.011 ± 0.006 and further
+adding BAO makes it 0.9993 ± 0.0019 [2]. Results of this type are normally taken as justifying the
+restriction to flat cosmologies.
+One derived parameter that is very robust is the age of the Universe, since there is a useful
+coincidence that for a flat Universe the position of the first peak is strongly correlated with the
+age. The CMB data give 13.797 ± 0.023 Gyr (assuming flatness). This is in good agreement with
+the ages of the oldest globular clusters and with radioactive dating.
+The baryon density Ωb is now measured with high accuracy from CMB data alone, and is
+consistent with and more precise than the determination from BBN. The value quoted in the
+Big-Bang Nucleosynthesis chapter in this volume is Ωb h2 = 0.0220 ± 0.0004.
+While ΩΛ is measured to be non-zero with very high confidence, there is no evidence of evolution
+of the dark energy density. As described in the Dark Energy chapter in this volume a combination
+31st May, 2024
+
+15
+
+25. Cosmological Parameters
+
+of CMB, SN, RSD, and BAO measurements, assuming a flat Universe, yield w = −1.03 ± 0.03 [28],
+consistent with the cosmological constant case w = −1. Allowing more complicated forms of dark
+energy weakens the limits.
+The data provide strong support for the main predictions of the simplest inflation models:
+spatial flatness and adiabatic, Gaussian, nearly scale-invariant density perturbations. But it is
+disappointing that there is no sign of primordial gravitational waves; combining Planck and WMAP
+with BICEP2/Keck Array BK18 data (plus BAO data to help constrain ns ) gives a 95% confidence
+upper limit of r < 0.036 at the scale 0.05 Mpc−1 [63]. The density perturbation spectral index is
+clearly required to be less than one by current data, though the strength of that conclusion can
+weaken if additional parameters are included in the model fits.
+Tests have been made for various types of non-Gaussianity, a particular example being a parameter fNL that measures a quadratic contribution to the perturbations. Various non-Gaussian shapes
+are possible (see Ref. [64] for details), and current constraints on the popular ‘local’, ‘equilateral’,
+local = −1 ± 5,
+and ‘orthogonal’ types (combining CMB temperature and polarization data) are fNL
+equil
+ortho
+fNL = −26 ± 47, and fNL = −38 ± 24, respectively (these may appear weak, but prominent
+non-Gaussianity requires the product fNL ∆R to be large, and ∆R is of order 10−5 ). Clearly none
+of these give any indication of primordial non-Gaussianity.
+While the above results come from the CMB alone, other probes are becoming competitive
+(especially when considering more complex cosmological models), and so the combination of data
+from different sources is of growing importance. We note that it has become fashionable to combine
+probes at the level of power-spectrum data vectors, taking into account nuisance parameters in
+each type of measurement. Discussions on ‘tension’ in resulting cosmological parameters depend
+on the statistical approaches used. Commonly the cosmology community works within the Bayesian
+framework, and assesses agreement amongst data sets with respect to a model via Bayesian evidence,
+essentially the denominator in Bayes’ theorem.
+As an example of results, combining DES Y3 (position–position clustering, galaxy–galaxy
+lensing, and weak lensing shear) with Planck, BAO, and RSD measurements from eBOSS, and
+Type Ia supernovae from the Pantheon dataset compilation, has shown the datasets to be mutually
+compatible and yields very tight constraints on cosmological parameters: S8 ≡ σ8 (Ωm /0.3)0.5 =
+0.812 ± 0.008 and Ωm = 0.306+0.004
+−0.005 in ΛCDM, and w = −1.03 ± 0.03 in wCDM [28] matching
+the constraint in Ref. [29]. The combined measurement of the Hubble constant within ΛCDM
+−1 Mpc−1 , still leaving substantial tension with the SH0ES measurement
+gives H0 = 68.0+0.4
+−0.3 km s
+described earlier. Future analyses and the next generation of surveys will test for deviations from
+ΛCDM, for example epoch-dependent w(z) and modifications to General Relativity.
+
+25.5 Outlook for the future
+The concordance model is now well-established, and there seems little room left for any dramatic
+revision of this paradigm. A measure of the strength of that statement is how difficult it has proven
+to formulate convincing alternatives.
+Should there indeed be no major revision of the current paradigm, we can expect future developments to take one of two directions. Either the existing parameter set will continue to prove
+sufficient to explain the data, with the parameters subject to ever-tightening constraints, or it
+will become necessary to deploy new parameters. The latter outcome would be very much the
+more interesting, offering a route towards understanding new physical processes relevant to the
+cosmological evolution. There are many possibilities on offer for striking discoveries, for example:
+• the cosmological effects of a neutrino mass may be unambiguously detected, shedding light
+on fundamental neutrino properties;
+31st May, 2024
+
+16
+
+25. Cosmological Parameters
+• detection of primordial non-Gaussianities would indicate that non-linear processes influence
+the perturbation generation mechanism;
+• detection of variation in the dark energy density (i.e., w 6= −1) would provide much-needed
+experimental input into its nature.
+
+These supply more than enough motivation for continued efforts to test the cosmological model and
+improve its accuracy. Over the coming years, there are a wide range of new observations that will
+bring further precision to cosmological studies. Indeed, there are far too many to mention them all
+here, and so we highlight just a few areas.
+The CMB observations will improve in several directions. A current frontier is the study of
+polarization, for which power spectrum measurements have now been made by several experiments.
+Detection of primordial B-mode anisotropies is the next major goal and a variety of projects are
+targeting this, though theory gives little guidance as to the likely signal level. Future CMB projects
+that are approved include the Simons Observatory and LiteBIRD.
+An impressive array of cosmology surveys are already operational, under construction, or proposed, including the ground-based Hyper Suprime Camera (HSC) and Rubin-LSST imaging surveys, spectroscopic surveys such as DESI, and space missions Euclid (succesfully launched in July
+2023) and the Roman Space Telescope.
+An exciting area for the future is radio surveys of the redshifted 21-cm line of hydrogen. Because
+of the intrinsic narrowness of this line, by tuning the bandpass the emission from narrow redshift
+slices of the Universe will be measured to extremely high redshift, probing the details of the reionization process at redshifts up to perhaps 20, as well as measuring large-scale features such as the
+BAOs. LOFAR and CHIME are the first instruments able to do this and have begun operations. In
+the longer term, the Square Kilometre Array (SKA) will take these studies to sophisticated levels.
+The development of the first precision cosmological model is a major achievement. However, it is
+important not to lose sight of the motivation for developing such a model, which is to understand the
+underlying physical processes at work governing the Universe’s evolution. From that perspective,
+progress has been much less dramatic. For instance, there are many proposals for the nature of
+the dark matter, but no consensus as to which is correct. The nature of the dark energy remains a
+mystery. Even the baryon density, now measured to an accuracy of a percent, lacks an underlying
+theory able to predict it within orders of magnitude. Precision cosmology may have arrived, but
+at present many key questions remain, to motivate and challenge the cosmology community.
+References
+[1] Planck Collab. 2018 Results I, Astron. Astrophys. 641, A1 (2020), [arXiv:1807.06205].
+[2] Planck Collab. 2018 Results VI, Astron. Astrophys. 641, A6 (2020), [arXiv:1807.06209].
+[3] C. L. Bennett et al. (WMAP), Astrophys. J. Suppl. 208, 20 (2013), [arXiv:1212.5225].
+[4] G. Hinshaw et al. (WMAP), Astrophys. J. Suppl. 208, 19 (2013), [arXiv:1212.5226].
+[5] S. Fukuda et al. (Super-Kamiokande), Phys. Rev. Lett. 85, 3999 (2000), [hep-ex/0009001];
+Q. R. Ahmad et al. (SNO), Phys. Rev. Lett. 87, 071301 (2001), [arXiv:nucl-ex/0106015].
+[6] E.W. Kolb and M.S. Turner, The Early Universe, Addison–Wesley (Redwood City, 1990).
+[7] D.H. Lyth and A.R. Liddle, The Primordial Density Perturbation, Cambridge University Press
+(2009).
+[8] A. R. Liddle and D. H. Lyth, Phys. Lett. B291, 391 (1992), [arXiv:astro-ph/9208007].
+[9] A. Lewis, A. Challinor and A. Lasenby, Astrophys. J. 538, 473 (2000), [arXiv:astroph/9911177]; D. Blas, J. Lesgourgues and T. Tram, JCAP 1107, 034 (2011), [arXiv:1104.2933].
+[10] D. J. Fixsen, Astrophys. J. 707, 916 (2009), [arXiv:0911.1955].
+31st May, 2024
+
+17
+
+25. Cosmological Parameters
+
+[11] M. Hobson et al. (eds). Bayesian Methods in Cosmology, Cambridge University Press (2009).
+[12] A. Kosowsky and M. S. Turner, Phys. Rev. D52, R1739 (1995), [arXiv:astro-ph/9504071].
+[13] K. A. Malik and D. Wands, Phys. Rept. 475, 1 (2009), [arXiv:0809.4944].
+[14] Planck Collab. 2013 Results XXV, Astron. Astrophys. 571, A25 (2014), [arXiv:1303.5085].
+[15] D. H. Lyth and D. Wands, Phys. Lett. B524, 5 (2002), [hep-ph/0110002]; K. Enqvist and
+M. S. Sloth, Nucl. Phys. B626, 395 (2002), [hep-ph/0109214]; T. Moroi and T. Takahashi,
+Phys. Lett. B522, 215 (2001), [Erratum: Phys. Lett.B539,303(2002)], [hep-ph/0110096].
+[16] J. J. Bennett et al., JCAP 04, 073 (2021), [arXiv:2012.02726].
+[17] S. Riemer-Sorensen, D. Parkinson and T. M. Davis, Publ. Astron. Soc. Austral. 30, e029
+(2013), [arXiv:1301.7102].
+[18] J. K. Webb et al., Phys. Rev. Lett. 107, 191101 (2011), [arXiv:1008.3907]; J. A. King et al.,
+Mon. Not. Roy. Astron. Soc. 422, 3370 (2012), [arXiv:1202.4758]; P. Molaro et al., Astron. &
+Astrophys. 555, 68 (2013).
+[19] Planck Collab. 2015 Results XVIII, Astron. Astrophys. 594, A18 (2016), [arXiv:1502.01593].
+[20] W. L. Freedman et al. (HST), Astrophys. J. 553, 47 (2001), [arXiv:astro-ph/0012376].
+[21] A. G. Riess et al., Astrophys. J. Lett. 934, 1, L7 (2022), [arXiv:2112.04510].
+[22] W. L. Freedman, Astrophys. J. 919, 1, 16 (2021), [arXiv:2106.15656].
+[23] S. Birrer et al., Astron. Astrophys. 643, A165 (2020), [arXiv:2007.02941].
+[24] B. P. Abbott et al. (LIGO Scientific, Virgo, 1M2H, Dark Energy Camera GW-E, DES,
+DLT40, Las Cumbres Observatory, VINROUGE, MASTER), Nature 551, 7678, 85 (2017),
+[arXiv:1710.05835].
+[25] A. Palmese et al., Astrophys. J. 943, 1, 56 (2023), [arXiv:2111.06445].
+[26] R. Abbott et al. (LIGO Scientific, Virgo„ KAGRA, VIRGO), Astrophys. J. 949, 2, 76 (2023),
+[arXiv:2111.03604].
+[27] E. Macaulay et al. (DES), Mon. Not. Roy. Astron. Soc. 486, 2, 2184 (2019), [arXiv:1811.02376].
+[28] T. M. C. Abbott et al. (DES), Phys. Rev. D 105, 2, 023520 (2022), [arXiv:2105.13549].
+[29] S. Alam et al. (eBOSS), Phys. Rev. D 103, 8, 083533 (2021), [arXiv:2007.08991].
+[30] P. Shah, P. Lemos and O. Lahav, Astron. Astrophys. Rev. 29, 1, 9 (2021), [arXiv:2109.01161].
+[31] B. Leibundgut, Ann. Rev. Astron. Astrophys. 39, 67 (2001).
+[32] A. G. Riess et al. (Supernova Search Team), Astron. J. 116, 1009 (1998), [arXiv:astroph/9805201]; P. M. Garnavich et al. (Supernova Search Team), Astrophys. J. 509, 74 (1998),
+[arXiv:astro-ph/9806396]; S. Perlmutter et al. (Supernova Cosmology Project), Astrophys. J.
+517, 565 (1999), [arXiv:astro-ph/9812133].
+[33] D. Scolnic et al., Astrophys. J. 938, 2, 113 (2022), [arXiv:2112.03863].
+[34] D. Brout et al., Astrophys. J. 938, 2, 110 (2022), [arXiv:2202.04077].
+[35] A. Lewis and S. Bridle, Phys. Rev. D66, 103511 (2002), [arXiv:astro-ph/0205436].
+[36] J. Zuntz et al., Astron. Comput. 12, 45 (2015), [arXiv:1409.3409].
+[37] E. Krause and T. Eifler, Mon. Not. Roy. Astron. Soc. 470, 2, 2100 (2017), [arXiv:1601.05779].
+[38] J. Torrado and A. Lewis, JCAP 05, 057 (2021), [arXiv:2005.05290].
+[39] M. S. Madhavacheril et al. (ACT) (2023), [arXiv:2304.05203].
+[40] N. Kaiser, Astrophys. J. 284, L9 (1984).
+31st May, 2024
+
+18
+
+25. Cosmological Parameters
+
+[41] A. Dekel and O. Lahav, Astrophys. J. 520, 24 (1999), [arXiv:astro-ph/9806193].
+[42] D. J. Eisenstein et al. (SDSS), Astrophys. J. 633, 560 (2005), [arXiv:astro-ph/0501171].
+[43] S. Cole et al. (2dFGRS), Mon. Not. Roy. Astron. Soc. 362, 505 (2005), [arXiv:astroph/0501174].
+[44] D. Parkinson et al., Phys. Rev. D86, 103518 (2012), [arXiv:1210.2130].
+[45] J. Moon et al. (DESI) (2023), [arXiv:2304.08427].
+[46] N. Kaiser, Mon. Not. Roy. Astron. Soc. 227, 1 (1987).
+[47] L. Guzzo et al., Nature 451, 541 (2008), [arXiv:0802.1944].
+[48] A. Nusser and M. Davis, Astrophys. J. 736, 93 (2011), [arXiv:1101.1650].
+[49] C. Alcock and B. Paczynski, Nature 281, 358 (1979).
+[50] C. Blake et al., Mon. Not. Roy. Astron. Soc. 425, 405 (2012), [arXiv:1204.3674].
+[51] J. Lesgourgues and S. Pastor, Phys. Rept. 429, 307 (2006), [arXiv:astro-ph/0603494].
+[52] H. du Mas des Bourboux et al., Astrophys. J. 901, 2, 153 (2020), [arXiv:2007.08995].
+[53] M. Viel et al., Phys. Rev. D88, 043502 (2013), [arXiv:1306.2314].
+[54] A. Refregier, Ann. Rev. Astron. Astrophys. 41, 645 (2003), [arXiv:astro-ph/0307212];
+R. Massey et al., Nature 445, 286 (2007), [arXiv:astro-ph/0701594]; H. Hoekstra and B. Jain,
+Ann. Rev. Nucl. Part. Sci. 58, 99 (2008), [arXiv:0805.0139].
+[55] M. Asgari et al. (KiDS), Astron. Astrophys. 645, A104 (2021), [arXiv:2007.15633].
+[56] C. Hikage et al. (HSC), Publ. Astron. Soc. Jap. 71, 2, 43 (2019), [arXiv:1809.09148].
+[57] L. F. Secco et al. (DES) (2021), [arXiv:2105.13544].
+[58] T. M. C. Abbott et al. (Kilo-Degree Survey, DES) (2023), [arXiv:2305.17173].
+[59] R. G. Crittenden and N. Turok, Phys. Rev. Lett. 75, 2642 (1995), [arXiv:astro-ph/9505120].
+[60] Planck Collab. 2015 Results XXI, Astron. Astrophys. 594, A21 (2016), [arXiv:1502.01595].
+[61] Planck Collab. 2015 Results XXIV, Astron. Astrophys. 594, A24 (2016), [arXiv:1502.01597].
+[62] A. Dekel, Ann. Rev. Astron. Astrophys. 32, 371 (1994), [arXiv:astro-ph/9401022].
+[63] P. A. R. Ade et al. (BICEP/Keck), Phys. Rev. Lett. 127, 15, 151301 (2021), [arXiv:2110.00483].
+[64] Planck Collab. 2018 Results IX, Astron. Astrophys. 641, A9 (2020), [arXiv:1905.05697].
+
+31st May, 2024
+
+

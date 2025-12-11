@@ -1,0 +1,2070 @@
+arXiv:2211.03823v1 [hep-th] 7 Nov 2022
+
+CYTools: A Software Package for
+Analyzing Calabi-Yau Manifolds
+Mehmet Demirtas,a,b Andres Rios-Tascon,c and Liam McAllisterc
+a
+
+The NSF AI Institute for Artificial Intelligence and Fundamental Interactions
+b
+Department of Physics, Northeastern University, Boston, MA 02115, USA
+c
+Department of Physics, Cornell University, Ithaca, NY 14853, USA
+m.demirtas@northeastern.edu, ar2285@cornell.edu, mcallister@cornell.edu
+
+We provide a user’s guide to version 1.0 of the software package CYTools, which we
+designed to compute the topological data of Calabi-Yau hypersurfaces in toric varieties.
+CYTools has strong capabilities in analyzing and triangulating polytopes, and can
+easily handle even the largest polytopes in the Kreuzer-Skarke list. We explain the
+main functions and the options that can be used to optimize them, including example
+computations that illustrate efficient handling of large numbers of polytopes. The
+software, installation instructions, and a Jupyter notebook tutorial can be found at
+https://cy.tools.
+
+November 9, 2022
+
+Contents
+1 Introduction
+
+2
+
+2 Overview
+2.1 Getting started . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+2.2 Calabi-Yau manifolds from reflexive polytopes . . . . . . . . . . . . . .
+
+3
+3
+4
+
+3 Calabi-Yau Hypersurfaces in CYTools
+3.1 Polytopes . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+3.2 Triangulations . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+3.3 Toric varieties . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+3.4 Calabi-Yau manifolds . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
+7
+7
+9
+13
+13
+
+4 Using CYTools: Illustrative Examples
+4.1 The hypersurface in P[1,1,1,6,9] . . . . . . . . . . . . . . . . . . . . . . . .
+4.2 A Calabi-Yau with h1,1 = 491 . . . . . . . . . . . . . . . . . . . . . . .
+4.3 An example scan . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
+15
+15
+25
+27
+
+5 Methods and Algorithms
+5.1 Polytopes . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+5.2 Triangulations . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+5.3 Calabi-Yau manifolds . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+5.4 Cones . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
+30
+30
+33
+36
+37
+
+6 Outlook
+
+39
+
+A List of Terms
+
+40
+
+–1–
+
+1
+
+Introduction
+
+Calabi-Yau compactifications provide a unique proving ground for ideas about quantum
+gravity and geometry. Although supersymmetry may have little to do with the lowenergy physics of our universe, it provides unparalleled theoretical control, and brings
+within reach a host of otherwise-inaccessible quantum gravity questions. Through
+careful study of compactifications of critical superstrings, M-theory, and F-theory on
+Calabi-Yau n-folds, one can learn a great deal about the physics of the Planck scale.
+Working even with simple Calabi-Yau threefolds requires efforts in algebraic geometry that can be a stretch for many physicists, presenting a barrier to entry into the
+subject. Moreover, most known threefolds have such topological complexity that some
+of their properties are out of reach for anyone equipped only with pencil and paper —
+indeed, until recently these properties were also inaccessible to computers.
+Nevertheless, an astronomically large set of Calabi-Yau threefolds can in principle
+be analyzed through purely mechanical computation from a combinatorial starting
+point. Batyrev [1] has shown how to construct Calabi-Yau threefold hypersurfaces
+in toric varieties in terms of triangulations of 4-dimensional reflexive polytopes, and
+Kreuzer and Skarke [2] have classified and listed all such polytopes. To manufacture
+and analyze threefolds, one needs only to follow Batyrev’s prescription applied to the
+Kreuzer-Skarke list.
+The difficulty is a practical one: most triangulations of polytopes in the KreuzerSkarke list, and thus most candidate Calabi-Yau threefold hypersurfaces, are inaccessible by existing publicly-available codes, even on contemporary hardware. As we will
+explain, the problem is not that there is a single, fundamental computation of irreducible complexity. Instead, many interrelated computations each become extremely
+slow for polytopes with many points, corresponding to Calabi-Yau threefolds in which
+the number of moduli, given by the Hodge numbers h1,1 and h2,1 , is large. General
+purpose algorithms that are not crafted specifically for dealing with Calabi-Yau hypersurfaces in toric varieties are typically effective only when the relevant Hodge number
+— for example, h1,1 for a computation of triple intersection numbers of divisors, or h2,1
+for a computation of periods of the holomorphic (3, 0) form — is . 10.
+The purpose of the software package CYTools is to overcome this limitation, and
+enable efficient study of an immense class of Calabi-Yau manifolds. To achieve this,
+we examined the series of computational steps connecting a polytope to a Calabi-Yau
+threefold. We optimized existing algorithms, or developed new algorithms, until each
+step took at most a few milliseconds for polytopes of modest size, and at most of order
+one second for the largest polytopes in the Kreuzer-Skarke list.
+CYTools primarily consists of a Python package that contains a variety of algorithms and tools designed to analyze Calabi-Yau hypersurfaces in toric varieties. It
+makes use of some open-source software to aid with particular computations that are
+
+2
+
+already well-optimized or would be too slow to run with Python. We have written
+Python classes that interface with the external software, and handle all the different
+steps in the computation, starting from polytope information, then obtaining suitable
+triangulations, and finally computing various properties of the resulting toric varieties
+and Calabi-Yau hypersurfaces. All the functionality can be easily accessed with intuitive Python functions, and it can be used with Jupyter notebooks, allowing beginner
+and expert programmers to suit their needs.
+The organization of this user’s guide is as follows. In §2 we explain how to
+install CYTools, and then briefly review key concepts and terminology for CalabiYau hypersurfaces in toric varieties. In §3 we demonstrate how CYTools operates on
+the data of polytopes, triangulations, and Calabi-Yau hypersurfaces. In §4 we give
+a step-by-step walkthrough of a few examples. In §5 we describe some of the key
+algorithms used in CYTools. We discuss potential applications, and directions for
+future development of CYTools, in §6.
+The CYTools software can be downloaded from https://cy.tools. This website
+also contains the most detailed and up-to-date installation instructions, troubleshooting steps, instructions for advanced usage, and a Jupyter notebook with a walkthrough
+tutorial.
+
+2
+
+Overview
+
+In this section we provide a beginner’s guide to installing and using CYTools, and then
+review how Calabi-Yau hypersurfaces are constructed from triangulations of reflexive
+polytopes.
+2.1
+
+Getting started
+
+The installation of CYTools is done in the form of a Docker image. Docker [3] is a tool
+that allows software to be packaged into an image that contains all the dependencies
+and configuration necessary to run it. These images are used to build containers, which
+
+3
+
+are essentially lightweight, self-contained virtual machines that allow the software to
+run in an environment isolated from the host operating system. This allows CYTools
+to be easily installed across all major operating systems.
+On a computer with an existing Docker installation,1 installing CYTools takes
+either a single line in the terminal, or the execution of an installer script. On Linux
+and macOS it can be installed by running the following line in the terminal.
+$ curl https://cy.tools/install.sh | bash
+
+On Windows computers, it can be installed by running the installer script found at
+https://cy.tools/cytools-installer.bat.
+Once installed, launching CYTools simply requires double-clicking on the icon that
+should appear on your start menu (or equivalent) after installation. Alternatively, it
+can be launched from the terminal with the command cytools. In either case, a splash
+screen and a handful of logs will briefly flash, and then a new tab will be opened in
+the default web browser. In rare cases when the browser does not open, there will be
+a link shown that you can either ctrl+click, or copy and paste into your browser of
+choice. You will be greeted with a standard JupyterLab environment where you can
+edit files, launch terminals, and, most importantly, work with Jupyter notebooks. If
+you are not familiar with JupyterLab or Jupyter notebooks, you can find plenty of
+resources online.2 For the rest of our discussion we will assume basic familiarity with
+JupyterLab and Python.
+Docker usage generally requires administrative privileges on the host machine.
+Since this is not always possible, for example when using a shared cluster at a university,
+we have also made it possible to install CYTools using Singularity. Singularity [4] is
+an alternative to Docker that is more focused on scientific computing, and that is
+commonly installed on computing clusters since its use does not require administrative
+privileges. However, it is only available on Linux, it is more difficult to install, and there
+are fewer online resources for it. For these reasons, Docker is the primary installation
+method. Advanced users seeking to modify the Docker image or to use CYTools on a
+cluster with Singularity can find guidance at https://cy.tools.
+2.2
+
+Calabi-Yau manifolds from reflexive polytopes
+
+We now give a brief summary of Batyrev’s construction of Calabi-Yau hypersurfaces
+in toric varieties. Our goal is to provide a practical overview and set notation. For a
+more in-depth exposition, we refer the reader to [1, 5, 6]. A limited glossary of terms
+and definitions appears in Appendix A. We will focus on Calabi-Yau threefolds for
+concreteness, but analogous statements hold for Calabi-Yau fourfolds, and CYTools is
+capable of performing the corresponding computations.
+1
+2
+
+See https://docs.docker.com/ for Docker installation instructions.
+See e.g. https://jupyterlab.readthedocs.io/en/stable/.
+
+4
+
+Let M , N be a pair of dual lattices isomorphic to Z4 , let ∆ ∈ M be a 4-dimensional
+reflexive lattice polytope, and let ∆◦ ∈ N be its dual. The normal fan of ∆, or equivalently the face fan of ∆◦ , defines a toric variety with a possibly singular anticanonical
+hypersurface. A smooth anticanonical hypersurface can be obtained by finding a suitable refinement of the fan that corresponds to a maximal projective crepant partial
+desingularization. This amounts to obtaining a regular, star, and sufficiently fine triangulation of the lattice points on ∆◦ . Specifically, points strictly interior to facets
+correspond to divisors in the toric variety that do not intersect a generic anticanonical
+hypersurface, and can safely be ignored. So suppose that T is a regular, star triangulation of ∆◦ such that every point of ∆◦ that is not strictly interior to a facet is a vertex
+of a simplex in T . Then, although strictly speaking one should call T ‘fine except
+for points interior to facets’, we will abuse terminology and say that T is fine, and
+is an FRST. The toric variety arising from such an FRST has a smooth anticanonical
+hypersurface that is Calabi-Yau [1].
+Famously, the full list of 473,800,776 4-dimensional reflexive polytopes was constructed by Kreuzer and Skarke (KS) [2], and is available in a database that now bears
+their name [7]. While 473,800,776 is not a small number, CYTools can easily process
+all polytopes in the Kreuzer-Skarke database. The number of FRSTs per polytope,
+however, increases exponentially with the number of lattice points on the polytope.
+The number of topologically distinct Calabi-Yau threefold hypersurfaces is not known,
+but it could be as high as 10428 [8]. Enumerating all Calabi-Yau hypersurfaces is therefore infeasible. Even so, CYTools enables the construction and analysis of large and
+diverse samples3 of Calabi-Yau hypersurfaces from the entire database of polytopes.
+Once a Calabi-Yau hypersurface is defined by specifying a polytope and an FRST,
+the next step is to compute geometric quantities of interest. Among the most important
+topological invariants are the Hodge numbers h1,1 and h2,1 , and the Euler characteristic
+χ = 2(h1,1 − h2,1 ). These depend only on polytope data:
+
+h1,1 (X) =
+h2,1 (X) =
+
+X
+
+`∗ (Θ◦ ) − 4 +
+
+X
+
+`∗ (Θ◦ )`∗ (Θ) ,
+
+(2.1)
+
+`∗ (Θ◦ )`∗ (Θ) ,
+
+(2.2)
+
+Θ◦ ∈F (≤2)
+
+Θ◦ ∈F (2)
+
+X
+
+X
+
+`∗ (Θ) − 4 +
+
+Θ∈F (≤2)
+
+Θ∈F (2)
+
+where Θ denotes a face of ∆ and Θ◦ its dual; F(d) and F(≤ d) denote the set of all
+faces with dimension d and ≤ d, respectively; and `∗ (Θ) is the number of points strictly
+interior to the face Θ. Polytopes for which the final term in (2.1) vanishes are called
+favorable. Checking favorability is immediate in CYTools, as we will demonstrate in
+§4. Much of the functionality of CYTools is automatic for favorable polytopes but
+3
+
+See [8] and §5.2.2 for an explanation of sampling algorithms.
+
+5
+
+requires a certain amount of adaptation for non-favorable cases. We intend to make
+the treatment of non-favorable polytopes more user-friendly in a future release.
+Each ray in the toric fan (equivalently, each lattice point on the boundary of ∆◦ )
+corresponds to a prime toric divisor D̂a of the toric variety. The degrees in the Cox ring,
+more commonly referred to as the GLSM charge matrix in the physics literature, encode
+the linear relationships among these divisors. As mentioned before, toric divisors that
+correspond to lattice points not strictly interior to facets intersect a generic Calabi-Yau
+hypersurface X, giving rise to a divisor in X, Da = D̂a ∩ X. The divisors Da , of which
+there are h1,1 + 4 in the case of a favorable polytope, generate H4 (X, Z). We will often
+pick h1,1 of these divisors (selecting a set that are linearly independent over R) to form
+a basis of H4 (X, Z).4
+We denote the intersection numbers of the Da as κabc ,
+κabc = #Da ∩ Db ∩ Dc .
+
+(2.3)
+
+The intersection numbers are important data for string compactifications, in part because they define a product in the de Rham cohomology of the Calabi-Yau manifold,
+and computing the volumes of cycles calibrated by the Kähler form requires computing
+the intersection numbers. One of the most important individual advances provided by
+CYTools is the capability to compute intersection numbers in at most a second even
+for Calabi-Yau hypersurfaces with many moduli.
+The homology classes in H2 (X, Z) and H4 (X, Z) that have holomorphic representatives are called effective. The sets of effective classes in H2 (X, Z) and H4 (X, Z) are
+called the Mori cone (or cone of effective curves) and the effective cone (or cone of
+effective divisors), respectively. A holomorphic representative of an effective homology
+class is volume-minimizing in its class, and its volume can be obtained by integrating
+the appropriate power of the Kähler form over the cycle. As the action of an extended
+object wrapping a cycle is proportional to the cycle volume to a good approximation
+in the geometric regime, identifying volume-minimizing cycles is an important problem. Additionally, the structure of the superpotential in superstring compactifications
+depends strongly on the holomorphic cycles in the compactification. The Mori cone of
+a Calabi-Yau manifold is of special interest, as its dual is the (closure of the) Kähler
+cone, the space of Kähler forms.
+There is no general algorithm known to us that allows for computing the cones of
+effective cycles of Calabi-Yau hypersurfaces with large Hodge numbers.5 Fortunately,
+analogous computations for the ambient toric variety are conceptually straightforward,
+4
+
+Every such choice will provide a basis over Q, and some also furnish a basis over Z. In practice
+we have always been able to find a choice that furnishes a Z-basis, but we are not aware of a proof
+that such a basis always exists.
+5
+While it is sometimes possible to determine whether a given homology class is effective, such
+computations become infeasible when h1,1  10.
+
+6
+
+and provide useful approximations to the Mori and effective cones of the Calabi-Yau
+hypersurface: see [9].
+While we have limited our discussion to even-dimensional cycles and the Kähler
+moduli space of Calabi-Yau manifolds so far, periods of 3-cycles and the complex structure moduli space are characterized by essentially the same data described above, via
+mirror symmetry. Utilizing mirror symmetry to compute periods requires additional
+computational methods, and will be discussed in future work [10].
+
+3
+
+Calabi-Yau Hypersurfaces in CYTools
+
+Let us walk through the process of analyzing a Calabi-Yau manifold in CYTools, starting from a polytope, finding a triangulation, and then constructing the corresponding
+toric variety and Calabi-Yau hypersurface. Most of the code blocks in this section can
+also be found in the tutorial page in the documentation website, where we focus on
+code usage as opposed to explaining the underlying mathematical objects.
+3.1
+
+Polytopes
+
+Batyrev’s construction of Calabi-Yau manifolds begins with reflexive polytopes. Polytope objects can be constructed in CYTools with the Polytope class. Only lattice
+polytopes are supported. As a consequence, any floating-point numbers that are used
+to construct a polytope are truncated to integers.
+Let us look at a simple example where we import the class, construct a square,
+and print basic information about it.
+>>> from cytools import Polytope
+>>> p = Polytope([[1,0],[0,1],[-1,0],[0,-1]])
+>>> print(p)
+A 2-dimensional reflexive lattice polytope in ZZ∧ 2
+
+The Polytope class contains numerous functions to perform all the main computations one typically needs. The functions have self-explanatory names whenever
+possible. For example, we can compute the dimension of the polytope, and whether it
+is reflexive, as follows.
+>>> p.dimension()
+2
+>>> p.is_reflexive()
+True
+
+The lattice points of the polytope can be found as follows.
+
+7
+
+>>> p.points()
+array([[ 0, 0],
+[-1, 0],
+[ 0, -1],
+[ 0, 1],
+[ 1, 0]])
+
+As a last example for now, here is how one can find the 1-faces of the polytope.
+>>> p.faces(d=1)
+(A 1-dimensional face of a 2-dimensional polytope in ZZ∧ 2,
+A 1-dimensional face of a 2-dimensional polytope in ZZ∧ 2,
+A 1-dimensional face of a 2-dimensional polytope in ZZ∧ 2,
+A 1-dimensional face of a 2-dimensional polytope in ZZ∧ 2)
+
+This function returns a tuple of PolytopeFace objects, with functions similar to those
+of the Polytope class. As we will see, this pattern of functions returning more refined
+objects is ubiquitous in CYTools. This makes the process of constructing Calabi-Yau
+manifolds more intuitive and reliable, as the functions make sure that all the data uses
+the right conventions for the computations.
+CYTools uses efficient algorithms that substantially improve upon previous open
+source software packages in the literature, especially in handling 4-dimensional reflexive
+polytopes.6 In particular, we have drastically increased the performance for computing
+the lattice points and faces of the polytopes. We will describe these algorithms in detail
+in §5.1.1 and §5.1.2.
+3.1.1
+
+Kreuzer-Skarke database
+
+As mentioned above, 4-dimensional reflexive polytopes are the starting point for obtaining Calabi-Yau threefolds using Batyrev’s construction. CYTools contains the
+fetch_polytopes function, which provides a convenient way to fetch polytopes from
+the Kreuzer-Skarke database. The number of points, vertices, or facets of the polytope,
+or the Hodge numbers of the resulting Calabi-Yau hypersurfaces, among other parameters, can be specified. As an example, we obtain 100 polytopes with 5 vertices that
+produce Calabi-Yau hypersurfaces with h1,1 = 27 when triangulated (i.e. the polytopes
+live in the N lattice).
+>>> from cytools import fetch_polytopes
+>>> gen = fetch_polytopes(n_vertices=5, h11=27, lattice="N", limit=100)
+>>> print(gen) # The number below will vary, as it is a memory address
+<generator object polytope generator at 0x7f306eacaeb0>
+6
+
+For some computations involving 5-dimensional polytopes we have not improved on the performance of PALP [11], but we note that CYTools provides a convenient interface to PALP.
+
+8
+
+Note that this function returns a generator object instead of a list. This is done for
+performance reasons, as is explained in more detail on the website. We also mention
+that when using Hodge numbers of a polytope, as in the above function, we must
+specify whether we want to interpret the polytope as being in the M lattice, i.e. as
+being the Newton polytope of the Calabi-Yau hypersurface, or as being in the N lattice,
+i.e. as being the polytope for which a suitable refinement of its face fan defines the
+ambient toric variety. We enforce this requirement because in parts of the literature
+it is common to interpret the polytope in the M lattice, while in others it is more
+common to interpret it in the N lattice, so it is a frequent source of confusion. A
+helpful mnemonic [12] is that points on the N -lattice polytope are the rays of the
+toric fan corresponding to divisors, while points in the M -lattice polytope correspond
+to monomials in the defining polynomial of the Calabi-Yau hypersurface. Thus, a
+polytope P with many points gives rise to a Calabi-Yau threefold X with many prime
+toric divisors, and hence many Kähler moduli, if P is taken to live in the N lattice. If
+instead P is taken to live in the M lattice, one finds the mirror threefold X̃, which has
+many monomials in its defining equation, and hence many complex structure moduli.
+CYTools also includes the read_polytopes function, which reads from a string
+or input file containing polytopes in the format used by the Kreuzer-Skarke database.
+The function read_polytopes is similar to fetch_polytopes, but is recommended
+when performing large scans, as fetch_polytopes may be quite slow when obtaining
+a large number (& 10, 000) of polytopes, especially when being very specific about
+their properties.
+We provide further examples of these functions in §4, and the full list of parameters
+can be found in the documentation website [13].
+3.2
+
+Triangulations
+
+Triangulations of polytopes are handled in CYTools by the Triangulation class, which
+contains a variety of functions to compute many of the relevant properties of triangulations, and also serves to interface with external software that performs other computations. Let us see how we can obtain triangulations of polytopes and analyze their
+properties.
+3.2.1
+
+Obtaining a triangulation
+
+A triangulation of a lattice polytope can be obtained using the triangulate function
+of the Polytope class. As a first example, we can construct a polytope and obtain a
+triangulation of it as follows.
+>>> p = Polytope([[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1],[-1,-1,-6,-9]])
+>>> t0 = p.triangulate()
+>>> print(t0)
+
+9
+
+A fine, regular, star triangulation of a 4-dimensional point configuration with
+7 points in ZZ∧ 4
+
+When the polytope is reflexive, the triangulate function by default constructs a fine,
+regular, star triangulation of the points not strictly interior to facets. The set of points
+to be included in the triangulation can be specified explicitly by modifying the input
+parameters of triangulate, as we will describe below.
+The triangulate function returns a Triangulation object with useful functions
+of its own. For example, there are functions to check if it is fine (with respect to a
+given point configuration, that by default does not include points interior to facets),
+regular, or star.
+>>> t.is_fine()
+True
+>>> t.is_regular()
+True
+>>> t.is_star()
+True
+
+We demonstrate a number of other useful functions in §4, and as usual refer the reader
+to the documentation website [13] for the full list of functions.
+CYTools utilizes multiple external software packages to obtain triangulations. The
+main method it uses is to lift the points into an extra dimension by a set of heights,
+compute the convex hull of these points, and then project down the lower faces of the
+resulting polyhedron. The process is illustrated in Fig. 1. This method is considerably
+faster than the pushing algorithm used in TOPCOM [14], which is partly why CYTools
+can vastly outperform standard mathematical software like SageMath [15]. However,
+although all regular triangulations can be obtained from this procedure, it does not
+allow a systematic enumeration of them. Thus, CYTools still relies on TOPCOM for some
+computations. We will discuss the algorithms in more detail in §5.2.
+
+Figure 1: Regular triangulations descend from projections of the lower faces of a
+convex hull in one higher dimension. In the figure, a 2-dimensional point set is lifted
+by a set of heights into a 3-dimensional convex hull. The lower faces (shown in red)
+induce a triangulation on the original point set via their projection. Figure from [8].
+
+10
+
+The triangulate function has various parameters that can be included as input.
+For example, one can force the inclusion of points interior to facets, one can input a
+set of heights, or even input the simplices of a pre-computed triangulation. One can
+include points interior to facets as follows.
+>>> p = Polytope([[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1],[-1,-1,-6,-9]])
+>>> t1 = p.triangulate(include_points_interior_to_facets=True)
+>>> print(t1)
+A fine, regular, star triangulation of a 4-dimensional point configuration with
+10 points in ZZ∧ 4
+
+Note that now the point configuration contains 10 lattice points instead of the 7 that
+were included in the triangulation t0 that we constructed above. If we want to construct a triangulation with a given set of heights we can do so as follows. We also show
+how to force the resulting triangulation to be star.
+>>> p = Polytope([[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1],[-1,-1,-6,-9]])
+>>> t2 = p.triangulate(heights=[10,2,3,4,5,6,7])
+>>> print(t2)
+A non-fine, regular, non-star triangulation of a 4-dimensional point configuration
+with 7 points in ZZ∧ 4
+>>> t3 = p.triangulate(heights=[10,2,3,4,5,6,7], make_star=True)
+>>> print(t3)
+A non-fine, regular, star triangulation of a 4-dimensional point configuration
+with 7 points in ZZ∧ 4
+
+Finally, we show how to construct a triangulation from a list of simplices that was
+previously found. In fact, it is the same triangulation as t3.
+>>> p = Polytope([[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1],[-1,-1,-6,-9]])
+>>> t4 = p.triangulate(simplices=[[0,1,2,3,4],[0,1,2,3,5],[0,1,2,4,5],
+>>>
+[0,1,3,4,5],[0,2,3,4,5]])
+>>> print(t4)
+A non-fine, regular, star triangulation of a 4-dimensional point configuration
+with 7 points in ZZ∧ 4
+
+3.2.2
+
+Obtaining all triangulations
+
+For polytopes with a small number of lattice points, it is possible to compute the full
+set of triangulations. CYTools achieves this with the use of TOPCOM. We provide a very
+simple interface with this external software: finding all triangulations only requires a
+single line.
+>>> p = Polytope([[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1],[-1,-1,-6,-9]])
+>>> gen = p.all_triangulations()
+>>> t = next(gen)
+
+11
+
+>>> print(t)
+A fine, regular, star triangulation of a 4-dimensional point configuration with
+7 points in ZZ∧ 4
+
+This function takes various arguments to indicate whether the triangulations should
+be fine, regular, and/or star. As with fetch_polytopes, the all_triangulations
+function returns a generator object for performance reasons. The triangulations can
+then be obtained with the next function as above, or with a for-loop, as will be shown
+later.
+We have now seen how to construct a single triangulation, or all triangulations
+of a polytope. However, for most of the polytopes in the Kreuzer-Skarke database
+the number of triangulations is exponentially large, so listing all of their triangulations is impossible. Nevertheless, one certainly would want to obtain more than a
+single triangulation, so we now explain how to construct large sets of suitably random
+triangulations.
+3.2.3
+
+Obtaining random triangulations
+
+Obtaining ensembles of triangulations is important for a variety of applications, ranging
+from training neural networks to compute topological properties of the Calabi-Yau very
+quickly [8], to studying distributions of observables in the string landscape. Particularly
+for the latter purpose, it is crucial that the sample be unbiased, so that the statistics
+of observables reflects the true distribution of Calabi-Yau geometries.
+When constructing random sets of triangulations, there are two main considerations: we would like to sample triangulations efficiently (i.e. as quickly as possible)
+and fairly (i.e. sampled from a uniform distribution). Unfortunately, these two goals
+are at odds with each other. Sampling triangulations without introducing any biases
+results in significant computational expense. Consequently, CYTools contains two separate methods to generate random triangulations: random_triangulations_fast()
+and random_triangulations_fair(). We will describe the associated algorithms in
+detail in §5.2.
+Both of these functions return a generator object, and both have a variety of
+parameters that can be tweaked. By default they try to find suitable parameters for
+the polytope being used, but it is recommended to tune the parameters by hand,
+especially with the fair generator, to achieve a balance between speed and the fairness
+of the sampling, as the default parameters tend to err on the side of fairness over speed.
+Let us look at a simple example that uses these random triangulation generators.
+
+>>> p = Polytope([[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1],[-1,-1,-1,-1]]).dual()
+>>> fast_triangs = p.random_triangulations_fast(N=5)
+>>> for t in fast_triangs: # This loop completes very quickly
+
+12
+
+>>>
+print(t)
+A fine, regular, star triangulation of a 4-dimensional point configuration with
+106 points in ZZ∧ 4
+** repeats 4 more times **
+>>> fair_triangs = p.random_triangulations_fair(N=5)
+>>> for t in fair_triangs: # This time it takes a long time
+>>>
+print(t)
+A fine, regular, star triangulation of a 4-dimensional point configuration with
+106 points in ZZ∧ 4
+** repeats 4 more times **
+
+As always, more details about these functions and their parameters can be found at
+the documentation website [13].
+3.3
+
+Toric varieties
+
+Let us now construct a toric variety using the triangulation of a polytope. When
+the triangulation is star, we can interpret the maximal simplices as defining the
+cones of a toric fan. The corresponding toric variety can then be obtained with the
+get_toric_variety function. Here is a simple example.
+>>> p = Polytope([[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1],[-1,-1,-6,-9]])
+>>> t = p.triangulate()
+>>> v = t.get_toric_variety()
+>>> print(v)
+A simplicial compact 4-dimensional toric variety with 9 affine patches
+
+The ToricVariety class offers a variety of functions to compute properties of the toric
+variety, such as intersection numbers, Mori and Kähler cones, and the Stanley-Reisner
+ideal. We showcase many of these functions in §4, and refer the reader to the website
+for a full list.
+3.4
+
+Calabi-Yau manifolds
+
+Now we can construct a Calabi-Yau hypersurface, starting from the Triangulation
+or ToricVariety objects.
+>>> p = Polytope([[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1],[-1,-1,-6,-9]])
+>>> t = p.triangulate()
+>>> v = t.get_toric_variety()
+>>> cy = v.get_cy()
+>>> cy = t.get_cy() # equivalent to the above line, but more conveninent
+>>> print(cy)
+A Calabi-Yau 3-fold hypersurface with h11=2 and h21=272 in a 4-dimensional
+toric variety
+
+13
+
+Again, the Calabi-Yau class offers a variety of functions, many of which we showcase in §4. However, let us mention one here since the examples below do not properly
+show its usefulness. It is not surprising that multiple triangulations can give rise to
+the same Calabi-Yau hypersurface: in particular, triangulations with identical restrictions to codimension-2 faces yield equivalent Calabi-Yaus. Moreover, automorphisms
+of the polytope also allow apparently different triangulations to be identified. To remove these redundancies from the analysis, CYTools incorporates a function called
+is_trivially_equivalent that checks for this “trivial” equivalence. We call the
+above equivalences trivial because they can be checked from triangulation and polytope data, whereas a more general equivalence check involves verifying the conditions
+of Wall’s theorem [16], which is generally extremely difficult. Let us see how this
+equivalence check works in a simple example.
+>>> p = Polytope([[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1],
+>>>
+[-1,-2,-1,-1],[-2,-1,-1,-1]])
+>>> all_triangs = p.all_triangulations()
+>>> t1 = next(all_triangs)
+>>> t2 = next(all_triangs)
+>>> t1 == t2 # verify that the triangulations are different
+False
+>>> cy1 = t1.get_cy()
+>>> cy2 = t2.get_cy()
+>>> cy1.is_trivially_equivalent(cy2)
+True
+
+CYTools automatically mods out by the above equivalence when constructing sets of
+CalabiYau objects, as occurs when using {} in Python. Let us look at an example.
+>>> p = Polytope([[-1,0,0,0],[-1,1,0,0],[-1,0,1,0],[2,-1,0,-1],[2,0,-1,-1],
+>>>
+[2,-1,-1,-1],[-1,0,0,1],[-1,1,0,1],[-1,0,1,1]])
+>>> all_cys = [t.get_cy() for t in p.all_triangulations()]
+>>> cys_not_triv_eq = set(all_cys)
+>>> # An equivalent way to directly construct this set is as follows
+>>> cys_not_triv_eq = {t.get_cy() for t in p.all_triangulations()}
+>>> print(len(all_cys), len(cys_not_triv_eq))
+102 5
+
+We see that while there are a total of 102 fine, regular, star triangulations, there
+are only 5 Calabi-Yau hypersurfaces that are not identical via trivial equivalence. It
+remains possible that some or all of these 5 are topologically equivalent in a nontrivial
+way, but this is difficult to check with version 1.0 of CYTools. We hope to provide
+capability in this direction in a future release.
+There are many more functions included in the CalabiYau class. We will cover
+some of them in §4, but we refer the reader to the website for a comprehensive list.
+
+14
+
+4
+
+Using CYTools: Illustrative Examples
+
+In this section, we will demonstrate how to use CYTools to construct and analyze
+Calabi-Yau hypersurfaces in concrete examples. A similar demonstration can be found
+in the tutorial hosted on our website [13], where we also provide a Jupyter notebook
+in which you can follow along.
+4.1
+
+The hypersurface in P[1,1,1,6,9]
+
+We will start by studying a simple Calabi-Yau with h1,1 = 2, namely the anticanonical
+hypersurface in the weighted projective space P[1,1,1,6,9] .
+4.1.1
+
+Polytope data
+
+We first import the Polytope class from the CYTools package.
+>>> from cytools import Polytope
+
+We define a Polytope object by specifying its vertices.
+>>> vertices = [[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1],[-1,-1,-6,-9]]
+>>> p = Polytope(vertices)
+>>> print(p)
+A 4-dimensional reflexive lattice polytope in ZZ∧ 4
+
+Next, we make sure that the resulting polytope is 4-dimensional,
+>>> p.dimension()
+4
+
+and is reflexive,
+>>> p.is_reflexive()
+True
+
+We can obtain the lattice points of the polytope.
+>>> p.points()
+array([[ 0, 0, 0, 0],
+[-1, -1, -6, -9],
+[ 0, 0, 0, 1],
+[ 0, 0, 1, 0],
+[ 0, 1, 0, 0],
+[ 1, 0, 0, 0],
+[ 0, 0, -2, -3],
+[ 0, 0, -1, -2],
+[ 0, 0, -1, -1],
+[ 0, 0, 0, -1]])
+
+15
+
+The output is a NumPy array containing the coordinates of all lattice points on the
+polytope. We use the convention that the origin is always first,7 and points strictly
+interior to facets are always at the end. When studying Calabi-Yau hypersurfaces,
+one is often interested in the lattice points that are not strictly interior to facets.
+Conveniently, these can be found as follows.
+>>> p.points_not_interior_to_facets()
+array([[ 0, 0, 0, 0],
+[-1, -1, -6, -9],
+[ 0, 0, 0, 1],
+[ 0, 0, 1, 0],
+[ 0, 1, 0, 0],
+[ 1, 0, 0, 0],
+[ 0, 0, -2, -3]])
+
+We notice that there are three fewer points at the end of the list: the now-omitted
+points were strictly interior to facets. Similarly, one can use the functions,
+>>> p.interior_points()
+>>> p.boundary_points()
+>>> p.points_interior_to_facets()
+>>> p.boundary_points_not_interior_to_facets()
+
+where the function names are self-explanatory. We can construct the faces of the
+polytope and determine the lattice points on each face. We start with the 2-faces of
+our polytope.
+>>> p.faces(d=2)
+(A 2-dimensional face of a 4-dimensional polytope in ZZ∧ 4,
+A 2-dimensional face of a 4-dimensional polytope in ZZ∧ 4,
+** omitted 6 lines **
+A 2-dimensional face of a 4-dimensional polytope in ZZ∧ 4,
+A 2-dimensional face of a 4-dimensional polytope in ZZ∧ 4)
+
+This polytope has ten 2-faces. For any given face of the polytope, we can find the
+lattice points on that face,
+>>> two_face = p.faces(d=2)[0]
+>>> two_face.points()
+array([[-1, -1, -6, -9],
+[ 0, 0, 0, 1],
+[ 0, 0, 1, 0]])
+
+and construct the faces of the face,
+7
+
+Note that indexing in Python starts at 0.
+
+16
+
+>>> two_face.faces(d=1)
+(A 1-dimensional face of a 4-dimensional polytope in ZZ∧ 4,
+A 1-dimensional face of a 4-dimensional polytope in ZZ∧ 4,
+A 1-dimensional face of a 4-dimensional polytope in ZZ∧ 4)
+
+Some relevant data of the Calabi-Yau hypersurface can be computed directly from the
+polytope. For example, the Hodge numbers and Euler characteristic can be computed
+as follows.
+>>> p.h11(lattice="N")
+2
+>>> p.h21(lattice="N")
+272
+>>> p.chi(lattice="N")
+-540
+
+Note that one must specify the lattice on which the polytope lives. Setting lattice="N"
+or lattice="M" specifies that the ambient toric variety is constructed from a desingularization of the face fan or normal fan of the polytope, respectively. We can check
+whether the polytope is favorable.
+>>> p.is_favorable(lattice="N")
+True
+
+We can verify that switching lattices we obtain the data of the mirror Calabi-Yau.
+>>> p.h11(lattice="M")
+272
+>>> p.h21(lattice="M")
+2
+>>> p.chi(lattice="M")
+540
+
+We can construct the dual polytope,
+>>> p.dual_polytope()
+A 4-dimensional reflexive lattice polytope in ZZ∧ 4
+
+and verify that it is a 4-dimensional reflexive polytope where the Hodge numbers are
+switched.
+>>> p.dual_polytope().dimension()
+4
+>>> p.dual_polytope().is_reflexive()
+True
+>>> p.dual_polytope().h11(lattice="N")
+272
+
+17
+
+>>> p.dual_polytope().h21(lattice="N")
+2
+
+We can find the faces of the dual polytope just as we did with the original polytope.
+For example, we can find the 1-faces.
+>>> p.dual_polytope().faces(d=1)
+(A 1-dimensional face of a 4-dimensional polytope in ZZ∧ 4,
+A 1-dimensional face of a 4-dimensional polytope in ZZ∧ 4,
+** omitted 6 lines **
+A 1-dimensional face of a 4-dimensional polytope in ZZ∧ 4,
+A 1-dimensional face of a 4-dimensional polytope in ZZ∧ 4)
+
+There are ten 1-faces of the dual polytope, as expected. The lists of faces are ordered
+such that the nth 2-face of the original polytope is dual to the nth 1-face of the dual
+polytope.
+>>> n = 0
+>>> p.dual_polytope().faces(d=1)[n].dual_face().points()
+array([[-1, -1, -6, -9],
+[ 0, 0, 0, 1],
+[ 0, 0, 1, 0]])
+>>> p.faces(d=2)[n].points()
+array([[-1, -1, -6, -9],
+[ 0, 0, 0, 1],
+[ 0, 0, 1, 0]])
+
+Other important data that can be computed directly from the polytope is the GLSM
+charge matrix,
+>>> p.glsm_charge_matrix()
+array([[-18,
+1,
+9,
+6,
+[ -6,
+0,
+3,
+2,
+
+1,
+0,
+
+1,
+0,
+
+0],
+1]])
+
+where the first column corresponds to the canonical divisor, and the remaining columns
+to the prime toric divisors Di . By default, divisors corresponding to points strictly
+interior to facets are not included, as they do not intersect a generic Calabi-Yau hypersurface.
+It is often useful to pick a basis of h1,1 divisors that span H4 (X, Z). We do this
+by picking a subset of of the prime toric divisors, such that the extra divisors can be
+written as integer linear combinations of the basis divisors. We can obtain such a basis
+as follows.
+>>> p.glsm_basis()
+array([5, 6])
+
+18
+
+As we can see, this function returns a list of indices indicating that divisors D5 and
+D6 form a complete basis.8 We can obtain the linear relations between the canonical
+and prime toric divisors as follows,
+>>> p.glsm_linear_relations()
+array([[ 1, 0, 0, 0, 0, 18, 6],
+[ 0, 1, 0, 0, 0, -1, 0],
+[ 0, 0, 1, 0, 0, -9, -3],
+[ 0, 0, 0, 1, 0, -6, -2],
+[ 0, 0, 0, 0, 1, -1, 0]])
+
+where each row encodes data of a particular linear relation, while each column corresponds to a divisor. From this matrix we can see that the five divisors that are
+not in the basis can be written as linear combinations of D5 and D6 . As we will see,
+the ToricVariety and CalabiYau classes allow picking a custom basis of divisors or
+curves, which are used for basis-dependent computations.
+4.1.2
+
+Triangulation data
+
+Now that we have computed most relevant data that exclusively comes from the polytope, we will triangulate the polytope to obtain a toric fan.
+>>> t = p.triangulate()
+>>> print(t)
+A fine, regular, star triangulation of a 4-dimensional point configuration with
+7 points in ZZ∧ 4
+
+As we can see, by default this function returns a fine, regular, star triangulation. We
+can also see that by default it only used the points not interior to facets. We can verify
+all of this as follows.
+>>> t.is_fine()
+True
+>>> t.is_regular()
+True
+>>> t.is_star()
+True
+>>> t.points()
+array([[ 0, 0, 0, 0],
+[-1, -1, -6, -9],
+[ 0, 0, 0, 1],
+[ 0, 0, 1, 0],
+[ 0, 1, 0, 0],
+[ 1, 0, 0, 0],
+[ 0, 0, -2, -3]])
+8
+
+We reiterate that indices start from zero. In this example, D1 has GLSM charges (1, 0) and D6
+has charges (0, 1).
+
+19
+
+We can print the simplices of the triangulation,
+>>> t.simplices()
+array([[0, 1, 2, 3, 4],
+[0, 1, 2, 3, 5],
+[0, 1, 2, 4, 6],
+[0, 1, 2, 5, 6],
+[0, 1, 3, 4, 6],
+[0, 1, 3, 5, 6],
+[0, 2, 3, 4, 5],
+[0, 2, 4, 5, 6],
+[0, 3, 4, 5, 6]])
+
+where each simplex is represented by the indices of its vertices. We can also calculate
+the GKZ vector [17] of the triangulation.
+>>> t.gkz_phi()
+array([18, 12, 9, 12, 12, 12, 15])
+
+As a last example, we can find the triangulations that can be obtained by performing
+a single bistellar flip.
+>>> t.neighbor_triangulations()
+[A non-fine, star triangulation of a 4-dimensional point configuration with
+7 points in ZZ∧ 4,
+A non-fine, non-star triangulation of a 4-dimensional point configuration with
+7 points in ZZ∧ 4]
+
+4.1.3
+
+Toric variety data
+
+Now that we have constructed a fine, regular, star triangulation, let us use it to construct the corresponding toric variety. We can do this as follows.
+>>> v = t.get_toric_variety()
+>>> print(v)
+A simplicial compact 4-dimensional toric variety with 9 affine patches
+
+We can see that the nine simplices of the triangulation above now correspond to affine
+patches of the toric variety. This is because they now correspond to the maximal cones
+of the toric fan that defines the variety. Let us take a look at these cones of the fan.
+>>> v.fan_cones()
+(A 4-dimensional rational polyhedral cone in RR∧ 4 generated by 4 rays,
+A 4-dimensional rational polyhedral cone in RR∧ 4 generated by 4 rays,
+A 4-dimensional rational polyhedral cone in RR∧ 4 generated by 4 rays,
+A 4-dimensional rational polyhedral cone in RR∧ 4 generated by 4 rays,
+A 4-dimensional rational polyhedral cone in RR∧ 4 generated by 4 rays,
+
+20
+
+A 4-dimensional rational polyhedral cone in RR∧ 4 generated by 4 rays,
+A 4-dimensional rational polyhedral cone in RR∧ 4 generated by 4 rays,
+A 4-dimensional rational polyhedral cone in RR∧ 4 generated by 4 rays,
+A 4-dimensional rational polyhedral cone in RR∧ 4 generated by 4 rays)
+
+We can similarly find lower-dimensional cones. For example, we will look at the 1dimensional cones, or rays, of the fan, which are in correspondence with the prime
+toric divisors.
+>>> v.fan_cones(d=1)
+(A 1-dimensional rational polyhedral cone in RR∧ 4 generated by 1 rays,
+A 1-dimensional rational polyhedral cone in RR∧ 4 generated by 1 rays,
+A 1-dimensional rational polyhedral cone in RR∧ 4 generated by 1 rays,
+A 1-dimensional rational polyhedral cone in RR∧ 4 generated by 1 rays,
+A 1-dimensional rational polyhedral cone in RR∧ 4 generated by 1 rays,
+A 1-dimensional rational polyhedral cone in RR∧ 4 generated by 1 rays)
+
+Another important piece of information we obtain from the fan is the Stanley-Reisner
+ideal, which tells us the combinations of toric coordinates that cannot vanish at the
+same time.
+>>> v.sr_ideal()
+((1, 4, 5), (2, 3, 6))
+
+Each tuple represents a monomial in terms of indices of toric coordinates. In this case,
+the Stanley-Reisner ideal is (z1 z4 z5 , z2 z3 z6 ), where the zi are toric coordinates.
+Let us now compute the Mori cone, Kähler cone, and effective cone of the toric
+variety. These are important cones, as they give approximations of the corresponding
+cones for the Calabi-Yau hypersurface.
+>>> v.mori_cone()
+A 2-dimensional rational polyhedral cone in RR∧ 7 generated by 3 rays
+>>> v.mori_cone(in_basis=True)
+A 2-dimensional rational polyhedral cone in RR∧ 2 generated by 3 rays
+>>> v.kahler_cone()
+A rational polyhedral cone in RR∧ 2 defined by 3 hyperplanes
+>>> v.effective_cone()
+A 2-dimensional rational polyhedral cone in RR∧ 2 generated by 6 rays
+
+Note that cones in CYTools can be defined in two ways: by specifying a set of rays, or
+by specifying the defining hyperplanes.
+The Mori cone can be interpreted as a cone living in an (h1,1 + 5)-dimensional
+lattice, or in an h1,1 -dimensional lattice after a choice of basis, while the Kähler and
+effective cones always require a choice of basis. We will discuss basis choices below,
+but for now let us conclude by computing intersection numbers of the variety with and
+without a choice of basis.
+21
+
+>>> v.intersection_numbers()
+{(1, 2, 3, 4): 1.0,
+(1, 2, 3, 5): 1.0,
+** omitted 117 lines **
+(0, 0, 0, 5): -108,
+(0, 0, 0, 0): 1944}
+>>> v.intersection_numbers(in_basis=True)
+{(0, 0, 1, 1): 0.16666666666666757,
+(0, 1, 1, 1): -1.0000000000000027,
+(1, 1, 1, 1): 4.500000000000011}
+
+The output of this function is a dictionary that contains key-value pairs for the nonzero intersection numbers. The keys consist of sorted indices of the divisors, and the
+values are the corresponding intersection numbers. When we compute intersection
+numbers without a basis choice, indices range from zero to h1,1 + 5, corresponding to
+the canonical and prime toric divisors. From the output we can see that, for example,
+κ1234 = 1. When using a choice of basis, the indices range from zero to h1,1 − 1,
+corresponding to the divisors in the basis. Since we previously saw that the default
+basis was {D̂5 , D̂6 }, this output tells us that #D̂5 ∩ D̂6 ∩ D̂6 ∩ D̂6 = −1. It is important
+to note that intersection numbers are computed as (double-precision) floating-point
+numbers. This provides a performance advantage since the fastest linear solvers work
+with floats. For most computations, double-precision floats offer enough precision to
+accurately represent the rational numbers that arise.
+The intersection numbers of smooth Calabi-Yau hypersurfaces must be integers,
+and a verification is always performed to make sure that the intersection numbers
+computed in CYTools do not deviate from integrality by a significant amount. We
+discuss the computation of intersection numbers in §5.3.1.
+4.1.4
+
+Calabi-Yau data
+
+Finally, let us get to the object of most interest. We can construct a CalabiYau object
+from the ToricVariety we constructed above, but we can also get it directly from the
+Triangulation object.
+>>> cy = t.get_cy()
+>>> print(cy)
+A Calabi-Yau 3-fold hypersurface with h11=2 and h21=272 in a 4-dimensional
+toric variety
+
+First, let us make sure that the generic hypersurface is smooth.
+>>> cy.is_smooth()
+True
+
+We can calculate the intersection numbers of the hypersurface just as we did with the
+toric variety.
+22
+
+>>> cy.intersection_numbers()
+{(1, 2, 3): 18,
+(2, 3, 4): 18,
+** omitted 52 lines **
+(0, 0, 5): 108,
+(0, 0, 0): -1944}
+>>> cy.intersection_numbers(in_basis=True)
+{(0, 1, 1): -3, (1, 1, 1): 9, (0, 0, 1): 1}
+
+Similar to what we saw for toric varieties, the indices correspond to canonical and prime
+toric divisors, or divisors in the basis, depending on whether we set in_basis=True.
+This is a good opportunity to talk about how divisor bases work in CYTools. By
+default, the ToricVariety and CalabiYau classes use the basis that the glsm_basis
+function of the Polytope class returns. We can verify this as follows.
+>>> cy.divisor_basis()
+array([5, 6])
+
+As expected, we see that D5 and D6 are used as the basis divisors.9
+We also have the option of choosing a custom basis, but with the requirement of
+it being integral. In the above example, D1 and D6 can be picked as our basis. To set
+this we do the following.
+>>> cy.set_divisor_basis([1, 6])
+>>> cy.divisor_basis()
+array([1, 6])
+>>> cy.curve_basis()
+array([1, 6])
+
+Now all the computations that are basis-dependent will be done with this choice of
+basis. Similarly, a new basis of curves can be set, and the divisor basis will also be
+updated. This case is particularly simple because the new basis is equivalent to the
+old one, but in more elaborate examples the specification of a basis can be useful.
+Furthermore, it is also possible to set a basis of divisors that corresponds to a general
+linear combination10 of prime toric divisors. We refer the reader to the website for
+more details on these more advanced use cases.
+Now that we have seen how bases work, let us move on and compute the second
+Chern class. We represent this data as a vector of the integrals of the second Chern
+class either over the canonical and prime toric divisors, or over the current basis of
+divisors.
+9
+10
+
+Given a set of basis divisors Di , CYTools will also use a dual basis of curves Cj , so that Di ·Cj = δij .
+As noted above, only integral bases are allowed.
+
+23
+
+>>> cy.second_chern_class()
+array([-612,
+36, 306, 204,
+36,
+36,
+>>> cy.second_chern_class(in_basis=True)
+array([36, -6])
+
+-6])
+
+The cone of effective divisors of the ambient variety is generated by the h1,1 + 4
+prime toric divisors Di . We can express each of these divisors in terms of the h1,1
+basis divisors. The resulting vectors define a solid h1,1 -dimensional cone, which gives
+an inner approximation of the effective cone of the Calabi-Yau hypersurface. We call
+this approximation the toric effective cone.
+>>> eff_cone = cy.toric_effective_cone()
+>>> print(eff_cone)
+A 2-dimensional rational polyhedral cone in RR∧ 2 generated by 6 rays
+
+The presentation of the effective cone is basis dependent, so changing to a new basis
+will result in a different set of rays.
+Next we construct the toric approximation of the Mori cone,
+>>> mori_cone = cy.toric_mori_cone()
+>>> print(mori_cone)
+A 2-dimensional rational polyhedral cone in RR∧ 7 generated by 3 rays
+
+and compute its generating rays.
+>>> mori_cone.rays()
+array([[ 0,
+1,
+0,
+[-18,
+1,
+9,
+[ -6,
+0,
+3,
+
+0,
+6,
+2,
+
+1,
+1,
+0,
+
+1,
+1,
+0,
+
+-3],
+0],
+1]])
+
+Each row corresponds to an effective curve Cα , and the entries along columns correspond to the intersection numbers with the canonical and prime toric divisors. We can
+compute the extremal rays as follows.
+>>> mori_cone.extremal_rays()
+array([[ 0, 1, 0, 0, 1, 1, -3],
+[-6, 0, 3, 2, 0, 0, 1]])
+
+It is often useful to view the Mori cone as living in H2 (X, Z). We do this by expressing
+it in the chosen basis of curves, which is dual to the basis of divisors.
+>>> mori_cone = cy.toric_mori_cone(in_basis=True)
+>>> mori_cone.rays()
+array([[ 1, -3],
+[ 0, 1]])
+
+We can construct the toric part of the Kähler cone,
+
+24
+
+>>> kahler_cone = cy.toric_kahler_cone()
+>>> print(kahler)
+A rational polyhedral cone in RR∧ 2 defined by 2 hyperplanes
+
+which is equivalent to taking the dual cone of the toric Mori cone in a specified basis.
+We can find the tip of the stretched Kähler cone, i.e. the shortest11 vector in the Kähler
+cone for which the generators of the Mori cone have volume at least c.
+>>> tip = kahler_cone.tip_of_stretched_cone(c=1)
+>>> tip
+array([4., 1.])
+
+Next, let us compute the volume V of the Calabi-Yau hypersurface, the volumes of the
+prime toric divisors τ i , and the volumes of the generators of the Mori cone, all at this
+point in the Kähler cone.
+>>> cy.compute_cy_volume(tip)
+3.4999999999999973
+>>> cy.compute_divisor_volumes(tip)
+array([ 2.5, 24. , 16. , 2.5, 2.5,
+>>> cy.compute_curve_volumes(tip)
+array([1., 1.])
+
+0.5])
+
+Finally, we define the Kähler metric Kij = ∂τ∂K
+i ∂τ j , where K = − log(2V). Its inverse
+−1
+(Kij ) can be expressed in closed form and computed efficiently.
+>>> cy.compute_inverse_kahler_metric(tip)
+array([[11., -9.],
+[-9., 43.]])
+
+This concludes the walkthrough of one of the simplest examples. There is functionality
+that we did not cover in the interest of space, but all the functionality is documented
+on the website [13].
+4.2
+
+A Calabi-Yau with h1,1 = 491
+
+Let us now consider a Calabi-Yau hypersurface arising from the largest polytope in
+the Kreuzer-Skarke database. The computations work in the same way as in the
+previous examples, except with much larger output data. Nevertheless, this example
+highlights the capabilities of CYTools, as it proves that even the most intricate CalabiYau manifolds can be easily analyzed.
+Let us start by constructing the polytope. We can construct it directly from the
+vertices, but we can instead use the fetch_polytopes function if we do not have them
+memorized.
+11
+
+Length is measured with the Euclidean metric in the working basis. See [9] for the motivation for
+considering this point in the moduli space.
+
+25
+
+>>> from cytools import fetch_polytopes
+>>> p = next(fetch_polytopes(h11=491, lattice="N"))
+>>> p.vertices()
+array([[ 1,
+0,
+0,
+0],
+[ 0,
+1,
+0,
+0],
+[ 0,
+0,
+1,
+0],
+[ 21, 28, 36, 42],
+[-63, -56, -48, -42]])
+
+We now construct a triangulation and Calabi-Yau hypersurface as before.
+>>> t = p.triangulate()
+>>> cy = t.get_cy()
+>>> print(cy)
+A Calabi-Yau 3-fold hypersurface with h11=491 and h21=11 in a 4-dimensional
+toric variety
+
+The GLSM charge matrix will now be a very large matrix, but it can still be
+computed efficiently.
+>>> cy.glsm_charge_matrix()
+array([[-330,
+1,
+0, ...,
+[
+6,
+0,
+1, ...,
+[ 174,
+0,
+0, ...,
+...,
+[ 132,
+0,
+0, ...,
+[ 138,
+0,
+0, ...,
+[ 144,
+0,
+0, ...,
+
+0,
+0,
+0,
+
+0,
+0,
+0,
+
+0],
+0],
+0],
+
+1,
+0,
+0,
+
+0,
+1,
+0,
+
+0],
+0],
+1]])
+
+Similarly, the Mori cone has a large number of generators and lives in a highdimensional lattice, but it can easily be computed.
+>>> cy.toric_mori_cone()
+A 491-dimensional rational polyhedral cone in RR∧ 496 generated by 3696 rays
+
+Crucially, even hard computations like intersection numbers only take about a
+second.
+>>> cy.intersection_numbers()
+{(1, 14, 28): 1,
+(1, 6, 28): 1,
+** omitted many lines**
+>>> len(cy.intersection_numbers()) # the number of non-zero intersection numbers
+4643
+
+Lastly, let us find the tip of the stretched Kähler cone, and find the volume of the
+Calabi-Yau at that point.
+
+26
+
+>>> tip = cy.toric_kahler_cone().tip_of_stretched_cone(c=1)
+>>> cy.compute_cy_volume(tip)
+1729010461108.0
+
+4.3
+
+An example scan
+
+Finally, we show a short Python script that efficiently constructs an ensemble of geometries by scanning over the Kreuzer-Skarke database. For this illustration, we perform
+a scan similar to that presented in [9]: in particular, we produce plots analogous to
+figures 1, 3, 4, and 8(a) of [9]. We use a much smaller set of polytopes so that the
+code only takes a few minutes to run, but improve on the original scan by sampling
+multiple triangulations per polytope. Here we only demonstrate a fast (biased) sampling to keep the run time to a few minutes, but this code is easily adapted to perform
+fairer samplings of triangulations. This code can be found in the tutorial section on
+the website [13].
+# We start by importing fetch_polytopes,
+# a plotting package, and numpy
+from cytools import fetch_polytopes
+import matplotlib.pyplot as plt
+import numpy as np
+# These are the settings for the scan.
+# We scan h11=2,3,4,5,10,15,...,100
+# For each h11 we take 10 polytopes,
+# and 5 random triangulations for each polytope
+h11s = [2,3,4] + list(range(5,105,5))
+n_polys = 10
+n_triangs = 5
+# These are the lists where we will save the data
+h11_list = []
+nonzerointnums = []
+costhetamin = []
+dmins = []
+Xvols = []
+for h11 in h11s:
+print(f"Processing h11={h11}", end="\r")
+for p in fetch_polytopes(h11=h11, lattice="N",
+favorable=True, limit=n_polys):
+# Here we take a random set of triangulations by picking random heights.
+# We use the random_triangulations_fast function with max_retries=5 so
+# that the generation doesn't take too long. However, this will not
+# generate a fair sampling of the triangulations of the polytope.
+# For a fair sampling one should use the random_triangulations_fair
+
+27
+
+# function, which is much slower.
+for t in p.random_triangulations_fast(N=n_triangs, max_retries=5):
+cy = t.get_cy()
+h11_list.append(h11)
+nonzerointnums.append(len(cy.intersection_numbers(in_basis=True)))
+mori_rays = cy.toric_mori_cone(in_basis=True).rays()
+mori_rays_norms = np.linalg.norm(mori_rays, axis=1)
+n_mori_rays = len(mori_rays)
+costhetamin.append(min(
+mori_rays[i].dot(mori_rays[j])
+/(mori_rays_norms[i]*mori_rays_norms[j])
+for i in range(n_mori_rays) for j in range(i+1,n_mori_rays)))
+tip = cy.toric_kahler_cone().tip_of_stretched_cone(1)
+dmins.append(np.log10(np.linalg.norm(tip)))
+Xvols.append(np.log10(cy.compute_cy_volume(tip)))
+print("Finished processing all h11s!")
+print(f"Scanned through {len(h11_list)} CY hypersurfaces.")
+# We plot the data using matplotlib.
+# If you are not familiar with this package, you can find tutorials and
+# documentation at https://matplotlib.org/
+xdata = [h11_list]*3 + [np.log10(h11_list)]
+ydata = [nonzerointnums, costhetamin, dmins, Xvols]
+xlabels = [r"$h^{1,1}$"]*3 + [r"log${}_{10}(h^{1,1})$"]
+ylabels = [r"# nonzero $\kappa_{ijk}$", r"$\cos(\theta_{min})$",
+r"log${}_{10}(d_{min})$", r"log${}_{10}(\mathcal{V})$"]
+fig, ax0 = plt.subplots(2, 2, figsize=(15,12))
+for i,d in enumerate(ydata):
+ax = plt.subplot(221+i)
+ax.scatter(xdata[i], ydata[i], s=10)
+plt.xlabel(xlabels[i], size=20)
+plt.ylabel(ylabels[i], size=20)
+plt.tick_params(labelsize=15, width=2, length=5)
+plt.subplots_adjust(wspace=0.3, hspace=0.22)
+
+After running the code, we obtain the plots shown in Fig. 2. Comparing with
+the plots from the original paper [9], we can see that the general trends match, but
+there are some slight variations. This is mainly because the triangulations used here
+are constructed using heights similar to those of the Delaunay triangulations, while
+in the original paper the triangulations were constructed using TOPCOM, which uses a
+push-pulling algorithm. These two approaches yield triangulations with qualitatively
+different properties, and thus result in Calabi-Yau hypersurfaces with slightly different
+properties. On the website we show how to obtain the triangulations with TOPCOM to
+
+28
+
+Figure 2: The resulting plots from the example code. Definitions and explanations
+can be found in [9].
+reproduce the original results.12
+The above example shows the power of CYTools. The original paper required
+very significant effort to assemble the code for the analysis, as it required downloading
+the Kreuzer-Skarke database, performing some computations in SageMath, then performing some extra computations in Mathematica, and finally using a variety of scripts
+to gather together all the data. Now, anyone can perform the full analysis with a few
+lines of code in CYTools. Although we only took a small number of polytopes in this
+example, one could easily increase the range of the scan and even surpass the statistics
+of the original paper by running the computation on a standard laptop overnight.
+12
+
+The polytopes retrieved by fetch_polytopes are not randomly sampled, and are instead retrieved
+in the order in which they are listed in the Kreuzer-Skarke database. When h1,1 is specified but h2,1
+is not, the polytopes are retrieved in order of ascending h2,1 .
+
+29
+
+5
+
+Methods and Algorithms
+
+In this section, we describe the algorithms and external software packages utilized by
+CYTools.
+5.1
+
+Polytopes
+
+Polytopes are handled in CYTools by the Polytope class, which provides a variety
+of functionality to study lattice polytopes. There are three available backends that
+can find the hyperplane representation from a given vertex representation: PPL [18],
+QHull [19], and PALP [11]. The default backend is PPL, as it is slightly faster than the
+other two in typical scenarios, but the others can be chosen by setting the backend
+argument to "qhull" or "palp". While PALP provides further functionality to handle
+lattice polytopes, the other two do not. Nevertheless, we still do not use PALP in most
+cases, as we have implemented faster algorithms to perform some computations on
+4-dimensional polytopes. We now describe the two main algorithms.
+5.1.1
+
+Lattice points
+
+One of the most basic computations for a lattice polytope is finding all of its lattice
+points. Even though this sounds like an easy task, it is fairly challenging to do it
+efficiently. CYTools comes with two different ways of performing this computation: a
+native computation in Python, and one using PALP [11] as the backend. We will start
+by describing the native algorithm, which is based on Volker Braun’s code written
+for the LatticePolytope_PPL class [20] of the SageMath software package [15]. The
+procedure is described in Algorithm 1. It is assumed without loss of generality that
+the polytope is full-dimensional because otherwise we can simply consider it as living
+on the affine lattice that it spans.
+
+30
+
+Algorithm 1: Find the lattice points of ∆.
+1. Perform the Lenstra–Lenstra–Lovász (LLL) lattice basis reduction algorithm
+[21] on the vertices vi of the polytope to obtain new vertices vi0 .
+2. Find the smallest rectangular box containing the vertices vi0 . Let the intervals
+defining the box be [bi,min , bi,max ] with i = 1, · · · , n where n is the dimension of
+the lattice. The coordinates are reordered so that the dimensions of the box are
+in decreasing size (b1,max − b1,min ) ≥ · · · ≥ (bn,max − bn,min ).
+3. Fix the coordinates xi = bi,min with i = 2, · · · , n.
+4. Find the maximum and minimum values x1,max , x1,min of x1 such that points
+with the previously fixed coordinates are contained in the polytope. The rest of
+the points with values of x1 in between these will also be contained
+5. Increase the coordinates xi , i = 2, · · · , n lexicographically, performing step 4
+after each increment, thus finding all lattice points of the polytope.
+6. Perform the inverse LLL transformation on the points to return to the original
+presentation of the polytope.
+The addition of step 1 provides a significant advantage over Braun’s original
+algorithm, since it generally results in an appreciable reduction of the size of the
+rectangular bounding box, thus speeding up the later steps. This allows this Python
+algorithm to have a similar level of performance to PALP, which is written in the
+C programming language, at least when dim(∆) ≤ 4. In fact, when Algorithm 1
+is implemented in a faster programming language such as Julia, it can considerably
+outperform PALP.
+As previously mentioned, the alternative method to compute the lattice points
+of the polytope is by using PALP. When the Polytope class uses PPL or Qhull as the
+backend, then Algorithm 1 is used, and when it uses PALP as the backend then PALP
+is also used for this computation. Earlier we noted that the Polytope class uses PPL
+as the default backend for dimensions less than or equal to 4. This is because, as
+dimension increases, the ratio of the volume of a generic polytope to the volume of its
+bounding box decreases, so Algorithm 1 becomes less efficient and PALP surpasses it.
+Lastly, we remark that when CYTools finds the lattice points of a polytope, it also
+checks which of the hyperplane inequalities defining the polytope each point saturates,
+storing the point along with a set of indices of the saturated inequalities. This will be
+a key step for the computation of the faces of the polytope, as we will now describe.
+
+31
+
+5.1.2
+
+Faces
+
+We now explain how we compute the set of faces of a polytope. The algorithm was
+developed from scratch with speed as the main goal, but the key idea is identical
+to well-known backtracking algorithms for face computations (see e.g. [22]). The data
+required for the computation are the hyperplane inequalities defining the polytope, and
+the set of vertices along with the inequalities that they saturate. In the algorithm we
+assume that the polytope ∆ is n-dimensional, is defined by m hyperplane inequalities
+(i.e. it has m facets), and is full-dimensional (i.e. there are no hyperplane equalities).
+If it is not full-dimensional we can consider it as living in the affine lattice that it spans.
+We index the hyperplane inequalities by 1, · · · , m and denote the set of inequalities
+saturated by a point pi as S(pi ). Lastly, for a subset s ⊂ {1, 2, · · · , m} we define
+F(s) := {p ∈ ∆ ∩ M | s ⊂ S(p)} and F̂(s) := F(s) ∩ vert(∆) with vert(∆) the set of
+vertices of ∆. We proceed as follows.
+Algorithm 2: Find the faces of ∆.
+1. Let Fn−1 = {{1}, {2}, · · · , {m}}. An element s of this set represents a facet of
+the polytope with points F(s) and vertices F̂(s).
+2. Recursively find the set of i-dimensional faces using
+
+Fi = f ∪ g | f, g ∈ Fi+1 and affdim(F̂(f ∪ g)) = i ,
+where affdim(F̂(f ∪ g)) is the dimension of the affine lattice spanned by the
+points F̂(f ∪ g).
+3. (optional) For computational efficiency, the computation of Fi with i ≤ 2 can
+be slightly simplified as follows.
+
+Fi = f ∪ g | f, g ∈ Fi+1 and |F̂(f ∪ g)| ≥ i + 1 .
+
+Representing a face as a subset f ⊂ {1, 2, · · · , m} allows for very efficient computation of its lattice points, filtering between interior or boundary lattice points, and
+finding the faces of the face. All of these computations are handled in CYTools by the
+PolytopeFace class.
+This concludes our brief account of the main computations available for lattice
+polytopes. There are many more computations that are available in CYTools, which
+we omit here for brevity. The full list of functions available for the Polytope and
+PolytopeFace classes can be found in our documentation website [13].
+
+32
+
+5.2
+
+Triangulations
+
+Triangulations of polytopes are handled in CYTools by the Triangulation class, which
+contains a variety of functions to compute many key properties of triangulations, and
+also serves to interface with external software that performs other computations. The
+key external software packages used by this class are TOPCOM [14], Qhull [19], and the
+triangulations module [23] of the Computational Geometry Algorithms Library (CGAL)
+[24]. We will describe the some of the roles these pieces of software play in the following
+sections.
+5.2.1
+
+Triangulation algorithms
+
+As previously mentioned, TOPCOM, Qhull, or CGAL can be used to construct triangulations. CGAL is the default backend, but another backend can be specified by setting the
+backend keyword to the strings "topcom", "qhull", or "cgal", respectively. When
+using TOPCOM as the backend, the triangulation that is obtained is the placing or pushing triangulation, which is a regular triangulation with specific properties (see [25] for
+more details). When using Qhull or CGAL as the backend, the triangulation is obtained
+by lifting the points into an extra dimension by a set of heights hi and projecting the
+lower faces of the convex hull. Recall that regular triangulations are those that can
+be obtained in such a way, and thus these backends will generically produce regular
+triangulations. There are measure zero subsets of heights that produce polyhedral
+subdivisions that do not fully consist of simplices. Both Qhull and CGAL automatically subdivide further to obtain a triangulation, but only CGAL does so preserving
+regularity, and so it is preferred over Qhull. For this reason, CGAL defaults to the
+Delaunay triangulation, which uses heights hi = |pi |2 , where pi is the location of the
+ith lattice point. CGAL then subdivides further if necessary, whereas Qhull defaults
+to a nearby triangulation using heights hi = |pi |2 + εi with εi chosen from a narrow
+Gaussian distribution.
+As we showed in the example in §3.2.1, the default triangulation that is obtained
+for reflexive polytopes is a fine, regular, star triangulation. We have already discussed
+why triangulate always returns a regular triangulation, so now let us discuss the other
+two properties. A placing or pushing triangulation is always fine, and a triangulation
+obtained from heights very close to the Delaunay heights will also be fine [25]. The
+way we ensure that triangulations are star, when using Qhull or CGAL, is by decreasing
+the height of the origin until it is much lower than the rest. When using TOPCOM we
+first obtain a non-star triangulation and turn it into a star triangulation by deleting
+internal lines and connecting all the points to the origin (see [26]), which is equivalent
+to decreasing the height of the origin when it is constructed in terms of heights.
+
+33
+
+5.2.2
+
+Sampling algorithms
+
+Now we discuss algorithms to produce large sets of triangulations, starting with the
+simplest such procedure. As we discussed above, there is a special kind of fine, regular
+triangulation called the Delaunay triangulation, which can also be made star easily.
+This triangulation can be obtained by picking heights hi = |pi |2 , and then subdividing
+further into simplices if necessary. We can thus use the Delaunay triangulation as a
+starting point to generate random triangulations, as follows.
+Algorithm 3: Fast (albeit unfair) generation of random triangulations
+1. Take a Gaussian distribution with standard deviation σ. The parameter σ will
+control how diverse the generated triangulations are, at the expense of how
+often they are not fine.
+2. Set an initial height vector hi = |pi |2 and decrease the height of the origin by a
+large number so that all resulting triangulations are star.
+3. Pick random elements εi from the Gaussian distribution, and construct the
+triangulation given by the heights hi + εi . If the triangulation is fine, store it; if
+not, discard it and repeat this step.
+4. Repeat step 3 until the desired number of triangulations is obtained.
+This algorithm is very fast, and at large h1,1 it can produce a practically unlimited
+set of triangulations. However, the triangulations that it obtains are not fairly sampled
+among the full set of triangulations. Thus, even though it can be useful for some things
+such as machine learning, it should not be used to draw conclusions about distributions
+in the landscape. Performing a fair sampling of triangulations is a difficult issue and
+requires a more elaborate setup, which we described in a previous paper [8]. Here we
+recall an algorithm that we found to produce a fair sample at a moderately high h1,1 ,
+where we had access to the full list of triangulations for calibration purposes.
+
+34
+
+Algorithm 4: Fair (albeit slow) generation of random triangulations [8]
+1. Choose a height vector h = h0 that generates a fine triangulation. This can be
+taken to be a triangulation near the Delaunay triangulation.
+2. Choose a random unit vector α ∈ Rn .
+3. Find the largest ε = εmax such that h0 = (h + α)/|h + α| generates a fine
+triangulation.
+4. Choose a random real number δ ∈ [0, εmax ] and send h → (h + δα)/|h + δα|.
+5. Repeat Nwalk times the steps 2-4.
+6. Compute the triangulation Th generated by the heights h.
+7. Perform Nflips random bistellar flips starting from Th , keeping the triangulation
+fine and regular at each step. Call the result Tnew .
+8. Make Tnew into a star triangulation, and store it in the ensemble.
+9. Repeat steps 2-8 to accumulate the number of triangulations desired.
+This algorithm is fairly slow, as it requires some non-trivial steps such as checking
+regularity after each bistellar flip, and it works better at large h1,1 , as most of the
+directions in the region of FRSTs in the secondary fan are bounded. For a more
+in-depth discussion see [8], where we also obtained some distributions from the 4dimensional reflexive polytopes with the largest Hodge numbers.
+5.2.3
+
+Checking regularity
+
+Ensuring regularity of the triangulations is crucial in constructions of Calabi-Yau hypersurfaces, since, as we discuss in §5.4, it is in correspondence with the variety being
+projective, and thus having a Kähler structure [27].
+The algorithm to determine whether a given triangulation is regular is most easily
+understood in terms of the secondary cone of the triangulation [17, 28, 29]. Remember
+that a triangulation of a point set is called regular if and only if it can be obtained by
+lifting the points into one extra dimension by a set of heights hi , obtaining the convex
+hull of the resulting points, and projecting down the lower faces of the polyhedron.
+The subset of heights that give rise to a particular regular triangulation is a cone,
+called the secondary cone, since scaling all heights by a constant factor λ ≥ 0 does not
+change the triangulation. A given triangulation is regular if and only if its secondary
+cone is full dimensional.
+The secondary cone can be obtained using an algorithm due to Oda and Park [27].
+
+35
+
+If the triangulation is fine, one can instead use the much more efficient algorithm by
+Berglund, Katz and Klemm [30], see also [31]. Once the secondary cone is constructed,
+we check whether it is full dimensional in various ways. For low-dimensional cones, this
+can be done using PPL. However, for high-dimensional cones one must use numerical
+methods to explicitly find a point inside the cone. For this purpose, CYTools uses
+multiple approaches, including the GLOP solver from OR-Tools [32], and MOSEK [33].
+5.3
+
+Calabi-Yau manifolds
+
+Finally, we describe the algorithms used by CYTools to analyze Calabi-Yau manifolds
+themselves.
+5.3.1
+
+Intersection numbers
+
+The intersection numbers are among the topological data most important for string
+compactifications, and CYTools can compute them many orders of magnitude faster
+than previously available software could. We will now describe the algorithm for computing the intersection numbers and comment on how the dramatic increase in efficiency was achieved. For concreteness, we will focus on computing the intersection
+numbers of a favorable Calabi-Yau threefold hypersurface.
+The first step — and the place where the computational challenge occurs — is
+the computation of the intersection numbers κVijkl of the ambient variety V ⊃ X. Once
+κVijkl are known, the intersection numbers of the Calabi-Yau hypersurface are simply,
+κX
+ijk =
+
+1,1 +4
+hX
+
+κVijkl .
+
+(5.1)
+
+l=1
+
+The intersection numbers of distinct divisors, i.e. κVijkl , i 6= j 6= k 6= l are determined by the volumes of full dimensional cones in the toric fan. Specifically, consider the toric cone generated by the rays (vi , vj , vk , vl ), corresponding to toric divisors
+(Di , Dj , Dk , Dl ). The properly normalized volume of this cone is given by the determinant of the 4 × 4 matrix
+
+
+vi1 vi2 vi3 vi4
+ 1 2 3 4
+v v v v 
+Mijkl =  j1 j2 j3 j4  .
+(5.2)
+vk vk vk vk 
+vl1 vl2 vl3 vl4
+The distinct intersection numbers are then
+κVijkl =
+
+1
+,
+det(Mijkl )
+
+36
+
+i 6= j 6= k 6= l.
+
+(5.3)
+
+The last step is to calculate the self-intersection numbers. Remember that there are 4
+linear equivalence relations between the toric divisors,
+Lai D̂i = 0,
+
+(5.4)
+
+with a = 1 . . . 4. We can multiply this linear system by D̂j ∩ D̂k ∩ D̂l to obtain
+Lai D̂i ∩ D̂j ∩ D̂k ∩ D̂l = Lai κVijkl = 0.
+
+(5.5)
+
+One can then iterate over all possible choices of the triplet {i, j, k} to construct a large
+linear system, involving all intersection numbers κVijkl . This system is over-determined
+and has a unique solution.
+One might worry that such a linear system would be unwieldy, as the number
+of equations is 4(h1,1 + 4)3 . There are two crucial factors that render this system
+solvable, even when h1,1 ∼ O(1000). First, if vi and vj are not on the same facet, the
+corresponding toric divisors cannot intersect. So, the linear equation from any triplet
+{i, j, k} is trivial unless the corresponding rays are on the same facet. This reduces the
+size of the linear system considerably. Second, the linear system is extremely sparse
+and can be solved via a Cholesky decomposition. This enables the use of sparse linear
+algebra tools, such as [34].
+5.4
+
+Cones
+
+Let us conclude by discussing how we perform some computations involving cones. The
+basic operation of switching between ray and hyperplane representations is done with
+the Parma Polyhedra Library (PPL) [18]. This software provides excellent performance,
+but because of the inherent exponential growth of complexity with the dimension of
+the cone, the change of representation can only be done for cones of relatively low
+dimensions, or for particularly simple high-dimensional cones. Nevertheless, one can
+avoid a change of representation for most computations of interest. We have developed
+the necessary tools to analyze high-dimensional cones, to the point where even the
+highest-dimensional Mori and Kähler cones, with 491 dimensions, can be easily studied.
+5.4.1
+
+Finding Mori and Kähler cones
+
+The Mori and Kähler cones of a toric variety are closely related to the secondary cone
+of the triangulation [27]. This can be understood from the fact that the Kähler cone
+of the toric variety can be thought of a projection of the secondary cone that removes
+the linear subspaces. As such, a regular, star triangulation is in correspondence with
+a projective variety, with a non-empty Kähler cone. With this knowledge, we can find
+both the Mori and Kähler cones by using the algorithm from [30] that we mentioned
+in §5.2.
+
+37
+
+5.4.2
+
+Finding extremal rays
+
+Suppose that we start with a cone generated by a set S of rays. The extremal rays
+are the minimal set of generators of the cone. In particular, an extremal ray cannot
+be written as a non-negative linear combination of the remaining rays. The question
+of whether a ray is extremal can be difficult to answer when using exact rational
+arithmetic. However, it very efficient to use a numerical approach, in particular via
+a non-negative least squares minimization. Let b be the ray of interest, and A be
+the matrix whose columns are the remaining generating rays. We minimize |Ax − b|
+subject to xi ≥ 0. If the result is equal to zero (up to some tolerance) then the
+ray is not extremal, and otherwise it is extremal. For the minimization we use the
+Non-Negative Least Squares (NNLS) solver in SciPy, which is taken from [35]. This
+procedure works well, even for high-dimensional cones. Furthermore, the procedure
+is parallelized when the cone is pointed. For non-pointed cones, one must be careful
+with the rays generating linear subspaces, so the process must be single-threaded.
+Moreover, for cones that are very high-dimensional, and additionally are extremely
+wide or narrow, it can sometimes misidentify rays or fail. Nevertheless, it is still far
+better than other approaches known to us.
+5.4.3
+
+Finding the tip of a stretched cone
+
+Let C be an n-dimensional polyhedral cone defined by m linear inequivalences
+n
+o
+C := ~x ∈ Rn M · ~x ≥ 0 ,
+
+(5.6)
+
+e to be
+where M is an n × m matrix. We define the c-stretched cone C[c]
+n
+o
+e := ~x ∈ Rn M · ~x ≥ c .
+C[c]
+
+(5.7)
+
+e is not always a cone. We call the
+Note that this is a slight abuse of language, as C[c]
+e that is closest to the origin the tip of C[c].
+e
+point ~x ∈ C[c]
+Finding this point requires
+solving the problem
+minimize
+
+|~x|2
+
+(5.8)
+
+subject to
+
+M · ~x ≥ c.
+
+(5.9)
+
+This is an instance of a quadratic programming problem, and can be solved efficiently,
+even when n ∼ O(1000). CYTools provides access to multiple backends for solving
+such problems, including MOSEK [33] and OSQP [36].
+
+38
+
+6
+
+Outlook
+
+CYTools provides fast, automated computation of the topological data of Calabi-Yau
+hypersurfaces and their parent toric varieties. It has powerful tools for triangulating
+polytopes and for the cone and lattice problems that are commonplace in Calabi-Yau
+compactifications. In many individual problems in this area, CYTools is substantially
+faster than prior software packages. For the complete, end-to-end analysis from a
+typical (or, especially, a difficult) polytope in the Kreuzer-Skarke list to the classical
+data of a 4-dimensional effective theory, CYTools represents an improvement in speed
+by many orders of magnitude. The numbers of configurations arising in many steps
+are exponential in the relevant Hodge numbers, and general-purpose computational
+geometry algorithms are effective only for Hodge numbers . 10. CYTools can handle
+the largest polytope in the Kreuzer-Skarke list, with h1,1 = 491, in seconds.
+CYTools integrates into a single platform many capabilities used in the analysis of
+string compactifications. We hope that CYTools will contribute to accelerating progress
+in the field in several ways. First, it can remove the many small barriers presented
+by the need to code up elementary operations. Second, when multiple researchers
+(or research groups) studying related problems use CYTools format, their codes are
+interoperable without translation, aiding reproducibility. For example, the code shown
+in §4.3 allows one to reproduce the key results of [9]. Finally, CYTools is fast enough
+to make analysis of the entire Kreuzer-Skarke list feasible for the first time, opening
+the door on a vast landscape.
+The computational capabilities afforded by CYTools have already been applied to
+a range of problems in string compactifications: see e.g. [8, 37–46]. Let us comment on
+a few examples in order to illustrate the sorts of problems that are accessible. CYTools
+was used in [39] to study del Pezzo divisors in an ensemble of Calabi-Yau threefolds
+with h1,1 ≤ 40, and was used in [45] to construct orientifolds for all favorable CalabiYau threefolds with h1,1 ≤ 7. The statistics of axion couplings were obtained in large
+ensembles reaching up to h1,1 = 491 in [9, 38, 42], with applications to black hole
+superradiance in [38] and to the strong CP problem in [42]. Moduli stabilization and
+the contributions of quantized fluxes to the D3-brane tadpole were studied in [43] and
+[46], and CYTools facilitated the study of cases with large Hodge numbers. The study
+of perturbatively flat vacua in [37, 47] and especially of supersymmetric AdS vacua in
+[40] relied heavily on CYTools. In sum, CYTools facilitates automated searches through
+the landscape of Calabi-Yau threefold hypersurfaces and of flux vacua therein, allowing
+for exploration and enumerative experiment.
+There are several obvious directions for future development of CYTools. One
+is to encompass a broader class of Calabi-Yau threefolds, such as complete intersections in toric varieties. Another is to construct orientifolds automatically, and, where
+applicable, to relate them to compactifications of F-theory on Calabi-Yau fourfolds.
+
+39
+
+Although CYTools can analyze fourfolds, it would be worthwhile to develop richer
+capabilities in this area. Another important step will be to compute the topological
+data that governs nonperturbative quantum effects in string compactifications, such
+as the Gopakumar-Vafa invariants of curves, and the zero modes and Pfaffians of Euclidean D-branes. Finally, one could extend CYTools to compute the zeta-functions of
+Calabi-Yau threefolds defined over the integers.
+We hope to incorporate progress in some of these directions in a future version.
+Moreover, we invite collaboration from members of the community who would like to
+integrate a wider range of computational capabilities into CYTools.
+
+Acknowledgements
+We are grateful to Nate MacFadden, Jakob Moritz, and Andreas Schachner for finding
+many bugs in CYTools. We thank Naomi Gendler, Manki Kim, Dnyanesh Kulkarni,
+Jakob Moritz, Richard Nally, and Andreas Schachner for comments on a draft of this
+work, and we are grateful to Gauri Batra, Arjun Chaturvedi, Geoffrey Fatin, Jim
+Halverson, Nate MacFadden, Viraf Mehta, Brent Nelson, Murali Saravanan, and Sam
+Weiss for discussions of related topics. Furthermore, we thank Andreas Braun and Sven
+Krippendorf for providing inspiration to pursue this work. We are grateful to Andreas
+Braun, Cody Long, Mike Stillman, and Ben Sung for their essential contributions to
+predecessors of this work, parts of which appeared in [9, 48, 49]. We are particularly
+indebted to Mike Stillman for explaining to us the algorithm for computing intersection numbers that is now used in CYTools, and for patiently teaching us countless
+pieces of mathematics needed for this work. Finally, we thank Manki Kim and Jakob
+Moritz for their collaboration in developing new capabilities to compute GopakumarVafa invariants in CYTools [10]. The research of M.D. was supported in part by the
+National Science Foundation under Cooperative Agreement PHY-2019786 (The NSF
+AI Institute for Artificial Intelligence and Fundamental Interactions). The research of
+L.M. and A.R.-T. was supported in part by the National Science Foundation through
+the grant PHY-2014071.
+
+A
+
+List of Terms
+
+A.1
+
+Polytopes
+
+• A lattice M of rank n is a finitely generated free abelian group of rank n, which
+we always think of as Zn . We denote the associated real vector space as MR :=
+M ⊗Z R.
+• The dual lattice N of a lattice M is the space of homomorphisms from M to Z,
+N := Hom(M, Z), which is also isomorphic to Zn .
+
+40
+
+• A polytope ∆ ⊂ MR is the convex hull of a finite set of points S ⊂ MR , i.e.
+∆ = Conv(S).
+• The dimension d of a polytope ∆ is the dimension of the smallest affine subspace
+of MR containing ∆. If it has the same dimension as its ambient space then it is
+called full-dimensional or solid.
+• A lattice polytope ∆ is a polytope that is the convex hull of a finite set of lattice
+points S ⊂ M .
+• The dual polytope ∆◦ of a full-dimensional polytope ∆ that contains the origin
+is the convex hull ∆◦ := Conv({y ∈ NR | y · x ≥ −1 for all x ∈ ∆}).
+• A polytope ∆ is called reflexive if both ∆ and ∆◦ are lattice polytopes.
+• A subset F ⊆ ∆ is called a face of ∆ if there are u ∈ NR \ {0} and b ∈ R such
+that F = {m ∈ MR | m · u = b} and ∆ ⊂ {m ∈ MR | m · u ≥ b}. The empty set
+and ∆ itself are faces of ∆. A face of codimension 1 in the polytope is called a
+facet, a face of dimension 1 is called an edge, and a face of dimension 0 is called
+a vertex.
+• A lattice point of ∆ is called a boundary point if it is contained in a facet, and
+is otherwise called an interior point. Note that when ∆ is reflexive, the only
+interior point is the origin.
+• A polytope of dimension n is called a simplex or an n-simplex if it has exactly
+n + 1 vertices, and is called simplicial if every facet is an n − 1-simplex.
+A.2
+
+Triangulations
+
+• A triangulation T of a lattice polytope ∆◦ is a collection of simplices in NR
+satisfying:
+– Each simplex has the same dimension as ∆◦ and has vertices in ∆◦ ∩ N .
+– The intersection of any two simplices in T is a face of each.
+– The union of all simplices in T is ∆◦ .
+• A triangulation of a point set is called fine if every point is the vertex of some
+simplex in the triangulation. When the point set is a 4-dimensional reflexive
+polytope ∆◦ , we call a triangulation T fine even if T omits some or all of the
+points that are strictly interior to facets of ∆◦ , since the inclusion of these points
+is not required to obtain smooth Calabi-Yau hypersurfaces [1].
+
+41
+
+• A triangulation is called star if the origin is a vertex of all the simplices of the
+triangulation. Such a triangulation can be interpreted as defining a refinement
+of the face fan of the polytope.
+• A triangulation is called regular if it can be obtained as the projection of the
+lower facets of the convex hull {(~pi , hi ) ∈ NR × R | p~i ∈ NR ∩ ∆◦ } for some set of
+heights hi ∈ R.
+A.3
+
+Cones
+
+Let X be a projective algebraic variety of complex dimension n.
+• An effective divisor on X is a finite formal sum, with nonnegative coefficients,
+of irreducible codimension-1 subvarieties. The effective cone, or cone of effective
+divisors, is the convex cone in H2n−2 (X, R) generated by the classes of effective
+divisors on X.
+• The Mori cone of X is the convex cone in H2 (X, R) generated by holomorphic
+curves. That is, it is the cone of effective subvarieties of complex dimension one.
+• The Kähler cone is the cone of cohomology classes of Kähler forms in H 1,1 (X, R).
+The closure of the Kähler cone is the dual of the Mori cone.
+
+References
+[1] V. V. Batyrev, Dual polyhedra and mirror symmetry for Calabi-Yau hypersurfaces in
+toric varieties, J. Alg. Geom. 3 (1994) 493–545, [alg-geom/9310003].
+[2] M. Kreuzer and H. Skarke, Complete classification of reflexive polyhedra in
+four-dimensions, Adv. Theor. Math. Phys. 4 (2002) 1209–1230, [hep-th/0002240].
+[3] D. Merkel, Docker: lightweight linux containers for consistent development and
+deployment, Linux journal 2014 (2014) 2.
+[4] G. M. Kurtzer, V. Sochat and M. W. Bauer, Singularity: Scientific containers for
+mobility of compute, PLOS ONE 12 (05, 2017) 1–20.
+[5] B. R. Greene, String theory on Calabi-Yau manifolds, in Theoretical Advanced Study
+Institute in Elementary Particle Physics (TASI 96): Fields, Strings, and Duality,
+pp. 543–726, 6, 1996. hep-th/9702155.
+[6] D. Cox, J. Little and H. Schenck, Toric Varieties. Graduate studies in mathematics.
+American Mathematical Society, 2011.
+[7] M. Kreuzer and H. Skarke, Reflexive polyhedra in 4 dimensions,
+http://hep.itp.tuwien.ac.at/~kreuzer/CY/.
+[8] M. Demirtas, L. McAllister and A. Rios-Tascon, Bounding the Kreuzer-Skarke
+Landscape, 2008.01730.
+
+42
+
+[9] M. Demirtas, C. Long, L. McAllister and M. Stillman, The Kreuzer-Skarke Axiverse,
+JHEP 04 (2020) 138, [1808.01282].
+[10] M. Demirtas, M. Kim, L. McAllister, J. Moritz and A. Rios-Tascon, Computational
+Mirror Symmetry, to appear .
+[11] M. Kreuzer and H. Skarke, PALP: A Package for analyzing lattice polytopes with
+applications to toric geometry, Comput. Phys. Commun. 157 (2004) 87–106,
+[math/0204356].
+[12] V. Bouchard, Lectures on complex geometry, Calabi-Yau manifolds and toric geometry,
+hep-th/0702063.
+[13] M. Demirtas, L. McAllister and A. Rios-Tascon, CYTools Documentation Website,
+https://cy.tools/docs/documentation/.
+[14] J. Rambau, TOPCOM: Triangulations of point configurations and oriented matroids,
+in Mathematical Software—ICMS 2002 (A. M. Cohen, X.-S. Gao and N. Takayama,
+eds.), pp. 330–340, World Scientific, 2002. DOI.
+[15] The Sage Developers, SageMath, the Sage Mathematics Software System (Version
+9.0), 2020.
+[16] C. T. C. Wall, Classification problems in differential topology. V, Inventiones
+mathematicae 1 (Dec, 1966) 355–374.
+[17] I. M. Gelfand, M. M. Kapranov and A. V. Zelevinsky, Discriminants, Resultants, and
+Multidimensional Determinants. Birkhäuser Boston, Boston, MA, 1994,
+10.1007/978-0-8176-4771-1.
+[18] R. Bagnara, P. M. Hill and E. Zaffanella, The Parma Polyhedra Library: Toward a
+complete set of numerical abstractions for the analysis and verification of hardware
+and software systems, Science of Computer Programming 72 (2008) 3–21.
+[19] C. B. Barber, D. P. Dobkin and H. Huhdanpaa, The quickhull algorithm for convex
+hulls, ACM Trans. Math. Softw. 22 (Dec., 1996) 469–483.
+[20] V. Braun, Fast Lattice Polytopes using PPL,
+https://doc.sagemath.org/html/en/reference/discrete_geometry/sage/
+geometry/polyhedron/ppl_lattice_polytope.html.
+[21] A. K. Lenstra, H. W. Lenstra and L. Lovasz, Factoring polynomials with rational
+coefficients, Math. Ann 261 (1982) 515–534.
+[22] K. Fukuda, T. M. Liebling and F. Margot, Analysis of backtrack algorithms for listing
+all vertices and all faces of a convex polyhedron, Computational Geometry 8 (1997) 1 –
+12.
+[23] O. Devillers, S. Hornus and C. Jamin, dD triangulations, in CGAL User and Reference
+Manual. CGAL Editorial Board, 5.2 ed., 2020.
+[24] The CGAL Project, CGAL User and Reference Manual. CGAL Editorial Board,
+5.2 ed., 2020.
+
+43
+
+[25] J. A. De Loera, J. Rambau and F. Santos, Triangulations: Structures for Algorithms
+and Applications. Springer Berlin Heidelberg, Berlin, Heidelberg, 2010,
+10.1007/978-3-642-12971-1.
+[26] A. P. Braun and T. Watari, The Vertical, the Horizontal and the Rest: anatomy of the
+middle cohomology of Calabi-Yau fourfolds and F-theory applications, JHEP 01 (2015)
+047, [1408.6167].
+[27] T. Oda and H. S. Park, Linear Gale transforms and Gel’fand-Kapranov-Zelevinskij
+decompositions, Tohoku Math. J. (2) 43 (1991) 375–399.
+[28] I. M. Gelfand, A. V. Zelevinsky and M. M. Kapranov, Newton polyhedra of principal
+a-determinants, Soviet Mathematics. Doklady 40 (1989) 278–281.
+[29] I. M. Gelfand, A. V. Zelevinsky and M. M. Kapranov, Discriminants of polynomials in
+several variables and triangulations of Newton polyhedra, Leningrad Math. J. 2 (1991)
+499–505.
+[30] P. Berglund, S. H. Katz and A. Klemm, Mirror symmetry and the moduli space for
+generic hypersurfaces in toric varieties, Nucl. Phys. B 456 (1995) 153–204,
+[hep-th/9506091].
+[31] R. Altman, J. Gray, Y.-H. He, V. Jejjala and B. D. Nelson, A Calabi-Yau Database:
+Threefolds Constructed from the Kreuzer-Skarke List, JHEP 02 (2015) 158,
+[1411.1418].
+[32] L. Perron and V. Furnon, OR-Tools, Version 9.4,
+https://developers.google.com/optimization/.
+[33] MOSEK ApS, Mosek Optimizer API for Python,
+http://docs.mosek.com/9.1/pythonapi/index.html.
+[34] Y. Chen, T. A. Davis, W. W. Hager and S. Rajamanickam, Algorithm 887: Cholmod,
+supernodal sparse cholesky factorization and update/downdate, ACM Trans. Math.
+Softw. 35 (Oct., 2008) .
+[35] C. L. Lawson and R. J. Hanson, Solving Least Squares Problems. Society for Industrial
+and Applied Mathematics, 1995, 10.1137/1.9781611971217.
+[36] B. Stellato, G. Banjac, P. Goulart, A. Bemporad and S. Boyd, OSQP: an operator
+splitting solver for quadratic programs, Mathematical Programming Computation 12
+(2020) 637–672.
+[37] M. Demirtas, M. Kim, L. McAllister and J. Moritz, Conifold Vacua with Small Flux
+Superpotential, Fortsch. Phys. 68 (2020) 2000085, [2009.03312].
+[38] V. M. Mehta, M. Demirtas, C. Long, D. J. E. Marsh, L. McAllister and M. J. Stott,
+Superradiance in string theory, JCAP 07 (2021) 033, [2103.06812].
+[39] M. Cicoli, I. Garcı́a Etxebarria, F. Quevedo, A. Schachner, P. Shukla and R. Valandro,
+The Standard Model quiver in de Sitter string compactifications, JHEP 08 (2021) 109,
+[2106.11964].
+
+44
+
+[40] M. Demirtas, M. Kim, L. McAllister, J. Moritz and A. Rios-Tascon, Small
+cosmological constants in string theory, JHEP 12 (2021) 136, [2107.09064].
+[41] M. Kim, A note on h2,1 of divisors in CY fourfolds. Part I, JHEP 03 (2022) 168,
+[2107.09779].
+[42] M. Demirtas, N. Gendler, C. Long, L. McAllister and J. Moritz, PQ Axiverse,
+2112.04503.
+[43] M. Graña, T. W. Grimm, D. van de Heisteeg, A. Herraez and E. Plauschinn, The
+tadpole conjecture in asymptotic limits, JHEP 08 (2022) 237, [2204.05331].
+[44] N. Gendler, M. Kim, L. McAllister, J. Moritz and M. Stillman, Superpotentials from
+Singular Divisors, 2204.06566.
+[45] C. Crinò, F. Quevedo, A. Schachner and R. Valandro, A database of Calabi-Yau
+orientifolds and the size of D3-tadpoles, JHEP 08 (2022) 050, [2204.13115].
+[46] K. Tsagkaris and E. Plauschinn, Moduli stabilization in type IIB orientifolds at
+h2,1 = 50, 2207.13721.
+[47] M. Demirtas, M. Kim, L. Mcallister and J. Moritz, Vacua with Small Flux
+Superpotential, Phys. Rev. Lett. 124 (2020) 211603, [1912.10047].
+[48] C. Long, L. McAllister and P. McGuirk, Heavy Tails in Calabi-Yau Moduli Spaces,
+JHEP 10 (2014) 187, [1407.0709].
+[49] A. P. Braun, C. Long, L. McAllister, M. Stillman and B. Sung, The Hodge Numbers of
+Divisors of Calabi-Yau Threefold Hypersurfaces, 1712.04946.
+
+45
+
+

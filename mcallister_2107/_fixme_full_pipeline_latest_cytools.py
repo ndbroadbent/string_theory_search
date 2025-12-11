@@ -49,15 +49,6 @@ def load_fluxes():
     return K, M
 
 
-def load_curves_and_gv():
-    """Load curve classes and GV invariants."""
-    curve_lines = (DATA_DIR / "dual_curves.dat").read_text().strip().split('\n')
-    curves = np.array([[int(x) for x in line.split(',')] for line in curve_lines])
-
-    gv_text = (DATA_DIR / "dual_curves_gv.dat").read_text().strip()
-    gv = np.array([int(x) for x in gv_text.split(',')])
-
-    return curves, gv
 
 
 def compute_flat_direction(kappa, M, K, h11):
@@ -93,32 +84,25 @@ def compute_eK0(kappa, p, h11):
     return eK0, kappa_p3
 
 
-def project_curves(curves_9d, basis):
-    """Project 9D ambient curves to 4D basis."""
-    return curves_9d[:, basis]
-
-
-def identify_racetrack_terms(curves_4d, gv, M, p, cutoff=1.0):
+def identify_racetrack_terms(gv_invariants, M, p, cutoff=1.0):
     """
-    Identify and group racetrack terms.
+    Identify and group racetrack terms from GV invariants.
     Returns grouped terms sorted by q·p exponent.
     """
-    q_dot_p = curves_4d @ p
-    M_dot_q = curves_4d @ M
-
-    # Filter for 0 < q·p < cutoff
-    mask = (q_dot_p > 0) & (q_dot_p < cutoff)
-    indices = np.where(mask)[0]
-
-    # Group by exponent
     groups = defaultdict(lambda: {'q_dot_p': None, 'eff_coeff': 0, 'count': 0})
 
-    for i in indices:
-        key = round(q_dot_p[i], 6)
-        if groups[key]['q_dot_p'] is None:
-            groups[key]['q_dot_p'] = q_dot_p[i]
-        groups[key]['eff_coeff'] += M_dot_q[i] * gv[i]
-        groups[key]['count'] += 1
+    for q_tuple, N_q in gv_invariants.items():
+        q = np.array(q_tuple)
+        q_dot_p = np.dot(q, p)
+
+        if 0 < q_dot_p < cutoff:
+            M_dot_q = np.dot(M, q)
+            if M_dot_q != 0:
+                key = round(q_dot_p, 6)
+                if groups[key]['q_dot_p'] is None:
+                    groups[key]['q_dot_p'] = q_dot_p
+                groups[key]['eff_coeff'] += M_dot_q * N_q
+                groups[key]['count'] += 1
 
     grouped = list(groups.values())
     grouped.sort(key=lambda g: g['q_dot_p'])
@@ -181,23 +165,16 @@ def main():
     print("=" * 70)
 
     # =========================================================================
-    # STEP 1: Load raw data
+    # STEP 1: Load geometry and setup CYTools
     # =========================================================================
-    print("\n[1] Loading raw data...")
+    print("\n[1] Loading geometry...")
 
     dual_points, simplices = load_geometry()
     K, M = load_fluxes()
-    curves_9d, gv = load_curves_and_gv()
 
     print(f"    Polytope: {len(dual_points)} points")
     print(f"    Triangulation: {len(simplices)} simplices")
     print(f"    Fluxes: K={K}, M={M}")
-    print(f"    Curves: {len(curves_9d)} with GV invariants")
-
-    # =========================================================================
-    # STEP 2: Setup CYTools geometry
-    # =========================================================================
-    print("\n[2] Setting up Calabi-Yau geometry...")
 
     poly = Polytope(dual_points)
     tri = poly.triangulate(simplices=simplices)
@@ -210,12 +187,18 @@ def main():
     print(f"    h11 = {h11}, h21 = {h21}")
     print(f"    Divisor basis: {basis}")
 
-    # Get intersection numbers - latest cytools returns dict
+    # =========================================================================
+    # STEP 2: Compute intersection numbers
+    # =========================================================================
+    print("\n[2] Computing intersection numbers...")
+
     kappa_sparse = cy.intersection_numbers(in_basis=True)
     kappa = np.zeros((h11, h11, h11))
     for (i, j, k), val in kappa_sparse.items():
         for perm in [(i,j,k), (i,k,j), (j,i,k), (j,k,i), (k,i,j), (k,j,i)]:
             kappa[perm] = val
+
+    print(f"    κ has {len(kappa_sparse)} non-zero entries")
 
     # =========================================================================
     # STEP 3: Compute flat direction p
@@ -236,12 +219,24 @@ def main():
     print(f"    e^{{K₀}} = {eK0:.6f}")
 
     # =========================================================================
-    # STEP 5: Build racetrack from GV invariants
+    # STEP 5: Compute GV invariants
     # =========================================================================
-    print("\n[5] Building racetrack from GV invariants...")
+    print("\n[5] Computing GV invariants...")
 
-    curves_4d = project_curves(curves_9d, basis)
-    grouped = identify_racetrack_terms(curves_4d, gv, M, p)
+    gv_obj = cy.compute_gvs(min_points=100)
+    gv_invariants = {}
+    for q, N_q in gv_obj.dok.items():
+        if N_q != 0:
+            gv_invariants[tuple(q)] = int(N_q)
+
+    print(f"    Found {len(gv_invariants)} non-zero GV invariants")
+
+    # =========================================================================
+    # STEP 6: Build racetrack from GV invariants
+    # =========================================================================
+    print("\n[6] Building racetrack...")
+
+    grouped = identify_racetrack_terms(gv_invariants, M, p)
 
     print(f"    Found {len(grouped)} distinct exponents in racetrack")
     print(f"    Leading terms:")
@@ -249,9 +244,9 @@ def main():
         print(f"      q·p = {g['q_dot_p']:.6f}, eff_coeff = {g['eff_coeff']}")
 
     # =========================================================================
-    # STEP 6: Solve F-term equation
+    # STEP 7: Solve F-term equation
     # =========================================================================
-    print("\n[6] Solving F-term equation ∂W/∂τ = 0...")
+    print("\n[7] Solving F-term equation ∂W/∂τ = 0...")
 
     Im_tau, g_s, W0 = solve_racetrack(grouped)
 
@@ -260,9 +255,9 @@ def main():
     print(f"    W₀ = {W0:.6e}")
 
     # =========================================================================
-    # STEP 7: Compute vacuum energy V₀
+    # STEP 8: Compute vacuum energy V₀
     # =========================================================================
-    print("\n[7] Computing vacuum energy V₀...")
+    print("\n[8] Computing vacuum energy V₀...")
 
     V_string = float((DATA_DIR / "cy_vol.dat").read_text().strip())
     print(f"    V[0] (string frame) = {V_string:.2f} [from file]")
