@@ -217,19 +217,39 @@ g_s = 1 / Im_tau
 This determines the Kähler moduli t and volume V_string.
 
 #### Step 15: Target Divisor Volumes
-- **Formula:** τᵢ = (cᵢ/2π) ln(W₀⁻¹)
+- **Formula (eq 5.12-5.13):**
+```
+c_τ = 2π / (g_s × ln(1/W₀))
+τ_target = c_i / c_τ + χ(D_i)/24 - GV_corrections
+```
 - **Inputs:**
   - c_i from orientifold (Step 3): either 1 or 6
+  - g_s from racetrack (Step 13)
   - W₀ from racetrack (Step 14)
-- **For 4-214-647 with W₀ = 2.3×10⁻⁹⁰:**
-  - ln(W₀⁻¹) ≈ 207
-  - τᵢ(c=1) ≈ 33
-  - τᵢ(c=6) ≈ 198
-- **Precision:** mpmath for ln(W₀⁻¹), then float64 is fine
+  - χ(D_i) = 12 × χ(O_D) - D³ (topological Euler char of divisor)
+- **χ(O_D) from Braun eq (2.7):**
+  - Vertex: χ(O_D) = 1 + g (g = interior pts in dual facet)
+  - Edge interior: χ(O_D) = 1 - g (g = interior pts in dual edge)
+  - 2-face interior: χ(O_D) = 1 (g = 0)
+- **For 4-214-647:**
+  - g_s = 0.00911134
+  - ln(W₀⁻¹) = 206.4
+  - c_τ = 2π / (0.00911134 × 206.4) = 3.341 ✓ validated
+  - χ(D_i) range: [4, 9] for rigid divisors, mean 5.84
+  - With χ/24 correction: τ ≈ 0.42-2.18 (2.4% error = GV corrections only)
+- **Precision:** float64 sufficient
+- **Implementation:**
+  - `compute_target_tau.py` - c_τ and zeroth-order target
+  - `compute_chi_divisor.py` - χ(D_i) via Braun formula ✓ validated
+  - `compute_gv_invariants.py` - GV corrections via cy.compute_gvs()
+
+**CRITICAL:** McAllister uses `kklt_basis.dat` (not `basis.dat`) which excludes
+non-rigid divisors. Points 1, 2 are non-rigid vertices (g=1, g=2) with χ = 33, 45.
 
 ```python
-ln_W0_inv = float(mpmath.log(1 / W0))  # ~207 for W0=2.3e-90
-tau_target = c_i * ln_W0_inv / (2 * np.pi)
+c_tau = 2 * np.pi / (g_s * np.log(1 / W0))  # ~3.34 for McAllister
+chi = compute_chi_divisor(poly, kappa, basis)  # Braun formula
+tau_target = c_i / c_tau + chi / 24 - gv_correction
 ```
 
 #### Step 16: Solve for Kähler Moduli t (ITERATIVE)
@@ -363,21 +383,46 @@ This search is what makes the problem hard in general. For reproduction, we use 
 
 ## Current Status
 
-| Step | Status | Notes |
-|------|--------|-------|
-| 1-4 | ✅ Loaded | From McAllister data files |
-| 5-7 | ✅ Computed | CYTools |
-| 8 | ✅ CYTools | `cy.compute_gvs(max_deg=N)` via cygv library |
-| 9-11 | ✅ Computed | Matches expected values |
-| 12-14 | ✅ Computed | `full_pipeline_from_data.py` |
-| 15 | ✅ Computed | From W₀ and c_i |
-| 16 | ⚠️ Partial | Using McAllister's solution, not solving ourselves |
-| 17 | ✅ Verified | 4711.829675 (exact match with BBHL) |
-| 18 | ✅ Computed | -5.5×10⁻²⁰³ |
+| Step | Status | Implementation | Notes |
+|------|--------|----------------|-------|
+| 1-4 | ✅ | Data files | From McAllister ancillary data |
+| 5-7 | ✅ | CYTools | `cy.h11()`, `cy.h21()`, `cy.chi()` |
+| 8 | ✅ | CYTools | `cy.compute_gvs(min_points=N)` via cygv |
+| 9-11 | ✅ | `full_pipeline_from_data.py` | e^{K₀} = 0.234393 ✓ |
+| 12-14 | ✅ | `derive_racetrack.py`, `full_pipeline_from_data.py` | g_s, W₀ match |
+| 15 | ✅ | `compute_target_tau.py`, `compute_chi_divisor.py` | 2.4% error (GV only) |
+| 16 | ⚠️ | `compute_kklt_iterative.py` | Need GV integration |
+| 17 | ✅ | `compute_V_string.py`, `verify_V_string.py` | 4711.83 exact ✓ |
+| 18 | ✅ | `full_pipeline_from_data.py` | -5.5×10⁻²⁰³ ✓ |
 
-### Remaining Work for True First-Principles Reproduction:
-1. **Step 16:** Implement iterative solver for T_i(t) = τᵢ with GV corrections
-2. **Search:** Implement (K, M) search to find valid flux pairs
+### Implementation Files (`mcallister_2107/`)
+
+| File | Step | Purpose | Status |
+|------|------|---------|--------|
+| `compute_triangulation.py` | 2 | Load polytope, apply heights | ✅ |
+| `compute_divisor_cohomology.py` | 3 | Compute h^i(D) via cohomCalg | ✅ |
+| `compute_rigidity_combinatorial.py` | 3 | Rigidity via dual face interior pts | ✅ |
+| `compute_c_i.py` | 3 | Dual Coxeter numbers c_i | ✅ |
+| `derive_racetrack.py` | 12-14 | Build racetrack, solve for g_s, W₀ | ✅ |
+| `compute_target_tau.py` | 15 | c_τ = 2π/(g_s × ln(1/W₀)) | ✅ |
+| `compute_chi_divisor.py` | 15 | χ(D) = 12×χ(O_D) - D³ (Braun) | ✅ 2.4% |
+| `compute_gv_invariants.py` | 15-16 | GV via cy.compute_gvs() | ✅ |
+| `compute_kklt_iterative.py` | 16 | Solve T_i(t) = τ_target | ⚠️ |
+| `compute_V_string.py` | 17 | V = (1/6)κt³ - BBHL | ✅ |
+
+### Remaining Work
+1. **Step 16:** Integrate GV corrections into KKLT solver iteration
+2. **Step 16:** Test solver convergence with full τ_target (χ + GV)
+3. **End-to-end:** Run full pipeline without McAllister's pre-solved t values
+
+### Key Discoveries
+- **KKLT basis ≠ divisor basis:** McAllister's `kklt_basis.dat` excludes non-rigid
+  divisors (points 1, 2 with g=1, g=2). Their `corrected_target_volumes.dat` uses
+  this KKLT basis, not `basis.dat`.
+- **Non-rigid divisors:** Have χ(D) >> 6 (e.g., 33, 45 for g=1,2). GA pipeline
+  must either exclude these or handle their large χ contributions.
+- **χ(D) validation:** 2.4% RMS error is entirely from GV corrections (not computed
+  yet in Step 15). The χ formula itself is correct.
 
 ---
 

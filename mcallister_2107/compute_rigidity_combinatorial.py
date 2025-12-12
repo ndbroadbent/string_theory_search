@@ -155,27 +155,40 @@ def compute_rigidity(poly) -> dict:
             }
 
         elif "1-face" in face_type:
-            # Points interior to 1-faces: always rigid (Δ-favorable)
+            # Points interior to 1-faces (edges)
+            # Per Braun eq (2.7): h^• = (1, g, 0) where g = interior pts in dual edge
+            # Rigid iff g = 0 (h¹ = 0)
+            dual_face = face.dual_face()
+            interior = dual_face.interior_points()
+            n_interior = len(interior) if interior is not None else 0
             results[pt_idx] = {
-                "rigid": True,
-                "reason": "interior to 1-face → always rigid",
+                "rigid": n_interior == 0,
+                "reason": f"dual edge has {n_interior} interior points",
                 "type": "1-face interior",
+                "dual_face_dim": dual_face.dim(),
+                "n_interior": n_interior,
             }
 
         elif "2-face" in face_type:
-            # Points interior to 2-faces: always rigid
+            # Points interior to 2-faces
+            # Per Braun eq (2.7): h^• = (1+g, 0, 0) where g = interior pts in dual vertex
+            # Dual of 2-face is a vertex (0-face), which has 0 interior points
+            # So g = 0 always, making these rigid
             results[pt_idx] = {
                 "rigid": True,
-                "reason": "interior to 2-face → always rigid",
+                "reason": "interior to 2-face → dual is vertex with g=0",
                 "type": "2-face interior",
+                "dual_face_dim": 0,
+                "n_interior": 0,
             }
 
         elif "3-face" in face_type:
-            # Points interior to 3-faces (facets): always rigid
+            # Points interior to 3-faces (facets) - these don't intersect generic CY hypersurface
             results[pt_idx] = {
                 "rigid": True,
-                "reason": "interior to 3-face → always rigid",
+                "reason": "interior to 3-face → not on CY hypersurface",
                 "type": "3-face interior",
+                "n_interior": 0,
             }
 
         else:

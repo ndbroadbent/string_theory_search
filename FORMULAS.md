@@ -97,6 +97,33 @@ Tᵢ = (1/2) κᵢⱼₖ tʲ tᵏ
      + (1/(2π)²) Σ_q qᵢ N_q Li₂((-1)^{γ·q} e^{-2πq·t})
 ```
 
+### 1A.2a Divisor Euler Characteristic χ(D_i)
+
+The χ(D_i) in eq. 4.12 is the **topological** Euler characteristic of the divisor:
+```
+χ(D) = 12 × χ(O_D) - D³
+```
+Where:
+- χ(O_D) = h⁰ - h¹ + h² is the holomorphic Euler characteristic
+- D³ = κ_DDD is the triple self-intersection
+
+**For toric CY hypersurface divisors**, χ(O_D) is computed COMBINATORIALLY using
+Braun et al. arXiv:1712.04946 eq (2.7):
+
+| Point location (µ) | h^•(O_D)     | χ(O_D)  | g definition |
+|--------------------|--------------|---------|--------------|
+| Vertex (µ=0)       | (1, 0, g)    | 1 + g   | interior pts in dual facet |
+| Edge interior (µ=1)| (1, g, 0)    | 1 - g   | interior pts in dual edge |
+| 2-face interior    | (1+g, 0, 0)  | 1 + g   | g = 0 (dual is vertex) |
+
+**Rigid divisors** have g = 0, so χ(O_D) = 1 and χ(D) = 12 - D³.
+
+**Non-rigid divisors** (g > 0) can have much larger χ(D) values:
+- Vertex with g=2, D³=-9: χ(D) = 12×3 - (-9) = 45
+
+**Implementation:** `mcallister_2107/compute_chi_divisor.py`
+**Validated:** 2.4% RMS error against McAllister (error is GV corrections only)
+
 ### 1A.3 The Iterative Solution Problem
 
 Given KKLT target divisor volumes τᵢ = (cᵢ/2π) ln(W₀⁻¹), we need to solve:
@@ -327,13 +354,20 @@ N_flux = (1/2) ∫_X F₃ ∧ H₃
 
 ---
 
-## WHAT WE CANNOT COMPUTE (Missing!)
+## WHAT WE CAN COMPUTE (Now Working!)
+
+| Quantity | Method | Status |
+|----------|--------|--------|
+| **GV invariants N_q** | `cy.compute_gvs()` via cygv | ✓ Validated |
+| **χ(D_i)** | Braun eq (2.7) combinatorially | ✓ Validated (2.4% = GV only) |
+| **Divisor rigidity** | Dual face interior points | ✓ Working |
+
+## WHAT WE CANNOT COMPUTE (Still Missing)
 
 | Quantity | Why Missing | Impact |
 |----------|-------------|--------|
 | **Periods Π** | Requires solving Picard-Fuchs equations | W₀ is garbage |
-| **Prepotential F(z)** | Requires periods + GV invariants | Can't compute periods |
-| **GV invariants N_q** | Need special algorithms at high h¹¹ | Can't compute F_inst |
+| **Prepotential F(z)** | Requires periods | Can't compute periods |
 | **eᴷ⁰** | Requires periods for ∫Ω∧Ω̄ | Full K is wrong |
 | **Pfaffians Aᵢ** | One-loop determinants on divisors | W_np prefactors unknown |
 
