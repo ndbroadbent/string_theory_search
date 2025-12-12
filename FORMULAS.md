@@ -413,6 +413,110 @@ If X̃ is the mirror of X:
 
 ---
 
+## Part 7: Toric Geometry & GLSM
+
+### 7.1 Fayet-Iliopoulos Parameters = Kähler Moduli
+
+From Bouchard arXiv:0901.3695 eq. (108):
+```
+∫_C^a ω = t^a
+```
+
+Where:
+- C^a = basis of resolving 2-cycles (a = 1, ..., h¹¹)
+- ω = Kähler form
+- t^a = Fayet-Iliopoulos (FI) parameters in the GLSM
+
+**Key insight:** "So the FI parameters in the GLSM really map to the 'Kähler volumes' of the resolving cycles" (eq. 107-108)
+
+This connects:
+- **GLSM** (physics): FI parameters t^a appear in D-term constraints
+- **Geometry**: t^a are volumes of 2-cycles = Kähler moduli
+
+### 7.2 Secondary Fan and Triangulations
+
+The **secondary fan** is the fan over the set of all regular triangulations of a polytope.
+
+- Each **cone** in the secondary fan corresponds to a triangulation
+- **Heights** h ∈ ℝ^n parametrize the secondary fan (one height per lattice point)
+- A triangulation is **regular** iff it's induced by some height function
+
+**Triangulation from heights:**
+```python
+# Heights lift points to (n+1) dimensions, triangulation = lower convex hull
+tri = poly.triangulate(heights=h)
+```
+
+### 7.3 Kähler Cone as Projection of Secondary Cone
+
+From CYTools paper arXiv:2211.03823 §5.4.1:
+
+> "The Kähler cone can be thought of as a **projection** of the secondary cone that removes the linear subspaces."
+
+More precisely:
+- Secondary cone ⊂ ℝ^n (n = number of lattice points)
+- Kähler cone ⊂ ℝ^h¹¹ (h¹¹ ≤ n - 4 for 4d polytopes)
+- Projection removes: origin point + linear dependencies from GLSM relations
+
+### 7.4 GLSM Charge Matrix
+
+The GLSM charge matrix Q relates divisors to points:
+```
+Q : ℝ^{n_pts} → ℝ^{h¹¹}
+```
+
+Properties:
+- Shape: (h¹¹, n_pts)
+- Rows span kernel of point matrix M
+- Encodes D-term constraints: Σᵢ Qᵢₐ |φᵢ|² = t^a
+
+**NOT a simple projection:** Q @ h does not directly give t because:
+1. Heights live in extended space (include origin, non-basis points)
+2. Linear subspaces must be quotiented out
+
+### 7.5 The Unsolved Problem: Heights → Kähler Moduli
+
+**Given:** Heights h ∈ ℝ^n defining a triangulation
+**Want:** Kähler moduli t ∈ ℝ^h¹¹ inside the Kähler cone
+
+McAllister's algorithm (Section 5 of arXiv:2107.09064):
+1. Pick random h_init in secondary fan
+2. This gives triangulation T and "associated" t_init
+3. Solve KKLT iteratively: t_init → τ_init → τ_target → t_final
+
+**The missing piece:** Step 2 says heights are "naturally associated" to t but doesn't specify the map.
+
+For h¹¹ ≤ 12, CYTools can compute `tip_of_stretched_cone()` to get a starting point.
+For h¹¹ = 214, this is computationally intractable.
+
+### 7.6 Why Newton Iteration Fails
+
+The KKLT equation:
+```
+τᵢ(t) = (1/2) κᵢⱼₖ t^j t^k - χ(Dᵢ)/24 + GV_correction(t)
+```
+
+Has Jacobian:
+```
+∂τᵢ/∂t^j = κᵢⱼₖ t^k
+```
+
+**For h¹¹=214:** Jacobian has rank ~65 (not 214)
+- 149-dimensional nullspace
+- Infinitely many solutions t for given τ
+- Newton's method diverges without good starting point inside Kähler cone
+
+### 7.7 Reference: Witten's "Phases of N=2"
+
+Witten, "Phases of N=2 theories in two dimensions," Nucl. Phys. B 403 (1993) 159
+
+Key concepts:
+- Different **phases** of the GLSM correspond to different triangulations
+- Phase boundaries are walls in FI parameter space
+- Each phase has a geometric interpretation (orbifold, flop, etc.)
+
+---
+
 ## REFERENCES
 
 ### Primary
