@@ -186,6 +186,40 @@ This applies to ALL computations: volumes, gauge couplings, potentials, etc.
 If CYTools or any physics computation fails, the entire evaluation must fail loudly.
 Silent fallbacks make debugging nearly impossible and produce garbage results.
 
+### CRITICAL: No Precomputed Database Shortcuts
+
+**NEVER use precomputed databases (Altman, etc.) as shortcuts for computations we should be doing ourselves.**
+
+The pipeline must be:
+- **Robust**: Works for any valid input, not just cases covered by a database
+- **Complete**: Computes all required quantities from first principles
+- **Proven**: Every computation is validated against known results
+- **General**: Works for arbitrary h11, not limited to h11 ≤ 6
+- **Zero shortcuts**: No database lookups for quantities we should compute
+
+Bad (NEVER DO THIS):
+```python
+def get_divisor_cohomology(h11, poly_id):
+    # Shortcut - just look it up in Altman database
+    return load_from_altman_database(h11, poly_id)
+```
+
+Good (ALWAYS DO THIS):
+```python
+def get_divisor_cohomology(vertices, glsm, sr_ideal, divisor_idx):
+    # Compute from scratch using cohomCalg + Koszul sequence
+    h_bundles = compute_line_bundle_cohomology(vertices, glsm, sr_ideal, ...)
+    return chase_koszul_sequence(h_bundles)
+```
+
+Precomputed databases (like Altman's rossealtman.com/toriccy) are useful ONLY for:
+1. **Validation**: Comparing our computed results against known values
+2. **Testing**: Unit tests that verify our implementation is correct
+3. **Debugging**: When our computation differs, the database helps identify bugs
+
+They are NEVER a substitute for implementing the actual computation.
+If we can't compute something ourselves, we don't understand it well enough.
+
 ## Target Constants (what we're matching)
 - α_em = 7.297e-3 (fine structure)
 - α_s = 0.118 (strong coupling at M_Z)
