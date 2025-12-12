@@ -48,7 +48,7 @@
 - [ ] Verify effective coefficients match -1 and +512 from eq. 6.59
 - [ ] Build truncated W_flux(τ) = ζ Σ (M·q̃) N_q̃ Li₂(e^{2πiτ(q̃·p)})
 
-**Output**: `verify_mcallister_rederive_racetrack.py`
+**Output**: `verify_mcallister_recompute_derived_racetrack.py`
 
 ---
 

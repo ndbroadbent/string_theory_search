@@ -314,7 +314,7 @@ def load_mcallister_ground_truth():
         "W0": W0,
         "g_s": g_s,
         "V_string": V_cy,
-        # From LATEST_CYTOOLS_RESULT.md
+        # From LATEST_CYTOOLS_CONVERSION_RESULT.md
         "e_K0": 0.234393,
         "V0": -5.5e-203,
         # Latest CYTools basis [5,6,7,8]

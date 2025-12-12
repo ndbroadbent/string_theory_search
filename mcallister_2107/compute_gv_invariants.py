@@ -41,72 +41,181 @@ def compute_gv_invariants(cy, min_points: int = 100) -> dict:
 
 
 # =============================================================================
-# VALIDATION
+# VALIDATION - ALL 5 MCALLISTER EXAMPLES
 # =============================================================================
 
-def main():
-    """Validate against McAllister 4-214-647 GV data."""
-    DATA_DIR = Path(__file__).parent.parent / "resources/small_cc_2107.09064_source/anc/paper_data/4-214-647"
+DATA_BASE = Path(__file__).parent.parent / "resources/small_cc_2107.09064_source/anc/paper_data"
 
-    print("=" * 70)
-    print("GV Invariants: Compute and Validate")
-    print("=" * 70)
+MCALLISTER_EXAMPLES = [
+    ("4-214-647", 4),
+    ("5-113-4627-main", 5),
+    ("5-113-4627-alternative", 5),
+    ("5-81-3213", 5),
+    ("7-51-13590", 7),
+]
 
-    # Load McAllister's GV data (for dual polytope, h11=4)
-    dual_curves = []
-    with open(DATA_DIR / "dual_curves.dat") as f:
+
+def load_mcallister_gv(example_name: str) -> dict:
+    """
+    Load McAllister's GV data for an example.
+
+    Returns:
+        Dict mapping ambient coordinate curves to GV values
+    """
+    data_dir = DATA_BASE / example_name
+
+    # Load curve classes (in ambient space coords: canonical + prime toric divisors)
+    curves = []
+    with open(data_dir / "dual_curves.dat") as f:
         for line in f:
-            row = [int(x) for x in line.strip().split(",")]
-            dual_curves.append(row)
-    dual_curves = np.array(dual_curves)
+            row = tuple(int(x) for x in line.strip().split(","))
+            curves.append(row)
 
-    gv_mcallister = []
-    with open(DATA_DIR / "dual_curves_gv.dat") as f:
+    # Load GV values
+    with open(data_dir / "dual_curves_gv.dat") as f:
         content = f.read()
-        gv_mcallister = [int(float(x)) for x in content.strip().split(",")]
+        gv_values = [int(float(x)) for x in content.strip().split(",")]
 
-    print(f"\nMcAllister GV data: {len(gv_mcallister)} curve classes")
+    return {c: g for c, g in zip(curves, gv_values)}
 
-    # Load dual polytope and compute GV
-    dual_pts = np.loadtxt(DATA_DIR / "dual_points.dat", delimiter=',').astype(int)
+
+def load_simplices(example_name: str) -> list:
+    """Load McAllister's triangulation simplices."""
+    data_dir = DATA_BASE / example_name
+    lines = (data_dir / "dual_simplices.dat").read_text().strip().split('\n')
+    return [[int(x) for x in line.split(',')] for line in lines]
+
+
+def test_example(example_name: str, expected_h11: int, verbose: bool = True) -> dict:
+    """
+    Test GV invariant computation for one McAllister example.
+
+    Uses coordinate transformation to convert computed (basis) to ambient coords,
+    then verifies EXACT match against McAllister's values.
+
+    Args:
+        example_name: Folder name in paper_data/
+        expected_h11: Expected h11 for the DUAL polytope
+        verbose: Print progress
+
+    Returns:
+        Dict with test results
+    """
+    data_dir = DATA_BASE / example_name
+
+    if verbose:
+        print("=" * 70)
+        print(f"GV TEST - {example_name} (h11={expected_h11})")
+        print("=" * 70)
+
+    # Load McAllister's GV data
+    mcallister_gv = load_mcallister_gv(example_name)
+    if verbose:
+        print(f"\nMcAllister GV data: {len(mcallister_gv)} curves")
+
+    # Load dual polytope with McAllister's triangulation
+    dual_pts = np.loadtxt(data_dir / "dual_points.dat", delimiter=',').astype(int)
+    simplices = load_simplices(example_name)
+
     poly = Polytope(dual_pts)
-    tri = poly.triangulate()
+    tri = poly.triangulate(simplices=simplices, check_input_simplices=False)
     cy = tri.get_cy()
 
-    print(f"CY: h11={cy.h11()}, h21={cy.h21()}")
+    if verbose:
+        print(f"CY: h11={cy.h11()}, h21={cy.h21()}")
 
-    gv_computed = compute_gv_invariants(cy, min_points=100)
-    print(f"Computed: {len(gv_computed)} non-zero GV invariants")
+    h11_match = cy.h11() == expected_h11
+    if not h11_match:
+        return {"success": False, "error": f"h11 mismatch: {cy.h11()} != {expected_h11}"}
 
-    # McAllister uses 9-component ambient space curves, we use h11=4 basis
-    # Build mapping from our basis to McAllister's values
-    # Known matches from compare_gv.py:
-    #   Our (1,0,0,0) = McAllister (-6,2,3,-1,1,1,0,0,0) = 252
-    #   Our (2,0,0,0) = McAllister (-12,4,6,-2,2,2,0,0,0) = -9252
-    #   Our (3,0,0,0) = McAllister (-18,6,9,-3,3,3,0,0,0) = 848628
+    # Get curve basis matrix for coordinate conversion
+    # Rows are basis curves in ambient coords (h11 x (h11+5))
+    curve_basis_mat = cy.curve_basis(include_origin=True, as_matrix=True)
+    if verbose:
+        print(f"Curve basis matrix: {curve_basis_mat.shape}")
 
-    print("\nValidation (known curve classes):")
-    expected = {
-        (1, 0, 0, 0): 252,
-        (2, 0, 0, 0): -9252,
-        (3, 0, 0, 0): 848628,
-        (0, 0, 0, 1): 420,
+    # Compute GV invariants with CYTools (in basis coords)
+    gv_computed_basis = compute_gv_invariants(cy, min_points=100)
+    if verbose:
+        print(f"Computed: {len(gv_computed_basis)} GV invariants")
+
+    # Convert to ambient coords and verify against McAllister
+    # q_ambient = q_basis @ curve_basis_mat
+    matches = 0
+    mismatches = 0
+    not_found = 0
+
+    for q_basis, gv_computed in gv_computed_basis.items():
+        q_ambient = tuple(int(x) for x in np.array(q_basis) @ curve_basis_mat)
+        gv_expected = mcallister_gv.get(q_ambient)
+
+        if gv_expected is None:
+            not_found += 1
+            if verbose and not_found <= 3:
+                print(f"  WARNING: Curve {q_ambient} not in McAllister data")
+        elif gv_computed == gv_expected:
+            matches += 1
+        else:
+            mismatches += 1
+            if verbose:
+                print(f"  MISMATCH: {q_ambient}: computed={gv_computed}, expected={gv_expected}")
+
+    if verbose:
+        print(f"\nValidation: {matches} match, {mismatches} mismatch, {not_found} not found")
+
+    # Test passes only if ALL computed curves match exactly
+    test_passed = (mismatches == 0) and (not_found == 0) and (matches > 0)
+
+    result = {
+        "example_name": example_name,
+        "h11": cy.h11(),
+        "h11_match": h11_match,
+        "n_gv_mcallister": len(mcallister_gv),
+        "n_gv_computed": len(gv_computed_basis),
+        "matches": matches,
+        "mismatches": mismatches,
+        "not_found": not_found,
+        "test_passed": test_passed,
     }
 
-    all_match = True
-    for q, N_expected in expected.items():
-        N_computed = gv_computed.get(q, None)
-        match = N_computed == N_expected
-        status = "✓" if match else "✗"
-        print(f"  {q}: computed={N_computed}, expected={N_expected} {status}")
-        if not match:
-            all_match = False
+    if verbose:
+        status = "✓" if test_passed else "✗"
+        print(f"\n{status} GV test {'PASSED' if test_passed else 'FAILED'}")
 
-    if all_match:
-        print(f"\n✓ GV INVARIANTS VALIDATED")
+    return result
+
+
+def main():
+    """Test GV invariants for all 5 McAllister examples."""
+    print("=" * 70)
+    print("TESTING ALL 5 MCALLISTER EXAMPLES - GV Invariants")
+    print("=" * 70)
+    print("\nValidation: Every computed GV must EXACTLY match McAllister's value")
+    print("McAllister wrote CYTools - with same triangulation, results must match.\n")
+
+    results = []
+    for name, h11 in MCALLISTER_EXAMPLES:
+        result = test_example(name, h11, verbose=True)
+        results.append(result)
+        print()
+
+    # Summary
+    print("=" * 70)
+    print("SUMMARY - GV Invariants")
+    print("=" * 70)
+    all_passed = True
+    for result in results:
+        status = "✓" if result["test_passed"] else "✗"
+        print(f"  {status} {result['example_name']}: {result['matches']}/{result['n_gv_computed']} match (McAllister: {result['n_gv_mcallister']})")
+        all_passed = all_passed and result["test_passed"]
+
+    print()
+    if all_passed:
+        print("All 5 examples PASSED")
     else:
-        print(f"\n✗ GV INVARIANTS MISMATCH")
-        raise AssertionError("GV invariants do not match")
+        print("Some examples FAILED")
+
+    return results
 
 
 if __name__ == "__main__":

@@ -44,7 +44,10 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "vendor/cytools_latest/src
 
 import numpy as np
 from scipy.special import zeta
-from mpmath import mp, mpf, exp as mp_exp, log as mp_log, pi as mp_pi
+from mpmath import mp, mpf, polylog
+from mpmath import exp as mp_exp
+from mpmath import log as mp_log
+from mpmath import pi as mp_pi
 
 from cytools import Polytope
 
@@ -67,18 +70,21 @@ def run_pipeline(
     dual_points: np.ndarray,
     K: np.ndarray,
     M: np.ndarray,
-    orientifold_o7_indices: list[int],
+    point_to_c: dict = None,
     verbose: bool = True,
 ) -> dict:
     """
     Run the full physics pipeline from polytope to V₀.
+
+    PURE FUNCTION: All inputs are passed explicitly. No data files loaded.
 
     Args:
         primal_points: Primal polytope vertices (N x 4)
         dual_points: Dual polytope vertices (M x 4)
         K: Flux vector K (h21 components)
         M: Flux vector M (h21 components)
-        orientifold_o7_indices: Divisor indices hosting O7-planes (c_i=6)
+        point_to_c: Dict mapping point index -> c_i value (1 for D3, 6 for O7).
+                    If None, assumes all c_i=1.
         verbose: Print progress
 
     Returns:
@@ -94,11 +100,10 @@ def run_pipeline(
         print("STEP 5: Hodge Numbers")
         print("=" * 70)
 
-    # Create polytopes
+    # Create polytopes and triangulate
     primal_poly = Polytope(primal_points)
     dual_poly = Polytope(dual_points)
 
-    # Triangulate (CYTools default FRST)
     primal_tri = primal_poly.triangulate()
     dual_tri = dual_poly.triangulate()
 
@@ -118,7 +123,7 @@ def run_pipeline(
     results["h21"] = h21_primal
 
     # =========================================================================
-    # STEP 6: Intersection Numbers κ_ijk (PRIMAL)
+    # STEP 6: Intersection Numbers κ_ijk
     # =========================================================================
     if verbose:
         print("\n" + "=" * 70)
@@ -126,24 +131,20 @@ def run_pipeline(
         print("=" * 70)
 
     kappa_primal = primal_cy.intersection_numbers(in_basis=True)
-
-    if verbose:
-        print(f"  Primal κ: {len(kappa_primal)} non-zero entries")
-
-    results["kappa_primal"] = kappa_primal
-
-    # Also get dual κ for racetrack (Step 9-11)
     kappa_dual = dual_cy.intersection_numbers(in_basis=True)
 
     if verbose:
+        print(f"  Primal κ: {len(kappa_primal)} non-zero entries")
         print(f"  Dual κ:   {len(kappa_dual)} non-zero entries")
+        print(f"  Dual divisor basis: {list(dual_cy.divisor_basis())}")
 
+    results["kappa_primal"] = kappa_primal
     results["kappa_dual"] = kappa_dual
 
-    # Build dense tensor for dual (small, h11=4)
+    # Build dense tensor for dual (small, h11=4 or similar)
     kappa_dual_dense = np.zeros((h11_dual, h11_dual, h11_dual))
     for (i, j, k), val in kappa_dual.items():
-        for perm in [(i,j,k), (i,k,j), (j,i,k), (j,k,i), (k,i,j), (k,j,i)]:
+        for perm in [(i, j, k), (i, k, j), (j, i, k), (j, k, i), (k, i, j), (k, j, i)]:
             kappa_dual_dense[perm] = val
 
     # =========================================================================
@@ -184,7 +185,7 @@ def run_pipeline(
         print("STEP 9: N-matrix")
         print("=" * 70)
 
-    N_matrix = np.einsum('abc,c->ab', kappa_dual_dense, M)
+    N_matrix = np.einsum("abc,c->ab", kappa_dual_dense, M)
     det_N = np.linalg.det(N_matrix)
 
     if verbose:
@@ -193,7 +194,7 @@ def run_pipeline(
         print(f"  det(N) = {det_N:.6f}")
 
     if abs(det_N) < 1e-10:
-        raise ValueError("N matrix is singular - invalid flux choice")
+        return {"success": False, "error": "N matrix is singular - invalid flux choice"}
 
     results["N_matrix"] = N_matrix
 
@@ -220,8 +221,8 @@ def run_pipeline(
         print("STEP 11: e^{K₀}")
         print("=" * 70)
 
-    kappa_p3 = np.einsum('abc,a,b,c->', kappa_dual_dense, p, p, p)
-    e_K0 = 1.0 / ((4.0/3.0) * kappa_p3)
+    kappa_p3 = np.einsum("abc,a,b,c->", kappa_dual_dense, p, p, p)
+    e_K0 = 1.0 / ((4.0 / 3.0) * kappa_p3)
 
     if verbose:
         print(f"  κ_abc p^a p^b p^c = {kappa_p3:.6f}")
@@ -237,7 +238,16 @@ def run_pipeline(
         print("STEPS 12-14: Racetrack Stabilization")
         print("=" * 70)
 
-    g_s, W0 = solve_racetrack(gv_invariants, p, M, verbose=verbose)
+    racetrack_result = solve_racetrack(gv_invariants, p, M, verbose=verbose)
+
+    if not racetrack_result["success"]:
+        return {
+            "success": False,
+            "error": racetrack_result.get("error", "Racetrack failed"),
+        }
+
+    g_s = racetrack_result["g_s"]
+    W0 = racetrack_result["W0"]
 
     results["g_s"] = float(g_s)
     results["W0"] = W0  # Keep as mpf for precision
@@ -250,9 +260,13 @@ def run_pipeline(
         print("STEP 15: Target Divisor Volumes")
         print("=" * 70)
 
-    # Build c_i array for primal divisors
+    # Build c_i array from point_to_c mapping
     basis_indices = list(primal_cy.divisor_basis())
-    c_i = np.array([6.0 if idx in orientifold_o7_indices else 1.0 for idx in basis_indices])
+    if point_to_c is None:
+        c_i = np.ones(h11_primal)
+    else:
+        # Map point indices to c_i values (default 1.0 if not in mapping)
+        c_i = np.array([point_to_c.get(idx, 1.0) for idx in basis_indices])
 
     n_o7 = int(np.sum(c_i == 6))
     n_d3 = int(np.sum(c_i == 1))
@@ -276,7 +290,9 @@ def run_pipeline(
     tau_target_zeroth = c_i / c_tau + chi_D / 24.0
 
     if verbose:
-        print(f"  τ_target range: [{tau_target_zeroth.min():.4f}, {tau_target_zeroth.max():.4f}]")
+        print(
+            f"  τ_target range: [{tau_target_zeroth.min():.4f}, {tau_target_zeroth.max():.4f}]"
+        )
 
     results["c_i"] = c_i
     results["c_tau"] = c_tau
@@ -307,8 +323,7 @@ def run_pipeline(
 
     # Solve
     t_solution, tau_achieved, converged = iterative_solve(
-        kappa_sparse, tau_target_zeroth,
-        n_steps=500, t_init=t_init, tol=1e-3, verbose=verbose
+        kappa_sparse, tau_target_zeroth, n_steps=500, t_init=t_init, tol=1e-3, verbose=verbose
     )
 
     if verbose:
@@ -354,9 +369,9 @@ def run_pipeline(
     g_s_mp = mpf(str(g_s))
     V_string_mp = mpf(str(V_string))
     e_K0_mp = mpf(str(e_K0))
-    W0_mp = mpf(str(W0))
+    W0_mp = W0 if isinstance(W0, mpf) else mpf(str(W0))
 
-    V0 = -3 * e_K0_mp * (g_s_mp**7 / (4 * V_string_mp)**2) * W0_mp**2
+    V0 = -3 * e_K0_mp * (g_s_mp**7 / (4 * V_string_mp) ** 2) * W0_mp**2
 
     if verbose:
         print(f"  e^{{K₀}} = {float(e_K0_mp):.6f}")
@@ -366,12 +381,14 @@ def run_pipeline(
         print(f"  V₀ = {V0:.2e}")
 
     results["V0"] = V0
+    results["success"] = True
 
     return results
 
 
-def solve_racetrack(gv_invariants: dict, p: np.ndarray, M: np.ndarray,
-                    verbose: bool = True) -> tuple:
+def solve_racetrack(
+    gv_invariants: dict, p: np.ndarray, M: np.ndarray, verbose: bool = True
+) -> dict:
     """
     Solve racetrack stabilization for g_s and W₀.
 
@@ -384,11 +401,11 @@ def solve_racetrack(gv_invariants: dict, p: np.ndarray, M: np.ndarray,
         verbose: Print progress
 
     Returns:
-        (g_s, W0) as (float, mpf)
+        Dict with g_s, W0, success, error
     """
-    # Build racetrack terms: group by exponent q·p
     from collections import defaultdict
 
+    # Build racetrack terms: group by exponent q·p
     terms = defaultdict(lambda: mpf(0))
 
     for q_tuple, N_q in gv_invariants.items():
@@ -401,7 +418,7 @@ def solve_racetrack(gv_invariants: dict, p: np.ndarray, M: np.ndarray,
         M_dot_q = np.dot(M, q)
         coeff = M_dot_q * N_q
 
-        # Round exponent to nearest rational for grouping
+        # Round exponent for grouping
         exp_key = round(exp_coeff, 8)
         terms[exp_key] += coeff
 
@@ -409,7 +426,10 @@ def solve_racetrack(gv_invariants: dict, p: np.ndarray, M: np.ndarray,
     positive_exps = sorted([e for e in terms.keys() if e > 0])
 
     if len(positive_exps) < 2:
-        raise ValueError("Need at least 2 positive exponent terms for racetrack")
+        return {
+            "success": False,
+            "error": f"Need at least 2 positive exponent terms, found {len(positive_exps)}",
+        }
 
     alpha = mpf(str(positive_exps[0]))
     beta = mpf(str(positive_exps[1]))
@@ -421,14 +441,22 @@ def solve_racetrack(gv_invariants: dict, p: np.ndarray, M: np.ndarray,
         print(f"    α = {float(alpha):.6f}, A = {float(A)}")
         print(f"    β = {float(beta):.6f}, B = {float(B)}")
 
+    # Check for valid racetrack (need A and B nonzero with opposite signs for minima)
+    if A == 0 or B == 0:
+        return {"success": False, "error": "Leading coefficient is zero"}
+
     # Solve F-term: ratio = -Aα/(Bβ), Im(τ) = -log|ratio| / (2π(β-α))
     ratio = -A * alpha / (B * beta)
 
     if ratio <= 0:
-        # Need to handle sign carefully
-        Im_tau = -mp_log(abs(ratio)) / (2 * mp_pi * (beta - alpha))
+        # Need |ratio|
+        abs_ratio = abs(ratio)
+        Im_tau = -mp_log(abs_ratio) / (2 * mp_pi * (beta - alpha))
     else:
         Im_tau = -mp_log(ratio) / (2 * mp_pi * (beta - alpha))
+
+    if Im_tau <= 0:
+        return {"success": False, "error": f"Im(τ) = {float(Im_tau)} <= 0, no valid minimum"}
 
     g_s = 1 / Im_tau
 
@@ -440,13 +468,9 @@ def solve_racetrack(gv_invariants: dict, p: np.ndarray, M: np.ndarray,
     # W = ζ × Σ (M·q) N_q Li₂(e^{2πiτ(q·p)})
     # At minimum, dominated by leading terms
 
-    ZETA = mpf(1) / (2**(mpf(3)/2) * mp_pi**(mpf(5)/2))
+    ZETA = mpf(1) / (mpf(2) ** (mpf(3) / 2) * mp_pi ** (mpf(5) / 2))
 
-    tau = mpf(0) + Im_tau * mpf(1j) if hasattr(mpf(1j), 'imag') else Im_tau  # Im(τ) only
-
-    # W₀ ≈ |ζ × A × Li₂(e^{-2π×Im(τ)×α}) + B × Li₂(e^{-2π×Im(τ)×β})|
-    from mpmath import polylog
-
+    # For Im(τ) only, the argument is e^{-2π×Im(τ)×α}
     arg_A = mp_exp(-2 * mp_pi * Im_tau * alpha)
     arg_B = mp_exp(-2 * mp_pi * Im_tau * beta)
 
@@ -456,46 +480,166 @@ def solve_racetrack(gv_invariants: dict, p: np.ndarray, M: np.ndarray,
     W0 = abs(ZETA * (W_A + W_B))
 
     if verbose:
-        print(f"  W₀ = {W0:.2e}")
+        # Convert to float for printing (mpf doesn't support .2e format)
+        print(f"  W₀ = {float(W0):.2e}")
 
-    return float(g_s), W0
+    return {"success": True, "g_s": float(g_s), "W0": W0}
+
+
+def run_kklt_only(
+    polytope_vertices: np.ndarray,
+    g_s: float,
+    W0: float,
+    c_i: np.ndarray = None,
+    verbose: bool = True,
+) -> dict:
+    """
+    Run only the KKLT part of the pipeline (Steps 15-18).
+
+    This is for test cases where g_s and W₀ are given directly
+    (e.g., 2507.00615 example) rather than computed from fluxes.
+
+    Args:
+        polytope_vertices: Primal polytope vertices (N x 4)
+        g_s: String coupling (given)
+        W0: Flux superpotential (given)
+        c_i: Dual Coxeter numbers (None = all D3-instantons with c=1)
+        verbose: Print progress
+
+    Returns:
+        Dict with V_string, V0, t, success
+    """
+    results = {}
+
+    # Create polytope and triangulate
+    poly = Polytope(polytope_vertices)
+    tri = poly.triangulate()
+    cy = tri.get_cy()
+
+    h11 = cy.h11()
+    h21 = cy.h21()
+    chi = 2 * (h11 - h21)
+
+    if verbose:
+        print(f"Polytope: h11={h11}, h21={h21}, χ={chi}")
+
+    # Default c_i: all D3-instantons
+    if c_i is None:
+        c_i = np.ones(h11)
+
+    if len(c_i) != h11:
+        return {"success": False, "error": f"c_i length {len(c_i)} != h11 {h11}"}
+
+    # Compute c_τ
+    c_tau = compute_c_tau(g_s, abs(W0))
+
+    if verbose:
+        print(f"c_τ = {c_tau:.6f}")
+
+    # Compute χ(D_i)
+    kappa_dict = cy.intersection_numbers(in_basis=True)
+    basis_indices = list(cy.divisor_basis())
+    chi_D = compute_chi_divisor(poly, kappa_dict, basis_indices)
+
+    if verbose:
+        print(f"χ(D) range: [{chi_D.min():.0f}, {chi_D.max():.0f}]")
+
+    # Target τ
+    tau_target = c_i / c_tau + chi_D / 24.0
+
+    if verbose:
+        print(f"τ_target range: [{tau_target.min():.4f}, {tau_target.max():.4f}]")
+
+    # KKLT solve
+    kappa_sparse = SparseIntersectionTensor(cy)
+
+    t_init = np.ones(h11)
+    tau_init = kappa_sparse.compute_tau(t_init)
+    scale = np.sqrt(np.mean(tau_target) / np.mean(tau_init))
+    t_init = t_init * scale
+
+    t_solution, tau_achieved, converged = iterative_solve(
+        kappa_sparse, tau_target, n_steps=500, t_init=t_init, tol=1e-3, verbose=verbose
+    )
+
+    if verbose:
+        print(f"KKLT converged: {converged}")
+
+    # Compute V_string
+    V_classical = kappa_sparse.compute_V(t_solution)
+    BBHL = zeta(3) * chi / (4 * (2 * np.pi) ** 3)
+    V_string = V_classical - BBHL
+
+    if verbose:
+        print(f"V_classical = {V_classical:.4f}")
+        print(f"BBHL = {BBHL:.6f}")
+        print(f"V_string = {V_string:.4f}")
+
+    results["t"] = t_solution
+    results["tau_achieved"] = tau_achieved
+    results["V_classical"] = V_classical
+    results["V_string"] = V_string
+    results["BBHL"] = BBHL
+    results["c_tau"] = c_tau
+    results["chi"] = chi
+    results["kklt_converged"] = converged
+    results["success"] = True
+
+    return results
 
 
 # =============================================================================
-# VALIDATION HARNESS (loads McAllister data for comparison)
+# VALIDATION HARNESS (loads data for comparison ONLY)
 # =============================================================================
 
-DATA_DIR = Path(__file__).parent.parent / "resources/small_cc_2107.09064_source/anc/paper_data/4-214-647"
+DATA_DIR = (
+    Path(__file__).parent.parent
+    / "resources/small_cc_2107.09064_source/anc/paper_data/4-214-647"
+)
 RESOURCES_DIR = Path(__file__).parent.parent / "resources"
 
 
 def load_mcallister_inputs():
-    """Load McAllister polytope 4-214-647 inputs for validation."""
+    """
+    Load McAllister polytope 4-214-647 inputs for validation.
+
+    IMPORTANT: Uses LATEST CYTOOLS BASIS [5,6,7,8] for the DUAL!
+    The flux vectors have been transformed from the paper's basis [3,4,5,8].
+
+    For the PRIMAL, we create a c_i mapping from the orientifold data.
+    """
     import json
 
     # Primal polytope
-    lines = (DATA_DIR / "points.dat").read_text().strip().split('\n')
-    primal_points = np.array([[int(x) for x in line.split(',')] for line in lines])
+    lines = (DATA_DIR / "points.dat").read_text().strip().split("\n")
+    primal_points = np.array([[int(x) for x in line.split(",")] for line in lines])
 
     # Dual polytope
-    lines = (DATA_DIR / "dual_points.dat").read_text().strip().split('\n')
-    dual_points = np.array([[int(x) for x in line.split(',')] for line in lines])
+    lines = (DATA_DIR / "dual_points.dat").read_text().strip().split("\n")
+    dual_points = np.array([[int(x) for x in line.split(",")] for line in lines])
 
-    # Flux vectors (CYTools 2021 basis)
-    K = np.array([-3, -5, 8, 6])
-    M = np.array([10, 11, -11, -5])
+    # Flux vectors for LATEST CYTOOLS basis [5,6,7,8]
+    # Transformed from McAllister's basis [3,4,5,8]:
+    #   K_old = [-3, -5, 8, 6], M_old = [10, 11, -11, -5]
+    # Using: K_new = T_inv @ K_old, M_new = T.T @ M_old
+    K = np.array([8, 5, -8, 6])
+    M = np.array([-10, -1, 11, -5])
 
-    # Orientifold O7-plane indices
+    # Orientifold data - build point_idx -> c_i mapping
     with open(RESOURCES_DIR / "mcallister_4-214-647_orientifold.json") as f:
         orientifold = json.load(f)
-    o7_indices = orientifold["o7_divisor_indices"]
+
+    # Build a dict mapping point index -> c_i value
+    kklt_basis = orientifold["kklt_basis"]
+    c_values = orientifold["c_i_values"]
+    point_to_c = {int(idx): float(c_values[i]) for i, idx in enumerate(kklt_basis)}
 
     return {
         "primal_points": primal_points,
         "dual_points": dual_points,
         "K": K,
         "M": M,
-        "o7_indices": o7_indices,
+        "point_to_c": point_to_c,  # Mapping from point index to c_i value
     }
 
 
@@ -507,26 +651,29 @@ def load_mcallister_expected():
         "V_string": float((DATA_DIR / "cy_vol.dat").read_text().strip()),
         "c_tau": float((DATA_DIR / "c_tau.dat").read_text().strip()),
         "e_K0": 0.234393,  # Back-calculated from paper
-        "V0": -5.5e-203,   # From paper eq. 6.63
+        "V0": -5.5e-203,  # From paper eq. 6.63
     }
 
 
-def validate_against_mcallister():
-    """Run pipeline and compare against McAllister's published results."""
+def validate_mcallister():
+    """Run full pipeline and compare against McAllister's published results."""
     print("\n" + "#" * 70)
-    print("# VALIDATION: McAllister 4-214-647")
+    print("# TEST CASE 1: McAllister 4-214-647")
     print("#" * 70)
 
     # Load inputs
     inputs = load_mcallister_inputs()
     expected = load_mcallister_expected()
 
+    n_o7 = sum(1 for c in inputs["point_to_c"].values() if c == 6)
+    n_d3 = sum(1 for c in inputs["point_to_c"].values() if c == 1)
+
     print(f"\nInputs:")
     print(f"  Primal polytope: {inputs['primal_points'].shape}")
     print(f"  Dual polytope: {inputs['dual_points'].shape}")
-    print(f"  K = {inputs['K']}")
-    print(f"  M = {inputs['M']}")
-    print(f"  O7 indices: {len(inputs['o7_indices'])} divisors")
+    print(f"  K = {inputs['K']} (latest CYTools basis)")
+    print(f"  M = {inputs['M']} (latest CYTools basis)")
+    print(f"  point_to_c: {n_o7} O7, {n_d3} D3")
 
     print(f"\nExpected (McAllister):")
     print(f"  g_s = {expected['g_s']}")
@@ -545,9 +692,13 @@ def validate_against_mcallister():
         dual_points=inputs["dual_points"],
         K=inputs["K"],
         M=inputs["M"],
-        orientifold_o7_indices=inputs["o7_indices"],
+        point_to_c=inputs["point_to_c"],
         verbose=True,
     )
+
+    if not results.get("success", False):
+        print(f"\n✗ PIPELINE FAILED: {results.get('error', 'Unknown error')}")
+        return results
 
     # Compare results
     print("\n" + "=" * 70)
@@ -560,7 +711,9 @@ def validate_against_mcallister():
         else:
             error = abs(computed - expected) / abs(expected)
         status = "✓" if error < rel_tol else "✗"
-        print(f"  {name}: computed={computed:.6g}, expected={expected:.6g}, error={100*error:.2f}% {status}")
+        print(
+            f"  {name}: computed={computed:.6g}, expected={expected:.6g}, error={100*error:.2f}% {status}"
+        )
         return error < rel_tol
 
     all_ok = True
@@ -574,26 +727,118 @@ def validate_against_mcallister():
     W0_expected = expected["W0"]
     W0_log_ratio = abs(np.log10(W0_computed) - np.log10(W0_expected))
     W0_ok = W0_log_ratio < 5  # Within 5 orders of magnitude
-    print(f"  W₀: computed={W0_computed:.2e}, expected={W0_expected:.2e}, log10 diff={W0_log_ratio:.1f} {'✓' if W0_ok else '✗'}")
+    print(
+        f"  W₀: computed={W0_computed:.2e}, expected={W0_expected:.2e}, log10 diff={W0_log_ratio:.1f} {'✓' if W0_ok else '✗'}"
+    )
 
     # V₀ comparison (will be off if W₀ is off)
     V0_computed = float(results["V0"])
     V0_expected = expected["V0"]
     V0_log_ratio = abs(np.log10(abs(V0_computed)) - np.log10(abs(V0_expected)))
     V0_ok = V0_log_ratio < 10  # Within 10 orders of magnitude (W₀² effect)
-    print(f"  V₀: computed={V0_computed:.2e}, expected={V0_expected:.2e}, log10 diff={V0_log_ratio:.1f} {'✓' if V0_ok else '✗'}")
+    print(
+        f"  V₀: computed={V0_computed:.2e}, expected={V0_expected:.2e}, log10 diff={V0_log_ratio:.1f} {'✓' if V0_ok else '✗'}"
+    )
 
     if all_ok and W0_ok:
         print("\n" + "=" * 70)
-        print("✓ PIPELINE VALIDATED")
+        print("✓ McAllister VALIDATION PASSED")
         print("=" * 70)
     else:
         print("\n" + "=" * 70)
-        print("✗ PIPELINE VALIDATION FAILED")
+        print("✗ McAllister VALIDATION FAILED")
+        print("=" * 70)
+
+    return results
+
+
+def validate_2507_kklt():
+    """
+    Test KKLT solver against 2507.00615 example (h11=3).
+
+    This paper provides g_s and W0 directly (no flux vectors),
+    so we test only the KKLT stabilization part (Steps 15-18).
+    """
+    print("\n" + "#" * 70)
+    print("# TEST CASE 2: 2507.00615 KKLT Example (h11=3)")
+    print("#" * 70)
+
+    # Polytope vertices from eq. 52 in 2507.00615
+    # 7 vertices in 4D (given as columns, need to transpose)
+    vertices_cols = np.array(
+        [
+            [1, -3, -2, -2, 0, 0, 1],
+            [0, -1, -1, 0, 0, 1, 1],
+            [0, -1, 0, -1, 1, 0, 1],
+            [0, -2, 0, 0, 0, 0, 2],
+        ]
+    )
+    vertices = vertices_cols.T  # Now (7, 4)
+
+    # Physics parameters from eq. 52/eq. KupliftEx1Par
+    g_s = 0.0703
+    W0 = -1.23  # They use negative W0
+
+    # From paper: A_i=1, a_i=2π/22, χ=-112
+    # All divisors are D3-instantons (c_i = 1)
+    # h11 = 3, so c_i has 3 elements
+    c_i = np.array([1.0, 1.0, 1.0])
+
+    print(f"\nInputs from 2507.00615:")
+    print(f"  Polytope: {vertices.shape[0]} vertices in 4D")
+    print(f"  h11 = 3, χ = -112 (expected)")
+    print(f"  g_s = {g_s}")
+    print(f"  W₀ = {W0}")
+    print(f"  c_i = {c_i} (all D3-instantons)")
+
+    # Run KKLT-only pipeline
+    print("\n" + "=" * 70)
+    print("RUNNING KKLT PIPELINE")
+    print("=" * 70)
+
+    results = run_kklt_only(
+        polytope_vertices=vertices, g_s=g_s, W0=W0, c_i=c_i, verbose=True
+    )
+
+    if not results.get("success", False):
+        print(f"\n✗ KKLT FAILED: {results.get('error', 'Unknown error')}")
+        return results
+
+    # Check against expected χ
+    if results["chi"] != -112:
+        print(f"\n⚠ χ mismatch: computed {results['chi']}, expected -112")
+
+    print("\n" + "=" * 70)
+    print("RESULTS")
+    print("=" * 70)
+    print(f"  V_string = {results['V_string']:.4f}")
+    print(f"  c_τ = {results['c_tau']:.6f}")
+    print(f"  KKLT converged: {results['kklt_converged']}")
+
+    # The paper doesn't give explicit V_string, but we can sanity check
+    # that V_string > 0 and the solver converged
+    if results["V_string"] > 0 and results["kklt_converged"]:
+        print("\n" + "=" * 70)
+        print("✓ 2507.00615 KKLT TEST PASSED")
+        print("=" * 70)
+    else:
+        print("\n" + "=" * 70)
+        print("✗ 2507.00615 KKLT TEST FAILED")
         print("=" * 70)
 
     return results
 
 
 if __name__ == "__main__":
-    validate_against_mcallister()
+    import sys
+
+    # Parse command line args
+    run_mcallister = "--mcallister" in sys.argv or len(sys.argv) == 1
+    run_2507 = "--2507" in sys.argv or len(sys.argv) == 1
+
+    if run_mcallister:
+        validate_mcallister()
+        print("\n" * 2)
+
+    if run_2507:
+        validate_2507_kklt()

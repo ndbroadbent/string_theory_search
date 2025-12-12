@@ -68,9 +68,9 @@ def setup_cytools_2024():
     for mod in mods_to_remove:
         del sys.modules[mod]
 
-    # Remove 2021 path, add parent's cytools
+    # Remove 2021 path, add latest cytools
     sys.path.pop(0)
-    sys.path.insert(0, str(Path(__file__).parent.parent.parent / "cytools_source"))
+    sys.path.insert(0, str(Path(__file__).parent.parent / "vendor/cytools_latest/src"))
 
     from cytools import Polytope as Polytope2024
 

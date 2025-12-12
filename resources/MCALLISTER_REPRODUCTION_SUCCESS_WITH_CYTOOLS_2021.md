@@ -120,7 +120,7 @@ mcallister_2107/
 ├── .mise.toml              # Python 3.9
 ├── pyproject.toml          # Dependencies
 ├── verify_basis_alignment.py   # Confirms basis match
-├── derive_racetrack.py     # Derives g_s, W₀ from GV
+├── compute_derived_racetrack.py     # Derives g_s, W₀ from GV
 └── full_pipeline_from_data.py        # Reproducing with shortcuts
 
 vendor/

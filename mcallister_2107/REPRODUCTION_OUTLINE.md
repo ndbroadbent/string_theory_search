@@ -389,7 +389,7 @@ This search is what makes the problem hard in general. For reproduction, we use 
 | 5-7 | ✅ | CYTools | `cy.h11()`, `cy.h21()`, `cy.chi()` |
 | 8 | ✅ | CYTools | `cy.compute_gvs(min_points=N)` via cygv |
 | 9-11 | ✅ | `full_pipeline_from_data.py` | e^{K₀} = 0.234393 ✓ |
-| 12-14 | ✅ | `derive_racetrack.py`, `full_pipeline_from_data.py` | g_s, W₀ match |
+| 12-14 | ✅ | `compute_derived_racetrack.py`, `full_pipeline_from_data.py` | g_s, W₀ match |
 | 15 | ✅ | `compute_target_tau.py`, `compute_chi_divisor.py` | 2.4% error (GV only) |
 | 16 | ⚠️ | `compute_kklt_iterative.py` | Need GV integration |
 | 17 | ✅ | `compute_V_string.py`, `verify_V_string.py` | 4711.83 exact ✓ |
@@ -403,7 +403,7 @@ This search is what makes the problem hard in general. For reproduction, we use 
 | `compute_divisor_cohomology.py` | 3 | Compute h^i(D) via cohomCalg | ✅ |
 | `compute_rigidity_combinatorial.py` | 3 | Rigidity via dual face interior pts | ✅ |
 | `compute_c_i.py` | 3 | Dual Coxeter numbers c_i | ✅ |
-| `derive_racetrack.py` | 12-14 | Build racetrack, solve for g_s, W₀ | ✅ |
+| `compute_derived_racetrack.py` | 12-14 | Build racetrack, solve for g_s, W₀ | ✅ |
 | `compute_target_tau.py` | 15 | c_τ = 2π/(g_s × ln(1/W₀)) | ✅ |
 | `compute_chi_divisor.py` | 15 | χ(D) = 12×χ(O_D) - D³ (Braun) | ✅ 2.4% |
 | `compute_gv_invariants.py` | 15-16 | GV via cy.compute_gvs() | ✅ |

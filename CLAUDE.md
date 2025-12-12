@@ -43,7 +43,7 @@ Python package for analyzing Calabi-Yau manifolds from toric geometry.
 CYTools 2021 (McAllister): basis [3,4,5,8], K=[-3,-5,8,6], M=[10,11,-11,-5]
 CYTools 2025 (Latest):     basis [5,6,7,8], K=[8,5,-8,6],  M=[-10,-1,11,-5]
 ```
-See `mcallister_2107/LATEST_CYTOOLS_RESULT.md` for transformation details.
+See `mcallister_2107/LATEST_CYTOOLS_CONVERSION_RESULT.md` for transformation details.
 
 **What CYTools computes:**
 - Polytope analysis (reflexivity, vertices, lattice points)
@@ -189,6 +189,19 @@ config.server.toml   - server config (/data/polytopes path)
 - Uses CYTools for polytope analysis, triangulations, intersection numbers
 - Uses cymyc (JAX) for numerical CY metrics
 - Computes: gauge couplings, cosmological constant, generation count
+
+### CRITICAL: This is Theoretical Physics, Not Normal Software
+
+**This is not building a SaaS. This is high energy theory physics. This is formal verification. This is launching rockets.**
+
+The standard of correctness here is absolute. A single sign error, a single wrong index, a single misunderstood coordinate system will produce garbage that looks plausible. There are no "close enough" results - either the physics is exactly right or it's meaningless.
+
+### CRITICAL: No Shortcuts, No Masking Problems
+**This entire process requires deep, perfect understanding. No stone left unturned.**
+
+DO NOT mask problems or take shortcuts. DO NOT use fallbacks or cheat to get tests or scripts passing. If you do that, you will save an hour now and waste days or weeks later.
+
+Every discrepancy must be understood completely. Every formula must be verified from first principles. If something doesn't match, STOP and figure out why - don't paper over it.
 
 ### CRITICAL: No Silent Fallbacks
 **NEVER write code that silently falls back to approximations or default values when a computation fails.**
@@ -379,14 +392,43 @@ The workflow is:
 
 Until we can reproduce McAllister, our GA results are meaningless garbage.
 
-### McAllister Data (resources/small_cc_2107.09064_source/anc/paper_data/4-214-647/)
-- `points.dat`: Primal polytope (294 points, h11=214, h21=4)
-- `dual_points.dat`: Dual polytope (12 points, h11=4, h21=214)
-- `kahler_param.dat`: 214 Kähler parameters (for primal, NOT dual)
-- `basis.dat`: 214 divisor basis indices for primal (NOT 4 basis divisors!)
-- `g_s.dat`: 0.00911134
-- `W_0.dat`: 2.30012e-90 (flux superpotential - requires periods to compute)
-- `cy_vol.dat`: 4711.83 (Einstein frame)
+### McAllister Data (resources/small_cc_2107.09064_source/anc/paper_data/)
+
+**CRITICAL: Read `readme.txt` first!** It explains all data files in detail.
+
+**Five examples in the paper:**
+| Folder | h²¹ | h¹¹ | Notes |
+|--------|-----|-----|-------|
+| `4-214-647` | 4 | 214 | Primary test case (highest h¹¹) |
+| `5-113-4627-main` | 5 | 113 | |
+| `5-113-4627-alternative` | 5 | 113 | Alternative flux choice |
+| `5-81-3213` | 5 | 81 | |
+| `7-51-13590` | 7 | 51 | |
+
+Key files (in each folder):
+- `points.dat`: Primal polytope vertices
+- `dual_points.dat`: Dual polytope vertices
+- `g_s.dat`: String coupling
+- `W_0.dat`: Flux superpotential magnitude
+- `cy_vol.dat`: CY volume (string frame, approximate KKLT vacuum)
+
+**CRITICAL: basis.dat vs kklt_basis.dat are DIFFERENT:**
+- `basis.dat`: Snapshot of CYTools 2021's divisor basis (214 indices for h11=214)
+- `kklt_basis.dat`: Indices of divisors that **contribute to the superpotential**
+- `target_volumes.dat`: The **c_i values** (dual Coxeter numbers: 6 for O7, 1 for D3)
+
+**CRITICAL: CYTools version differences:**
+- McAllister's data files are **snapshots** from CYTools 2021
+- Latest CYTools generates **different basis AND triangulation** for the same polytope
+- `basis.dat` from McAllister = CYTools 2021 basis [3,4,5,8] for h21=4
+- Latest CYTools auto-generates basis [5,6,7,8] for the same polytope
+- Flux vectors (K, M) must be **transformed** between bases (see transformation rules below)
+- Use `mcallister_2107/transform_km_to_new_cytools_basis.py` to convert
+
+**CRITICAL: corrected_* vs uncorrected files:**
+- `kahler_param.dat`: Approximate KKLT (ignoring instanton corrections)
+- `corrected_kahler_param.dat`: Actual KKLT vacuum (WITH instanton corrections)
+- Same for `heights.dat` vs `corrected_heights.dat`, `cy_vol.dat` vs `corrected_cy_vol.dat`
 
 ### Key Insight: Primal vs Dual
 - The genome must support BOTH primal (h11=214) and dual (h11=4) polytopes
@@ -395,7 +437,7 @@ Until we can reproduce McAllister, our GA results are meaningless garbage.
 - CYTools works with either; physics_bridge should too
 
 ### CRITICAL: Latest CYTools Basis Transformation
-**See `mcallister_2107/LATEST_CYTOOLS_RESULT.md` for the validated configuration.**
+**See `mcallister_2107/LATEST_CYTOOLS_CONVERSION_RESULT.md` for the validated configuration.**
 
 CYTools versions use different divisor bases. We have successfully ported McAllister's
 configuration to the latest CYTools (2025):

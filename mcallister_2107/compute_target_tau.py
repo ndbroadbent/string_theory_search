@@ -88,7 +88,7 @@ def main():
 
     # Compute and verify c_τ
     # NOTE: McAllister's data files store values at 6 significant figures.
-    # In the actual pipeline, g_s and W0 come from derive_racetrack.py at
+    # In the actual pipeline, g_s and W0 come from compute_derived_racetrack.py at
     # full float64 precision, so c_tau will be computed more precisely.
     # This validation confirms our formula matches McAllister's to their
     # stored precision.
