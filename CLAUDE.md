@@ -22,7 +22,7 @@ Genetic algorithm searching through Calabi-Yau compactifications to find configu
 
 ## External Tools (../xxx_source/)
 
-### CYTools (`../cytools_source`)
+### CYTools (`vendor/cytools_latest`)
 Python package for analyzing Calabi-Yau manifolds from toric geometry.
 **What it computes:**
 - Polytope analysis (reflexivity, vertices, lattice points)
@@ -103,7 +103,7 @@ When you find a relevant arXiv paper or other academic PDF during research:
 # Create venv with homebrew Python 3.11
 uv venv --python /opt/homebrew/opt/python@3.11/bin/python3.11 .venv
 uv sync
-uv pip install ../cytools_source ../cymyc_source
+uv pip install vendor/cytools_latest ../cymyc_source
 
 # Build with correct Python
 PYO3_PYTHON=/opt/homebrew/opt/python@3.11/bin/python3.11 cargo build --release --bin search
@@ -393,16 +393,16 @@ Physics values (invariant under transformation):
 - **V_string = 4711.83** (our validation target)
 - V₀ = -5.5 × 10⁻²⁰³ Mpl⁴
 
-### Searching the McAllister Paper (PDF)
-The paper has detailed formulas. Extract and search with:
+### Searching the McAllister Paper
+All papers in `resources/` have been converted to `.txt` for searching. Use `rg`:
 ```bash
 # Search for specific terms
-pdftotext resources/small_cc_2107.09064.pdf - | grep -i -B5 -A10 "vacuum energy"
-pdftotext resources/small_cc_2107.09064.pdf - | grep -i -B5 -A10 "cosmological constant"
-pdftotext resources/small_cc_2107.09064.pdf - | grep -i -B3 -A10 "e\^K\|eK"
+rg -i -B5 -A10 "vacuum energy" resources/small_cc_2107.09064.txt
+rg -i -B5 -A10 "cosmological constant" resources/small_cc_2107.09064.txt
+rg -i -B3 -A10 "e\^K|eK" resources/small_cc_2107.09064.txt
 
-# Extract specific sections (e.g., section 6.4 for polytope 4-214-647)
-pdftotext resources/small_cc_2107.09064.pdf - | grep -i -B5 -A30 "6.4.*Vacuum\|h.*4.*214"
+# Search across all papers
+rg -i "vacuum energy" resources/*.txt
 ```
 
 ## Critical Physics Formulas

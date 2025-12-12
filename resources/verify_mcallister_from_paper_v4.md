@@ -672,7 +672,7 @@ CYTools is 0-indexed. `dual_simplices.dat` may be 1-indexed. Always check and co
 ```python
 mpmath          # Arbitrary precision arithmetic (pip install mpmath)
 numpy           # Array operations
-cytools         # CY geometry (../cytools_source)
+cytools         # CY geometry (vendor/cytools_latest)
 ```
 
 Note: `cygv` is only needed if computing GV invariants from scratch.

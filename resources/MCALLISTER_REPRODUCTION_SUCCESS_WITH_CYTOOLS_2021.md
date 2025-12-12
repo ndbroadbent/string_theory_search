@@ -121,7 +121,7 @@ mcallister_2107/
 ├── pyproject.toml          # Dependencies
 ├── verify_basis_alignment.py   # Confirms basis match
 ├── derive_racetrack.py     # Derives g_s, W₀ from GV
-└── full_pipeline.py        # Complete end-to-end pipeline
+└── full_pipeline_from_data.py        # Reproducing with shortcuts
 
 vendor/
 ├── cytools_mcallister_2107/    # CYTools @ commit bb5b550 (June 2021)

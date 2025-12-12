@@ -16,7 +16,7 @@ dependencies = [
 dev-dependencies = []
 
 [tool.uv.sources]
-cytools = { path = "../cytools_source", editable = true }
+cytools = { path = "vendor/cytools_latest", editable = true }
 cymyc = { path = "../cymyc_source", editable = true }
 
 [tool.pytest.ini_options]

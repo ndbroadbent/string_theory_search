@@ -412,7 +412,7 @@ V_Einstein = V_String × g_s^{-3/2}
 ```
 mpmath          # Arbitrary precision (pip install mpmath)
 numpy           # Arrays
-cytools         # CY geometry (../cytools_source)
+cytools         # CY geometry (vendor/cytools_latest)
 ```
 
 Note: cygv is only needed if computing GV invariants from scratch. We can use McAllister's precomputed values or CYTools' `compute_gvs()`.

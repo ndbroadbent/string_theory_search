@@ -18,7 +18,7 @@ or need basis transformation.
 import numpy as np
 from fractions import Fraction
 import sys
-sys.path.insert(0, '/Users/ndbroadbent/code/cytools_source')
+sys.path.insert(0, 'vendor/cytools_latest')
 
 from cytools import Polytope
 

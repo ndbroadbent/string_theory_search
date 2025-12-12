@@ -30,7 +30,7 @@ Multiple workers run in parallel, each trying different evolved strategies. The 
 # 1. Install dependencies
 uv venv --python /opt/homebrew/opt/python@3.11/bin/python3.11 .venv
 uv sync
-uv pip install ../cytools_source ../cymyc_source
+uv pip install vendor/cytools_latest ../cymyc_source
 
 # 2. Build
 PYO3_PYTHON=/opt/homebrew/opt/python@3.11/bin/python3.11 cargo build --release --bin search
