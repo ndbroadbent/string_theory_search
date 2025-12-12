@@ -515,6 +515,15 @@ Key concepts:
 - Phase boundaries are walls in FI parameter space
 - Each phase has a geometric interpretation (orbifold, flop, etc.)
 
+### 7.8 Further Reading
+
+See **docs/TORIC_GEOMETRY.md** for comprehensive documentation on:
+- Heights and triangulations
+- Secondary fan structure
+- GLSM charge matrix
+- The projection from heights to Kähler moduli
+- Open problems
+
 ---
 
 ## REFERENCES
@@ -528,6 +537,14 @@ Key concepts:
 - [Hosono-Klemm-Theisen-Yau](https://arxiv.org/abs/hep-th/9308122) - Mirror symmetry and periods
 - [Picard-Fuchs for CY](https://arxiv.org/abs/0910.4215) - Picard-Fuchs equations
 - [Computational Mirror Symmetry](https://arxiv.org/abs/2303.00757) - Recent algorithms
+
+### Toric Geometry & GLSM
+- [Witten - Phases of N=2](https://arxiv.org/abs/hep-th/9301042) - GLSM, FI parameters, phase structure
+- [Bouchard - Toric intro](https://arxiv.org/abs/0901.3695) - FI params = Kähler volumes (eq 108)
+- [CYTools paper](https://arxiv.org/abs/2211.03823) - Kähler cone as projection of secondary cone
+- [MacFadden - Efficient CY algorithm](https://arxiv.org/abs/2309.10855) - Secondary cones and heights
+- [Segal - GKZ guide](https://arxiv.org/abs/2412.14748) - GKZ theory foundations
+- [Bouchard - CY toric](https://arxiv.org/abs/hep-th/0702063) - Symplectic quotients, GLSM
 
 ### Tools
 - Klemm-Kreuzer "Instanton" code: http://hep.itp.tuwien.ac.at/~kreuzer/CY/
