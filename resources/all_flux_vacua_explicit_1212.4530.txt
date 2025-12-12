@@ -1,0 +1,2017 @@
+DESY 12-246
+Prepared for submission to JHEP
+
+arXiv:1212.4530v1 [hep-th] 18 Dec 2012
+
+Finding all flux vacua in an explicit example
+
+Danny Martı́nez-Pedrera,a Dhagash Mehta,b Markus Rummel,a and
+Alexander Westphalc
+a II. Institut für Theoretische Physik der Universität Hamburg, D-22761 Hamburg, Ger-
+
+many
+b Department of Physics, Syracuse University, Syracuse, NY 13244, USA
+c Deutsches Elektronen-Synchrotron DESY, Theory Group, D-22603 Hamburg, Germany
+
+E-mail: dbmehta@syr.edu, markus.rummel@desy.de,
+alexander.westphal@desy.de
+Abstract: We explicitly construct all supersymmetric flux vacua of a particular
+Calabi-Yau compactification of type IIB string theory for a small number of flux
+carrying cycles and a given D3-brane tadpole. The analysis is performed in the large
+complex structure region by using the polynomial homotopy continuation method,
+which allows to find all stationary points of the polynomial equations that characterize the supersymmetric vacuum solutions. The number of vacua as a function of
+the D3 tadpole is in agreement with statistical studies in the literature. We calculate the available tuning of the cosmological constant from fluxes and extrapolate to
+scenarios with a larger number of flux carrying cycles. We also verify the range of
+scales for the moduli and gravitino masses recently found for a single explicit flux
+choice giving a Kähler uplifted de Sitter vacuum in the same construction.
+Keywords: moduli stabilization, string vacua, flux compactifications
+
+Contents
+1 Introduction
+
+1
+
+2 The complex structure of CP411169 [18]
+2.1 Effective reduction of the moduli space
+
+4
+7
+
+3 The polynomial homotopy continuation method
+3.1 The algorithm
+3.2 The scan
+3.3 Distribution of parameters
+3.4 de Sitter vacua via Kähler uplifting
+
+10
+10
+12
+13
+19
+
+4 The minimal flux method
+4.1 The algorithm
+4.2 The scan
+4.3 Results
+
+21
+21
+22
+24
+
+5 Conclusions
+
+26
+
+1
+
+Introduction
+
+The question of the vacuum states of string theory has been an outstanding problem in the field since its founding days. Those vacua which could describe our
+world are of particular interest. Apart from a standard model sector including the
+corresponding gauge groups and matter in the right representations of these gauge
+groups, such vacua should have a positive vacuum energy that is extremely small
+in terms of the natural scale of gravity, the Planck / string scale [1–3]. In addition, one may wish for 4D N = 1 supersymmetry for its power to keep control over
+quantum corrections to the theory above the supersymmetry breaking / electroweak
+scale. There has been remarkable progress in the construction of such de Sitter (dS)
+vacua with stabilized geometric moduli in the past years [4–6]. The moduli are 4D
+massless scalar fields parametrizing the geometric deformation modes of the compact
+six-dimensional spaces all viable Kaluza-Klein type vacua of string theory need to
+describe our effectively four-dimensional reality.
+A corner of the string theory landscape where moduli stabilization can be addressed very explicitly is type IIB compactified on orientifolded Calabi-Yau threefolds. The four-dimensional effective action of the geometric moduli is given by an
+
+–1–
+
+N = 1 theory of a set of chiral multiplets consisting of the axio-dilaton, h1,1 Kähler
+moduli, and h2,1 complex structure moduli [7]. Recent years saw a progress for the
+stabilization of the dilaton and the complex structure moduli from the use of quantized fluxes of three form field strength of the Ramond-Ramond and Neveu-Schwarz
+sector of type IIB string theory [5]. The flux stabilization procedure operates supersymmetrically at a high scale. The Kähler moduli are flat directions at tree level, i.e.
+they do not obtain a scalar potential due to the no-scale structure of type IIB compactified on Calabi-Yau [8, 9]. We can use the breaking of this no-scale structure by
+non-perturbative [6] and perturbative [10, 11] effects to stabilize the Kähler moduli
+at a parametrically lower scale than the complex structure moduli. This stabilization
+produces in an AdS vacuum with unbroken supersymmetry [6], an AdS vacuum with
+spontaneously broken supersymmetry with an exponentially large volume [12, 13] or
+directly in a dS vacuum with spontaneously broken supersymmetry [14, 15].
+If the stabilization of the geometric moduli does not directly lead to a dS vacuum,
+an additional uplifting sector has to be added. The uplifting may arise for instance by
+anti D3 branes [6], D-terms [16–18], F-terms from matter fields [19], metastable vacua
+in gauge theories [20] or dilaton dependent non-perturbative effects [21]. Concerning
+the smallness of the cosmological constant, statistical arguments show that due to the
+enormous amount of possible flux configurations there is an exponential abundance
+of isolated potential dS vacua [22–24]. For a sufficiently large number of complex
+structure moduli h2,1 (typically O(100)) the number of flux vacua and, in turn, also
+2,1
+the number of dS vacua scaling like eO(1) h is large enough to produce vacuum
+energies with average spacing . 10−120 . This enables the flux vacuum landscape
+in string theory in principle to accommodate the observed vacuum energy of our
+Universe.
+In this paper, we study the flux vacua of a particular Calabi-Yau: The degree 18
+hypersurface in a 4 complex dimensional projective space X3 ≡ CP411169 [18] in the
+large complex structure limit. This manifold is the standard working example of both
+the large volume scenario (LVS) [12, 13] and the Kähler uplifting scenario [14, 15]
+and its geometric properties have been worked out in great detail in [25]. It has
+h1,1 = 2 Kähler moduli and h2,1 = 272 complex structure moduli. We switch on
+flux along six three-cycles that correspond to two complex structure moduli that are
+invariant under a certain discrete symmetry that can be used to construct the mirror
+manifold [26]. For this purpose we review a known argument that a supersymmetric
+vacuum in these two complex structure moduli corresponds to a supersymmetric
+vacuum of all 272 complex structure moduli [27, 28].
+For an explicit construction of the flux vacua we use the fact that the prepotential
+G of the two complex structure moduli space has been worked out in [25] in the large
+complex structure limit. We apply two computational methods to find flux vacua on
+
+–2–
+
+this manifold:
+• The polynomial homotopy continuation method [29] allows us to find all stationary points of the polynomial equations that characterize the supersymmetric
+vacuum solutions. The fluxes fi ∈ Z appear as parameters in these equations
+and are restricted by the D3 tadpole L which depends on the chosen brane
+and gauge flux configuration imposed on the manifold. Since the restriction
+P 2
+is of the form
+fi ≤ L this method allows us to explicitly construct for the
+first time all flux vacua in the large complex structure limit that are consistent
+with a given D3 tadpole L by applying the polynomial homotopy continuation
+method at each point in flux parameter space. This method has the attractive
+feature to be highly parallelizable.
+• The minimal flux method [28] finds flux parameters that are consistent with
+a given D3 tadpole L for a given set of vacuum expectation values (VEVs) of
+the complex structure moduli. Hence it is in a sense complementary to the
+polynomial homotopy continuation method where the role of parameters and
+solutions is exchanged with respect to this method. However, it is not possible
+to find all flux vacua for a given tadpole L with this method.
+The obtained solution space of flux vacua is analyzed for several physically interesting properties. For the polynomial homotopy continuation method, we find that
+for the ∼ 50, 000 flux choices contained in our maximum D3-brane tadpole L = 34 of
+our scan there are ∼ 20, 000 solutions in the large complex structure limit. We find a
+preference of strongly coupled vacua gs & 1 and preference for values of O(101 − 103 )
+for the flux superpotential W0 . The number of vacua is
+Nvac ≃ (0.52 ± 0.04) L2.92±0.03 ,
+
+(1.1)
+
+compared to ∼ 0.03L3 expected form statistical analysis [24, 30]. The gravitino
+mass is typically m23/2 = O(10−3 ) · ( 100
+)2 MP2 and the masses of the complex structure
+V
+moduli and the dilaton scale like O(10−3 − 102 ) · ( 100
+)2 MP2 , where V is the Volume
+V
+of X3 in string units.
+The average spacing of the flux superpotential in our solution set can be used to
+estimate the available fine-tuning ∆Λ/Λ of the cosmological constant Λ as
+2,1
+∆Λ
+≃ (5.1 ± 0.3) L−(0.93±0.006) (heff +1) ,
+Λ
+
+(1.2)
+
+2,1
+where heff
+is the number of complex structure moduli with non-zero flux on the cor2,1
+responding three-cycles. Eq. (1.2) is obtained as a fit for L ≤ 34 and heff
+= 2. It
+can be used to estimate the available fine-tuning of the cosmological constant to for
+instance ∆Λ/Λ ∼ 10−100 for L = 500 and h2,1
+eff = 40. These are typical values for
+
+–3–
+
+Calabi-Yau manifolds that are hypersurfaces in toric varieties with D7 branes and
+O7 planes introduced to stabilize the Kähler moduli and break supersymmetry.
+The explicit brane and gauge flux construction in [15] allows us to answer the question how many of theses supersymmetric flux vacua allow an uplift to dS via Kähler
+uplifting. Depending on the available values for the one-loop determinant from gaugino condensation used to stabilize the Kähler moduli in this setup, we find that for a
+fraction of about 10−4 of all flux vacua up to a given D3-brane tadpole this mechanism
+can be applied to obtain a dS vacuum.
+For the minimal flux method, we find ∼ 1000 flux vacua with L < 500 out of
+∼ 107 parameter points of our scan. This method allows us to control the region in
+W0 and moduli space where we are intending to find flux vacua. Hence, we more
+easily access the regions of weak string coupling and the large complex structure
+limit compared to the polynomial homotopy continuation method. For this much
+smaller set of flux vacua constructed with the minimal flux method, the fraction of
+Kähler uplifted dS minima is about 10%. This is a considerably higher fraction of
+vacua compared to the polynomial homotopy continuation method which is due to
+the fact that the minimal flux method naturally finds values for W0 in a region where
+Kähler uplifting is applicable.
+Our results are complementary to statistical analysis by [24, 30].1 The uniform
+distribution of physical quantities as for instance the gravitino mass and the vacuum
+energy density in the landscape has recently been questioned in general [34–36] and
+in the context of Kähler uplifting [37–39]. Hence, our results present an important
+check of the general results found in [24, 30] on a very realistic examples X3 , especially
+since we are able to construct the complete solution space of flux vacua for a given
+tadpole L.
+In section 2, we review the effective 4d, N = 1 description of the complex structure moduli and the dilaton as well as the reduction of the full moduli space to
+two complex structure moduli. The scans for flux vacua with the polynomial homotopy continuation method and the minimal flux method are presented in section 3
+respectively section 4. We conclude in section 5.
+
+The complex structure of CP411169 [18]
+
+2
+
+The effective 4d, N = 1 description of the moduli space of the h2,1 = 272 complex
+structure moduli of X3 is given by the Kähler potential K and superpotential W0 of
+1
+
+For explicitly constructed vacua on two different two parameter models in the vicinity of the
+Landau-Ginzburg respectively conifold point see [31]. For a study of flux vacua of X3 in the context
+of accidental inflation [32] see [33].
+
+–4–
+
+the theory.2 We choose a symplectic basis {Aa , B b } for the b3 = 2h2,1 + 2 three-cycles
+Z
+Z
+Z
+Z
+b
+b
+b
+α =
+α ∧ β a = δa ,
+βa =
+βa ∧ αb = −δab ,
+(2.1)
+Aa
+
+Bb
+
+X3
+
+X3
+
+where {αb , β a } are the Poincaré dual cohomology elements to the three-cycles and
+a, b = 0, .., h2,1 .
+Having chosen a symplectic basis for the three-cycles, this defines a choice of
+coordinates ωa on complex structure moduli space via the period integrals over the
+holomorphic three-form Ω via
+Z
+Z
+ωa =
+Ω,
+Gb =
+Ω.
+(2.2)
+Bb
+
+Aa
+
+Note, that there are h2,1 + 1 coordinates ω0 , .., ωh2,1 even though there are only
+h2,1 complex structure moduli. This is because ω0 refers to the normalization of
+the holomorphic three-form Ω. The complex structure moduli can be defined via
+Ua ≡ νa + i ua = ωa /ω0 for i = a, .., h2,1 . The period vector Π(ωa ) = (Gb , ωa ) is
+inherited from a holomorphic function G(ωa ) of degree two in the ωa known as the
+prepotential via Gb = ∂b G of the underlying N = 2 Calabi-Yau compactification.
+The Kähler potential of the complex structure moduli Ua and the dilaton τ = σ+i s
+can then be written as
+
+ Z
+Kcs = − log −i
+Ω(Ua ) ∧ Ω̄(Ūa ) − log (−i(τ − τ̄ )) ,
+X3
+
+(2.3)
+= − log i(ω̄a Ga − ωa Ḡa ) − log (−i(τ − τ̄ )) ,
+
+= − log −iΠ† · Σ · Π − log (−i(τ − τ̄ )) ,
+where in the second line of eq. (2.3) we have introduced the symplectic matrix
+
+
+0 1
+Σ=
+,
+(2.4)
+−1 0
+and used the intersection formula
+Z
+h2,1 Z
+X
+X ∧Y =
+X3
+
+a=0
+
+X
+
+Aa
+
+Z
+
+Ba
+
+Y −
+
+Z
+
+Aa
+
+Y
+
+Z
+
+Ba
+
+X
+
+
+
+,
+
+(2.5)
+
+for general three-forms X and Y .
+The Gukov-Vafa-Witten flux superpotential is determined by the RR and NS flux
+F3 and H3 via [43]
+Z
+1
+W0 =
+(F3 − τ H3 ) ∧ Ω(Ua ) .
+(2.6)
+2π X3
+2
+
+For recent reviews see [40–42].
+
+–5–
+
+Due to the quantization of the three-form flux
+Z
+Z
+1
+1
+F3 = f1 a ∈ Z ,
+F 3 = f2 a ∈ Z ,
+(2π)2 α0 Aa
+(2π)2 α0 B a
+Z
+Z
+1
+1
+H3 = h1a ∈ Z ,
+H3 = h2a ∈ Z ,
+(2π)2 α0 Aa
+(2π)2 α0 B a
+
+(2.7)
+
+eq. (2.6) can be written as
+W0 = 2π [(f1 a − τ h1a )Ga − (f2 a − τ h2a )Ua ] ,
+
+(2.8)
+
+where we have set α0 = 1 and used again eq. (2.5) and the definition of the periods
+eq. (2.2).
+The D3-tadpole induced by turning on RR and NS flux is given by
+Z
+1
+L=
+H3 ∧ F3 = h · Σ · f = h1 f2 − h2 f1 .
+(2π)4 (α0 )2 X3
+The N = 1 supergravity scalar potential is given as
+
+
+V = eK K αβ̄ Dα W Dβ W − 3|W |2 ,
+
+(2.9)
+
+(2.10)
+
+where K = Kcs + Kk and
+
+Kk = −2 log V ,
+
+(2.11)
+
+is the Kähler potential of the Kähler moduli up to corrections in α0 and gs with V
+the volume of the Calabi-Yau X3 . The indices α and β in eq. (2.10) run over the
+dilaton, the h2,1 complex structure moduli and the h1,1 Kähler moduli. At tree-level,
+eq. (2.10) obeys a no-scale structure [8, 9] in the Kähler sector:
+K i̄ Di W Dj W = 3|W |2 ,
+
+for i, j = 1, .., h1,1 ,
+
+(2.12)
+
+such that
+¯
+
+V = eK K cd Dc W Dd W ,
+
+(2.13)
+
+where the indices c and d run over the moduli τ and Ua . The no-scale structure
+eq. (2.12) is broken by α0 corrections [10] and string loop corrections [11] in K, as
+well as non-perturbative corrections to the superpotential and K. However, these
+corrections are parametrically small in every moduli stabilization scenario where the
+overall volume of X3 is large. Hence, the scalar potential for the dilaton and complex
+structure moduli eq. (2.13) is positive semi-definite in this limit and a supersymmetric
+extremum given by a solution to the system of equations
+Dτ W = 0
+
+and
+
+DUa W = 0 ,
+
+–6–
+
+for a = 1, .., h2,1 ,
+
+(2.14)
+
+will always be a minimum, i.e. all eigenvalues of the second derivative matrix Vab are
+positive [13].
+Note that due to the appearance of the symplectic matrix, the tadpole eq. (2.9)
+is at first not positive definite. However, as has been discussed in [5, 24], imposing
+the supersymmetry conditions Da W = 0 results in G3 = F3 − τ H3 being imaginary
+self-dual (ISD). Since the ISD component of G3 always results in positive semidefinite contributions to the tadpole while the anti-ISD component of G3 always
+yields negative semi-definite contributions, a supersymmetric point always has L ≥ 0.
+This can be seen nicely if the ISD condition is displayed as [44]
+∗6 s H3 = −(F3 − σH3 ) ,
+
+(2.15)
+
+i.e. only h2,1 +1 of the original 2h2,1 +2 fluxes are independent once the ISD condition
+is invoked and
+Z
+Z
+Z p
+L∼
+H3 ∧ F3 ∼
+H3 ∧ ∗6 H3 ∼
+g̃|H3 |2 > 0 ,
+(2.16)
+X3
+
+X3
+
+X3
+
+where we have used eq. (2.15).
+The type IIB ten dimensional effective supergravity Lagrangian is invariant under
+SL(2, Z) transformations
+aτ + b
+with
+a, b, c, d ∈ Z and ad − bc = 1 ,
+cτ + d
+
+
+
+ 
+
+H3
+d c
+H3
+→
+·
+,
+F3
+b a
+F3
+
+τ→
+
+(2.17)
+
+which implies
+G3
+.
+(2.18)
+cτ + d
+As is easily verified, these transformations also leave the D3 tadpole eq. (2.9) invariant. When determining the solution space of flux vacua of X3 we have to make sure
+to consider only inequivalent vacua under the transformations eq. (2.17).
+G3 →
+
+2.1
+
+Effective reduction of the moduli space
+
+Consider the two parameter ψ, φ-family of threefolds CP411169 [18] given by the vanishing of the polynomials
+3
+2
+6 6 6
+18
+18
+x18
+1 + x2 + x3 + x4 + x5 − 18ψx1 x2 x3 x4 x5 − 3φx1 x2 x3 ,
+
+(2.19)
+
+i.e. all except two of the 272 complex structure moduli which correspond to monomials in the general degree 18 Calabi-Yau hypersurface equation have been set to zero.
+
+–7–
+
+As was discussed in [25], eq. (2.19) is invariant under a global Γ = Z6 × Z18 symmetry. This symmetry is used in the Greene-Plesser construction [26] to construct
+the mirror Calabi-Yau which in this case has h1,1 = 272 and h2,1 = 2. Furthermore,
+the moduli ψ and φ in eq. (2.19) describe the two complex structure moduli of this
+mirror manifold. As was pointed out in [45], the periods of the mirror agree with
+those of CP411169 [18] at the Γ symmetric point. Also, [45] shows that the complete set
+of h2,1 complex structure moduli can be divided into a Γ-invariant subspace and its
+complement. The moduli with trivial transformation are exactly those that do not
+vanish at the Γ symmetric point, in this case ψ and φ.
+To make use of the agreement of the prepotential for the complex structure sector
+of CP411169 [18] and its mirror in the large complex structure limit, it is useful to
+introduce the complex coordinates U1 and U2 that are related to ψ and φ as [25]
+1
+1 + 312q1 + 2q2 + 10260q12 − 540q1 q2 − q22
+q1
+
+− 901120q13 + 120420q12 q2 + 20q23 + . . . ,
+1
+X2 = −
+1 + 180q1 − 6q2 + 11610q12 + 180q1 q2 + 27q22
+q2
+
++ 514680q13 − 150120q12 q2 − 5040q1 q22 − 164q23 + . . . ,
+
+X1 = −
+
+(2.20)
+
+up to third order in the qj ≡ e2π i Uj with the large complex structure coordinates
+X1 =
+
+(18ψ)6
+3φ
+
+and
+
+X2 = (3φ)3 .
+
+(2.21)
+
+The large complex structure limit corresponds to Xj → ∞ which is equivalent to
+Im(Uj ) → ∞ as can be seen from eq. (2.20).
+There are two conifold singularities given by the equations [25]
+3
+
+X2 X1
+6
+3
+CF1 : (26244ψ + φ) = 1
+⇔
++ 1 = 1,
+27 432
+X2
+CF2 : φ3 = 1
+⇔
+= 1.
+27
+
+(2.22)
+
+Let us come back to the problem of finding supersymmetric extrema by solving
+eq. (2.14). As was noted in [28, 46], to find an extremum it is sufficient to turn on
+fluxes only along the six Γ-invariant three-cycles, i.e.
+f = (f11 , f12 , f13 , f21 , f22 , f23 , 0, ..., 0) and h = (h11 , h12 , h13 , h21 , h22 , h23 , 0, ..., 0) ,
+(2.23)
+having set to zero all the components along the b3 − 6 non-invariant three-cycles.
+It is then possible to achieve Da W = 0 for all 272 complex structure moduli,3 and
+3
+
+Note that orientifolding will project out some of the 272 complex structure moduli. Since the
+exact number of projected out directions depends on the position of the O-plane we stick to the
+upper bound of 272 for a general treatment.
+
+–8–
+
+hence to find a minimum of the positive definite tree-level no-scale scalar potential
+eq. (2.13). This is due to the fact that, for this Γ invariant flux, the symmetry Γ is
+realized at the level of the four-dimensional effective action. Note that the restriction
+to flux on the Γ invariant cycles is purely for simplicity, as the analysis of the complete
+272 dimensional complex structure moduli space is practically extremely challenging.
+Let us explain more detailed why the flux vector in eq. (2.23) generically provides
+a stable minimum of all 272 complex structure moduli [28, 46]. We first consider
+DŨa W0 = 0, where Ũa for a = 3, . . . , 272 denote the non-trivially transforming moduli under Γ = Z6 × Z18 . In the large complex structure limit, the prepotential G
+is a polynomial function of all h2,1 complex structure moduli that has to transform
+trivially under Γ, since if it would not, Γ could be used to fix the non-trivially transforming moduli.4 Hence, the non-trivially transforming Ũa have to appear at least
+quadratic in G in order to represent a Γ invariant contribution to G. This information, together with having switched on flux only along the Γ invariant directions, is
+sufficient to show
+W0,Ũa = KŨa = 0 at Ũa = 0 for a = 3, . . . , 272 ,
+
+(2.24)
+
+since W0,Ũa is a polynomial function which is at least linear in the Ũa , see eq. (2.8)
+and KŨa is a rational function which is at least linear in the numerator in the Ũa ,
+see eq. (2.3). Hence, DŨa W0 = W0,Ũa + KŨa W0 = 0 at Ũa = 0 for a = 3, . . . , 272.
+This reduces the full set of conditions Da W = 0 ∀a to the three equations
+DI W |Ũa =0 = 0
+
+for I = τ, U1 , U2 .
+
+(2.25)
+
+This is equivalent to set Ũa = 0 from the beginning and study the stabilization
+problem for the reduced case with two complex structure moduli, as we do in the
+following.
+In [25], the prepotential G for the two complex structure moduli U1 = ω1 /ω0 and
+U2 = ω2 /ω0 was derived via mirror symmetry in the large complex structure limit to
+be
+17ω0 ω1 3ω0 ω2 9ω12 3ω1 ω2 9ω13 + 9ω12 ω2 + 3ω1 ω22
+G(ω0 , ω1 , ω2 ) = ξω02 +
++
++
++
+−
+, (2.26)
+4
+2
+4
+2
+6ω0
+ζ(3)χ
+with ξ = 2(2π
+≃ −1.30843 i determined by the Euler number χ of the Calabi-Yau.
+i)3
+
+Eq. (2.26) receives instanton corrections which are given as
+
+1
+1215q12
+Ginst. (q1 , q2 ) =
+540q
++
++ 560q13 + 3q2 − 1080q1 q2 + 143370q12 q2
+1
+3
+(2π i)
+2
+
+2
+45q2
+244q23
+2
+−
++ 2700q1 q2 +
++ ... ,
+(2.27)
+2
+9
+4
+
+G completely determines the moduli space of the (before orientifolding) N = 2 moduli space.
+If it would not be invariant the complex structure moduli space would have been reduced, i.e. some
+flat directions lifted but this does not happen just because there exists a Γ symmetric point.
+
+–9–
+
+with qa = exp (2π i Ua ) and we have set ω0 = 1. The dots in eq. (2.27) denote
+higher powers in the qa which are suppressed in the large complex structure limit
+ua = Im(Ua ) & 1. We define the large complex structure limit via
+|Ginst. |
+≤ LCS ,
+|G|
+
+540e−2πu1
+≤ LCS
+(2π)3 |G|
+
+and
+
+3e−2πu2
+≤ LCS ,
+(2π)3 |G|
+
+(2.28)
+
+for small LCS . The two last condition in eq. (2.28) are imposed to ensure that there
+are no cancellations between the terms in Ginst. , i.e. the leading correction in e−2πua
+is actually small. Furthermore, to have a valid description of the complex structure
+moduli by G we have to ensure that we are not in the vicinity of the conifold points
+eq. (2.22), i.e.
+
+3
+X2 X1
+X2
++ 1 − 1 ≥ CF
+− 1 ≥ CF ,
+(2.29)
+and
+27 432
+27
+with small CF .
+
+3
+
+The polynomial homotopy continuation method
+
+We want to solve the non-linear eqs. (2.25) derived from the prepotential eq. (2.26)
+for the 6 real variables xi = u1 , u2 , s, ν1 , ν2 and σ. The parameters of these equations
+are the 12 fluxes f1 , f2 , h1 and h2 in eq. (2.23). Though systems of non-linear equations are extremely difficult to solve in general, if the non-linearity in the system is
+polynomial-like, then the recently developed algebraic geometry methods can rescue
+the situation. In particular, we use the so-called numerical polynomial homotopy
+continuation (NPHC) method [29] which finds all the solutions of the given system
+of polynomial equations. This method has been used in various problems in particle
+theory and statistical mechanics in Refs. [47–57].
+3.1
+
+The algorithm
+
+Here we briefly explain the NPHC method: for a system of polynomial equations,
+P (x) = 0, where P (x) = (p1 (x), . . . , pm (x))T and x = (x1 , . . . , xm )T , which is known
+to have isolated solutions, the Classical Bézout Theorem asserts that for generic
+Q
+values of coefficients, the maximum number of solutions in Cm is m
+i=1 di . Here, di
+is the degree of the ith polynomial. This bound, the classical Bézout bound (CBB),
+is exact for generic values [29, 58] for details.
+Based on the CBB, a homotopy can be constructed as
+H(x, t) = γ(1 − t)Q(x) + t P (x),
+
+(3.1)
+
+where γ is a generic complex number and t ∈ [0, 1). Q(x) = (q1 (x), . . . , qm (x))T is a
+system of polynomial equations with the following properties:
+
+– 10 –
+
+1. the solutions of Q(x) = H(x, 0) = 0 are known or can be easily obtained. Q(x)
+is called the start system and the solutions are called the start solutions,
+2. the number of solutions of Q(x) = H(x, 0) = 0 is equal to the CBB for P (x) =
+0,
+3. the solution set of H(x, t) = 0 for 0 ≤ t ≤ 1 consists of a finite number of
+smooth paths, called homotopy paths, each parameterized by t ∈ [0, 1), and
+4. every isolated solution of H(x, 1) = P (x) = 0 can be reached by some path
+originating at a solution of H(x, 0) = Q(x) = 0.
+The start system Q(x) = 0 can for example be taken to be
+
+ d1
+x1 − 1
+
+
+..
+Q(x) = 
+ = 0,
+.
+
+(3.2)
+
+xdmm − 1
+
+where di is the degree of the ith polynomial of the original system P (x) = 0. Eq. (3.2)
+Q
+is easy to solve and guarantees that the total number of start solutions is m
+i=1 di ,
+all of which are non-singular.
+We can then track all the paths corresponding to each solution of Q(x) = 0 from
+t = 0 to t = 1. The paths which reach P (x) = 0 = H(x, 1) are the solutions of
+P (x) = 0. By implementing an efficient path tracker algorithm, all isolated solutions
+of a system of multivariate polynomials system can be obtained because it is shown
+[29] that for a generic γ, there are no singularities (i.e., paths do not cross each other)
+for t ∈ [0, 1). In this respect, the NPHC method has a great advantage over all other
+known methods for finding stationary points.
+There are several sophisticated numerical packages well-equipped with path trackers such as Bertini[59], PHCpack [60], PHoM [61] and HOM4PS2 [58, 62]. We mainly
+use Bertini to get the results in this paper.
+We mean by a solution a set of values of variables which satisfies the eqs. (2.25)
+with tolerance 10−10 . All the solutions come with real and imaginary parts. A
+solution is a real solution if the imaginary part of each of the variables is less than
+or equal to the tolerance 10−6 (below which the number of real solutions does not
+change, i.e., it is robust for the problem at hand). All these solutions can be further
+refined to an arbitrary precision.
+The advantages of the homotopy based on the CBB are (1) the CBB is easy to
+compute, and (2) the start system based on the CBB can be solved quickly. The
+drawback of it is that the CBB does not take the sparsity of the system into account:
+systems arising in practice have far fewer solutions than the CBB, so a large portion
+of the computational effort is wasted.
+
+– 11 –
+
+Hence, one can also use homotopies based on tighter upper bounds. For example, one can compute the so-called 2-Homogeneous Bézout Bound or the BernsteinKhovanskii-Kushnirenko bound [63–65] which are tighter upper bounds. These two
+bounds were explained in Ref. [47, 54]. We note that, as with the CBB, the 2HomBB
+and BKK bound are also generically sharp with respect to the family of polynomial
+systems under consideration.
+There is yet another, rather more practical, way of solving a parametric system
+which is called Cheater’s homotopy [66, 67]: let us say we want to solve a parametric
+system, f~(~q; ~x) = ~0 where ~x are variables and ~q are parameters, in our case the fluxes.
+Now, it can be shown [66, 67] that the maximum number of complex solutions at
+any parameter point is the number of solutions at a generic parametric point. So our
+strategy is first to solve the system at a generic parameter point and then using the
+solutions at this point as the start solutions for the systems at all other parameterpoints. This homotopy is called cheater’s homotopy. A recently developed software,
+based on Bertini, called Paramotopy [68], precisely uses cheater’s homotopy and
+goes over a huge number of parameter points in parallel. The package is publicly
+not available yet though the respective research group has kindly given access to the
+code for the purpose of the computation in this paper. We will publish the details
+on the cheater’s homotopy and the package Paramotopy elsewhere [69].
+3.2
+
+The scan
+
+We define a set of flux parameters on which we apply the algorithm described in the
+previous section 3.1. Since we are only interested in supersymmetric flux vacua, we
+can make use of the ISD condition eq. (2.15) and define a flux configuration via
+H3 =
+
+
+
+h1
+h2
+
+
+
+and
+
+F3 =
+
+
+
+−h2
+h1
+
+
+
+,
+
+(3.3)
+
+with h1 , h2 ∈ Z3 . Note that since we have two complex structure moduli we have
+initially 2 · 2 + 2 = 6 flux parameters for both H3 and F3 but the ISD condition
+eq. (2.15) reduces this to the six parameters given in eq. (3.3). Furthermore, the D3
+tadpole eq. (2.9) becomes manifestly positive semi-definite, i.e.
+L = h21 + h22 .
+
+(3.4)
+
+To scan efficiently, we apply the paramotopy algorithm only to SL(2, Z) inequivalent flux configurations. Note that a configuration of the form eq. (3.3) transforms
+as
+ 0 
+
+ 0 
+
+h1
+d h1 − c h2
+f1
+b h1 − a h2
+0
+0
+H3 =
+=
+and
+F3 =
+=
+, (3.5)
+h02
+d h2 + c h1
+f20
+b h2 + a h1
+
+– 12 –
+
+under SL(2, Z) transformations, eq. (2.17). For general a, b, c and d, F30 in eq. (3.5)
+will not be of the form in eq. (3.3) but only for the 4 cases
+a = ±1, b = 0, c = 0, d = ±1
+
+a = 0, b = ±1, c = ∓1, d = 0 .
+
+and
+
+(3.6)
+
+This corresponds to the SL(2, Z) equivalent flux configurations
+
+
+h1
+h2
+
+
+
+∼
+=
+
+
+
+−h1
+−h2
+
+
+
+∼
+=
+
+
+
+−h2
+h1
+
+
+
+∼
+=
+
+
+
+h2
+−h1
+
+
+
+.
+
+(3.7)
+
+Note that the two transformations on the LHS of eq. (3.6) do not transform the
+dilaton τ 0 = τ while the two transformations on the RHS act as τ 0 = −1/τ .
+The number of SL(2, Z) inequivalent flux configurations in a spherical region
+√
+defined by a spherical constraint eq. (3.4) can be estimated as π 3 /(4 Γ[4])( L)6 ,
+using the formula for the volume of the n-sphere Vn (r) = π n/2 /Γ(n/2 + 1) rn . The
+factor 1/4 accounts for the 4 equivalent configurations in eq. (3.7). If we had switched
+on more flux n > 6 the number of lattice points grows very rapidly ∼ Ln/2 .
+For our scan, we choose L = 34 such that we scan over 52,329 parameter points
+(the above estimate yields 55,391). On the FermiLab cluster using 100 nodes each
+with 32 cores (each core with 2.0 GHz cloak speed), the calculation time in total is
+around 75, 000 hours, with 60 − 100 minutes per parameter point.
+3.3
+
+Distribution of parameters
+
+In this section, we want to discuss the distribution of the following parameters as
+results of the scan defined in the previous section 3.2:
+• u1 and u2 , to see how many points reach the large complex structure limit as
+defined in eq. (2.28).
+• τ , to identify regions of weak respectively strong coupling.
+• The number of solutions for a given D3 tadpole L.
+• W0 , the flux superpotential.
+• The masses of the moduli m2 and the gravitino mass m23/2 .
+• The available fine-tuning ∆Λ of the cosmological constant Λ.
+• The amount of flux vacua for which a dS vacuum can be constructed via Kähler
+uplifting in 3.4.
+
+– 13 –
+
+Figure 1: Distribution of u1 and u2 for the complete set of solutions to eqs. (2.25)
+(gray) and for the physical solutions fulfilling the criterion for the validity of the large
+complex structure limit (blue for LCS = 10−1 and black for LCS = 10−2 ), eq. (2.28).
+For the 52,329 parameter points, we find a total of 500,865 solutions to the
+eqs. (2.25). This corresponds to an average of 9.5 solutions per parameter point.
+For 1,270 parameter points we do not find a solution. Many of the solutions are
+unphysical and hence have to be sorted out: A subset of 271,825 fulfill the criterion
+of a physical string coupling gs > 0 and only a subset of 24,882 respective 15,392 is
+in accordance with the large complex structure criterion eq. (2.28) for LCS = 10−1
+respective LCS = 10−2 . Of these none have to be sorted out because they are in
+the vicinity of the conifold singularities eq. (2.29) having chosen CF = 10−2 . Due
+to the strong suppression of the large complex structure limit in the general solution
+space of eq. (2.25) the minimal flux method has the advantage of directly searching
+for solutions in this region.
+
+– 14 –
+
+For the distribution of the dilaton, we can
+use SL(2, Z), to transform each solution to
+the fundamental domain
+−
+
+1
+1
+≤ Re(τ ) ≤
+2
+2
+
+and
+
+|τ | > 1 ,
+(3.8)
+
+via the successive transformations
+τ0 = τ + b ,
+
+G03 = G3 ,
+
+(3.9)
+
+i.e. a = 1, b ∈ Z, c = 0, d = 1 and
+τ 0 = −1/τ ,
+
+G03 = G3 /τ ,
+
+(3.10)
+
+i.e. a = 0, b = −1, c = 1, d = 0.
+We show the distribution of the obtained
+values for τ = σ + i s in Figure 2. We see
+that the the strongly coupled region s =
+1/gs ∼ 1 is preferred and large values of
+s > 10 are obtained for a fraction of 5%.
+
+Figure 2: Distribution of τ for the
+paramotopy scan with LCS = 10−2 .
+
+The number of vacua of X3 in the large complex structure limit for a given D3
+tadpole L was estimated in [28] as 5
+Z
+(2πL)3
+Nvac =
+det(−R − 1 · ω) ,
+(3.11)
+3!
+with Kähler form ω and the curvature two-form R of the moduli space. The integral
+in eq. (3.11) was estimated in [28] to be be 1/1296, using the Γ symmetry of the
+moduli space such that
+Nvac ≃ 0.03 L3 .
+(3.12)
+Since paramotopy allows us to find all solutions for a given flux configuration we
+can not only check the L dependence of eq. (3.11) but also the normalization. This
+depends on the value chosen for LCS , i.e. a greater LCS will yield a larger normalization factor. Fitting the number of solutions with h2 ≤ L in the large complex
+structure limit to the tadpole L we find
+Nvac ≃ (0.52 ± 0.04) L2.92±0.03
+
+for
+
+LCS = 10−2 ,
+
+(3.13)
+
+Nvac ≃ (0.88 ± 0.06) L2.91±0.03
+
+for
+
+LCS = 10−1 .
+
+(3.14)
+
+5
+
+Note that Nvac ∼ L6 in [28] which is due to the fact that 12 independent fluxes have been
+switched on while we effectively switch on 6 independent fluxes, see eq. (3.3).
+
+– 15 –
+
+15 000
+
+Nvac
+
+10 000
+
+5000
+
+0
+0
+
+5
+
+10
+
+15
+
+20
+
+25
+
+30
+
+35
+
+L
+
+Figure 3: The number of vacua Nvac with h2 < L (left) and the logarithmic distribution of the flux superpotential W0 (right) in the large complex structure limit
+with LCS = 10−2 .
+The dependence of Nvac on L and the fit in eq. (3.13) are shown in Figure 3. Considering the very general arguments that are used to derive the estimate eq. (3.11), the
+agreement within an order of magnitude with the factual number of vacua strongly
+confirms the statistical analysis of [24, 30]. In the following, we set LCS = 10−2 .
+The distribution of the flux superpotential is shown in Figure 3. We find that
+for most vacua O(101 − 103 ) values are preferred. To calculate the masses of the
+moduli we have to know the value of the volume V of X3 which enters via the Kähler
+potential of the Kähler moduli given in eq. (2.11). Note that we have not specified
+the stabilization mechanism for the Kähler moduli and hence have no information
+about the value of V. For the KKLT and Kähler uplifting scenarios the volume is
+typically stabilized at O(102 − 104 ) while for the LVS it is O(106 − 1015 ). Hence, we
+can only calculate the physical masses m up to factors of V −1 , i.e.
+mcs
+m=
+,
+(3.15)
+V
+where mcs is the mass calculated from the effective theory of the complex structure
+moduli only, i.e.K = Kcs and W = W0 .
+The distribution of the physical moduli masses m2 in terms of m2cs , i.e. the
+eigenvalues of the Hessian ∂a ∂b V of the no-scale potential eq. (2.13) for a, b =
+u1 , u2 , s, ν1 , ν2 , σ is shown in Figure 4 as well as the gravitino mass m23/2 in terms
+of the quantity
+m2cs, 3/2 ≡ m23/2 V 2 = eKcs |W0 |2 .
+(3.16)
+This quantity m2cs, 3/2 governs the scale of the typical AdS cosmological constant
+induced by the flux superpotential ignoring the contributions from the Kähler moduli
+
+– 16 –
+
+5000
+1500
+
+4000
+
+3000
+
+1000
+
+2000
+500
+
+1000
+
+0
+
+1. � 10 �6 0.0001
+
+0.01
+
+1.
+
+�
+m2 ��
+MP2 �V=100
+
+100.
+
+2
+
+m
+Figure 4: Masses M
+2
+
+P
+
+V=100
+
+10 000. 1. � 10 6
+
+0
+0.00001
+
+0.0001
+
+�0.001
+m23/2 ��
+�
+MP2 �
+
+0.01
+
+0.1
+
+V=100
+
+of the moduli, and the gravitino mass
+
+m23/2
+2
+MP
+
+, for a
+V=100
+
+Calabi-Yau volume V = 100. For different Calabi-Yau volumes the masses scale as
+
+m2
+100 2
+for the moduli u1 , u2 , s, ν1 , ν2 , σ (left) and for the gravitino mass as
+2
+V
+MP V=100
+
+m23/2
+100 2
+(right). The left plot includes all eigenvalues of the Hessian, i.e. 6
+V
+M2
+P
+
+V=100
+
+values per parameter point.
+sector.
+
+)2 with standard
+The distribution of m23/2 is peaking at hm23/2 i = 3.5 × 10−2 · ( 100
+V
+)2 . The complex structure moduli and the dilaton are stabilized
+deviation 3×10−2 ·( 100
+V
+at m2 ∼ O(10−3 − 102 )( 100
+)2 . These ranges for the moduli and gravitino masses are
+V
+compatible with the values obtained for a single explicit flux choice in the same
+construction [14, 15].
+The AdS respective dS cosmological constant before tuning is up to O(1) factors
+estimated to be
+m23/2
+m2cs, 3/2
+Λ∼
+=
+,
+(3.17)
+V
+V3
+in the LVS respective Kähler uplifting scenarios. In particular, the tunability of
+mcs, 3/2 by three-form flux directly translates into the tunability of the cosmological
+constant via
+∆mcs, 3/2
+∆Λ
+∼2
+.
+(3.18)
+Λ
+mcs, 3/2
+Note that the RHS of eq. (3.18) is independent of the volume V, i.e. fine tuning of
+mcs, 3/2 only has a tiny effect on the VEVs of the Kähler moduli.
+
+– 17 –
+
+Since the polynomial homotopy continuation method allows us to calculate all
+solutions for a given tadpole L we can estimate ∆Λ/Λ by determining the average
+spacing ∆mcs, 3/2 for all values of mcs, 3/2 that are to be found in a σ-interval around
+hmcs, 3/2 i. Since the number of vacua is given as a power-law in L, with the exponent linear in the number of flux carrying complex structure moduli h2,1
+eff , we expect
+∆mcs, 3/2 /mcs, 3/2 to be of the form
+∆mcs, 3/2
+C
+,
+∼
+2,1
+mcs, 3/2
+La (heff +1)
+
+(3.19)
+
+with C, a > 0. We can determine these parameters by fitting the LHS of eq. (3.19)
+6
+around hmcs, 3/2 i we find
+as a function of L for h2,1
+eff = 2. Choosing a 3-σ interval
+the available tuning for the cosmological constant to be
+2,1
+∆Λ
+≃ (5.1 ± 0.3) L−(0.93±0.006) (heff +1) ,
+Λ
+
+(3.20)
+
+where we have included the statistical errors of the fit parameters C and a.
+Let us assume that eq. (3.20) is valid and hmcs, 3/2 i ∼ O(10) also for larger values
+2,1
+of L ∼ O(103 ) and larger values of heff
+∼ O(101 − 102 ). 7 Then, we can extrapolate
+the values of the cosmological constant eq. (3.17) and its tunability to more realistic
+scenarios, see Table 1.
+h2,1
+eff
+2
+2
+40
+40
+
+L
+
+∆Λ/Λ
+
+34
+500
+34
+500
+
+−3
+
+7 · 10 ± 5 · 10−4
+5 · 10−5 ± 4 · 10−6
+5 · 10−57 ± 4 · 10−57
+2 · 10−100 ± 2 · 10−100
+
+Table 1: The tunability ∆Λ/Λ of the cosmological constant for different values of
+h2,1
+eff and L with statistical errors propagated from eq. (3.20). The untuned values
+of the cosmological constant are estimated via eq. (3.17) to be O(10−4 − 10−22 ) in
+units of MP4 for V of O(102 − 108 ). The first row of this table is directly calculated
+from our dataset while the last three entries are obtained as an extrapolation via
+eq. (3.20).
+To tune the cosmological constant to the accuracy given in Table 1, one has
+to make the assumption that every supersymmetric flux vacuum has no tachyonic
+6
+
+There is only a week dependence on the width of the interval. For 5-σ the difference in
+∆mcs, 3/2 /mcs, 3/2 compared to 3-σ is less than 1%.
+7
+This assumption is reasonable when the prepotential G is of the same structure as eq. (2.26),
+i.e. we are considering the large complex structure limit away from e.g. conifold singularities via a
+1,1
+mirror construction. It may be interesting to consider such examples with h2,1
+> 2, e.g. by
+eff = h
+choosing random pre-factors in a general polynomial prepotential of degree 2 in the ωi .
+
+– 18 –
+
+directions after uplifting and stabilizing the Kähler moduli. Especially, for large
+values of h1,1 there could be strong suppressions of tachyonic free configurations [34–
+36]. In the following section, we will determine how many de Sitter vacua can be
+constructed from our dataset on X3 via the method of Kähler uplifting.
+3.4
+
+de Sitter vacua via Kähler uplifting
+
+The two Kähler moduli T1 and T2 of X3 can be stabilized in a dS minimum by Kähler
+uplifting. A globally consistent D7 brane and gauge flux setup that realizes such a
+dS vacuum has been presented in [15]. The Kähler potential of T1 and T2 is given as
+"
+#
+3/2
+
+1
+1
+1
+1
+ˆ τ̄ ) ,
+K = −2 log √
+(T1 + T̄1 ) + (T2 + T̄2 )
+− (T2 + T̄2 )3/2 + ξ(τ,
+3
+18
+2
+12
+(3.21)
+0
+with the leading order α correction [10]
+ζ(3) χ
+ˆ τ̄ ) = − √
+ξ(τ,
+(−i (τ − τ̄ ))3/2 ,
+3
+4 2 (2π)
+
+(3.22)
+
+with Euler number χ = 2(2 − 272) = −540. To apply the method of Kähler uplifting
+we need to balance the leading order α0 correction to the Kähler potential with
+non-perturbative contributions to the superpotential. These originate from gaugino
+condensation of an SU (24) and SO(24) pure super Yang Mills from respectively 24 D7
+branes wrapping the divisors corresponding to T1 and T2 . The induced superpotential
+is
+2π
+2π
+(3.23)
+W = W0 + A1 e− 24 T1 + A2 e− 22 T2 .
+By switching on suitable gauge flux it can be shown [15] that A1 , A2 6= 0. The induced
+D3 tadpole by this gauge flux and the geometric contributions from the D7 branes
+is L = 96 − 104. The one-loop determinants A1 and A2 depend on the complex
+structure moduli, the dilaton and also potentially D7 brane moduli. The explicit
+dependence on these moduli is unknown, however for the purpose of Kähler moduli
+stabilization the values of A1 and A2 can be assumed be constant since complex
+structure moduli are stabilized at a higher scale. Choosing A1 = A2 = 1, it was
+found numerically in [15], that the pairs of W0 and s that are suitable to realize a
+dS vacuum with small positive tree level vacuum energy 8 lie on the curve
+W0dS (s) = 70.2 s−2.35
+
+with
+
+s ≥ 4.
+
+(3.24)
+
+To parametrize our missing knowledge of the values of A1 and A2 we introduce
+the parameter ∆A and the scaling relations
+W0 → W0 · ∆A ,
+
+A1 → A1 · ∆A ,
+
+8
+
+A2 → A2 · ∆A ,
+
+(3.25)
+
+In this case, small refers to how small we can tune hV i by choosing numerical values for W0
+and s to a certain decimal place and is not related to the tuning of the cosmological constant.
+
+– 19 –
+
+6
+
+ðdS vacua
+
+5
+4
+3
+2
+1
+0
+2
+
+4
+
+6
+
+8
+
+10
+
+DA
+Figure 5: The number of Kähler uplifted dS vacua as a function of ∆A (left) and
+data points (s, |W0 |) (right). Kähler uplifting can be applied in the shaded region
+(∆A = 2).
+under which the position of a minimum of the potential eq. (2.10) is invariant since
+V → V · ∆A2 . For a given uncertainty in the one-loop determinants ∆A−1 ≤ Ai ≤
+∆A around A1 = A2 = 1 we can then define the criterion
+W0dS (s)
+≤ |W0 | ≤ W0dS (s) · ∆A
+and
+s ≥ 4,
+∆A
+for a given data point (s, |W0 |) to allow a dS vacuum via Kähler uplifting.
+
+(3.26)
+
+We show the number of Kähler uplifted dS vacua depending on ∆A in Figure 5.
+Due to the suppression of weakly coupled vacua s  1 and O(1) values of the
+superpotential, the number of vacua that can be uplifted to dS via Kähler uplifting
+is strongly suppressed. For ∆A = 10, only 6, i.e. a fraction of ∼ 10−4 of the total
+number of flux vacua allow such an uplifting.
+The available tuning of the cosmological constant via fluxes can be estimated
+again via eq. (3.18). The Kähler moduli stabilization yields a volume of V ≃ 50 [15]
+such that the untuned cosmological constant is Λ ∼ 5 · 10−6 and
+∆Λ
+≃ 0.51 ± 0.37 ,
+(3.27)
+Λ
+for ∆A = 10. We remind the reader, that this is calculated for L = 34 which is
+the maximal value we reach in our paramotopy scan and hence less than L = 104
+which is maximally allowed by the gauge flux and D7 brane construction realized for
+a Kähler uplifted dS vacuum in our explicit CP411169 [18] example.
+To summarize this section, the polynomial homotopy continuation method allows
+us to find all flux vacua for a given D3 tadpole L. The number of these vacua is well
+
+– 20 –
+
+estimated by the statistical analysis of [24, 30]. We find that strongly coupled vacua
+s & 1 are preferred as well as O(101 − 103 ) values of W0 . Our results can be used
+to estimate the tunability of the cosmological constant by fluxes and the number of
+flux vacua that can be Kähler uplifted to a dS vacuum.
+
+4
+
+The minimal flux method
+
+In this section we describe the method to find flux vacua that has been first used by
+Denef, Douglas and Florea [28]. In contrast to the polynomial homotopy continuation
+method described in section 3, we fix starting values for the VEVs hU1 if ix , hU2 if ix
+and hτ if ix and solve for the flux values f and h.
+4.1
+
+The algorithm
+
+Due to the linear dependence of W0 on f and h, see eq. (2.8), the quantities DI W0 =
+W0I + KI W0 for I = τ, U1 , U2 are linear in these flux vectors. Hence, if we want to
+solve the system of equations
+(W0 , Dτ W0 , DU1 W0 , DU2 W0 ) = 0 ,
+
+(4.1)
+
+M · (f, h) = 0 ,
+
+(4.2)
+
+this can be written as
+with M ∈ R8×12 for general VEVs hU1 i, hU2 i, hτ i ∈ C. The dimensions of M are due
+to the fact that we have 8 real equations in eq. (4.1), and there are 12 flux integers in
+total in f and h. Note that we have also included the condition W0 = 0 in eq. (4.1).
+In fact, we are not interested in flux vacua where W0 is strictly zero since none of
+the well studied moduli stabilization mechanisms KKLT [6], LVS [13] and Kähler
+uplifting [12, 14, 15, 70] apply in this situation. However, eq. (4.1) will only serve as
+a starting point and we will eventually end up with vacua where W0 6= 0 and O(1).
+For M ∈ R8×12 there is no hope to find a solution of eq. (4.2) since the flux parameters have to be integers. However, if we neglect instanton corrections induced by
+eq. (2.27) and choose rational starting values hU1 i, hU2 i, hτ i ∈ Q + i Q in the superζ(3)χ
+= −1.30843.. i.
+potential, the only transcendental number in eq. (4.2) is ξ = 2(2π
+i)3
+If we approximate ξ by a rational number ξrat , for instance ξrat = −13/10 i, we have
+accomplished M ∈ Q8×12 .
+Now, we can hope to find a solution of eq. (4.2) although the entries of f and h will
+be generically be quite large for generic M , since one generally expects them to be at
+least of the order of the lowest common denominator of the entries of M . This puts
+tension on the D3 tadpole constraint eq. (2.9) since generally the geometry of the
+compactification manifold and D7 brane configuration generates L ∼ 102 − 104 . We
+
+– 21 –
+
+use the same algorithms [71] as the authors of [28], to generate as small as possible
+values for the entries of f and h in order to generate a not too large D3 tadpole
+L < Lmax where we choose Lmax = 500 to be the maximal value for the D3 tadpole
+that we consider.
+Since the system of equations eq. (4.2) is under determined, the solution space is
+given by all linear combinations of linearly independent vectors (f, h)i for i = 1, .., 4,
+where each (f, h)i is a solution to eq. (4.2), i.e.
+(f, h)sol =
+
+4
+X
+
+with ai ∈ Z .
+
+ai (f, h)i
+
+(4.3)
+
+i=1
+
+For obvious practical reasons, we cannot consider all possible values of the ai . Since
+L(ai (f, h)i ) = a2i L((f, h)i ) and tadpoles of solution basis vectors smaller than ten
+are extremely rare, we can safely restrict ourselves to −3 < ai < 3 in order to fulfill
+L((f, h)sol ) < Lmax .
+In the next step, we are looking for solutions to eq. (2.25), including instanton
+corrections eq. (2.27) to the prepotential and also setting ξ to its transcendental
+value. We insert the flux solution (f, h)sol into the equations
+(Dτ W0 , DU1 W0 , DU2 W0 ) = 0
+
+(with instanton corrections) ,
+
+(4.4)
+
+leaving the VEVs hU1 i, hU2 i and hτ i unfixed. These are six real equations for six
+real variables and we can numerically search for a solution in the vicinity of hU1 if ix ,
+hU2 if ix and hτ if ix . It has to be checked case by case if the complex structure limit
+is still valid for these perturbed solutions. The shift of the VEVs from their fixed
+values may also induce a shift in the superpotential, i.e. W0 is not zero anymore.
+However, note that the value that W0 will take in the end is not in any way under
+our control and it has to be checked if one obtains useful values for the purpose of
+moduli stabilization.
+The above outlined algorithm can be iterated by sampling over a set of VEVs
+hU1 if ix , hU2 if ix and hτ if ix and approximate ξ values ξrat .
+4.2
+
+The scan
+
+First of all, we need to define a set of rational starting values (hU1 i, hU2 i, hτ i, ξrat )f ix
+over which the algorithm explained in section 4.1 can be iterated. We set the axionic
+components of the fixed VEV’s to zero, i.e.
+RehU1 if ix = RehU2 if ix = Rehτ if ix = 0 .
+
+(4.5)
+
+Let x ∈ [xmin , xmax ] represent ξrat and the imaginary parts of the moduli. We use
+
+
+p
+| p ∈ [minZ (q xmin ), maxZ (q xmax )] , q ∈ [1, qmax ] ,
+(4.6)
+q
+
+– 22 –
+
+as the set of rational numbers that fills out the interval [xmin , xmax ]. minZ (x) and
+maxZ (x) define the smallest integer greater than or equal to x respectively the greatest integer less than or equal to x. Note that qmax determines how ‘dense’ the interval
+is filled with rational numbers. For example, one has
+
+
+5 4 3 5 7
+1, , , , , , 2
+(4.7)
+4 3 2 3 4
+for x ∈ [1, 2] and qmax = 4.
+
+ξrat
+u1
+u2
+s
+
+xmin
+0.9ξ
+1
+1/6
+1
+
+xmax
+1.1ξ
+4
+4
+10
+
+qmax
+20
+5
+5
+10
+
+#
+34
+31
+40
+289
+
+Table 2: Starting values for ξrat and the imaginary parts of the moduli. The last
+column counts the number of elements yielding from the choice of xmin , xmax and
+qmax according to eq. (4.6).
+The set of starting values given in Table 2 is chosen such that the starting values
+for the complex structure moduli are in the large complex structure limit eq. (2.28)
+and the string coupling gs = 1/s is always larger than one. The total number of
+points in the grid of starting values defined in Table 2 has 12,184,240 points. Using
+80 cores with 2.4 GHz of the DESY Theory Cluster this yields a total calculation
+time of approximately four weeks.
+
+– 23 –
+
+4.3
+
+Results
+
+We find 1,698 solutions fulfilling the constraint L < Lmax = 500 which is only
+0.01% of the total number of points of
+the scan. Hence, most of the time one
+can not find a flux vector whose entries
+are small enough to fulfill the D3 tadpole
+constraint.
+As in section 3.3, we can make use of the
+SL(2, Z) transformations eq. (3.9) and
+eq. (3.10) to transform every solution to
+the fundamental domain eq. (3.8). Identifying equivalent solutions in this domain, 1,374 elements of the original solution set are not related via SL(2, Z)
+symmetry and hence physically inequivalent. The distribution of τ is shown in
+Figure 6. Compared to the paramotopy
+scan we more easily find weakly coupled
+vacua with s  1 which is due to the fact
+that we have chosen the starting values
+for s accordingly, see Table 2.
+
+Figure 6: Distribution of τ for the
+minimal flux scan.
+
+The distribution of u1 and u2 as well as the distribution of the superpotential are
+shown in Figure 7. We find that there are no flux vacua in the vicinity of the conifold
+singularities eq. (2.29) for CF = 10−2 . Also, all flux vacua fulfill the constraint of the
+validity of the large complex structure limit description, eq. (2.28) for LCS = 10−2
+which is again due to the chosen starting values deep in the large complex structure
+limit, Table 2. Since we solve for vanishing W0 in the first step of the algorithm
+eq. (4.1), we obtain a clustering around W0 = 0, see Figure 7. This is however not a
+general property of the complete solution space as we noted in section 3.3 but rather
+O(10 − 100) values are preferred.
+We fit the number of vacua as a function of the D3 tadpole L, finding Nvac ≃
+0.02 L1.83 which strongly deviates from the estimate eq. (3.11). However, our dataset
+of 1,374 is in no way representative for the total number of flux vacua with L = 500
+such that this deviation can be easily explained by insufficient statistics.
+Finally, we can calculate how many flux vacua allow a dS vacuum via Kähler
+uplifting along the lines of section 3.4. Since the minimal flux scan is setup such that
+
+– 24 –
+
+Figure 7: Distribution of u1 and u2 (left) and superpotential W0 for the minimal
+flux scan.
+the values of s and |W0 | naturally lie in the region where Kähler uplifting can be
+applied we find a much milder suppression of these vacua compared to section 3.3,
+see Figure 8. For ∆A = 10, three of the 75 flux vacua with L = 104 and 135 of the
+1,374 flux vacua with L = 500 allow a dS vacuum via Kähler uplifting.9 Repeating
+the estimate of eq. (3.27) for the results of the minimal flux scan, the cosmological
+constant Λ ∼ 10−6 can be tuned to an accuracy
+∆Λ
+∼ 1.9 ± 2.2
+Λ
+∆Λ
+∼ 5 · 10−2 ± 10−2
+Λ
+
+for
+
+L = 104 ,
+(4.8)
+
+for
+
+L = 500 .
+
+To conclude this section, the minimal flux method has the advantage that one can
+specify the region in parameter space where physically interesting flux vacua should
+be constructed. In our case this region is defined by the large complex structure limit,
+weak string coupling and O(1) values of W0 . However, it is not possible to construct
+all flux vacua for a given D3 tadpole L which can be done using paramotopy and the
+method is rather inefficient in the sense that only 0.01% of the starting values yield
+a flux vacuum.
+9
+
+The maximum D3 tadpole of X3 is L = 104 but due to the small amount of vacua we find for
+this tadpole we also show the results for L = 500.
+
+– 25 –
+
+3.0
+120
+
+2.5
+
+ðdS vacua
+
+ðdS vacua
+
+100
+80
+60
+40
+
+2.0
+1.5
+1.0
+0.5
+
+20
+
+0.0
+
+0
+2
+
+4
+
+6
+
+8
+
+2
+
+10
+
+4
+
+6
+
+8
+
+10
+
+DA
+
+DA
+14
+12
+
+ÈW0È
+
+10
+8
+6
+4
+2
+0
+
+2
+
+4
+
+6
+
+8
+
+10
+
+s
+Figure 8: The number of Kähler uplifted dS vacua as a function of ∆A (top) and
+data points (s, |W0 |) (bottom). Kähler uplifting can be applied in the shaded region
+(∆A = 2) for the minimal flux scan. We show the results for L = 500 (left) and
+L = 104 (right).
+
+5
+
+Conclusions
+
+In this paper we have studied the flux vacua of type IIB string theory compactified
+on CP411169 [18] Calabi-Yau hypersurface, i.e. the standard working example of both
+the LVS and the Kähler uplifting scenario. We switch on flux along six three-cycles
+that correspond to two complex structure moduli that are invariant under a certain
+discrete symmetry that can be used to construct the mirror manifold. As explained
+in the main text, such a supersymmetric vacuum in these two complex structure
+moduli extends to a supersymmetric vacuum of all 272 complex structure moduli.
+
+– 26 –
+
+To explicitly construct flux vacua, we make use of the fact that the prepotential G
+of the two complex structure moduli space has been worked out in the large complex
+structure limit. We apply two computational methods to find flux vacua on this
+manifold: The polynomial homotopy continuation method allows us to explicitly
+construct for the first time all flux vacua in the large complex structure limit that
+are consistent with a given D3 tadpole L by applying the polynomial homotopy
+continuation method at each point in flux parameter space. The minimal flux method
+finds flux parameters that are consistent with a given D3 tadpole L for a given set
+of vacuum expectation values (VEVs) of the complex structure moduli.
+We analyze the resulting solution space of flux vacua for several physically interesting properties. For the polynomial homotopy continuation method, we find that
+for the ∼ 50, 000 parameter points of our scan there are ∼ 20, 000 solutions in the
+large complex structure limit. We find a preference of strongly coupled vacua gs & 1
+and preference for values of O(101 −103 ) for the flux superpotential W0 . The number
+of vacua is
+Nvac ≃ (0.52 ± 0.04) L2.92±0.03 ,
+(5.1)
+compared to ∼ 0.03L3 expected form statistical analysis [24, 30]. The gravitino
+mass is typically m23/2 = O(10−3 ) · ( 100
+)2 MP2 and the masses of the complex structure
+V
+moduli and the dilaton scale like O(10−3 − 102 ) · ( 100
+)2 MP2 . These ranges for the
+V
+moduli and gravitino masses are compatible with the values obtained for a single
+explicit flux choice in the same construction [14, 15].
+The average spacing of the flux superpotential in our solution set can be used to
+estimate the available fine-tuning ∆Λ/Λ of the cosmological constant Λ as
+2,1
+∆Λ
+≃ (5.1 ± 0.3) L−(0.93±0.006) (heff +1) ,
+Λ
+
+(5.2)
+
+which corresponds to for instance ∆Λ/Λ ∼ 10−100 for L = 500 and h2,1
+eff = 40. The
+explicit brane and gauge flux construction in [15] allows us to answer the question
+how many of theses supersymmetric flux vacua allow an uplift to dS via Kähler uplifting. Depending on the available values for the one-loop determinant from gaugino
+condensation used to stabilize the Kähler moduli in this setup, we find that for a fraction of about 10−4 of all flux vacua up to a given D3-brane tadpole this mechanism
+can be applied to obtain a dS vacuum.
+For the minimal flux method, we find ∼ 1000 flux vacua with L < 500 out of ∼ 107
+parameter points of our scan. This method allows us to control the region in W0 and
+moduli space where we are intending to find flux vacua. Hence, we more easily access
+the regions of weak string coupling and the large complex structure limit compared
+to the polynomial homotopy continuation method. For the much smaller set of flux
+vacua constructed with the minimal flux method, the fraction of Kähler uplifted dS
+minima is about 10%.
+
+– 27 –
+
+Acknowledgments
+We thank Frederik Denef for the initial motivation in launching this project, and
+Jose Blanco-Pillado, Arthur Hebecker, Jan Louis, Francisco Pedro, and Roberto Valandro for valuable, and enlightening discussions. MR thanks Malte Nuhn for help
+with Python. This work was supported by the Impuls und Vernetzungsfond of the
+Helmholtz Association of German Research Centers under grant HZ-NG-603, the
+German Science Foundation (DFG) within the Collaborative Research Center 676
+”Particles, Strings and the Early Universe” and the Research Training Group 1670.
+DM would like to thank the U.S. Department of Energy for their support under
+contract no. DE-FG02-85ER40237; Fermilab’s LQCD clusters where the cheater’s
+homotopy runs were performed; and most importantly, Matthew Niemerg for his continuous support in installing and help in running Paramotopy. Finally, the authors
+would like to thank the organizers of the 2012 String Phenomenology conference in
+Cambridge where part of the work was done for their warm hospitality.
+
+References
+[1] Supernova Search Team Collaboration, A. G. Riess et. al., Observational
+evidence from supernovae for an accelerating universe and a cosmological constant,
+Astron.J. 116 (1998) 1009–1038, [astro-ph/9805201].
+[2] Supernova Cosmology Project Collaboration, S. Perlmutter et. al.,
+Measurements of Omega and Lambda from 42 high redshift supernovae, Astrophys.J.
+517 (1999) 565–586, [astro-ph/9812133]. The Supernova Cosmology Project.
+[3] WMAP Collaboration Collaboration, E. Komatsu et. al., Seven-Year Wilkinson
+Microwave Anisotropy Probe (WMAP) Observations: Cosmological Interpretation,
+Astrophys.J.Suppl. 192 (2011) 18, [arXiv:1001.4538].
+[4] K. Dasgupta, G. Rajesh, and S. Sethi, M theory, orientifolds and G - flux, JHEP
+9908 (1999) 023, [hep-th/9908088].
+[5] S. B. Giddings, S. Kachru, and J. Polchinski, Hierarchies from fluxes in string
+compactifications, Phys.Rev. D66 (2002) 106006, [hep-th/0105097].
+[6] S. Kachru, R. Kallosh, A. D. Linde, and S. P. Trivedi, De Sitter vacua in string
+theory, Phys.Rev. D68 (2003) 046005, [hep-th/0301240].
+[7] T. W. Grimm and J. Louis, The Effective action of N = 1 Calabi-Yau orientifolds,
+Nucl.Phys. B699 (2004) 387–426, [hep-th/0403067].
+[8] J. R. Ellis, A. Lahanas, D. V. Nanopoulos, and K. Tamvakis, No-Scale
+Supersymmetric Standard Model, Phys.Lett. B134 (1984) 429.
+[9] E. Cremmer, S. Ferrara, C. Kounnas, and D. V. Nanopoulos, Naturally Vanishing
+Cosmological Constant in N=1 Supergravity, Phys.Lett. B133 (1983) 61.
+
+– 28 –
+
+[10] K. Becker, M. Becker, M. Haack, and J. Louis, Supersymmetry breaking and
+alpha-prime corrections to flux induced potentials, JHEP 0206 (2002) 060,
+[hep-th/0204254].
+[11] M. Berg, M. Haack, and B. Kors, String loop corrections to Kahler potentials in
+orientifolds, JHEP 0511 (2005) 030, [hep-th/0508043].
+[12] V. Balasubramanian and P. Berglund, Stringy corrections to Kahler potentials,
+SUSY breaking, and the cosmological constant problem, JHEP 0411 (2004) 085,
+[hep-th/0408054].
+[13] V. Balasubramanian, P. Berglund, J. P. Conlon, and F. Quevedo, Systematics of
+moduli stabilisation in Calabi-Yau flux compactifications, JHEP 0503 (2005) 007,
+[hep-th/0502058].
+[14] M. Rummel and A. Westphal, A sufficient condition for de Sitter vacua in type IIB
+string theory, JHEP 1201 (2012) 020, [arXiv:1107.2115].
+[15] J. Louis, M. Rummel, R. Valandro, and A. Westphal, Building an explicit de Sitter,
+JHEP 1210 (2012) 163, [arXiv:1208.3208].
+[16] C. Burgess, R. Kallosh, and F. Quevedo, De Sitter string vacua from
+supersymmetric D terms, JHEP 0310 (2003) 056, [hep-th/0309187].
+[17] M. Haack, D. Krefl, D. Lust, A. Van Proeyen, and M. Zagermann, Gaugino
+Condensates and D-terms from D7-branes, JHEP 0701 (2007) 078,
+[hep-th/0609211].
+[18] M. Cicoli, S. Krippendorf, C. Mayrhofer, F. Quevedo, and R. Valandro, D-Branes at
+del Pezzo Singularities: Global Embedding and Moduli Stabilisation,
+arXiv:1206.5237.
+[19] O. Lebedev, H. P. Nilles, and M. Ratz, De Sitter vacua from matter superpotentials,
+Phys.Lett. B636 (2006) 126–131, [hep-th/0603047].
+[20] K. A. Intriligator, N. Seiberg, and D. Shih, Dynamical SUSY breaking in meta-stable
+vacua, JHEP 0604 (2006) 021, [hep-th/0602239].
+[21] M. Cicoli, A. Maharana, F. Quevedo, and C. Burgess, De Sitter String Vacua from
+Dilaton-dependent Non-perturbative Effects, JHEP 1206 (2012) 011,
+[arXiv:1203.1750].
+[22] R. Bousso and J. Polchinski, Quantization of four form fluxes and dynamical
+neutralization of the cosmological constant, JHEP 0006 (2000) 006,
+[hep-th/0004134].
+[23] J. L. Feng, J. March-Russell, S. Sethi, and F. Wilczek, Saltatory relaxation of the
+cosmological constant, Nucl.Phys. B602 (2001) 307–328, [hep-th/0005276].
+[24] F. Denef and M. R. Douglas, Distributions of flux vacua, JHEP 0405 (2004) 072,
+[hep-th/0404116].
+[25] P. Candelas, A. Font, S. H. Katz, and D. R. Morrison, Mirror symmetry for two
+
+– 29 –
+
+parameter models. 2., Nucl.Phys. B429 (1994) 626–674, [hep-th/9403187].
+[26] B. R. Greene and M. Plesser, Duality in Calabi-Yau Moduli Space, Nucl.Phys. B338
+(1990) 15–37.
+[27] O. DeWolfe, A. Giryavets, S. Kachru, and W. Taylor, Type IIA moduli stabilization,
+JHEP 0507 (2005) 066, [hep-th/0505160].
+[28] F. Denef, M. R. Douglas, and B. Florea, Building a better racetrack, JHEP 0406
+(2004) 034, [hep-th/0404257].
+[29] A. J. Sommese and C. W. Wampler, The numerical solution of systems of
+polynomials arising in Engineering and Science. World Scientific Publishing
+Company, 2005.
+[30] S. Ashok and M. R. Douglas, Counting flux vacua, JHEP 0401 (2004) 060,
+[hep-th/0307049].
+[31] J. P. Conlon and F. Quevedo, On the explicit construction and statistics of
+Calabi-Yau flux vacua, JHEP 0410 (2004) 039, [hep-th/0409215].
+[32] A. D. Linde and A. Westphal, Accidental Inflation in String Theory, JCAP 0803
+(2008) 005, [arXiv:0712.1610].
+[33] J. J. Blanco-Pillado, M. Gomez-Reino, and K. Metallinos, Accidental Inflation in the
+Landscape, arXiv:1209.0796.
+[34] D. Marsh, L. McAllister, and T. Wrase, The Wasteland of Random Supergravities,
+JHEP 1203 (2012) 102, [arXiv:1112.3034].
+[35] X. Chen, G. Shiu, Y. Sumitomo, and S. H. Tye, A Global View on The Search for
+de-Sitter Vacua in (type IIA) String Theory, JHEP 1204 (2012) 026,
+[arXiv:1112.3338].
+[36] T. C. Bachlechner, D. Marsh, L. McAllister, and T. Wrase, Supersymmetric Vacua
+in Random Supergravity, arXiv:1207.2763.
+[37] Y. Sumitomo and S.-H. H. Tye, A Stringy Mechanism for A Small Cosmological
+Constant, arXiv:1204.5177.
+[38] Y. Sumitomo and S.-H. H. Tye, A Stringy Mechanism for A Small Cosmological
+Constant - Multi-Moduli Cases -, arXiv:1209.5086.
+[39] Y. Sumitomo and S.-H. H. Tye, Preference for a Vanishingly Small Cosmological
+Constant in Supersymmetric Vacua in a Type IIB String Theory Model,
+arXiv:1211.6858.
+[40] M. R. Douglas and S. Kachru, Flux compactification, Rev.Mod.Phys. 79 (2007)
+733–796, [hep-th/0610102].
+[41] M. Grana, Flux compactifications in string theory: A Comprehensive review,
+Phys.Rept. 423 (2006) 91–158, [hep-th/0509003].
+[42] R. Blumenhagen, B. Kors, D. Lust, and S. Stieberger, Four-dimensional String
+
+– 30 –
+
+Compactifications with D-Branes, Orientifolds and Fluxes, Phys.Rept. 445 (2007)
+1–193, [hep-th/0610327].
+[43] S. Gukov, C. Vafa, and E. Witten, CFT’s from Calabi-Yau four folds, Nucl.Phys.
+B584 (2000) 69–108, [hep-th/9906070].
+[44] L. E. Ibanez and A. M. Uranga, String theory and particle physics: An introduction
+to string phenomenology, p.458, .
+[45] P. Candelas, X. de la Ossa, and F. Rodriguez-Villegas, Calabi-Yau manifolds over
+finite fields. 1., hep-th/0012233.
+[46] A. Giryavets, S. Kachru, P. K. Tripathy, and S. P. Trivedi, Flux compactifications on
+Calabi-Yau threefolds, JHEP 0404 (2004) 003, [hep-th/0312104].
+[47] D. Mehta, Lattice vs. Continuum: Landau Gauge Fixing and ’t Hooft-Polyakov
+Monopoles, Ph.D. Thesis, The Uni. of Adelaide, Australasian Digital Theses
+Program (2009).
+[48] D. Mehta, A. Sternbeck, L. von Smekal, and A. G. Williams, Lattice Landau Gauge
+and Algebraic Geometry, PoS QCD-TNT09 (2009) 025, [arXiv:0912.0450].
+[49] D. Mehta, Finding All the Stationary Points of a Potential Energy Landscape via
+Numerical Polynomial Homotopy Continuation Method, Phys.Rev. E (R) 84 (2011)
+025702, [arXiv:1104.5497].
+[50] D. Mehta, Numerical Polynomial Homotopy Continuation Method and String Vacua,
+Adv.High Energy Phys. 2011 (2011) 263937, [arXiv:1108.1201].
+[51] M. Kastner and D. Mehta, Phase Transitions Detached from Stationary Points of
+the Energy Landscape, Phys.Rev.Lett. 107 (2011) 160602, [arXiv:1108.2345].
+[52] R. Nerattini, M. Kastner, D. Mehta, and L. Casetti, Exploring the energy landscape
+of XY models, arXiv:1211.4800.
+[53] M. Maniatis and D. Mehta, Minimizing Higgs Potentials via Numerical Polynomial
+Homotopy Continuation, arXiv:1203.0409.
+[54] D. Mehta, Y.-H. He, and J. D. Hauenstein, Numerical Algebraic Geometry: A New
+Perspective on String and Gauge Theories, JHEP 1207 (2012) 018,
+[arXiv:1203.4235].
+[55] C. Hughes, D. Mehta, and J.-I. Skullerud, Enumerating Gribov copies on the lattice,
+arXiv:1203.4847.
+[56] D. Mehta, J. D. Hauenstein, and M. Kastner, Energy landscape analysis of the
+two-dimensional nearest-neighbor φ4 model, Phys.Rev. E85 (2012) 061103,
+[arXiv:1202.3320].
+[57] J. Hauenstein, Y.-H. He, and D. Mehta, Numerical Analyses on Moduli Space of
+Vacua, arXiv:1210.6038.
+[58] T. Y. Li, Solving polynomial systems by the homotopy continuation method,
+Handbook of numerical analysis XI (2003) 209–304.
+
+– 31 –
+
+[59] D. J. Bates, J. D. Hauenstein, A. J. Sommese, and C. W. Wampler, “Bertini:
+Software for numerical algebraic geometry.” Available at
+http://www.nd.edu/∼sommese/bertini.
+[60] J. Verschelde, Algorithm 795: Phcpack: a general-purpose solver for polynomial
+systems by homotopy continuation, ACM Trans. Math. Soft. 25 (1999), no. 2
+251–276.
+[61] T. Gunji, S. Kim, M. Kojima, A. Takeda, K. Fujisawa, and T. Mizutani, Phom: a
+polyhedral homotopy continuation method for polynomial systems, Computing 73
+(2004), no. 1 57–77.
+[62] T. Gao, T. Y. Li, and M. Wu, Algorithm 846: Mixedvol: a software package for
+mixed-volume computation, ACM Trans. Math. Softw. 31 (2005), no. 4 555–560.
+[63] D. N. Bernstein, The number of roots of a system of equations, Funkts. Anal. Pril. 9
+(1975) 1–4.
+[64] A. G. Khovanski, Newton polyhedra and the genus of complete intersections, Funkts.
+Anal. Pril. 12 (1978), no. 1 51–61.
+[65] A. G. Kushnirenko, Newton polytopes and the bezout theorem, Funkts. Anal. Pril. 10
+(1976), no. 3.
+[66] T. Li, T. Sauer, and J. Yorke, The cheater’s homotopy: an efficient procedure for
+solving systems of polynomial equations, SIAM Journal on Numerical Analysis 26
+(1989), no. 5 1241–1251.
+[67] T. Li and X. Wang, Nonlinear homotopies for solving deficient polynomial systems
+with parameters, SIAM journal on numerical analysis 29 (1992), no. 4 1104–1118.
+[68] D. J. Bates, D. A. Brake, and M. E. Niemerg., Efficient software for large-scale
+parameter homotopy problems, in preparation (2012).
+[69] Y.-H. He, D. Mehta, M. Niemerg, M. Rummel, and A. Valeanu, Solving parametric
+systems in the string landscape, in preparation (2012).
+[70] A. Westphal, de Sitter string vacua from Kahler uplifting, JHEP 0703 (2007) 102,
+[hep-th/0611332].
+[71] H. Cohen, A Course in Computational Algebraic Number Theory, Springer (1993).
+
+– 32 –
+
+

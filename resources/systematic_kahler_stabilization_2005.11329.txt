@@ -1,0 +1,4713 @@
+Prepared for submission to JHEP
+
+IPPP/20/18
+
+A Systematic Approach to Kähler Moduli Stabilisation
+
+arXiv:2005.11329v1 [hep-th] 22 May 2020
+
+S. AbdusSalam,a S. Abel,b M. Cicoli,c,d F. Quevedoe and P. Shuklaf
+a
+
+Department of Physics, Shahid Beheshti University, Tehran 19839, Islamic Republic of Iran
+Institute for Particle Physics Phenomenology, Durham University, South Road, Durham, UK
+c
+Dipartimento di Fisica e Astronomia, Università di Bologna, via Irnerio 46, 40126 Bologna, Italy
+d
+INFN, Sezione di Bologna, viale Berti Pichat 6/2, 40127 Bologna, Italy
+e
+DAMTP, University of Cambridge, Wilberforce Road, Cambridge, CB3 0WA, UK
+f
+ICTP, Strada Costiera 11, Trieste 34151, Italy
+b
+
+Abstract: Achieving full moduli stabilisation in type IIB string compactifications for
+generic Calabi-Yau threefolds with hundreds of Kähler moduli is notoriously hard. This is
+due not just to the very fast increase of the computational complexity with the number
+of moduli, but also to the fact that the scalar potential depends in general on the supergravity variables only implicitly. In fact, the supergravity chiral coordinates are 4-cycle
+volume moduli but the Kähler potential is an explicit function of the 2-cycle moduli and
+inverting between these two variables is in general impossible. In this paper we propose a
+general method to fix all type IIB Kähler moduli in a systematic way by working directly
+in terms of 2-cycle moduli: on one side we present a ‘master formula’ for the scalar potential which can depend on an arbitrary number of Kähler moduli, while on the other we
+perform a computer-based search for critical points, introducing a hybrid Genetic/Clustering/Amoeba algorithm and other computational techniques. This allows us to reproduce
+several known minima, but also to discover new examples of both KKLT and LVS models,
+together with novel classes of LVS minima without diagonal del Pezzo divisors and hybrid
+vacua which share some features with KKLT and other with LVS solutions.
+Keywords: Moduli stabilisation, Flux compactifications, Calabi Yau Orientifolds
+
+Contents
+1 Introduction
+
+2
+
+2 Type IIB effective theory
+2.1 Type IIB preliminaries
+2.2 A master formula for the scalar potential
+2.3 Validity of the effective field theory
+
+4
+4
+8
+10
+
+3 Explicit CY examples
+3.1 h1,1 = 1
+3.2 h1,1 = 2
+3.3 h1,1 = 3
+
+12
+12
+13
+14
+
+4 Moduli stabilisation results
+4.1 Reproducing old vacua
+4.2 Discovering new vacua
+
+15
+15
+19
+
+5 Conclusions
+
+30
+
+A Known potentials from our master formula
+A.1 1-modulus KKLT
+A.2 2-moduli KKLT
+A.3 2-moduli Swiss cheese LVS
+A.4 3-moduli Swiss cheese LVS
+A.5 3-moduli fibred LVS
+
+32
+32
+32
+33
+34
+35
+
+B Lipschitz optimisation algorithm
+
+35
+
+C A hybrid GA/Clustering/Amoeba algorithm to find all minima in a potential
+36
+D List of CY threefolds with h1,1 = 2
+
+40
+
+E List of structureless LVS with h1,1 = 3
+
+41
+
+–1–
+
+1
+
+Introduction
+
+Stabilising the moduli fields that determine the size and shape of the extra dimensions
+has been one of the most important challenges for string compactifications for decades.
+Flux compactifications of type IIB string theory are probably the most explored since 3form fluxes stabilise the complex structure moduli U α (counted via α = 1, · · · , h1,2 ) and
+the dilaton S, producing a huge landscape of solutions. Conversely the Kähler moduli
+Ti (counted by i = 1, · · · , h1,1 ) can be fixed only after perturbative and non-perturbative
+corrections to the Kähler potential and superpotential are included. This last stage of the
+stabilisation is under less control, due to the difficulty of computing quantum corrections,
+and of writing the scalar potential explicitly in terms of the correct 4D supergravity chiral
+coordinates.
+This issue becomes evident when we recall that the imaginary parts of the Ti fields
+include the 4-cycle volume moduli τi which also give the gauge couplings of the gauge
+theories living on D7-branes wrapped around internal 4-cycles. Thus the T -moduli appear
+directly in the non-perturbative superpotential. On the other hand the tree-level Kähler
+potential depends directly on the overall Einstein-frame volume:
+V=
+
+1
+kijk ti tj tk ,
+6
+
+(1.1)
+
+where kijk are the triple intersection numbers of the underlying Calabi-Yau (CY) threefold
+and ti are 2-cycle volumes. The 4-cycle moduli τi are determined in terms of their dual ti
+as:
+∂V
+1
+τi = i = kijk tj tk .
+(1.2)
+∂t
+2
+In order to write the full effective action in terms of the T -fields, (1.2) needs to be inverted
+to express ti as a function of τj which can only be done for simple cases. However a
+generic CY compactification features a large number of Kähler moduli, typically of order
+h1,1 = 100 − 1000 (see for instance [1–3] for classifications on complete intersection CY
+manifolds and [4, 5] for CY manifolds as hypersurfaces in toric ambient varieties).1
+As well as the computational complexity of finding the minimum of a potential with
+several variables, the fact that in general the scalar potential depends only implicitly on
+the 4-cycle moduli creates a hard technical obstacle to finding explicit vacua for CY compactifications with large h1,1 . For this reason the vast majority of work in the literature has
+so far focused only on simple examples such as the original KKLT model [10] for h1,1 = 1,
+and vanilla LVS vacua for Swiss cheese and K3-fibred compactifications with h1,1 = 2, 3
+and diagonal del Pezzo (dP) divisors, where (1.2) can be inverted exactly [11–13].
+In this paper we propose a new approach to type IIB Kähler moduli stabilisation
+which allows one to overcome these technical issues. Our key idea is to work directly in
+terms of the 2-cycle volume moduli which appear explicitly in the scalar potential. In
+combination with a computer-based search this can in principle discover the critical points
+1
+See also [6, 7] for partial classifications. Furthermore, it has recently been found that CY manifolds
+with a comparably large number of moduli have interesting and distinctive properties [8, 9].
+
+–2–
+
+for an arbitrary number of Kähler moduli. Indeed we shall present a ‘master formula’ for the
+scalar potential generated by α0 corrections to the Kähler potential and non-perturbative
+contributions to the superpotential which is valid for arbitrary numbers of 2-cycle moduli.
+Our subsequent numerical analysis then exploits both Lipschitz optimisation and a hybrid
+Genetic/Clustering/Amoeba algorithm.
+For convenience, we will illustrate the efficiency of our general method by focusing on
+CY examples that still have a relatively small number of moduli, but our analysis should
+be considered as a first step towards tackling more general cases with much larger h1,1 .
+In fact, even though in this paper we focus on h1,1 ≤ 3, our method is already able to
+reveal the existence of entirely new classes of vacua. More precisely, we first show how
+our ‘master formula’ for the scalar potential in terms of 2-cycle volume moduli combined
+with our numerical techniques can reproduce several known models, such as standard AdS
+KKLT vacua [10], dS KKLT solutions with α0 uplift [14–17] and both AdS and dS LVS
+minima [11–13]. But we then go on to show that our method can also find new examples
+of both KKLT and LVS models and, more interestingly, it can uncover entirely new classes
+of LVS minima without diagonal dP divisors, and hybrid vacua that share features of both
+the KKLT and the LVS solutions.
+The developments that we make towards establishing a new systematic approach to
+Kähler moduli stabilisation can be summarised as follows:
+1. We present a ‘master formula’ for the scalar potential as a function of the 2-cycle
+moduli for an arbitrary number of Kähler moduli. The scalar potential is generated
+by generic single-instanton non-perturbative contributions to the superpotential and
+the leading O(α03 ) correction to the Kähler potential [18]. In this first-step approach
+to Kähler moduli stabilisation we neglect string loop corrections [13, 19, 20] and
+F 4 O(α03 ) contributions [21] which depend explicitly on 2-cycle moduli, providing
+further motivation for the idea of working directly in terms of the t-fields. Given that
+these corrections are suppressed with respect to the leading O(α03 ) contribution by
+either direct powers of gs  1 or inverse powers of the internal volume V  1, it is
+consistent to neglect them, although we will include them in future work which will
+provide a more comprehensive analysis. For this work we should note that string
+loops have been used to fix the moduli in [22–27] for simple K3-fibred LVS models
+with 1 or 2 diagonal dPs, while ref. [28] showed that F 4 O(α03 ) effects can fix all the
+Kähler moduli of any CY with arbitrary large h1,1 and at least a single dP divisor.
+In addition the stabilisation of an arbitrarily large number of Kähler moduli in [28]
+has been achieved by minimising analytically with respect to 2-cycle moduli.
+2. We consider the large database of CY threefolds constructed by Kreuzer and Skarke
+as hypersurfaces in toric ambient varieties [5], and we identify the models with h1,1 =
+1, 2, 3 that can be treated with KKLT and LVS techniques (recall LVS needs at least
+two 4-cycles, a ‘big’ and a ‘small’ divisor). In addition, we find the percentage of
+models where the relation between 2- and 4-cycle volume moduli cannot be inverted
+explicitly, so identifying those models that cannot be studied by standard stabilisation
+techniques, where our new method is particularly powerful.
+
+–3–
+
+3. We introduce new powerful computational tools for locating and identifying local
+minima, for example a hybrid Genetic+Clustering+Nelder-Mead algorithm. This
+technique is of general applicability in systems with many local minima. Due to the
+computational complexity of identifying local minima we will in practice combine of
+such numerical approaches with analytical techniques.
+4. We recover from our ‘master formula’ all the main scenarios that have been proposed
+so far, for both AdS and dS vacua, including KKLT, α0 -uplift and LVS, by specifying
+just 3 quantities: the CY Euler number, the Hodge number h1,1 and the number of
+non-perturbative contributions to the superpotential.
+5. We focus on CY threefolds whose volume does not admit a simple expression in
+terms of 4-cycle volume moduli, and we find new concrete examples of KKLT vacua
+for h1,1 = 2 and LVS minima for CY compactifications with h1,1 = 3 and just a
+single diagonal dP divisor. Moreover we find the first examples in the literature
+of LVS models for CY compactifications with 3 Kähler moduli none of which is a
+diagonal dP 4-cycle. We also discover novel vacua for CY threefolds with h1,1 = 2
+and no diagonal dP 4-cycle. We call these entirely new solutions ‘hybrid’, because
+the value of the volume at the minimum scales as in KKLT models but the effects
+used to stabilise the moduli are the same as in LVS models.
+This paper is organised as follows. In the Sec. 2, after collecting all conventions, we
+provide the general expression for the scalar potential of the Kähler moduli parametrised
+by the 2-cycle moduli, and we then discuss the conditions that have to be satisfied to make
+the effective field theory trustable. In Sec. 3 we make a systematic study of all the models
+in the Kreuzer-Skarke list with Hodge numbers h1,1 = 1, 2, 3, classifying those that have a
+structure admitting LVS vacua and those whose volume form cannot be written explicitly
+in terms of 4-cycle moduli. In Sec. 4 we then show the power of our general method by
+first reproducing known AdS and dS vacua, and then discovering novel classes of stabilised
+vacua. Our conclusions are finally presented in Sec. 5. We have also collected several
+technical details in the appendices, starting with App. A which shows how the scalar
+potential of several known models can be easily read off from our ‘master formula’. The
+details of the codes used to search for global and also local minima are then explained in
+Apps. B and C, the first describing the Lipschitz optimisation algorithm and the second
+a hybrid of a genetic algorithm and Clustering and Nelder-Mead algorithms. All of these
+methods (with their various strong and weak points) are used in combination with analytic
+calculations to properly identify the local minima. Finally we have included tables of CY
+models with h1,1 = 2, 3 in Apps. D and E.
+
+2
+
+Type IIB effective theory
+
+2.1
+
+Type IIB preliminaries
+
+The F -term contributions to the N = 1 scalar potential governing the dynamics of low energy effective supergravity are computed from the Kähler potential K and the holomorphic
+
+–4–
+
+superpotential W via the following well-known relation:
+
+
+V = eK KAB̄ DA W DB W − 3 |W |2 ,
+
+(2.1)
+
+where the covariant derivatives are defined with respect to all the chiral variables on which
+K and W generically depend.
+2.1.1
+
+Fixing the conventions
+
+The massless states in the 4D effective theory are in one-to-one correspondence with harmonic forms which are either even or odd under the action of an isometric, holomorphic involution σ acting on the internal CY threefold, and these generate the equivariant cohomolp,q
+ogy groups H±
+(X). Let us fix our conventions and denote the bases of even/odd 2-forms
+1,1
+as (µi , νa ) while 4-forms are denoted (µ̃i , ν̃ a ) where i = 1, ..., h+
+(X), a = 1, ..., h1,1
+− (X).
+1,1
+Configurations with h1,1
+(X)
+=
+6
+0
+have
+been
+studied
+much
+less
+than
+the
+simpler
+h
+(X)
+=0
+−
+−
+case, and explicit constructions of such orientifold odd 2-cycles can be found in [6, 29–33].
+Also, we denote the 0- and 6-forms as 1 and Φ6 respectively. In addition, the bases for the
+3 (X) are denoted respectively as the symplectic
+even and odd cohomologies of 3-forms H±
+J
+∆
+pairs (aK , b ) and (AΛ , B ). Using the conventions of [34], let us fix the normalisation in
+the various cohomology bases as:
+Z
+Z
+Z
+Z
+j
+j
+b
+b
+Φ6 = 1,
+µi ∧ µ̃ = δi ,
+νa ∧ ν̃ = δa ,
+µi ∧ µj ∧ µk = kijk ,
+X
+X
+ZX
+Z
+Z X
+∆
+µi ∧ νa ∧ νb = k̂iab ,
+aK ∧ bJ = δK J ,
+AΛ ∧ B ∆ = δΛ
+.
+(2.2)
+X
+
+X
+
+X
+
+2,1
+For the orientifold choice with O3/O7-planes, K = 1, ..., h+
+and Λ = 0, ..., h2,1
+− , while for
+2,1
+2,1
+O5/O9-planes, one has K = 0, ..., h+ and Λ = 1, ..., h− .
+The various fields can be expanded in appropriate bases of the equivariant cohomologies. For example, the Kähler form J, the 2-forms B2 , C2 and the RR 4-form C4 can be
+expanded as [35]:
+
+J = ti µi ,
+
+B2 = ba νa ,
+
+C2 = ca νa ,
+
+C4 = ρi µ̃i + D2i ∧ µi + V K ∧ aK + UK ∧ bK ,
+
+(2.3)
+
+where, as mentioned before, ti denotes 2-cycle volume moduli, while ba , ca and ρi are
+various axions. Furthermore (V K , UK ) forms a dual pair of space-time 1-forms and D2i
+is a space-time 2-form dual to the scalar field ρi . Also, since σ ∗ reflects the holomorphic
+α
+3-form Ω3 , we have h2,1
+− (X) complex structure moduli U appearing as complex scalars.
+Moreover, the involutively-odd holomorphic 3-form Ω3 generically depends on the complex
+structure moduli and can be written in terms of the period vectors as:
+Ω3 ≡ X Λ AΛ − FΛ B Λ ,
+where F = (X 0 )2 f (U α ) is a generic pre-potential, with U α =
+
+–5–
+
+(2.4)
+α XΛ
+δΛ
+and with f (U α ) being
+X0
+
+some function dependent on the complex structure moduli [36]. Apart from the complex
+structure moduli, the dynamics of the N = 1 type IIB 4D effective theory can be described
+using the following additional chiral variables (S, Ga , Ti ) defined as in [37]:
+S = C0 + i e−φ = C0 + i s ,
+Ga = ca + S ba ,
+
+
+
+
+1
+s
+a b
+a b
+Ti = ρi + k̂iab c b + C0 k̂iab b b − i τi − k̂iab ba bb ,
+2
+2
+
+(2.5)
+
+where τi = 21 kijk tj tk is an Einstein frame 4-cycle volume. In addition we will introduce
+−1
+the short-hand notation k ij ≡ kijk tk
+.
+At the perturbative level, the Kähler potential receives two kinds of corrections: α0
+and gs corrections. Using appropriate chiral variables, a generic form for the Kähler potential incorporating the leading O(α03 ) correction can be written as the sum of two terms
+motivated by their underlying N = 2 special Kähler and quaternionic structure:
+K = Kcs + K ,
+
+(2.6)
+
+where:
+ Z
+
+Kcs = − ln i
+Ω3 ∧ Ω̄3
+
+
+K = − ln −i(S − S) − 2 ln Y .
+
+and
+
+X
+
+(2.7)
+
+Here Y denotes the α0 corrected CY volume [18]:
+ξ
+Y=V+
+2
+
+
+
+S−S
+2i
+
+3/2
+=V+
+
+ξ
+3/2
+
+2 gs
+
+,
+
+(2.8)
+
+where V is the tree-level CY volume V = 16 kijk ti tj tk in Einstein frame and ξ is proportional
+χ(X)
+to the CY Euler characteristics χ: ξ = − ζ(3)
+(for reference ζ(3) ≃ 1.2). Further α0
+2 (2π)3
+and gs corrections have been estimated throughout the years, turning out to be either
+subdominant or reabsorbable by field redefinitions. Finding all the possible α0 corrections
+is an open question. For a recent discussion of these corrections see for instance [38].
+The block diagonal nature of the total Kähler metric (and its inverse) admits the
+following splitting of contributions:
+e−K V = KAB (DA W ) (DB W ) − 3|W |2 ≡ Vcs + Vk ,
+
+(2.9)
+
+where:
+αβ
+(Dα W ) (Dβ W )
+Vcs = Kcs
+
+and
+
+Vk = K AB (DA W ) (DB W ) − 3|W |2 .
+
+(2.10)
+
+Recall that the indices (α, β) correspond to the complex structure moduli U α while the
+indices (A, B) run over the remaining chiral variables {S, Ga , Ti }. For our purposes, we
+choose the orientifold involution such that the odd (1, 1)-cohomology sector is trivial, and
+so there will be no odd moduli present in the current analysis.
+
+–6–
+
+2.1.2
+
+Inverse Kähler metric and useful identities
+
+The derivatives of the Kähler moduli dependent piece of the Kähler potential (K) in (2.7)
+3/2
+can be generically expressed as (with ξˆ ≡ ξ/gs ):
+!
+3 ξˆ
+i
+i ti
+1+
+= −KS ,
+KS =
+KTi = −
+= −KT i .
+(2.11)
+2s
+2Y
+2Y
+Using these derivatives, the various Kähler metric components are found to be:
+!
+1
+3 ξˆ
+3 ξˆ ti
+9 G ij
+9 ξˆ2
+KSS =
+1
+−
+,
+K
+=
+−
+=
+K
+,
+K
+=
+,
++
+Ti S
+S Ti
+Ti T j
+4 s2
+4Y
+8 Y2
+16 s Y 2
+4 Y2
+
+(2.12)
+
+where, using our shorthand notation, the α0 -corrected moduli space metric and its inverse,
+G and G −1 , are given by:
+kijk tk
+Gij
+τi τj
+=
+−
+36
+Y (6V − 2 Y)
+4Y
+
+and
+
+36 G ij = 2 ti tj − 4 Y k ij .
+
+(2.13)
+
+Hence the inverse Kähler metric components are found to be [39]:
+K SS = γ1 ,
+
+K Ti S = γ2 τi = K S T i ,
+
+K Ti T j =
+
+4 2
+γ2
+Y Gij + 2 τi τj ,
+9
+γ1
+
+(2.14)
+
+where γ1 and γ2 are given by:
+γ1 =
+
+ˆ
+s2 (4 V − ξ)
+,
+ˆ
+(V − ξ)
+
+γ2 =
+
+3 s ξˆ
+.
+ˆ
+(V − ξ)
+
+(2.15)
+
+Here let us note that in the absence of α0 corrections, i.e. setting ξˆ = 0, we have γ1 = 4 s2
+and γ2 = 0, and the inverse metric components in (2.14) reduce to the standard results
+of [35]. Considering the explicit components of the inverse Kähler metric, we find the
+following useful simplified relations:
+KS K SS =
+KS K ST i =
+
+ˆ
+ˆ
+i s (4 V − ξ)(V
++ 2 ξ)
+= − K SS KS ,
+ˆ
+ˆ
+(V − ξ)(2V + ξ)
+ˆ
+3 i ξˆ τi (V + 2 ξ)
+= − K Ti S KS ,
+ˆ
+ˆ
+(V − ξ)(2V
++ ξ)
+
+KTi K Ti S = −
+KTi K Ti T j = −
+
+9 i s ξˆ V
+= − K S T i KT i ,
+ˆ
+ˆ
+(V − ξ)(2V + ξ)
+
+i τj (4 V 2 + V ξˆ + 4 ξˆ2 )
+= − K Tj T i KT i ,
+ˆ
+ˆ
+(V − ξ)(2V
++ ξ)
+
+–7–
+
+(2.16)
+
+together with:
+KS K SS KS =
+
+ˆ
+ˆ2
+(4 V − ξ)(V
++ 2 ξ)
+,
+ˆ
+ˆ2
+(V − ξ)(2V
++ ξ)
+
+KS K ST i KT i = −
+KTi K Ti T j KT j =
+
+ˆ
+9 ξˆ V(V + 2 ξ)
+= KTi K Ti S KS ,
+ˆ
+ˆ2
+(V − ξ)(2V
++ ξ)
+
+3 V(4 V 2 + V ξˆ + 4 ξˆ2 )
+.
+ˆ
+ˆ2
+(V − ξ)(2V
++ ξ)
+
+(2.17)
+
+These identities will be used extensively in the derivation of the master formula for the
+scalar potential. As a check, when α0 corrections are turned off, i.e. when ξˆ = 0, these
+useful identities reduce to the following well-known tree-level results:
+KS K SS = 2 i s = − K SS KS ,
+
+KTi K Ti S = 0 = K S T i KT i ,
+KS K SS KS = 1,
+2.2
+
+KS K ST i = 0 = K Ti S KT i ,
+
+KTi K Ti T j = −2 i τj = − K Tj T i KT i ,
+
+KS K ST i KT i = 0,
+
+KTi K Ti T j KT j = 3 .
+
+(2.18)
+
+A master formula for the scalar potential
+
+For a generic superpotential which depends on all closed string chiral variables, namely S,
+Ti and U α , the F -term scalar potential (2.1) can be rewritten as:
+αβ
+(Dα W ) (Dβ W ) + K SS (DS W ) (DS W ) + K ST i KT i (DS W ) W
+e−K V = Kcs
+
++ KTi K Ti S (DS W ) W + K ST i (DS W ) W T i + K Ti S WTi (DS W )
++ KTi K Ti T j W W T j + WTi K Ti T j KT j W + WTi K Ti T j W T j
+
+
++ KTi K Ti T j KT j − 3 |W |2 .
+
+(2.19)
+
+In standard flux compactifications with F3 and H3 fluxes, the tree-level superpotential
+depends only on the complex structure moduli and the axio-dilaton, i.e. W = W0 (U α , S).
+This flux-dependent superpotential can fix all complex structure moduli and the axiodilaton supersymmetrically at leading order by enforcing:
+Dα W0 = 0 = Dα W 0 ,
+
+DS W0 = 0 = DS W 0 .
+
+and
+
+(2.20)
+
+The Kähler moduli can appear in W only via non-perturbative effects. In what follows,
+we shall assume n non-perturbative contributions to W which can be generated by either
+rigid divisors, such as shrinkable dP 4-cycles, or non-rigid divisors with non-zero magnetic
+fluxes [40–42]. The corresponding non-perturbative superpotential is then:2
+W = W0 +
+
+n
+X
+
+Ai e−i ai Ti .
+
+(2.21)
+
+i=1
+2
+
+The exponents (−i ai Ti ) in (2.21) follow from the definition of the chiral variables in (2.5) which have
+been chosen to make explicit the T-duality transformations between type IIA and type IIB [43].
+
+–8–
+
+Note that in (2.21) there is no sum in the exponents (−i ai Ti ), and summations are to be
+understood only when upper indices are contracted with lower indices; otherwise we will
+write an explicit sum as in (2.21). We will suppose that out of h1,1 Kähler moduli, only
+the first n appear in W , i.e. i = 1, ..., n ≤ h1,1 .
+Assuming that the S and U -moduli are stabilised as in (2.20) and considering a superpotential given by (2.21), the scalar potential (2.19) reduces to:
+h
+
+ 
+
+i
+V = eK KTi K Ti T j W W T j + WTi K Ti T j W T j + KT j W + KTi K Ti T j KT j − 3 |W |2 .
+Moreover, using the identities in eqs. (2.16)-(2.17) which include O(α03 ) corrections to the
+Kähler potential, this scalar potential can be written as the sum of three terms:
+V = VO(α03 ) + Vnp1 + Vnp2 ,
+
+(2.22)
+
+where (introducing phases into the parameters as W0 = |W0 | ei θ0 and Ai = |Ai | ei φi ):
+VO(α03 ) = eK
+Vnp1 = eK
+
+ˆ 2 + 7 V ξˆ + ξˆ2 )
+3 ξ(V
+|W0 |2 ,
+ˆ
+ˆ2
+(V − ξ)(2V
++ ξ)
+n
+X
+i=1
+
+
+×
+Vnp2 = eK
+
+(2.23)
+
+2 |W0 | |Ai | e−ai τi cos(ai ρi + θ0 − φi )
+
+ˆ 2 + 7 V ξˆ + ξˆ2 ) 
+(4V 2 + V ξˆ + 4 ξˆ2 )
+3 ξ(V
+(ai τi ) +
+,
+ˆ
+ˆ
+ˆ
+ˆ2
+(V − ξ)(2V
++ ξ)
+(V − ξ)(2V
++ ξ)
+
+n X
+n
+X
+i=1 j=1
+
+|Ai | |Aj | e− (ai τi +aj τj ) cos(ai ρi − aj ρj − φi + φi )
+
+!
+
+ξˆ
+4V − ξˆ
+× −4 V +
+(a τ ) (aj τj )
+(kijk tk ) ai aj +
+ˆ i i
+2
+(V − ξ)
+
+ˆ 2 + 7 V ξˆ + ξˆ2 ) 
+(4V 2 + V ξˆ + 4 ξˆ2 )
+3 ξ(V
++
+(ai τi + aj τj ) +
+.
+ˆ
+ˆ
+ˆ
+ˆ2
+(V − ξ)(2V
++ ξ)
+(V − ξ)(2V
++ ξ)
+
+Notice that VO(α03 ) reproduces the known O(α03 ) contribution to the potential first derived
+in [18]. This term vanishes for ξˆ = 0, reproducing the standard no-scale structure in the
+absence of a T -dependent non-perturbative W . On the other hand, for very large volume
+ˆ this term takes the standard form which plays a crucial rôle in LVS models [11]:
+V  ξ,
+VO(α03 ) ≃
+
+eKcs
+3 ξˆ |W0 |2
+×
+.
+2 s V2
+4V
+
+(2.24)
+
+Let us also stress that VO(α03 ) depends only on the overall volume V, while Vnp1 depends
+on V and the 4-cycle moduli τi (with the additional dependence on the axions ρi ). Hence
+these two contributions to V could be minimised by taking derivatives with respect to
+V and (h1,1 − 1) 4-cycle moduli. However Vnp2 depends on the quantity kijk tk which in
+general cannot be inverted to be expressed as an explicit function of the τi ’s. Thus our
+
+–9–
+
+master formula for the scalar potential shows that moduli stabilisation is more naturally
+performed in terms of the 2-cycle moduli ti . As discussed in the introduction, we will see
+that this strategy allows the study of a much wider set of cases, leading to new interesting
+moduli stabilisation schemes.
+Moreover (2.23) determines the complete form of V simply by specifying topological
+quantities such as the intersection numbers and the CY Euler number which controls O(α03 )
+corrections, and the number n of non-perturbative contributions to W . Before proceeding
+to find new vacua, in Tab. 1 we show how our master formula can elegantly reproduce
+known moduli stabilisation models parametrised by different choices of h1,1 , n and ξˆ (see
+App. A for an explicit derivation of these potentials from our master formula).
+Model
+1-modulus KKLT [10]
+1-modulus KKLT with α0 -uplift [15–17]
+2-moduli KKLT [44, 45]
+2-moduli KKLT with α0 -uplift [42]
+2-moduli Swiss cheese LVS [6, 11, 46, 47]
+3-moduli Swiss cheese LVS [48, 49]
+3-moduli fibred LVS [22]
+
+h1,1
+h1,1 = 1
+h1,1 = 1
+h1,1 = 2
+h1,1 = 2
+h1,1 = 2
+h1,1 = 3
+h1,1 = 3
+
+n
+n=1
+n=1
+n=2
+n=2
+n=1
+n=2
+n=2
+
+ξˆ
+ξˆ = 0
+ξˆ > 0
+ξˆ = 0
+ξˆ > 0
+ξˆ > 0
+ξˆ > 0
+ξˆ > 0
+
+Table 1: Various classes of known models whose scalar potential can be easily read-off from our
+master formula (2.23).
+
+Furthermore, our master formula features an explicit dependence on all phases and
+axion fields. In this paper we shall fix the axions analytically and scan numerically for
+minima along the directions of the 2-cycle moduli. However (2.23) allows for a more
+general numerical analysis of the many axion potential. We leave this for future work.
+2.3
+
+Validity of the effective field theory
+
+Before using the master formula in (2.23) to find new minima, let us list the conditions
+that have to be satisfied to trust the validity of the low-energy 4D effective field theory:
+(i)
+
+1. Stringy corrections: Stringy effects can be neglected if each 2-cycle 
+Σ2 , i =
+(i)
+
+1, ..., h1,1 , has a string-frame volume larger than the string scale, i.e. Vols Σ2
+α0
+
+1, ..., h1,1 .
+
+
+
+∀i = 
+Given
+ that
+ string and Einstein frame volumes are related as
+(i)
+1/2
+(i)
+Vols Σ2
+= gs VolE Σ2 , and expressing the 2-cycle volumes in units of `s =
+
+
+√
+(i)
+2π α0 as VolE Σ2 = |ti | `2s , the condition to trust the supergravity regime is [26]:
+|ti | 
+
+1
+1/2
+gs (2π)2
+
+∀ i = 1, ..., h1,1 .
+
+(2.25)
+
+The 10D tree-level action receives higher derivative corrections at different orders in
+α0 which, at the level of the 4D effective theory, appear as an expansion in inverse
+powers of the Kähler moduli. Hence the condition (2.25) guarantees that the α0
+
+– 10 –
+
+expansion is well-behaved. In what follows, we shall consider only the leading O(α03 )
+correction to the Kähler potential in (2.8) which generates VO(α03 ) in (2.23). However
+this expression can be trusted only if higher α0 effects can be neglected which requires:
+ξ
+3/2
+2 gs V
+
+ 1.
+
+(2.26)
+
+2. String loops: A crucial requirement to trust moduli stabilisation is that perturbation theory does not break down. Given that string loop corrections to the Kähler
+potential are proportional to the string coupling gs , we need therefore to impose:
+
+S−S
+−1
+−φ
+gs = e =
+ 1,
+(2.27)
+2i
+which can be met by an appropriate choice of background fluxes that fix S. In our
+analysis we shall neglect gs corrections to the effective action. As explained in [13, 50],
+this is justified by the existence of an ‘extended no-scale structure’ so that string loop
+effects start contributing to the effective action only at O(gs2 α04 ).
+3. Non-perturbative effects: The superpotential (2.21) contains only single-instanton
+contributions while in general multi-instanton effects would also be present. These
+can be safely neglected if:
+ai τi  1
+
+∀ i = 1, ..., n .
+
+(2.28)
+
+4. 4D supergravity regime: The low-energy supergravity theory admits a valid 4D
+description only if the Kaluza-Klein (KK) modes are heavy. In a string compactifica(i)
+tion, there can actually be several KK scales MKK associated with either bulk modes
+or open string excitations on D7-branes wrapped around 4-cycles. We therefore require the following hierarchy of mass scales:
+(i)
+
+m3/2 , mmod  MKK . Ms  Mp
+
+∀i,
+
+(2.29)
+
+where mmod denotes generic moduli masses, m3/2 is the gravitino mass, Ms is the
+string scale and Mp is the reduced Planck mass given by (see [27] for the proper
+normalisation factor κ = gs eKcs /(8π) in 4D Einstein frame):
+√
+√ |W0 |
+π
+(i)
+κ
+Mp ,
+MKK = √ 1/4 Mp ,
+V
+V τi
+√
+1/4
+√
+gs
+π
+Ms ≡ 1/ α0 = √
+Mp ,
+Mp = (8πG)−1/2 = 2.4 · 1018 GeV . (2.30)
+V
+
+m3/2 = eK/2 |W | ≃
+
+(i)
+
+The condition Ms  Mp ∀ i is guaranteed by (2.25) while MKK . Ms corresponds
+to τi & gs−1 which is always true for ‘large’ 4-cycles while it is marginally satisfied for
+(i)
+relatively ‘small’ moduli. The condition m3/2  MKK is more severe when i = bulk
+
+– 11 –
+
+with τbulk ≃ V 2/3 . In this case we have therefore to impose:
+r
+κ
+(bulk)
+|W0 |  V 1/3 ,
+m3/2  MKK
+⇔
+π
+
+(2.31)
+
+which sets an important upper bound on the vacuum expectation value of the fluxgenerated superpotential |W0 |.
+5. Superspace higher-derivative expansion: Ref. [51] established that the coupling
+(bulk)
+of heavy bulk KK modes to light states scales as g ∼ MKK /Mp ∼ V −2/3  1.
+Denoting the auxiliary field of the light fields as F ∼ m3/2 Mp and the UV cut-off
+(bulk)
+
+as Λ ∼ MKK , the superspace derivative expansion is therefore under control if
+(bulk)
+g F/Λ2 ∼ m3/2 /MKK  1, which is guaranteed to hold if (2.31) is satisfied.
+
+3
+
+Explicit CY examples
+
+In this section we will present a classification of all CY threefolds with 1 ≤ h1,1 ≤ 3 from
+the Kreuzer-Skarke list where these manifolds have been constructed via toric geometry
+[5]. We will perform this analysis with the help of a database [7] which provides several
+topological properties of all CY threefolds with 1 ≤ h1,1 ≤ 6 arising from triangulations
+of the polytopes of the Kreuzer-Skarke list. The most relevant data that we will use are
+the GLSM charges, the Stanley-Reisner (SR), the intersection tensor, the Mori cone and
+Euler characteristics. Knowing the GLSM charges along with the SR ideal will enable us to
+analyse the divisor topologies using the cohomCalg package [52, 53]. We will then perform
+a choice of divisor basis which takes the overall volume V in its simplest possible form
+and makes some important features for moduli stabilisation manifest (like the presence of
+diagonal dP divisors for LVS constructions). This will also allow us to divide the models
+into those where the volume admits a simple form in terms of 4-cycle volume moduli, and
+those where it does not.
+This classification will then be used in Sec. 4.1 and 4.2 to show how our master formula
+can be used to stabilise the Kähler moduli in generic situations where the volume can be
+expressed in a simple way only as a function of 2-cycle moduli. In fact, we will show that
+converting 2- into 4-cycle volume moduli can be hard even for simple examples where only
+a few intersection numbers are non-zero. In what follows we denote the various models as
+Mi,j , where i indicates the value of h1,1 while j labels a given CY threefold at fixed h1,1 .
+3.1
+
+h1,1 = 1
+
+In the presence of a single Kähler modulus the conversion from t to τ is trivially possible.
+In this case the Kreuzer-Skarke database features 5 distinct CY threefolds whose details
+relevant for moduli stabilisation are summarised in Tab. 2.
+
+– 12 –
+
+Model
+M1,1
+M1,2
+M1,3
+M1,4
+M1,5
+
+χ
+-40
+-200
+-204
+-288
+-296
+
+k111
+1
+5
+3
+1
+2
+
+τ1
+1 2
+2 t1
+5 2
+2 t1
+3 2
+2 t1
+1 2
+2 t1
+t21
+
+V
+
+1 3
+6 t1
+5 3
+6 t1
+1 3
+2 t1
+1 3
+6 t1
+1 3
+3 t1
+
+Kähler cone
+t1 > 0
+t1 > 0
+t1 > 0
+t1 > 0
+t1 > 0
+
+Table 2: Relevant data for CY geometries with h1,1 = 1.
+
+3.2
+
+h1,1 = 2
+
+In the Kreuzer-Skarke database there are 36 reflexive polytopes with h1,1 = 2 leading
+to 48 triangulations [7]. However given that different polytopes can lead to the same
+triangulations, there are only 39 distinct CY geometries listed in Tab. 11 in App. D. As
+can be seen from Tab. 11, in all cases 1 intersection number can always be eliminated
+by an appropriate choice of basis.3 All these 39 models with h1,1 = 2 can be classified as
+follows:
+• 22 CY geometries feature 1 diagonal dP 4-cycle, allowing them to be written in the
+3/2
+3/2
+strong Swiss cheese form V ∼ τ1 − τ2 . The negative sign arises from the Kähler
+cone condition t1 < 0 which characterises all LVS models, as can be seen in Tab. 11.
+• 10 CY threefolds are K3-fibred. In these cases at least 2 intersection numbers can be
+removed by an appropriate choice of basis. For example, if D1 is the K3 divisor, one
+can always find another suitable divisor D2 to form a basis where k111 = k112 = 0, as
+a consequence of a theorem for K3-fibred CY threefolds [54, 55]. Moreover, in some
+cases (like CP4 [1, 1, 2, 2, 2]), it is even possible to make k222 = 0, leaving k122 as the
+√
+only non-zero intersection number and V ∼ t1 t22 ∼ τ1 τ2 . As can be seen from Tab.
+11, M2,33 is an example with this simple form of the CY volume.
+• 7 CY threefolds do not admit a simple volume form in terms of 4-cycle volume moduli.
+These are the examples which are of interest to us and are highlighted as ‘hard’ in
+Tab. 11. The simplest example in this class of models is M2,1 with volume form:
+V=
+
+
+1 2
+t1 t2 + t1 t22 .
+2
+
+(3.1)
+
+This simple example already illustrates the difficulty to invert the relations between
+2- and 4-cycle volume moduli which look like:
+τ1 = t1 t2 +
+
+1 2
+t ,
+2 2
+
+τ2 = t1 t2 +
+
+1 2
+t .
+2 1
+
+(3.2)
+
+3
+Here we limit the discussion to the coordinate divisors but there may be some non-toric divisor combinations that reduce this number further. However, such cases are likely to be non-smooth and hence they
+are not suitable for phenomenology.
+
+– 13 –
+
+The conversion from 2- to 4-cycle moduli results in the following 4 sets of solutions:
+r
+
+4 τ1 − 3 τ2 + x2±
+2
+√
+t1 = ±
+x± ,
+(3.3)
+x± ,
+t2 = ±
+3
+6 τ2
+where:
+
+r
+x± =
+
+τ2 − 2 τ1 ± 2
+
+q
+τ12 − τ1 τ2 + τ22 .
+
+(3.4)
+
+A unique solution is identified by the Kähler cone conditions {t1 > 0, t2 > 0} which
+select in (3.3) the x+ -dependent solution with positive signs. In order to illustrate our
+numerical analysis, in what follows we shall consider M2,6 and M2,20 as representative
+benchmark examples of this class of ‘hard’ CY models.
+3.3
+
+h1,1 = 3
+
+In the h1,1 = 3 case, a generic CY geometry features 10 intersection numbers. In the
+Kreuzer-Skarke database, there are 244 reflexive polytopes for h1,1 = 3 leading to 569 triangulations [7]. However given that different polytopes can lead to the same triangulation,
+there are only 305 distinct CY geometries which we classify as follows:4
+• 232 CY geometries have at least 1 divisor, say Dp , whose corresponding intersection
+numbers satisfy the following condition first derived in [56]:
+kppi kppj = kppp kpij
+
+∀ i, j .
+
+(3.5)
+
+This condition allows to trade easily one 2-cycle modulus for τp since it guarantees
+that τp can be written as a perfect square of a sum of 2-cycle volume moduli if
+p
+kppp 6= 0 (or trivially if kpij = 2 kpii kpjj with i 6= j for kppp = 0) since:
+2
+1
+1
+τp = kpij ti tj =
+kppi ti .
+2
+2kppp
+
+(3.6)
+
+Out of these 232 cases, 132 are standard LVS models where Dp is a dP divisor with
+kppp 6= 0, while in the remaining 100 cases Dp has a different topology, and so the
+relation (3.6) is not guaranteed to hold. In turn, in these 100 cases the volume form
+does not necessarily admit a simple expression in terms of 2-cycle volume moduli.
+Following [56], the 132 LVS geometries can be classified as:
+1. Strong Swiss cheese: 39 models have a volume given schematically by V ∼
+3/2
+3/2
+3/2
+τ3 − τ2 − τ1 , which is equivalent to saying that for such models one can
+always find a basis where the only non-zero intersections are k111 , k222 and k333 .
+2. K3 fibrations: 43 models are K3-fibred, leading to a volume form which can be
+√
+3/2
+written schematically as V ∼ τ3 τ2 − τ1 , implying that the only non-zero
+intersection numbers as k111 and k233 .
+4
+
+The number of distinct CY examples is actually 306 but 1 is a non-favorable geometry which we do
+not consider relevant for phenomenology.
+
+– 14 –
+
+3. Strong Swiss cheese-like: 36 models feature a volume which schematically looks
+3/2
+like V ∼ τ3 − (a τ1 + b τ2 )3/2 − τ1 3/2 where a and b are positive integers.
+This geometry is similar but qualitatively different from a strong Swiss cheese
+since (a D1 + b D2 ) does not correspond to a smooth divisor, and so (a τ1 + b τ2 )
+cannot be redefined as a new τx . These geometries have been used in [57] to
+study poly-instanton effects and in [58–63] for cosmological applications.
+4. Structureless: 14 models, despite admitting a diagonal dP, do not feature a
+volume which can be written in terms of the τ ’s in a simple way. In these cases
+3/2
+the volume can be generically expressed as V ∼ f3/2 (τ2 , τ3 ) − τ1 where f is a
+homogeneous function of degree 3/2. The relevant data for these 14 examples
+are presented in Tab. 12 in App. E. In what follows we shall focus on model
+M3,1 to illustrate our numerical analysis.
+• 73 models do not admit a divisor like Dp which obeys the condition (3.5), implying
+that in these cases the volume does not admit a simple form in terms of 4-cycle
+volumes. These cases are definitely of interest for our numerical study, and so in
+what follows we shall consider a representative example for this class of CY models,
+which we call M3,15 , characterised by the following topological data:
+M3,15 :
+
+χ = − 240 ,
+
+k111 = 4 ,
+
+Kähler cone:
+
+k112 = −2 ,
+
+t1 > 0 ,
+
+t2 > t1 ,
+
+k113 = −2 ,
+t3 > t1 .
+
+k123 = 2 ,
+(3.7)
+
+Let us finally point out that this discussion shows that 118 models out of 132 LVS models
+can definitely be studied using the conventional approach based on 4-cycle moduli, corresponding to 38.7% of all 305 cases. However the 14 ‘structureless’ LVS models and the 73
+models without a divisor which satisfies (3.5) are certainly better analysed using 2-cycle
+moduli, corresponding to 28.5% of all 305 cases.
+
+4
+
+Moduli stabilisation results
+
+4.1
+
+Reproducing old vacua
+
+As a warmup to check the validity of our numerical analysis, we first focus on standard
+KKLT vacua with a single Kähler modulus and typical LVS models with 2 Kähler moduli
+one of which is a diagonal dP divisor.
+4.1.1
+
+KKLT with a single modulus
+
+The potential of the simplest KKLT model with a single Kähler modulus and no α0 corrections is given by our master formula (2.23) which for h1,1 = n = 1 and ξˆ = 0
+reduces to (setting hsi = gs−1 ):
+
+
+9k111 gs eKcs
+|A1 | −a1 τ1
+−a1 τ1
+VKKLT =
+a1 |A1 | e
+|W0 | cos (a1 ρ1 + θ0 − φ1 ) +
+e
+(a1 τ1 + 3) .
+3
+τ12
+(4.1)
+
+– 15 –
+
+After performing the axion minimisation by setting (a1 ρ1 +θ0 −φ1 ) = π, a simple calculation
+leads to the following relation in a generic extremum for the saxion τ1 :
+V0 ≡ hVKKLT i = −
+
+3k111 gs eKcs 2
+a1 |A1 |2 e−2a1 hτ1 i ≤ 0 ,
+hτ1 i
+
+(4.2)
+
+which excludes dS vacua in the minimal KKLT model. This problem can be circumvented
+by adding uplifting contributions which can come from several different sources. In the
+case of anti-branes, the uplifting term can be simply written as:
+up
+VKKLT
+= VKKLT + Vup
+
+with
+
+Vup =
+
+δ
+,
+τ1p
+
+(4.3)
+
+where δ > 0 is a tunable flux dependent parameter. The new term Vup modifies the
+condition in (4.2) as follows:
+
+
+p
+up
+up
+,
+(4.4)
+V0 ≡ hVKKLT i = V0 + hVup i 1 −
+a1 hτ1 i + 2
+showing that the dS no-go condition can be avoided for 0 < p < a1 hτ1 i + 2. Using Tab. 2,
+the potentials (4.1) and (4.3), where we have set p = 3, can be minimised numerically for
+all 5 CY threefolds with h1,1 = 1, leading to the results given in Tab. 3. One can easily
+check that all minima lie in a region where the effective field theory is under control since
+each condition of Sec. 2.3 is satisfied.
+Model
+M1,1
+M1,2
+M1,3
+M1,4
+M1,5
+
+ht1 i
+15.0724
+6.7406
+8.70207
+15.0724
+10.6578
+
+hVi
+570.688
+255.220
+329.487
+570.688
+403.537
+
+V0 × 1015
+−3.97181
+−19.8590
+−11.9154
+−3.97181
+−7.94361
+
+δ × 108
+5
+0.3
+1
+5
+2
+
+ht1 i
+15.1637
+6.80975
+8.81984
+15.1637
+10.7779
+
+hVi
+581.12
+263.155
+343.046
+581.12
+417.331
+
+V0up × 1015
+0.220944
+11.265
+10.3356
+0.220944
+5.30588
+
+Table 3: KKLT vacua with and without anti-brane uplifting for all CY threefolds with h1,1 = 1.
+The underlying parameters are set as W0 = −10−4 , a1 = 0.1, gs = 0.1, Kcs = 0.1, A1 = 1 and the
+axion ρ1 is minimised at hρ1 i = 0.
+
+In the KKLT framework, dS vacua can also be achieved by including α0 corrections
+which are captured by our master formula (2.23) for ξˆ 6= 0. In this case, the scalar potential
+is the sum of the following 3 terms (after fixing again (a1 ρ1 + θ0 − φ1 ) = π):
+ˆ 2 + 7 ξˆ V + ξˆ2 )
+3 ξ(V
+|W0 |2 ,
+(4.5)
+ˆ
+ˆ2
+(V − ξ)(2V
++ ξ)
+"
+#
+2 + V ξˆ + 4 ξˆ2 )
+ˆ 2 + 7 ξˆ V + ξˆ2 )
+(4V
+3
+ξ(V
+Vnp1 = −2 eK |W0 | |A1 | e−a1 τ1
+(a1 τ1 ) +
+,
+ˆ
+ˆ
+ˆ
+ˆ2
+(V − ξ)(2V
++ ξ)
+(V − ξ)(2V
++ ξ)
+!
+
+ˆ p
+ξ
+4V − ξˆ
+Vnp2 = eK |A1 |2 e−2a1 τ1 −4 a21 V +
+2 k111 τ1 +
+(a τ )2
+ˆ 1 1
+2
+(V − ξ)
+
+VO(α03 ) = eK
+
+– 16 –
+
+ˆ 2 + 7 ξˆ V + ξˆ2 ) 
+3 ξ(V
+(4V 2 + V ξˆ + 4 ξˆ2 )
+(2 a1 τ1 ) +
+.
++
+ˆ
+ˆ
+ˆ
+ˆ2
+(V − ξ)(2V
++ ξ)
+(V − ξ)(2V
++ ξ)
+This scalar potential can be minimised numerically with respect to either t1 or τ1 , since
+in this simple case the conversion between 2- and 4-cycle moduli is trivial. The results of
+our numerical analysis are presented in Tab. 4 which shows that these dS vacua tend to
+be located at relatively small volume. However the effective field theory is still marginally
+under control since all conditions listed in Sec. 2.3 are satisfied. In particular, the condition
+(bulk)
+(2.31) is still slightly met even for relatively small values of V since m3/2 ≃ 0.1 MKK .
+For a condensing gauge group with rank N = 32, (corresponding to a1 = π/16), τ1 at the
+dS minimum is around 15 as can be seen from Fig. 1. Larger values of hVi of O(50 − 100)
+can be realised for N ∼ O(100) and |W0 | ∼ O(50 − 100) [14–16, 42] even if these values
+have their own limitations and criticism [51, 64].
+gs
+0.1
+0.2
+0.2
+0.2
+0.2
+
+Model
+M1,1
+M1,2
+M1,3
+M1,4
+M1,5
+
+−W0
+4.55
+0.68
+0.93
+1.24
+0.74
+
+ht1 i
+5.56456
+2.43598
+3.20034
+5.61173
+3.86787
+
+hτ1 i
+15.4822
+14.8350
+15.3633
+15.7457
+14.9604
+
+hVi
+28.7172
+12.0459
+16.3892
+29.4536
+19.2883
+
+ξˆ
+1.53245
+2.70901
+2.76319
+3.90097
+4.00933
+
+V0 × 107
+0.327441
+0.404328
+6.30582
+9.80739
+7.42126
+
+Table 4: dS KKLT vacua with α0 -uplift for all CYs with h1,1 = 1. The underlying parameters are
+π
+, Kcs = 1, A1 = 1 and the axion ρ1 is minimised at hρ1 i = 0.
+set as a1 = 16
+
+V(τ 1 )
+
+3
+
+2
+
+1
+
+15
+
+20
+
+25
+
+30
+
+35
+
+40
+
+τ1
+
+Figure 1: KKLT scalar potentials V (τ1 ) (×105 ) with α0 -uplift for all 5 models in Tab. 4.
+
+4.1.2
+
+LVS with diagonal del Pezzo
+
+The potential of the simplest LVS model with 2 Kähler moduli and volume of the form
+3/2
+3/2
+V ≃ τ2 − τ1 , can be obtained from our master formula (2.23) setting h1,1 = 2, n = 1
+
+– 17 –
+
+and ξˆ 6= 0. Taking the large volume limit and minimising the axionic direction ρ1 , this
+scalar potential can be approximated as the sum of 3 terms:
+VLVS = V1 + V2 + V3 ,
+with:
+
+(4.6)
+
+√
+
+τ1 e−2 a1 τ1
+γ
+β τ1 e−a1 τ1
+< 0,
+V3 = 3 ,
+(4.7)
+> 0,
+V2 = −
+2
+V
+V
+V
+where the model-dependent parameters α and β are positive while the sign of γ ∝ −χ
+depends on the sign of the CY Euler number χ. Notice that the minus sign in front of
+V2 is due to the ρ1 minimisation for β > 0. The 3 terms in (4.6) are of the same order if
+V ∼ ea1 τ1 , and so any extremum of this potential lies at exponentially large volume.
+Let us now analyse the vacuum structure of the LVS potential (4.6). Trading τ2 for the
+overall volume V, the extremisation conditions ∂V VLVS = ∂τ1 VLVS = 0 lead to the following
+relations among the 3 terms of the LVS potential at any extremum:
+
+
+
+
+1
+1
+hV1 i = hV3 i 1 −
+> 0,
+hV2 i = −hV3 i 2 −
+< 0,
+(4.8)
+a1 hτ1 i
+2 a1 hτ1 i
+V1 =
+
+α
+
+which imply that at any extremum:
+hVLVS i = −
+
+hV3 i
+.
+2 a1 hτ1 i
+
+(4.9)
+
+In the regime where the instanton series is under control, i.e. for a1 hτ1 i  1, the second
+expression in (4.8) simplifies to hV2 i = −hV3 i < 0 which implies that a solution can exist
+only if hV3 i > 0, i.e. for negative CY Euler number since γ ∝ −χ. In turn, (4.9) forces the
+potential to be negative at any extremum, i.e. hVLVS i < 0. This is a no-go result for any
+dS extremum, both potential minima and maxima. This is consistent with the known fact
+that LVS models without any uplifting term give rise just to AdS minima.
+This no-go result can be evaded by adding an additional positive contribution to the
+LVS potential (4.6) which can be expressed as V4 = δ/V p with δ > 0. This term can come
+from either anti-D3s [10], non-perturbative effects at singularities [65] or T-branes [66], and
+modifies the relation (4.9) for the value of the potential V = VLVS + V4 at any extremum
+as follows:
+
+
+hV3 i
+p
+p
+hV i = −
++ hV4 i 1 − −
+.
+(4.10)
+2 a1 hτ1 i
+3 6a1 hτ1 i
+For p = 3, V4 can be reabsorbed into V3 via a proper shift of γ to include δ, and so hV i
+is still negative. More generally, one can see that hV i < 0 for p ≥ 3. Hence, the only way
+to evade the dS no-go result found above is to consider p < 3. In this case, (4.10) shows
+clearly that one can easily obtain hV i > 0 since the term proportional to hV4 i becomes
+positive (for a1 hτ1 i  1) and can compensate the fact that the term proportional to hV3 i
+is negative. This is natural since in order to obtain dS minima the uplifting term has to
+dominate at large volume.
+
+– 18 –
+
+4.2
+
+Discovering new vacua
+
+Let us now show how new classes of type IIB vacua can be found with the help of numerical
+techniques and minimising the scalar potential with respect to 2-cycle volume moduli.
+4.2.1
+
+New KKLT vacua
+
+Let us now focus on a case with h1,1 = 2, which leads to new KKLT vacua. This is model
+M2,6 in Tab. 11 in App. D which we classify as ‘hard’ since V does not admit a simple
+form in terms of the 4-cycle volume moduli. In this case we shall perform numerical moduli
+stabilisation using the 2-cycle volume moduli.
+The CY threefold of model M2,6 corresponds to the polytope ID #10 in the CY
+database of [7] and it is defined by the following toric data:
+CY
+3
+3
+
+x1
+1
+0
+SD1
+
+x2
+1
+0
+SD1
+
+x3
+1
+0
+SD1
+
+x4
+0
+1
+SD2
+
+x5
+0
+1
+SD2
+
+x6
+0
+1
+SD2
+
+where what we call the ‘special deformation’ divisors SD1 and SD2 (following the nomenclature of [25, 26, 33]) are represented by the following Hodge diamond:
+1
+0
+SD1 ≡ 2
+
+0
+30
+
+0
+
+0
+
+2 ≡ SD2 .
+
+(4.11)
+
+1
+The Hodge numbers are (h2,1 , h1,1 ) = (83, 2), the Euler number is χ = −162 and the SR
+ideal is SR = {x1 x2 x3 , x4 x5 x6 }. As can be seen from Tab. 11 in App. D, the intersection
+numbers and the Kähler cone in the basis of smooth divisors D1 = {1, 0} = SD1 and
+D2 = {0, 1} = SD2 are:
+k111 = k222 = 0 ,
+
+k112 = k122 = 3 ,
+
+Kähler cone:
+
+t1 > 0 , t2 > 0 .
+
+(4.12)
+
+In this case the overall volume and the 4-cycle moduli take the following form:
+V=
+
+
+3 2
+t1 t2 + t1 t22 ,
+2
+
+τ1 = 3 t1 t2 +
+
+3 2
+t ,
+2 2
+
+τ2 = 3 t1 t2 +
+
+3 2
+t .
+2 1
+
+The scalar potential of this non-standard KKLT model can be obtained from our master
+formula (2.23) by setting h1,1 = n = 2 and ξˆ = 12.4128 which follows from χ = −162 and
+our choice of the string coupling gs = 0.1.
+Notice that, under the exchange t1 ↔ t2 , both V and the Kähler cone are invariant
+and τ1 ↔ τ2 . Thus the scalar potential is symmetric if A1 = A2 and a1 = a2 . In this case,
+the minimisation solutions have therefore to be symmetric. In Tab. 5 we present such
+symmetric solutions, along with non-symmetric ones for A1 6= A2 and/or a1 6= a2 . We
+
+– 19 –
+
+only show vacua which are AdS, but larger values of |W0 | would give rise to α0 -uplifted dS
+solutions. All minima lie in a region where the effective 4D theory is under control.
+W0
+−0.01
+−0.01
+−0.10
+−0.01
+−0.01
+
+{A1 , A2 }
+{100, 100}
+{50, 50}
+{50, 50}
+{100, 100}
+{170, 180}
+
+a1
+π/8
+π/10
+π/16
+π/12
+π/12
+
+a2
+π/8
+π/10
+π/16
+π/8
+π/11
+
+ht1 i
+2.62890
+2.84489
+3.17337
+2.07977
+3.01803
+
+ht2 i
+2.62890
+2.84489
+3.17337
+3.89165
+3.43224
+
+hVi
+54.5059
+69.0745
+95.8698
+72.4963
+100.224
+
+V0 (×109 )
+−8.97384
+−5.73264
+−291.656
+−5.30985
+−2.91829
+
+Table 5: Benchmark examples for Model M2,6 .
+
+Larger values of the CY volume can be realised by increasing the rank of the condensing
+gauge group, which may be beneficial to gain better control over the effective theory. In
+Fig. 2 we present contour plots for the scalar potential in the (t1 , t2 )-plane, showing the
+AdS minimum of the last two cases presented in Tab. 5.
+
+4.1
+
+3.48
+
+3.46
+
+4.0
+
+t2
+3.9
+
+3.44
+
+t2
+
+t2
+
+t2
+
+3.42
+3.8
+3.40
+
+3.7
+1.9
+
+2.0
+
+2.1
+
+2.98
+
+2.2
+
+3.00
+
+3.04
+
+t1
+
+t1
+
+t1
+
+3.02
+
+3.06
+
+t1
+
+Figure 2: Contour plots of the potential in the (t1 , t2 )-plane for the last two models of Tab. 5.
+
+4.2.2
+
+New LVS vacua with a diagonal and a non-diagonal del Pezzo
+
+We now focus on a new LVS model with h1,1 = 3 which we classified as ‘structureless’ since
+V does not admit a simple form in terms of 4-cycle moduli. This is model M3,1 in Tab. 12
+in App. E. In this case we will stabilise the moduli numerically using the 2-cycle moduli.
+The CY threefold of model M3,1 corresponds to the polytope ID #61 in the CY
+database of [7] and it is defined by the following toric data:
+7
+4
+3
+
+x1
+0
+1
+1
+dP1
+
+x2
+2
+0
+1
+NdP22
+
+x3
+1
+0
+0
+SD1
+
+x4
+1
+0
+0
+SD1
+
+– 20 –
+
+x5
+0
+1
+0
+dP8
+
+x6
+1
+1
+0
+SD2
+
+x7
+2
+1
+1
+SD3
+
+The Hodge numbers are (h2,1 , h1,1 ) = (66, 3), the Euler number is χ = −126 and the SR
+ideal is:
+SR = {x1 x5 , x5 x6 , x1 x2 x7 , x3 x4 x6 , x2 x3 x4 x7 } .
+The analysis of the divisor topologies shows that they can be represented by the following
+Hodge diamonds:
+1
+
+1
+
+0
+dPn or NdPn ≡ 0
+
+0
+SD1 ≡ 1
+
+0 ,
+
+n+1
+0
+
+0
+
+0
+
+0
+
+0
+1
+
+1
+
+1
+0
+
+0
+
+0
+SD3 ≡ 4
+
+2 ,
+
+30
+0
+1
+
+1 ,
+
+21
+
+1
+0
+SD2 ≡ 2
+
+0
+
+0
+4 .
+
+44
+0
+
+0
+1
+
+As can be seen from Tab. 12, the intersection numbers and the Kähler cone in the basis of
+smooth divisors D1 = {0, 1, 0} = dP8 , D2 = {0, 1, 1} = dP1 and D3 = {1, 1, 0} = SD2 are:
+k111 = 1,
+Kähler cone:
+
+k222 = 8 ,
+
+t1 < 0 ,
+
+k223 = −5 ,
+
+t3 − 2t2 > 0 ,
+
+k233 = 3 ,
+
+t1 + t3 > 0 ,
+
+k333 = 0 ,
+t1 + 3 t2 > 0 ,
+
+(4.13)
+
+which shows clearly that D1 is a diagonal dP8 while D2 is a non-diagonal dP1 . In addition,
+the overall volume and the 4-cycle volume moduli are as follows:
+
+1 3 1
+t1 +
+8 t32 − 15 t22 t3 + 9 t2 t23 ,
+6
+6
+3
+1 2
+τ2 = 4 t22 − 5 t2 t3 + t23 ,
+τ1 = t1 ,
+2
+2
+V =
+
+τ3 = 3 t2 t3 −
+
+5 2
+t .
+2 2
+
+(4.14)
+
+This shows clearly that V does not admit a simple expression in terms of 4-cycle moduli.
+The potential of this structureless LVS model can be obtained from our master formula
+(2.23) by setting h1,1 = 3, n = 2 and ξˆ 6= 0. In Tab. 6 we present the results of our numerical minimisation with respect to 2-cycle moduli for different choices of the microscopic
+parameters, while Fig. 3 shows the minima for each of the 3 t-moduli for a particular
+example (E6 in Tab. 6). All minima are within the regime of validity of the effective
+theory.
+
+– 21 –
+
+Example
+E1
+E2
+E3
+E4
+E5
+E6
+
+gs
+0.15
+0.14
+0.13
+0.12
+0.11
+0.10
+
+ht1 i
+−2.22639
+−2.29369
+−2.38288
+−2.51017
+−2.69616
+−2.92776
+
+ht2 i
+5.06509
+6.12009
+7.87495
+11.3404
+19.6372
+40.3554
+
+ht3 i
+10.9593
+13.0085
+16.4338
+23.243
+39.673
+80.9498
+
+hVi
+381.042
+639.008
+1291.22
+3658.79
+18208.5
+154711.0
+
+ξˆ
+5.2552
+5.8282
+6.51345
+7.34436
+8.36829
+9.65442
+
+V0
+−1.13561 × 10−9
+−1.93895 × 10−10
+−1.79005 × 10−11
+−5.73649 × 10−13
+−3.67679 × 10−15
+−5.94805 × 10−18
+
+Table 6: Benchmark examples for model M3,1 where we have set Kcs = A1 = A2 = 1, W0 = −1,
+a1 = π, a2 = π/2 and A3 = 0.
+
+As can be seen from Tab. 6, smaller values of the string coupling give rise to larger
+values of V which improve the control over the effective field theory. This is expected since
+it resembles the behaviour of standard LVS where the small 2-cycle t1 and the volume V
+2
+−1/2
+would scale respectively as ht1 i ∝ gs
+and hVi ∝ eht1 i .
+A qualitative understanding of the results of our numerical minimisation can be gained
+as follows. First note that, given that dP8 is a diagonal divisor, O(α03 ) corrections to K
+and a single non-perturbative effect in W with A1 6= 0, would be sufficient to fix the volume
+−1/2
+exponentially large and ht1 i ∼ gs
+together with the axion ρ1 . This would however leave
+3 flat directions which can be parametrised for example by t2 , ρ2 and ρ3 . Because of the
+axionic shift symmetry, the 2 flat directions ρ2 and ρ3 can be lifted only by T2 - and T3 dependent non-perturbative corrections to W which would generate a potential also for t2 .
+However t2 can develop a potential also via perturbative corrections to K which would in
+general dominate over non-perturbative effects if τ2 and τ3 (the 2 combinations appearing
+in the exponent of the non-perturbative superpotential) were both large cycles.
+
+1
+V(t
+V(t1) )
+50
+
+40
+
+3
+
+2
+
+V(t ))
+V(t
+3
+
+V(t2 ))
+V(t
+
+6
+
+6
+
+30
+
+4
+
+4
+
+20
+2
+
+2
+
+10
+t1
+-3.4 -3.3 -3.2 -3.1 -3.0 -2.9 -2.8 t 1
+
+t2
+40.31 40.32 40.33 40.34 40.35 40.36 40.37 t 2
+
+80.95
+
+81.00
+
+81.05
+
+81.10
+
+t3t
+
+3
+
+Figure 3: Scalar potential for each of the 3 Kähler moduli (t1 , t2 , t3 ) (with the other 2 fixed at
+their minima) for example E6 of Tab. 6.
+
+Examples where the remaining saxionic flat direction is fixed by higher order α0 corrections are given in [28]. However our master formula (2.23) does not include this kind
+of effect, and so we looked for minima where the remaining saxionic flat direction is fixed
+at small values, so that the dominant source of its potential is non-perturbative physics.
+This is possible for A2 6= 0 and A3 = 0 if the moduli are stabilised close to the Kähler cone
+condition t3 > 2t2 in (4.13), but still far enough from it to be able to trust the effective
+
+– 22 –
+
+field theory. In fact, for t3 → 2t2 , the expressions (4.14) show that τ2 → 0 and τ3 → 27 t22 ,
+and so a superpotential contribution of the form A2 e−a2 T2 would not be suppressed, while
+A3 e−a3 T3 would be negligible for t2 stabilisation even if it would be crucial to fix ρ3 . Tab.
+7 shows that the minima displayed in Tab. 6 are still fully within the regime of validity of
+the effective field theory since each 4-cycle modulus, in particular τ2 , turns out to be fixed
+at values much larger than unity.
+Example
+E1
+E2
+E3
+E4
+E5
+E6
+
+hτ1 i
+2.47842
+2.63050
+2.83905
+3.15047
+3.63465
+4.28590
+
+hτ2 i
+5.23087
+5.58806
+6.08695
+6.84907
+8.06464
+9.73469
+
+hτ3 i
+102.392
+145.201
+233.208
+469.243
+1373.15
+5728.89
+
+hVi
+381.042
+639.008
+1291.22
+3658.79
+18208.5
+154711.0
+
+Table 7: Values of the 4-cycle moduli for the benchmark examples of model M3,1 listed in Tab. 6.
+
+In the general case where also A3 6= 0 the scalar potential should feature two minima:
+(i) an LVS-like AdS vacuum with the same properties described just above but with a
+massive, even if ultra-light, ρ3 axion; and (ii) an α0 -uplifted KKLT-like dS minimum where
+however the CY volume would take values smaller than the one shown in Tab. 6 which
+would affect the trustability of the effective field theory.
+Let us finally point out that our numerical analysis has shown how model M3,1 can
+lead to an LVS-like vacuum where not only the diagonal dP8 modulus τ1 , but also the
+non-diagonal dP1 modulus τ2 , can be fixed at ‘small’ size. This observation raises the
+question of whether it is possible to find new LVS vacua for CY threefolds which do not
+admit diagonal divisors. This issue is addressed in the next section.
+4.2.3
+
+New LVS vacua without a diagonal del Pezzo
+
+In this section we discuss a 3-moduli CY model that does not feature any diagonal dP
+divisor. We shall show that despite this an LVS-like AdS minimum at exponentially large
+volume still exists thanks to a particular symmetry of the Kähler moduli space. We shall
+perform a detailed analysis of Kähler moduli stabilisation both via numerical techniques
+and analytical approximations in terms of 2-cycle volume moduli focusing on model M3,15
+introduced in Sec. 3.3. The CY threefold of model M3,15 corresponds to the polytope ID
+#263 in the CY database of [7] and it is defined by the following toric data:
+
+6
+6
+4
+
+x1
+0
+0
+1
+dP5
+
+x2
+0
+1
+0
+K3
+
+x3
+1
+0
+0
+K3
+
+x4
+1
+0
+0
+K3
+
+x5
+0
+1
+0
+K3
+
+x6
+1
+1
+1
+SD1
+
+x7
+3
+3
+2
+SD2
+
+The Hodge numbers are (h2,1 , h1,1 ) = (123, 3), the Euler number is χ = −240 and the SR
+ideal is SR = {x1 x6 , x2 x5 , x3 x4 x7 }. The analysis of the divisor topologies shows that they
+
+– 23 –
+
+are represented by the following Hodge diamonds:
+1
+0
+dP5 ≡ 0
+
+1
+0
+
+0
+
+0
+
+K3 ≡ 1
+
+0 ,
+
+6
+0
+
+0
+
+0
+
+0
+
+1
+
+1
+
+1
+0
+SD1 ≡ 4
+
+1
+0
+
+0
+SD2 ≡ 29
+
+4 ,
+
+46
+0
+
+1 ,
+
+20
+
+0
+1
+
+0
+29 .
+
+196
+0
+
+0
+1
+
+As can be seen from (3.7), the intersection polynomial in the basis of smooth divisors
+D1 = {0, 0, 1} = dP5 , D2 = {0, 1, 0} = K3 and D3 = {1, 0, 0} = K3 is given by:
+I3 = 4 D13 − 2 D12 D2 − 2 D12 D3 + 2 D1 D2 D3 .
+
+(4.15)
+
+The linearity of I3 in D2 and D3 , together with the divisor analysis, shows that this CY
+threefold is K3-fibred. Moreover the fact that k112 , k113 and k123 are all non-zero implies
+that D1 is a non-diagonal dP5 divisor. The CY volume and the 4-cycle moduli become:
+2 3
+t − t21 (t2 + t3 ) + 2 t1 t2 t3 ,
+3 1
+τ1 = 2 (t1 − t2 ) (t1 − t3 ) ,
+τ2 = t1 (2 t3 − t1 ) ,
+V =
+
+τ3 = t1 (2 t2 − t1 ) .
+
+(4.16)
+
+The potential of this model can be obtained from (2.23) by setting h1,1 = 3, n = 1 and
+ξˆ > 0. In Tab. 8 we present the results of our numerical minimisation with respect to
+2-cycle moduli for different choices of the microscopic parameters, while Fig. 4 shows the
+minima for each of the 3 t-moduli for example E6 in Tab. 8. The large values of hVi show
+that this model features an LVS-like AdS vacuum even though it does not have a diagonal
+dP divisor. All minima lie in a region where the effective field theory is fully under control.
+Example
+E1
+E2
+E3
+E4
+E5
+E6
+
+gs
+0.20
+0.20
+0.20
+0.10
+0.15
+0.25
+
+N
+4
+3
+2
+4
+3
+2
+
+ht1 i
+15.4545
+39.6462
+267.289
+378.003
+163.346
+76.0825
+
+ht2 i = ht3 i
+17.1932
+41.3674
+269.001
+380.424
+165.325
+77.6175
+
+hVi
+3384.8
+47190.1
+1.2977×107
+3.6704×107
+3.0125×106
+311734.7
+
+ξˆ
+6.50162
+6.50162
+6.50162
+18.3894
+10.0099
+4.65218
+
+V0
+−1.9727 × 10−12
+−5.1269 × 10−16
+−1.6471 × 10−23
+−1.0294 × 10−24
+−1.7065 × 10−21
+−1.3231 × 10−18
+
+Table 8: Benchmark examples for model M3,15 where we have set Kcs = A1 = 1, W0 = −1,
+a1 = 2π/N and A2 = A3 = 0.
+
+The emergence of this novel LVS vacuum can be qualitatively understood as follows.
+The T1 -dependent non-perturbative W , in combination with O(α03 ) effects, stabilises τ1 at
+
+– 24 –
+
+‘small’ size and the CY volume exponentially large. The remaining flat direction in the
+2-cycle volume moduli space, which we will parametrise as t∗ , is also lifted since the nondiagonality of D1 introduces a dependence of V on t∗ . Notice that the axions ρ2 and ρ3 can
+become massive only after including T2 - and T3 -dependent non-perturbative contributions
+to W . These terms would however be negligible for the stabilisation of the 2-cycle volume
+moduli since all our minima are located at τ2 = τ3  τ1 , as can be seen from Tab. 9.
+VHt2 L or VHt3 L
+
+VHt1 L
+
+6
+5
+
+6
+
+4
+4
+
+3
+2
+
+2
+
+1
+75.8
+
+75.9
+
+76.0
+
+76.1
+
+76.2
+
+t1
+77.55
+
+77.60
+
+77.65
+
+77.70
+
+77.75
+
+77.80
+
+t2 or t3
+
+Figure 4: Scalar potential V (×1017 ) for each of the Kähler moduli (t1 , t2 , t3 ) (with the other two
+fixed at their minima) for example E6 of Tab. 8.
+
+It is important to stress here that in general the non-diagonality of a dP divisor modifies the scaling behaviour with the overall volume of the different contributions to V , so
+destroying the existence of an LVS minimum. However in our model this is not the case
+due to the presence of a symmetry of the moduli space under the exchange t2 ↔ t3 , as can
+be seen from (3.7) and (4.16).
+Example
+E1
+E2
+E3
+E4
+E5
+E6
+
+hτ1 i
+6.04622
+5.92451
+5.86144
+11.7229
+7.83456
+4.71267
+
+hτ2 i
+17.1932
+1708.3
+72358.4
+144716.88
+27328.40
+6022.13
+
+hτ3 i
+17.1932
+1708.3
+72358.4
+144716.88
+27328.40
+6022.13
+
+hVi
+3384.8
+47190.1
+1.2977×107
+3.6704×107
+3.0125×106
+311734.7
+
+Table 9: Values of the 4-cycle moduli for the benchmark examples of model M3,15 in Tab. 8.
+
+In the large volume limit where V  ξˆ and a1 τ1  1, and after stabilising the axion
+ρ1 such that cos(a1 hρ1 i + θ0 − φ1 ) = −1, the scalar potential of this model derived from
+(2.23) can be very well approximated as:
+!
+ˆ 0 |2
+4|W
+||A
+|a
+3
+ξ|W
+eKcs 4|A1 |2 a21
+0
+1
+1
+V =
+h(ti ) e−2a1 τ1 −
+τ1 e−a1 τ1 +
+,
+(4.17)
+2s
+V2
+V2
+4V 3
+where:
+h(ti ) = −V
+
+3
+X
+k=1
+
+!
+k11k tk
+
++ τ12 = 2V (t2 + t3 − 2 t1 ) + τ12 .
+
+– 25 –
+
+(4.18)
+
+Thanks to the symmetry of the moduli space under the exchange t2 ↔ t3 , if we now write
+t3 = t2 + t∗ , the h(ti ) function takes the simple form:
+h(ti ) = 2V
+
+p
+2τ1 + t2∗ + τ12 .
+
+(4.19)
+
+The potential (4.17) therefore depends on only 3 variables: V, τ1 and t∗ . The dependence
+on t∗ is very simple, signaling that there is a minimum at t∗ = 0, which implies t2 = t3 and
+τ2 = τ3 from (4.16). Notice that this minimum lies well inside the Kähler cone since t∗ = 0
+does not correspond to any boundary of the moduli space. More interestingly, for t∗ = 0,
+√ √
+3/2
+the potential (4.17) takes the standard LVS form with h(ti ) ≃ 2 2 V τ1 for V  τ1 :
+eKcs
+V =
+2s
+
+ˆ 0 |2
+√
+√ e−2a1 τ1
+3ξ|W
+e−a1 τ1
+8 2|A1 |2 a21 τ1
++
+− 4|W0 ||A1 |a1 τ1
+V
+V2
+4V 3
+
+!
+.
+
+(4.20)
+
+This potential has an LVS AdS minimum located at:
+p
+|W0 | hτ1 i a1 hτ1 i
+hVi ≃ √
+e
+4 2a1 A1
+
+and
+
+hτ1 i ≃
+
+3ξˆ
+√
+2
+
+!2/3
+.
+
+(4.21)
+
+These relations correctly reproduce the scaling behaviour of the numerical solutions presented in Tabs. 8 and 9. Let us stress that this is the first example of a CY threefold which
+admits LVS vacua even without the presence of a diagonal dP divisor, implying that LVS
+vacua in the string landscape occur more frequently than previously thought.
+4.2.4
+
+New hybrid vacua
+
+In this section we shall study if numerical moduli stabilisation in terms of 2-cycle moduli
+can reveal the existence of new LVS vacua in ‘hard’ h1,1 = 2 models where V does not
+admit a simple form in terms of 4-cycle moduli. We will find that the absence of a diagonal
+dP divisor combined with the simplicity of this model which has only 2 Kähler moduli
+prevents the existence of an LVS-like vacuum. We will discover instead new vacua which
+we term ‘hybrid’ since they share some features with standard LVS vacua and others with
+typical KKLT models. We shall illustrate our claim by focusing on model M2,20 in Tab.
+11 in App. D. The CY threefold of model M2,20 corresponds to the polytope ID #23 in
+the CY database of [7] and it is defined by the following toric data:
+CY
+7
+3
+
+x1
+0
+1
+dP1
+
+x2
+1
+0
+SD1
+
+x3
+1
+0
+SD1
+
+x4
+2
+1
+SD2
+
+x5
+1
+0
+SD1
+
+x6
+2
+1
+SD2
+
+The Hodge numbers are (h2,1 , h1,1 ) = (95, 2), the Euler number is χ = −186 and the SR
+ideal is SR = {x1 x4 x6 , x2 x3 x5 }. The analysis of the divisor topologies shows that they
+
+– 26 –
+
+are represented by the following Hodge diamonds:
+1
+0
+dP1 ≡ 0
+
+1
+0
+0 ,
+
+2
+0
+
+0
+
+0
+
+SD1 ≡ 2
+
+1
+0
+
+0
+2 ,
+
+30
+0
+
+1
+
+0
+
+SD2 ≡ 7
+
+0
+7 .
+
+66
+0
+
+0
+
+1
+
+1
+
+As can be seen from Tab. 11, the intersection numbers and the Kähler cone in the basis
+of smooth divisors D1 = {0, 1} = dP1 and D2 = {2, 1} = SD2 are:
+k111 = 8 ,
+
+k112 = −2 ,
+
+k122 = 0 ,
+
+k222 = 14 ,
+
+Kähler cone:
+
+t1 < 0 , t1 + t2 > 0 ,
+
+which shows clearly that the dP1 divisor D1 is non-diagonal. The CY volume and the
+4-cycle moduli become:
+V=
+
+7
+4 3
+t1 − t21 t2 + t32 ,
+3
+3
+
+τ1 = 4 t21 − 2 t1 t2 ,
+
+τ2 = 7 t22 − t21 .
+
+(4.22)
+
+The potential can be obtained from our master formula (2.23) by setting h1,1 = 2, n = 1
+and ξˆ 6= 0. In Tab. 10 we present the results of our numerical minimisation with respect
+to 2-cycle moduli for different choices of the microscopic parameters, while Fig. 5 shows
+a contour plot of the potential for 2 particular examples (E1 and E5). Notice that the
+effective field theory is still under control even if |ht1 i| ∼ O(1) since all examples in Tab.
+10 satisfy the condition (2.25) which guarantees that stringy corrections can be neglected.
+Example
+E1
+E2
+E3
+E4
+E5
+
+gs
+0.13
+0.10
+0.09
+0.08
+0.07
+
+W0
+−0.1
+−0.2
+−0.8
+−1.0
+−1.8
+
+a1
+π/4
+π/5
+π/6
+π/7
+π/8
+
+ht1 i
+−1.04315
+−1.05354
+−1.00075
+−1.07603
+−1.02386
+
+ht2 i
+4.44218
+5.87528
+7.18459
+7.48456
+9.55669
+
+hVi
+198.187
+465.138
+856.799
+967.979
+2025.12
+
+ξˆ
+9.61509
+14.2518
+16.6919
+19.9174
+24.3344
+
+V0 (×1011 )
+−22.4614
+−5.15813
+−9.78060
+−12.2713
+−2.76468
+
+Table 10: Benchmark examples for model M2,20 where we have set Kcs = 1, A1 = 10 and A2 = 0.
+
+We stress that we considered only a T1 -dependent non-perturbative W since A2 = 0,
+and so the Kähler moduli are fixed by balancing the leading α0 -correction to K against the
+superpotential generated by gaugino condensation in a hidden gauge group with rank N .
+This is the same stabilisation mechanism used in LVS models which are characterised by
+an exponentially large volume hVi ∼ e1/(gs N ) that increases when either gs or N decreases.
+However, as can be seen from Tab. 10 where we limit ourselves to N ≤ 16, in our new
+vacua hVi increases when gs decreases but it reduces when N goes to lower values. Hence
+these new vacua are not really LVS-like. This difference can be traced back to the absence
+of a diagonal dP divisor together with the fact that this model has only 2 Kähler moduli
+while the CY threefold discussed in Sec. 4.2.3 had h1,1 = 3.
+
+– 27 –
+
+9.65
+
+4.50
+
+9.60
+
+4.45
+
+9.55
+
+4.40
+
+9.50
+
+-1.050
+
+-1.045
+
+-1.040
+
+-1.035
+
+-1.030
+
+-1.025
+
+-1.020
+
+-1.015
+
+Figure 5: Contour plot of the scalar potential of the 2 Kähler moduli (t1 , t2 ) for examples E1 (left)
+and E5 (right) of Tab. 10.
+
+The behaviour of these new vacua can be understood analytically as follows. Tab. 10
+shows that, in all examples, the 2-cycle volume moduli t1 and t2 are fixed at |t1 | ≃ 1 and
+t22  t21 . In this limit of the Kähler cone, the expressions for V and τ2 in (4.22) simplify to
+3/2
+1
+τ2 ≃ 7 t22 and V ≃ 37 t32 ≃ 3√
+τ . Moreover, as can be seen from Tab. 10, all solutions
+7 2
+are located at V  ξˆ and a1 τ1  1, and so our master formula (2.23) can be very well
+approximated by (after ρ1 minimisation):
+V ≃ −4 a21 |A1 |2 f (τ1 , V)
+
+e−2a1 τ1
+e−a1 τ1
+3 ξˆ |W0 |2
+− 4 |W0 | |A1 | a1 τ1
++
+,
+V
+V2
+4V 3
+
+where:
+
+s
+
+f (τ1 , V) = (k111 t1 − k112 t2 ) ≃ −2
+
+3
+V
+7
+
+(4.23)
+
+2/3
++ 4τ1 .
+
+(4.24)
+
+Notice that, similarly to LVS models, the negative sign in (4.24) is crucial to find a minimum. However the potential (4.23) does not give rise to a minimum at exponentially
+3/2
+large volume. In fact, if one takes the limit V  τ1 , the function in (4.24) simplifies to
+
+1/3
+f (τ1 , V) ≃ −2 73 V
+and the potential (4.23) becomes schematically:
+V = c1
+
+e−2a1 τ1
+e−a1 τ1
+c3
+−
+c
+τ
++ 3
+2
+1
+2
+2/3
+V
+V
+V
+
+c1,2,3 > 0 .
+
+with
+
+(4.25)
+
+Extremising this potential with respect to τ1 yields:
+∂V
+=0
+∂τ1
+
+
+⇔
+
+V=
+
+– 28 –
+
+c2
+2c1
+
+3/4
+
+3/4
+
+τ1
+
+3
+
+e 4 a1 τ1 ,
+
+(4.26)
+
+which appears to indicate the presence of a solution at exponentially large volume. However
+using this expression to integrate out τ1 , the scalar potential reduces to:
+V ≃
+
+−c4 (ln V)2 + c3 V 1/3
+V 10/3
+
+with
+
+c4 =
+
+4c22
+> 0.
+9a21 c1
+
+(4.27)
+
+The behaviour of this potential at large volume is qualitatively different from standard
+LVS models where, after integrating out τ1 , one has:
+VLVS ≃
+
+−λ1 (ln V)3/2 + λ2
+V3
+
+with
+
+λ1,2 > 0 .
+
+(4.28)
+
+For V  1, the LVS potential (4.28) is dominated by the logarithmic term proportional
+to λ1 , and so it goes to zero from negative values, while for V ∼ O(1) it is dominated by
+the term proportional to λ2 , and so it is positive. Clearly the potential has to admit an
+AdS minimum at large volume. On the other hand, the potential (4.27) is not guaranteed
+to feature a minimum since the term proportional to c3 dominates the potential for both
+V ∼ O(1) and V  1, implying that at large volume it goes to zero from positive values. In
+fact there is a window at intermediate volume values, i.e. for O(1) . V . O(100), where
+the 2 terms in (4.27) can compete. This reveals the existence of a minimum, which is
+however in a strong string coupling regime where the effective field theory is out of control,
+and only a maximum at exponentially large volume. However, given that the axion ρ1 has
+been kept fixed at its minimum, this would-be maximum is actually a saddle point.
+The presence of a saddle point at exponentially large volume can be explicitly seen by
+taking the first and second derivatives of (4.27) with respect to V which read as follows
+(for x ≡ ln V):
+
+
+∂2V
+10c4 2
+33
+9
+⇔ V
+⇒ V
+=−
+x 1−
++
+.
+∂V 2
+3
+5x 5x2
+(4.29)
+For x  1, the second derivative is clearly negative, signaling the existence of a saddle
+point. The second derivative can actually become positive, so giving rise to a minimum,
+1/3
+for x . 6.3. In order to trust the initial approximation f (τ1 , V) ≃ −2 73 V
+for the
+−2/3
+3
+function in (4.24), one needs to have at least x & 5.3 for τ1 & 1 so that 4τ1 7 V
+. 0.2.
+Minima with 5.3 . x < 6 would be AdS, x = 6 would give Minkowski and 6 < x . 6.3
+would yield dS. However one can check that none of these vacua can be trusted since they
+would lie at gs > 1, in a regime where perturbation theory would break down. This can be
+easily seen by using the minimisation equation in (4.29) as an expression for c3 with the
+volume fixed in the regime 5.3 . x . 6.3, and then using this result to find the value of gs
+3/2
+knowing that c3 can be also expressed as c3 = 3ξ W02 /(4gs ).
+This discussion implies that there is no minimum in the region of moduli space where
+1/3
+the function in (4.24) can be approximated as f (τ1 , V) ≃ −2 37 V
+. In fact, defining:
+∂V
+=0
+∂V
+
+1/3
+
+
+
+10c4 2
+3
+=
+x 1−
+9c3
+5x
+
+ 2/3
+3
+hVi2/3
+R≡
+,
+7
+4hτ1 i
+
+– 29 –
+
+(4.30)
+
+the two terms in (4.24) are always of the same order of magnitude since 0.5 . R . 1 for
+all vacua listed in Tab. 10. The potential (4.23) can then be minimised analytically giving
+(for a1 hτ1 i  1):
+d1 p
+d2
+hVi ≃
+hτ1 i ea1 hτ1 i
+and
+hτ1 i ≃
+,
+(4.31)
+a1
+gs
+with:
+d1 =
+
+|W0 |
+√
+8|A1 | 1 + R
+
+and
+
+d2 = (3ξ)2/3 (1 + R)1/3 .
+
+(4.32)
+
+The relations (4.31) resemble those of standard LVS AdS vacua but the condition (4.30)
+with R ∼ O(1) now implies also (setting a1 = 2π/N ):
+   
+1
+d4
+56 3/2
+d2
+d4
+with
+d3 =
+ln
+and
+d4 =
+N gs ≃
+ln
+R . (4.33)
+d3
+2π
+d1
+d1
+3
+Interestingly, for all examples in Tab. 10, d2 ≃ d3 ≃ O(1), and so N gs ≃ O(1). Thus the
+value of the overall volume at the AdS minimum is given by:
+
+ 1
+
+
+3/2
+3/2
+d
+d
+N 3/2 ,
+hVi ≃ d4 hτ1 i3/2 ≃ d4 d2
+≃
+4 2
+3/2
+gs
+
+(4.34)
+
+which reproduces the behaviour of the volume in Tab. 10, since hVi increases when either gs
+decreases or N increases. Moreover (4.34) implies that the combination r ≡ hVi(gs /R)3/2
+should be more or less constant, and this is confirmed by all examples in Tab. 10 which
+feature r ≃ O(40). This analytical estimate is useful also to perform our numerical study
+since it provides reasonable initial conditions to easily find convergent solutions.
+It is for these reasons that we term these new vacua ‘hybrid’: they clearly have some
+similarities and also some differences with known stabilisation mechanisms which can be
+summarised as follows:
+• KKLT: both cases admit an AdS vacuum where hVi ∝ N 3/2 even if, contrary to
+KKLT, in our new vacua supersymmetry is broken, α0 effects play a crucial rôle and
+|W0 | does not need to be tuned exponentially small;
+• LVS: both cases feature a non-supersymmetric AdS vacuum where non-perturbative
+effects compete with α0 corrections for natural values of |W0 | even if, contrary to
+LVS, in our new vacua the volume in string units is not exponentially large;
+• α0 uplift: both cases have a minimum which breaks supersymmetry via balancing
+non-perturbative against α0 contributions without tuning |W0 | even if, contrary to α0
+uplift, our new vacua are AdS and require non-perturbative effects just for 1 modulus.
+
+5
+
+Conclusions
+
+In this article we have presented a new systematic approach to type IIB moduli stabilisation
+which is based on fixing the Kähler moduli through the 2-cycle volume moduli as opposed
+to the standard approach which uses the 4-cycle volume moduli.
+
+– 30 –
+
+With the help of numerical techniques, we have been able to reproduce all known
+approaches to type IIB Kähler moduli stabilisation and to identify new classes of models
+that could not be determined with previous methods. In particular we discovered the first
+examples in the literature of LVS vacua for CY threefolds which do not admit a diagonal dP
+divisor. This implies that the presence of LVS vacua in the string landscape is more generic
+than previously thought. An interesting future line of investigation would be to perform a
+more systematic analysis of the frequency of LVS in type IIB flux compactifications.
+Moreover our innovative approach to Kähler moduli stabilisation allowed us also to
+reveal a new class of hybrid models where the volume is stabilised at values large enough
+to be of phenomenological and cosmological interest, as well as to guarantee control over
+the effective field theory approximation, but not exponentially large as in standard LVS
+models. More work in this direction is certainly needed, both to explore the physical
+implications of this new class of models and also to obtain better computational control
+over the effective field theory.
+In order to consider concrete models, we have been systematic in our approach and
+started by covering all known models constructed from hypersurfaces in toric varieties by
+Kreuzer and Skarke with Hodge numbers h1,1 = 1, 2, 3. We have classified them according
+to whether they are of the LVS type: standard Swiss cheese LVS models, K3 fibrations
+with a diagonal dP divisor, strong Swiss cheese-like examples and structureless LVS CY
+models which can still lead to stabilised vacua with exponentially large internal volume.
+The underlying message for analysing the dataset with 1 ≤ h1,1 ≤ 3 is that, while
+all examples with h1,1 = 1 can be studied via the conventional approach based on 4-cycle
+moduli, only 72% of the models with h1,1 = 2 and 50% of the models with h1,1 = 3 can be
+analysed with this standard approach. Thus the new strategy described in our paper to
+find stable vacua by working in terms of 2-cycle volume moduli is essential for achieving full
+moduli stabilisation with supersymmetry breaking for h1,1 = 3, and indeed our approach
+seems to be the only way to proceed for larger h1,1 .
+This article can then be considered as only the first step towards the more systematic
+aim of performing full moduli stabilisation with an arbitrarily large number of Kähler
+moduli. With the analytic and numerical techniques developed in this article, we hope in
+the future to approach concrete models with h1,1 ≥ 4, possibly even in the regime of large
+h1,1 ∼ O(102 − 103 ) where we may be able to use a large Hodge number approximation.
+Interesting directions for future work are the inclusion in our master formula of string
+loop corrections and higher order α0 effects, as well as a detailed exploration of the axion
+landscape for cases with large h1,1 . The presence of many axions allows for a potentially
+large landscape inside the actual string landscape, with the added value that extrema
+should be computable within the effective field theory as proposed in [67–69]. We hope to
+come back and address these questions in the future.
+
+Acknowledgments
+We would like to thank Francesco Muia, Andreas Schachner and Roberto Valandro for useful conversations and ICTP for hospitality at different stages of this project. We especially
+
+– 31 –
+
+thank Nicole Edmea Bollan for collaborations at an early stage of this project.
+
+A
+
+Known potentials from our master formula
+
+In this appendix we will show how our master formula (2.23) reduces to different known
+scalar potentials by just choosing 3 parameters: the Hodge number h1,1 , the number n of
+ˆ Some of
+non-perturbative contributions to the superpotential, and CY Euler-number ξ.
+these models are collected in Tab. 1.
+A.1
+
+1-modulus KKLT
+
+For reproducing the standard KKLT potential [10], we need to consider h1,1 = n = 1 and
+ξˆ = 0. In this case the 3 contributions to the general potential given in (2.23) become:
+Vnp1 = 4 eK |W0 | |A1 | a1 τ1 e−a1 τ1 cos(a1 ρ1 + θ0 − φ1 ),
+
+Vnp2 = 4 eK |A1 |2 e−2a1 τ1 −V a21 k111 t1 + (a1 τ1 )2 + a1 τ1 ,
+
+VO(α03 ) = 0,
+
+(A.1)
+
+where:
+
+1
+eKcs
+1
+k111 t31 ,
+τ1 = k111 t21 ,
+eK =
+.
+(A.2)
+6
+2
+2 s V2
+This leads to the standard KKLT scalar potential which admits a supersymmetric AdS
+vacuum:
+
+
+9 eKcs a1 k111 |A1 | −a1 τ1
+|A1 | −a1 τ1
+e
+(a1 τ1 + 3) .
+VKKLT =
+e
+|W0 | cos(a1 ρ1 + θ0 − φ1 ) +
+3
+s τ12
+V=
+
+A.2
+
+2-moduli KKLT
+
+For reproducing the potential of KKLT models with 2 Kähler moduli [44, 45], we need to
+consider h1,1 = n = 2 and ξˆ = 0. In this case the 3 contributions in (2.23) become:
+2
+
+eKcs X
+4ai τi |W0 ||Ai | cos(ai ρi + θ0 − φi ) e−ai τi ,
+2sV 2
+i=1
+" 2
+
+
+eKcs X 2
+τi
+2
+2
+Vnp2 =
+(A.3)
+4ai |Ai | −V kiii ti + τi +
+e−2ai τi
+2sV 2
+ai
+i=1
+
+
+a1 τ1 + a2 τ2
+−(a1 τ1 +a2 τ2 )
++ 8a1 a2 |A1 ||A2 | e
+cos(a1 ρ1 − a2 ρ2 − φ1 + φ2 ) τ1 τ2 +
+,
+2a1 a2
+
+VO(α03 ) = 0 ,
+
+Vnp1 =
+
+where, similarly to the CP4 [1, 1, 1, 6, 9] model studied in [44], we focused on a CY example
+with only k111 6= 0 and k222 6= 0. Hence the 4-cycle moduli and the overall volume read:
+r
+p
+1
+2 τ1
+2
+τ1 = k111 t1 ⇒ t1 = −
+and
+k111 t1 = − 2k111 τ1 ,
+2
+k
+r 111
+p
+2 τ2
+1
+τ2 = k222 t22 ⇒ t2 = +
+and
+k222 t2 = + 2k222 τ2 ,
+2
+k222
+
+– 32 –
+
+√
+
+1
+2
+3
+3
+V =
+k111 t1 + k222 t2 = √
+6
+3 k222
+
+3/2
+τ2 −
+
+r
+
+k222 3/2
+τ
+k111 1
+
+!
+,
+
+(A.4)
+
+where the minus sign in the relation between t1 and τ1 is due to the fact that τ1 is the
+volume of a diagonal dP divisor whose Kähler cone condition is t1 < 0. Thus the potential
+(A.3) reduces to the standard 2-moduli KKLT form mentioned in [45]:
+" 2
+eKcs X
+V =
+4ai τi |W0 ||Ai | cos(ai ρi + θ0 − φi ) e−ai τi
+2sV 2
+i=1
+s
+!
+ 3/2
+2
+X
+τ
+3
+k
+4
+j
+iii
+|Ai |2 a2i τi2 e−2ai τi 1 + 2
++
++
+3
+kjjj τi
+ai τi
+i=1
+i6=j
+
+
+
+a1 τ1 + a2 τ2
++ 8a1 a2 |A1 ||A2 | e−(a1 τ1 +a2 τ2 ) cos(a1 ρ1 − a2 ρ2 − φ1 + φ2 ) τ1 τ2 +
+.
+2a1 a2
+A.3
+
+2-moduli Swiss cheese LVS
+
+For reproducing the standard LVS potential [6, 11, 46, 47], let us consider h1,1 = 2, n = 1
+and ξˆ > 0. In this case the 3 contributions to the general potential given in (2.23) become:
+VO(α03 ) = eK
+
+3 ξˆ (V 2 + 7 ξˆ V + ξˆ2 )
+|W0 |2 ,
+2
+ˆ
+ˆ
+(V − ξ)(2V + ξ)
+
+(A.5)
+
+Vnp1 = 2 eK |W0 | |A1 | e−a1 τ1 cos(a1 ρ1 + θ0 − φ1 )
+
+
+(4 V 2 + V ξˆ + 4 ξˆ2 )
+3 ξˆ (V 2 + 7 ξˆ V + ξˆ2 )
+×
+(a1 τ1 ) +
+,
+ˆ V + ξ)
+ˆ
+ˆ (2V + ξ)
+ˆ2
+(V − ξ)(2
+(V − ξ)
+!
+
+ˆ
+ξ
+4V − ξˆ
+(a τ )2
+Vnp2 = 4 eK |A1 |2 e−2a1 τ1 − V +
+a21 k111 t1 +
+ˆ 1 1
+2
+4(V − ξ)
+
+(4 V 2 + V ξˆ + 4 ξˆ2 )
+3 ξˆ (V 2 + 7 ξˆ V + ξˆ2 )
++
+(a1 τ1 ) +
+.
+ˆ V + ξ)
+ˆ
+ˆ V + ξ)
+ˆ2
+2(V − ξ)(2
+4(V − ξ)(2
+Focusing on the large volume limit, the leading order contributions in all terms above give:
+"
+#
+ˆ 0 |2 4a1 τ1 |W0 ||A1 |
+eKcs 3ξ|W
+4a21 |A1 |2 k111 t1 −2a1 τ1
+−a1 τ1
+cos (a1 ρ1 + θ0 − φ1 ) −
+V ≃
++
+e
+e
+.
+2s
+4V 3
+V2
+V
+(A.6)
+In Swiss cheese LVS models with 2 Kähler moduli, the only non-zero intersection numbers
+are k111 and k222 and the relations between 2- and 4-cycle moduli look as in (A.4) where
+τ1 plays the rôle of the ‘small’ modulus while τ2 corresponds to the ‘big’ divisor. Hence
+(A.6) takes the form:
+eKcs
+V ≃
+2s
+
+
+
+
+√
+τ1 −2a1 τ1
+βα0
+τ1 −a1 τ1
++ βnp1 2 e
+cos (a1 ρ1 + θ0 − φ1 ) + βnp2
+e
+,
+V3
+V
+V
+
+– 33 –
+
+(A.7)
+
+with:
+βα0 =
+
+ˆ 0 |2
+3ξ|W
+,
+4
+
+βnp1 = 4a1 |W0 ||A1 | ,
+
+βnp2 = 4a21 |A1 |2
+
+p
+2k111 .
+
+(A.8)
+
+Notice that (A.7) matches the form of the potential of standard Swiss cheese LVS models
+with 2 Kähler moduli [6, 11, 46, 47].
+A.4
+
+3-moduli Swiss cheese LVS
+
+The scalar potential of Swiss cheese LVS models with 3 Kähler moduli [48, 49] can be
+reproduced by our master formula (2.23) by setting h1,1 = 3, n = 2 and ξˆ > 0, yielding:
+VO(α03 ) = eK
+
+ˆ 2 + 7ξV
+ˆ + ξˆ2 )
+3 ξ(V
+|W0 |2 ,
+2
+ˆ
+ˆ
+(V − ξ)(2V + ξ)
+
+K
+
+Vnp1 = e
+
+2
+X
+i=1
+
+"
+×
+
+(A.9)
+
+2|W0 ||Ai | e−ai τi cos(ai ρi + θ0 − φi )
+
+ˆ 2 + 7ξV
+ˆ + ξˆ2 )
+3 ξ(V
+(4V 2 + V ξˆ + 4ξˆ2 )
+ai τi +
+ˆ V + ξ)
+ˆ
+ˆ
+ˆ2
+(V − ξ)(2
+(V − ξ)(2V
++ ξ)
+
+Vnp2 = eK
+
+2 X
+2
+X
+i=1 j=1
+
+#
+,
+
+|Ai ||Aj | e−(ai τi +aj τj ) cos(aj ρj − ai ρi − φj + φi )
+
+"
+
+!
+ξˆ
+ai aj
+× −4 V +
+2
+
+3
+X
+
+!
+kijk tk
+
++
+
+k=1
+
+4V − ξˆ
+aa ττ
+ˆ i j i j
+(V − ξ)
+
+ˆ 2 + 7ξV
+ˆ + ξˆ2 )
+3 ξ(V
+(4V 2 + V ξˆ + 4ξˆ2 )
+(ai τi + aj τj ) +
++
+ˆ
+ˆ
+ˆ
+ˆ2
+(V − ξ)(2V
++ ξ)
+(V − ξ)(2V
++ ξ)
+
+#
+.
+
+In the large volume limit, this potential can very well be approximated as:
+eKcs
+V =
+2s
+−
+
+"
+
+2
+
+ˆ 0 |2 X 4|W0 ||Ai |ai
+3ξ|W
++
+τi e−ai τi cos(ai ρi + θ0 − φi )
+4V 3
+V2
+
+2 X
+2
+X
+4|Ai ||Aj |ai aj
+i=1 j=1
+
+(A.10)
+
+i=1
+
+V
+
+e−(ai τi +aj τj ) cos(aj ρj − ai ρi − φj + φi )
+
+3
+X
+
+!
+kijk tk  .
+
+k=1
+
+Given that we are interested in Swiss cheese CY models where the only non-vanishing
+intersection numbers are k111 , k222 and k333 , we have:
+3
+X
+k=1
+
+p
+kiik tk = kiii ti = − 2 kiii τi
+
+for i = 1, 2
+
+and
+
+3
+X
+k=1
+
+– 34 –
+
+kijk tk = 0
+
+for i 6= j .
+
+Hence (A.10) reduces to the potential of known 3-moduli Swiss cheese LVS models [48, 49]:
+eKcs
+V =
+2s
+
+"
+
+#
+√
+2 
+τi −2ai τi
+βα0 X
+τi −ai τi
++
+βnp1,i 2 e
+cos(ai ρi + θ0 − φi ) + βnp2,i
+e
+,
+V3
+V
+V
+i=1
+
+with:
+βα0 =
+A.5
+
+ˆ 0 |2
+3ξ|W
+,
+4
+
+βnp1,i = 4a1 |W0 ||A1 | ,
+
+βnp2,i = 4a21 |A1 |2
+
+p
+
+2k111 .
+
+(A.11)
+
+3-moduli fibred LVS
+
+We now focus on 3-moduli fibred LVS models whose potential can be derived from our
+master formula (2.23) by setting h1,1 = 3, n = 2 and ξˆ > 0. Hence its form is the same as
+P
+in (A.9) but now 3k=1 kijk tk is different since the underlying CY threefold has a distinct
+topological structure. In fact, in this case the CY features a K3 or T 4 -fibration over a P1
+base together with a diagonal dP divisor (for explicit CY threefolds with this topology see
+[24–26, 70]). Via an appropriate choice of basis, the only non-zero intersection numbers
+can be chosen to be k111 and k233 , signaling that D1 is a diagonal dP divisor, D2 is a K3
+or T 4 fibre and D3 contains the P1 base of the fibration. Thus we obtain:
+3
+X
+k=1
+
+p
+k11k tk = − 2k111 τ1 ,
+
+and
+
+3
+X
+k=1
+
+k12k tk =
+
+3
+X
+
+k22k tk = 0 ,
+k=1
+√ 3/2
+2τ
+√ 1
+
+√
+τ3 τ2
+1
+1
+3
+2
+V = k111 t1 + k233 t2 t3 = √ √
+−
+6
+2
+3
+2 k233
+
+k111
+
+.
+
+(A.12)
+
+By substituting these expression in (A.9) we can easily read off the potential of fibred LVS
+models with 3 Kähler moduli. Interestingly, in [22] it has been shown that this potential
+cannot give rise to any LVS vacuum in a regime where the effective field theory is under
+control. In order to achieve this goal, one has to consider additional perturbative α0 or gs
+corrections to the potential which are however not captured by our master formula (2.23).
+
+B
+
+Lipschitz optimisation algorithm
+
+Exploring string theory models and related mathematical data vis-a-vis observations calls
+for new approaches to moduli stabilisation. Central to the stabilisation exercise is the
+need to minimise supergravity potential, a function of moduli fields that arises upon string
+compactification. The classical approach were via the selection of CY base geometry by
+hand and analytical minimisation of the one- or few-moduli potentials. In order to go
+beyond this, numerical automisation is required for selecting geometries and finding the
+positions of corresponding minima positions in moduli space. Here we describe a global
+optimisation algorithm, Lipschitz optimisation (LIPO), used for numerically stabilising the
+moduli fields of the example geometries addressed in this paper 5 .
+5
+
+There are many optimisation algorithms in the literature. The application of these for CY selections
+and for finding corresponding minima in moduli space is an interesting research direction to pursue further.
+
+– 35 –
+
+X
+
+Xk,t
+
+X
+
+Figure 6: From [72]. (a) A simple Lipschitz function f (x) evaluated over a sample of 4 points
+(dots). (b) The upper limit function, U (x) is sketch in grey. (c) Here the domain of f (x) is reduced
+to regions containing the maximum.
+
+Lipschitz optimisation falls within the class of deterministic global optimisations (see
+for instance [71]). The task is to find the absolutely best set of parameters for achieving a
+mathematically-formulated objective. In [72] the LIPO algorithm for finding x ∈ Rd which
+globally maximises a function f (x) was introduced. The DLIB library (see dlib.net)
+implements LIPO algorithm and improves it with local trust tests at the global maximum
+point. The basic principle for the Lipschitz optimisation is as follows.
+A piecewise linear upper bound, U (x), of f (x) is used to decide which x to evaluate
+at each of the optimisation steps. Given already evaluated points x1 , x2 , . . . , xj , U (x) can
+be represented by:
+U (x) = max (f (xi ) + k |x − xi |) ,
+(B.1)
+i=1...j
+
+where k is the Lipschitz constant for f (x). By the definition of the Lipschitz constant, this
+will give U (x) ≥ f (x) for all x. The algorithm selects a test point, xt randomly, and then
+check if U (xt ) is better than the best of the points so far chosen. If true, then xt is selected
+as the next point at which f (x) should be evaluated. For illustration, Fig. 6 (a) shows a
+4-point sample for a simple function f (x). The grey lines in plot (b) show the upper bound
+function U (x) constructed from the 4 sample points in (a). Plot (c) shows the region of
+f (x) which satisfies the decision rule for selecting xt at which to evaluate f (x) next. It can
+be seen that the procedure evolves such that over subsequent steps the selected points will
+eventually reach the global maximum of the f (x).
+In practice the Lipschitz constant is not known, the functions to be minimised (known
+or unknown) can be very noisy, discontinuous or stochastic. LIPO could also be slow in
+converging to the maximum though it finds the local region near the maximum quickly.
+The implementation in DLIB is modified to tackle these problems.
+
+C
+
+A hybrid GA/Clustering/Amoeba algorithm to find all minima in a
+potential
+
+Finding all the stable or metastable minima in a system is a common problem in physics,
+but heuristic search techniques tend to focus on the more iconic problem of correctly
+finding the global minimum. While individual algorithms may be well suited to this one
+task, collecting the locations of all the local minima as well as the global one in a given
+search space may be more efficiently done by combining them, as indeed suggested by the
+
+– 36 –
+
+Figure 7: Initial evolution of a genetic algorithm over a test function. There is rapid convergence
+to local clusters but further convergence takes place slowly. The population in this case is 100
+individuals.
+
+analysis in the previous appendix. In this appendix we describe an algorithm that is a
+combination of a Genetic Algorithm (GA) [73–76], followed by a Cluster Algorithm (CA),
+followed by a Nelder-Mead (or amoeba) algorithm (NM) [77–79].
+GAs seek optimal solutions by evolving a population of models in the search-space
+which, by means of a suitable definition of ‘fitness’, is transformed into a fitness landscape.
+Such algorithms are able to avoid stagnation and attempt to find the global minima in
+NP-hard problems, and there has been some interest in their use in various contexts in
+particle physics, for example in [80–94]. However it is known that once a GA begins to
+select the favoured minimum the final stage of convergence is relatively slow. On the other
+hand optimisation methods such as the Nelder-Mead algorithm flow to local minima and
+cannot address NP-hard problems, but in the basin of attraction of a minimum the NM
+method can converge much more quickly than a GA, if the function does not have many
+discontinuities and the dimensionality of the search-space is not too large. This suggests
+that a combination of these techniques may be beneficial. As we will see, for the problem
+at hand there are other benefits.
+In order to illustrate our procedure, we will consider finding the local minima for the
+test function:
+V (x, y) = −(36 sin(2y) cos(2x) + 12(x + y) − x2 − y 2 ) .
+
+(C.1)
+
+This function can be seen plotted in the background of Fig. 7. The evolution of a standard
+GA with 100 individuals is also plotted in the figure. Although many popular GAs are
+available, for our purposes it is more convenient to use our own tailored code. In particular in order to treat very flat potentials we use a simple roulette wheel selection genetic
+algorithm with fitness based on ranking (so the GA works for potentials with directions
+that are arbitrarily flat). As can be seen, within only a few generations the genetic algorithm clusters around the local minima. Continued convergence to the global minimum
+
+– 37 –
+
+Figure 8: Instead we run the GA several times for a few generations. Then a kmeans algorithm
+determines a set of clusters. A representative d + 1 = 3 dimensional simplex is chosen from
+each cluster, and a Nelder-Mead optimisation determines the local minimum (corresponding to the
+maximum fitness in the figure) for each simplex.
+
+then proceeds slowly. It can be enhanced by dialing down the mutation rate (due to the
+relevant theorem of Holland) but then one risks losing all the information about the local
+minima. One approach to the problem of identifying all the local minima is to dial down
+the mutation ‘too early’, so that sub-populations gets trapped in them. However it is much
+faster to pass to a NM algorithm as soon as clusters have formed.
+We therefore treat the problem in 3 stages. First we perform the genetic algorithm
+itself but with a relatively large (optimal) mutation rate. For the function we show here, a
+population of around 100 was found to be optimal. The process is terminated at an early
+stage after only a few generations, resulting in clusters located around the local minima as
+we observed in Fig. 7. Note that if we wait too long, some of these clusters will begin to
+disappear unless we also impose some kind of crowding penalty. An additional interesting
+point is that (in contrast with a straight genetic algorithm) the overall process is better
+with larger populations as the clusters that are initially established are better defined.
+We then formally identify the clusters using a kmeans clustering algorithm. From each
+cluster we then select the best d + 1 points (for a d dimensional function) in order to form
+a representative d + 1 dimensional simplex. Finally we determine the local minimum for
+each simplex using an NM (or amoeba) algorithm. Overall the process is very fast for our
+example, and yields the outcome shown in Fig. 8. We include pseudo-code for the procedure
+in Algorithm 1, and actual code is available at www.maths.dur.ac.uk/~dma0saa/GANM/.
+
+– 38 –
+
+Data: Potential to be minimised over specified domain in d-dimensional space
+Result: Array of location and depth of local minima within domain
+GA;
+for population do
+Initialise genotype
+end
+while generations < gen-number do
+for population do
+Find phenotype (potential)
+Assign fitness by ranking
+end
+for new-population do
+Roulette wheel select breeding pair from population
+Two-point crossover to create new individual
+Elitist Mutation of new individual
+end
+population = new-population
+end
+Clustering: Run K-means clustering algorithm to produce clusters
+simplices = []
+for clusters do
+Find phenotype
+Assign fitness by ranking
+Select first d + 1 elements to form simplex
+simplices += simplex
+end
+Nelder-Mead;
+local-minima = []
+for simplices do
+Find several trial-minima from simplex and perturbations
+for trial-minima do
+test for unbounded below
+test for flat directions and form basis
+if trial-minimum passes && minimum ∈
+/ local-minima then
+local-minima += trial-minimum
+end
+end
+end
+Algorithm 1: Pseudo-code for combined GA+Cluster+Amoeba algorithm
+There are several other advantages since for cases of relatively low dimension and without
+discontinuities, the NM algorithm is known to converge rapidly and (like the GA itself)
+does not need a differentiable function [78, 79]. However the problem in this paper becomes
+6D and some local minima appear close to the Kähler cone where there is a discontinuity.
+Thus the NM algorithm is somewhat less efficient even if the method still functions well.
+
+– 39 –
+
+D
+
+List of CY threefolds with h1,1 = 2
+
+Model
+M2,1
+M2,2
+M2,3
+M2,4
+M2,5
+M2,6
+M2,7
+M2,8
+M2,9
+M2,10
+M2,11
+M2,12
+M2,13
+M2,14
+M2,15
+M2,16
+M2,17
+M2,18
+M2,19
+M2,20
+M2,21
+M2,22
+M2,23
+M2,24
+M2,25
+M2,26
+M2,27
+M2,28
+M2,29
+M2,30
+M2,31
+M2,32
+M2,33
+M2,34
+M2,35
+M2,36
+M2,37
+M2,38
+M2,39
+
+−χ
+54
+72
+144
+144
+144
+162
+164
+168
+168
+168
+168
+168
+168
+168
+168
+168
+168
+176
+180
+186
+200
+208
+208
+208
+228
+236
+240
+240
+240
+252
+252
+252
+252
+252
+252
+260
+260
+284
+540
+
+k111
+0
+9
+1
+1
+1
+0
+2
+0
+−4
+0
+2
+0
+2
+−1
+−1
+−1
+8
+3
+3
+8
+8
+9
+9
+9
+1
+1
+9
+9
+9
+0
+−2
+0
+0
+−4
+2
+2
+9
+8
+9
+
+k112
+1
+0
+0
+0
+0
+3
+0
+0
+4
+0
+4
+0
+0
+0
+−2
+0
+−2
+0
+0
+−2
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+2
+0
+0
+2
+0
+0
+0
+0
+0
+
+k122
+1
+0
+0
+0
+0
+3
+0
+4
+0
+4
+0
+4
+0
+4
+0
+4
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+2
+0
+2
+2
+0
+0
+0
+0
+0
+0
+
+k222
+0
+9
+3
+3
+3
+0
+5
+8
+0
+−4
+0
+5
+3
+11
+5
+14
+6
+5
+3
+14
+24
+36
+36
+36
+1
+2
+63
+63
+63
+4
+0
+−2
+0
+0
+1
+2
+9
+8
+72
+
+Kähler cone
+t1 > 0, t2 > 0
+t1 < 0, t1 + t2 > 0
+t1 < 0, t1 + t2 > 0
+t1 < 0, t1 + t2 > 0
+t1 < 0, t1 + t2 > 0
+t1 > 0, t2 > 0
+t1 < 0, t1 + t2 > 0
+t1 > 0, t2 > 0
+t1 > 0, t2 − t1 > 0
+t1 − t2 > 0, t2 > 0
+t1 > 0, t2 > 0
+t1 > 0, t2 > 0
+t1 < 0, t1 + t2 > 0
+t1 < 0, t1 + t2 > 0
+t1 < 0, t1 + t2 > 0
+t1 < 0, t1 + t2 > 0
+t1 < 0, 3t1 + t2 > 0
+t1 < 0, t1 + t2 > 0
+t1 < 0, t1 + t2 > 0
+t1 < 0, t1 + t2 > 0
+t1 < 0, t1 + t2 > 0
+t1 < 0, t1 + t2 > 0
+t1 < 0, t1 + t2 > 0
+t1 < 0, t1 + t2 > 0
+t1 < 0, t1 + t2 > 0
+t1 < 0, t1 + t2 > 0
+t1 < 0, t1 + t2 > 0
+t1 < 0, t1 + t2 > 0
+t1 < 0, t1 + t2 > 0
+t1 > 0, t2 > 0
+t1 > 0, t2 − t1 > 0
+t1 − t2 > 0, t2 > 0
+t1 > 0, t2 > 0
+t1 > 0, t2 − t1 > 0
+t1 < 0, 2t1 + t2 > 0
+t1 < 0, t1 + t2 > 0
+t1 < 0, t1 + t2 > 0
+t1 < 0, t1 + t2 > 0
+t1 < 0, t1 + 2t2 > 0
+
+LVS
+
+K3-fibred
+
+Hard
+X
+
+X
+X
+X
+X
+X
+X
+X
+X
+X
+X
+X
+X
+X
+X
+X
+X
+X
+X
+X
+X
+X
+X
+X
+X
+X
+X
+X
+X
+X
+X
+X
+X
+X
+X
+X
+X
+X
+X
+
+Table 11: Topological data for CYs with h1,1 = 2 which are relevant to check the consistency of
+the extrema. Notice that M2,17 and M2,20 are ‘hard’ but admit a non-diagonal dP divisor.
+
+– 40 –
+
+E
+
+List of structureless LVS with h1,1 = 3
+
+Model
+M3,1
+M3,2
+M3,3
+M3,4
+M3,5
+M3,6
+M3,7
+M3,8
+M3,9
+M3,10
+M3,11
+M3,12
+M3,13
+M3,14
+
+−χ
+126
+132
+132
+138
+144
+144
+144
+144
+162
+164
+164
+200
+216
+216
+
+k111
+1
+2
+2
+3
+3
+3
+3
+3
+3
+8
+9
+9
+9
+9
+
+k222
+8
+−1
+−1
+0
+−1
+−1
+−1
+−1
+8
+−2
+−4
+−1
+−1
+−1
+
+k223
+−5
+3
+2
+3
+1
+−1
+2
+3
+−5
+−2
+−2
+−3
+1
+1
+
+k233
+3
+−5
+0
+3
+3
+3
+0
+−5
+3
+6
+8
+9
+17
+17
+
+k333
+0
+8
+−2
+0
+0
+0
+−2
+8
+0
+14
+22
+48
+64
+64
+
+Kähler cone
+t1 < 0, t3 − 2t2 > 0, t1 + t3 > 0, t1 + 3t2 > 0
+t1 < 0, 3t3 − t2 > 0, t1 + t3 > 0, t2 − 2t3 > 0
+t1 < 0, 2t3 − t2 > 0, t1 + t3 > 0, t2 − t3 > 0
+t1 < 0, t1 + t2 > 0, t1 + t3 > 0
+t1 < 0, t1 + t2 > 0, t3 − t2 > 0
+t1 < 0, t1 + t2 > 0, t3 − t2 > 0
+t1 < 0, 2t3 − t2 > 0, t1 + t3 > 0, t2 − t3 > 0
+t1 < 0, 3t3 − t2 > 0, t1 + t3 > 0, t2 − 2t3 > 0
+t1 < 0, t1 + t2 > 0, t3 − 2t2 > 0
+t1 < 0, t1 + t2 > 0, t3 − t2 > 0
+t1 < 0, t1 + t2 > 0, t3 − t2 > 0
+t1 < 0, t1 + t2 > 0, t3 − t2 > 0
+t1 < 0, t1 + t2 > 0, t3 − t2 > 0
+t1 < 0, t1 + t2 > 0, t3 − t2 > 0
+
+Table 12: List of structureless LVS models with h1,1 = 3.
+
+– 41 –
+
+References
+[1] P. Candelas, A. Dale, C. Lutken and R. Schimmrigk, Complete Intersection Calabi-Yau
+Manifolds, Nucl. Phys. B 298 (1988) 493.
+[2] P. Candelas, M. Lynker and R. Schimmrigk, Calabi-Yau Manifolds in Weighted P(4), Nucl.
+Phys. B 341 (1990) 383–402.
+[3] A. Constantin, J. Gray and A. Lukas, Hodge Numbers for All CICY Quotients, JHEP 01
+(2017) 001, [1607.01830].
+[4] M. Kreuzer and H. Skarke, PALP: A Package for analyzing lattice polytopes with applications
+to toric geometry, Comput. Phys. Commun. 157 (2004) 87–106, [math/0204356].
+[5] M. Kreuzer and H. Skarke, Complete classification of reflexive polyhedra in four-dimensions,
+Adv. Theor. Math. Phys. 4 (2002) 1209–1230, [hep-th/0002240].
+[6] M. Cicoli, S. Krippendorf, C. Mayrhofer, F. Quevedo and R. Valandro, D-Branes at del Pezzo
+Singularities: Global Embedding and Moduli Stabilisation, JHEP 09 (2012) 019, [1206.5237].
+[7] R. Altman, J. Gray, Y.-H. He, V. Jejjala and B. D. Nelson, A Calabi-Yau Database:
+Threefolds Constructed from the Kreuzer-Skarke List, JHEP 02 (2015) 158, [1411.1418].
+[8] M. Demirtas, C. Long, L. McAllister and M. Stillman, The Kreuzer-Skarke Axiverse,
+1808.01282.
+[9] A. P. Braun, C. Long, L. McAllister, M. Stillman and B. Sung, The Hodge Numbers of
+Divisors of Calabi-Yau Threefold Hypersurfaces, 1712.04946.
+[10] S. Kachru, R. Kallosh, A. D. Linde and S. P. Trivedi, De Sitter vacua in string theory, Phys.
+Rev. D68 (2003) 046005, [hep-th/0301240].
+[11] V. Balasubramanian, P. Berglund, J. P. Conlon and F. Quevedo, Systematics of moduli
+stabilisation in Calabi-Yau flux compactifications, JHEP 03 (2005) 007, [hep-th/0502058].
+[12] J. P. Conlon, F. Quevedo and K. Suruliz, Large-volume flux compactifications: Moduli
+spectrum and D3/D7 soft supersymmetry breaking, JHEP 08 (2005) 007, [hep-th/0505076].
+[13] M. Cicoli, J. P. Conlon and F. Quevedo, Systematics of String Loop Corrections in Type IIB
+Calabi-Yau Flux Compactifications, JHEP 01 (2008) 052, [0708.1873].
+[14] V. Balasubramanian and P. Berglund, Stringy corrections to Kahler potentials, SUSY
+breaking, and the cosmological constant problem, JHEP 11 (2004) 085, [hep-th/0408054].
+[15] A. Westphal, de Sitter string vacua from Kahler uplifting, JHEP 03 (2007) 102,
+[hep-th/0611332].
+[16] M. Rummel and A. Westphal, A sufficient condition for de Sitter vacua in type IIB string
+theory, JHEP 01 (2012) 020, [1107.2115].
+[17] I. Ben-Dayan, S. Jing, A. Westphal and C. Wieck, Accidental inflation from Kähler uplifting,
+JCAP 1403 (2014) 054, [1309.0529].
+[18] K. Becker, M. Becker, M. Haack and J. Louis, Supersymmetry breaking and alpha-prime
+corrections to flux induced potentials, JHEP 06 (2002) 060, [hep-th/0204254].
+[19] M. Berg, M. Haack and B. Kors, String loop corrections to Kahler potentials in orientifolds,
+JHEP 11 (2005) 030, [hep-th/0508043].
+[20] M. Berg, M. Haack and E. Pajer, Jumping Through Loops: On Soft Terms from Large
+Volume Compactifications, JHEP 09 (2007) 031, [0704.0737].
+
+– 42 –
+
+[21] D. Ciupke, J. Louis and A. Westphal, Higher-Derivative Supergravity and Moduli
+Stabilization, JHEP 10 (2015) 094, [1505.03092].
+[22] M. Cicoli, J. P. Conlon and F. Quevedo, General Analysis of LARGE Volume Scenarios with
+String Loop Moduli Stabilisation, JHEP 10 (2008) 105, [0805.1029].
+[23] M. Cicoli, C. P. Burgess and F. Quevedo, Fibre Inflation: Observable Gravity Waves from
+IIB String Compactifications, JCAP 0903 (2009) 013, [0808.0691].
+[24] M. Cicoli, C. Mayrhofer and R. Valandro, Moduli Stabilisation for Chiral Global Models,
+JHEP 02 (2012) 062, [1110.3333].
+[25] M. Cicoli, F. Muia and P. Shukla, Global Embedding of Fibre Inflation Models, JHEP 11
+(2016) 182, [1611.04612].
+[26] M. Cicoli, D. Ciupke, V. A. Diaz, V. Guidetti, F. Muia and P. Shukla, Chiral Global
+Embedding of Fibre Inflation Models, JHEP 11 (2017) 207, [1709.01518].
+[27] C. P. Burgess, M. Cicoli, M. Gomez-Reino, F. Quevedo, G. Tasinato and I. Zavala,
+Non-standard primordial fluctuations and nongaussianity in string inflation, JHEP 08
+(2010) 045, [1005.4840].
+[28] M. Cicoli, D. Ciupke, S. de Alwis and F. Muia, α0 Inflation: moduli stabilisation and
+observable tensors from higher derivatives, JHEP 09 (2016) 026, [1607.01395].
+[29] D. Lust, S. Reffert, E. Scheidegger, W. Schulgin and S. Stieberger, Moduli Stabilization in
+Type IIB Orientifolds (II), Nucl. Phys. B766 (2007) 178–231, [hep-th/0609013].
+[30] D. Lust, S. Reffert, E. Scheidegger and S. Stieberger, Resolved Toroidal Orbifolds and their
+Orientifolds, Adv. Theor. Math. Phys. 12 (2008) 67–183, [hep-th/0609014].
+[31] R. Blumenhagen, V. Braun, T. W. Grimm and T. Weigand, GUTs in Type IIB Orientifold
+Compactifications, Nucl.Phys. B815 (2009) 1–94, [0811.2936].
+[32] X. Gao and P. Shukla, F-term Stabilization of Odd Axions in LARGE Volume Scenario,
+Nucl.Phys. B878 (2014) 269–294, [1307.1141].
+[33] X. Gao and P. Shukla, On Classifying the Divisor Involutions in Calabi-Yau Threefolds,
+JHEP 1311 (2013) 170, [1307.1139].
+[34] D. Robbins and T. Wrase, D-terms from generalized NS-NS fluxes in type II, JHEP 0712
+(2007) 058, [0709.2186].
+[35] T. W. Grimm and J. Louis, The Effective action of N = 1 Calabi-Yau orientifolds, Nucl.
+Phys. B699 (2004) 387–426, [hep-th/0403067].
+[36] S. Hosono, A. Klemm and S. Theisen, Lectures on mirror symmetry, hep-th/9403096.
+[37] I. Benmachiche and T. W. Grimm, Generalized N=1 orientifold compactifications and the
+Hitchin functionals, Nucl.Phys. B748 (2006) 200–252, [hep-th/0602241].
+[38] M. Cicoli, S. De Alwis, A. Maharana, F. Muia and F. Quevedo, De Sitter vs Quintessence in
+String Theory, Fortsch. Phys. 67 (2019) 1800079, [1808.08967].
+[39] K. Bobkov, Volume stabilization via alpha-prime corrections in type IIB theory with fluxes,
+JHEP 05 (2005) 010, [hep-th/0412239].
+[40] M. Bianchi, A. Collinucci and L. Martucci, Magnetized E3-brane instantons in F-theory,
+JHEP 12 (2011) 045, [1107.3732].
+
+– 43 –
+
+[41] M. Bianchi, A. Collinucci and L. Martucci, Freezing E3-brane instantons with fluxes, Fortsch.
+Phys. 60 (2012) 914–920, [1202.5045].
+[42] J. Louis, M. Rummel, R. Valandro and A. Westphal, Building an explicit de Sitter, JHEP 10
+(2012) 163, [1208.3208].
+[43] P. Shukla, A dictionary for the type II non-geometric flux compactifications, 1909.07391.
+[44] F. Denef, M. R. Douglas and B. Florea, Building a better racetrack, JHEP 06 (2004) 034,
+[hep-th/0404257].
+[45] J. J. Blanco-Pillado, C. P. Burgess, J. M. Cline, C. Escoda, M. Gomez-Reino, R. Kallosh
+et al., Inflating in a better racetrack, JHEP 09 (2006) 002, [hep-th/0603129].
+[46] M. Cicoli, S. Krippendorf, C. Mayrhofer, F. Quevedo and R. Valandro, D3/D7 Branes at
+Singularities: Constraints from Global Embedding and Moduli Stabilisation, JHEP 07 (2013)
+150, [1304.0022].
+[47] M. Cicoli, D. Klevers, S. Krippendorf, C. Mayrhofer, F. Quevedo and R. Valandro, Explicit
+de Sitter Flux Vacua for Global String Models with Chiral Matter, JHEP 05 (2014) 001,
+[1312.0014].
+[48] J. P. Conlon and F. Quevedo, Kahler moduli inflation, JHEP 01 (2006) 146,
+[hep-th/0509012].
+[49] M. Cicoli, I. Garcı̀a-Etxebarria, C. Mayrhofer, F. Quevedo, P. Shukla and R. Valandro,
+Global Orientifolded Quivers with Inflation, JHEP 11 (2017) 134, [1706.06128].
+[50] C. Burgess, M. Cicoli, S. de Alwis and F. Quevedo, Robust Inflation from Fibrous Strings,
+JCAP 05 (2016) 032, [1603.06789].
+[51] M. Cicoli, J. P. Conlon, A. Maharana and F. Quevedo, A Note on the Magnitude of the Flux
+Superpotential, JHEP 01 (2014) 027, [1310.6694].
+[52] R. Blumenhagen, B. Jurke, T. Rahn and H. Roschy, Cohomology of Line Bundles: A
+Computational Algorithm, J. Math. Phys. 51 (2010) 103525, [1003.5217].
+[53] R. Blumenhagen, B. Jurke and T. Rahn, Computational Tools for Cohomology of Toric
+Varieties, Adv. High Energy Phys. 2011 (2011) 152749, [1104.1187].
+[54] K. Oguiso, On Algebraic Fiber Space Structures on a Calabi-Yau 3-fold, International
+Journal of Mathematics Vol. 04, No. 03 (1993) 439–465.
+[55] M. B. Schulz, Calabi-Yau duals of torus orientifolds, JHEP 05 (2006) 023, [hep-th/0412270].
+[56] M. Cicoli, D. Ciupke, C. Mayrhofer and P. Shukla, A Geometrical Upper Bound on the
+Inflaton Range, JHEP 05 (2018) 001, [1801.05434].
+[57] R. Blumenhagen, X. Gao, T. Rahn and P. Shukla, A Note on Poly-Instanton Effects in Type
+IIB Orientifolds on Calabi-Yau Threefolds, JHEP 06 (2012) 162, [1205.2485].
+[58] M. Cicoli, F. G. Pedro and G. Tasinato, Poly-instanton Inflation, JCAP 1112 (2011) 022,
+[1110.6182].
+[59] M. Cicoli, F. G. Pedro and G. Tasinato, Natural Quintessence in String Theory, JCAP 1207
+(2012) 044, [1203.6655].
+[60] R. Blumenhagen, X. Gao, T. Rahn and P. Shukla, Moduli Stabilization and Inflationary
+Cosmology with Poly-Instantons in Type IIB Orientifolds, JHEP 11 (2012) 101, [1208.1160].
+
+– 44 –
+
+[61] X. Gao and P. Shukla, On Non-Gaussianities in Two-Field Poly-Instanton Inflation, JHEP
+03 (2013) 061, [1301.6076].
+[62] X. Gao, T. Li and P. Shukla, Cosmological observables in multi-field inflation with a non-flat
+field space, JCAP 1410 (2014) 008, [1403.0654].
+[63] T. Kobayashi, S. Uemura and J. Yamamoto, Polyinstanton axion inflation, Phys. Rev. D96
+(2017) 026007, [1705.04088].
+[64] J. P. Conlon, Quantum Gravity Constraints on Inflation, JCAP 1209 (2012) 019,
+[1203.5476].
+[65] M. Cicoli, A. Maharana, F. Quevedo and C. P. Burgess, De Sitter String Vacua from
+Dilaton-dependent Non-perturbative Effects, JHEP 06 (2012) 011, [1203.1750].
+[66] M. Cicoli, F. Quevedo and R. Valandro, De Sitter from T-branes, JHEP 03 (2016) 141,
+[1512.04558].
+[67] T. C. Bachlechner, K. Eckerle, O. Janssen and M. Kleban, Multiple-axion framework, Phys.
+Rev. D 98 (2018) 061301, [1703.00453].
+[68] T. C. Bachlechner, K. Eckerle, O. Janssen and M. Kleban, Systematics of Aligned Axions,
+JHEP 11 (2017) 036, [1709.01080].
+[69] T. C. Bachlechner, K. Eckerle, O. Janssen and M. Kleban, The Axidental Universe,
+1902.05952.
+[70] M. Cicoli, M. Kreuzer and C. Mayrhofer, Toric K3-Fibred Calabi-Yau Manifolds with del
+Pezzo Divisors for String Compactifications, JHEP 02 (2012) 002, [1107.0383].
+[71] A. Neumaier, Complete Search in Continuous Global Optimization and Constraint
+Satisfaction. Cambridge University Press, 2004.
+[72] C. Malherbe and N. Vayatis, Global optimization of Lipschitz functions, in Proceedings of the
+34th International Conference on Machine Learning (D. Precup and Y. W. Teh, eds.),
+vol. 70 of Proceedings of Machine Learning Research, (International Convention Centre,
+Sydney, Australia), pp. 2314–2323, PMLR, 06–11 Aug, 2017.
+[73] J. Holland, Adaptation in natural and artificial systems, 1992.
+[74] E. David, Genetic algorithms in search, optimization and machine learning, 1989.
+[75] J. Holland, The royal road for genetic algorithms: Fitness landscapes and ga performance,
+1992.
+[76] C. Reeves and J. Rowe, Genetic algorithms: Principles and perspectives, 2002.
+[77] J. Nelder and R. Mead, A simplex method for function minimization, Comput. J. 7 (1965)
+308.
+[78] J. Lagarias, J. Reeds, M. Wright and P. Wright, Convergence Properties of the Nelder-Mead
+Simplex Method in Low Dimensions, SIAM J. Optim. 9 (1998) 112.
+[79] T. Kolda, R. Lewis and V. Torczon, Optimization by Direct Search: New Perspectives on
+Some Classical and Modern Methods, SIAM J. Optim. 45 (2003) 385.
+[80] T. S. Metcalfe, R. E. Nather and D. E. Winget, Genetic-algorithm-based asteroseismological
+analysis of the dbv white dwarf gd 358, Astrophys. J. 545 (2000) 974, [astro-ph/0008022].
+[81] B. C. Allanach, D. Grellscheid and F. Quevedo, Genetic algorithms and experimental
+discrimination of SUSY models, JHEP 07 (2004) 069, [hep-ph/0406277].
+
+– 45 –
+
+[82] M. R. Mokiem, A. de Koter, J. Puls, A. Herrero, F. Najarro and M. R. Villamariz, Spectral
+analysis of early-type stars using a genetic algorithm based fitting method, Astron. Astrophys.
+441 (2005) 711, [astro-ph/0506751].
+[83] Y. Akrami, P. Scott, J. Edsjo, J. Conrad and L. Bergstrom, A Profile Likelihood Analysis of
+the Constrained MSSM with Genetic Algorithms, JHEP 04 (2010) 057, [0910.3950].
+[84] S. Nesseris and J. Garcia-Bellido, A new perspective on Dark Energy modeling via Genetic
+Algorithms, JCAP 1211 (2012) 033, [1205.0364].
+[85] J. Blåbäck, U. Danielsson and G. Dibitetto, Fully stable dS vacua from generalised fluxes,
+JHEP 08 (2013) 054, [1301.7073].
+[86] C. Damian, L. R. Diaz-Barron, O. Loaiza-Brito and M. Sabido, Slow-Roll Inflation in
+Non-geometric Flux Compactification, JHEP 06 (2013) 109, [1302.0529].
+[87] C. Damian and O. Loaiza-Brito, More stable de Sitter vacua from S-dual nongeometric
+fluxes, Phys. Rev. D88 (2013) 046008, [1304.0792].
+[88] J. Blåbäck, U. Danielsson and G. Dibitetto, Accelerated Universes from type IIA
+Compactifications, JCAP 1403 (2014) 003, [1310.8300].
+[89] J. Blåbäck, D. Roest and I. Zavala, De Sitter Vacua from Nonperturbative Flux
+Compactifications, Phys. Rev. D90 (2014) 024065, [1312.5328].
+[90] S. Abel and J. Rizos, Genetic Algorithms and the Search for Viable String Vacua, JHEP 08
+(2014) 010, [1404.7359].
+[91] R. Hogan, M. Fairbairn and N. Seeburn, GAz: A Genetic Algorithm for Photometric
+Redshift Estimation, Mon. Not. Roy. Astron. Soc. 449 (2015) 2040–2046, [1412.5997].
+[92] F. Ruehle, Evolving neural networks with genetic algorithms to study the String Landscape,
+JHEP 08 (2017) 038, [1706.07024].
+[93] S. Abel, D. G. Cerdeño and S. Robles, The Power of Genetic Algorithms: what remains of
+the pMSSM?, 1805.03615.
+[94] K. Bull, Y.-H. He, V. Jejjala and C. Mishra, Getting CICY High, Phys. Lett. B795 (2019)
+700–706, [1903.03113].
+
+– 46 –
+
+

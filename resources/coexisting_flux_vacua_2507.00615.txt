@@ -1,0 +1,1834 @@
+Prepared for submission to JHEP
+
+arXiv:2507.00615v1 [hep-th] 1 Jul 2025
+
+Coexisting Flux String Vacua from Numerical
+Kähler Moduli Stabilisation
+
+Shehu AbdusSalam,a Christopher Hughes,b Fernando Quevedo,b,c Andreas Schachnerd,e
+a
+
+Department of Physics, Shahid Beheshti University, Tehran, Iran
+
+b
+
+DAMTP,University of Cambridge, Wilberforce Road, Cambridge, CB3 0WA, UK
+
+c
+
+New York University, Abu Dhabi, PO Box 129188 Saadiyat Island, Abu Dhabi, UAE.
+
+d
+
+ASC for Theoretical Physics, LMU Munich, 80333 Munich, Germany
+
+e
+
+Department of Physics, Cornell University, Ithaca, NY 14853, USA
+
+E-mail: abdussalam@sbu.ac.ir, ch845@cam.ac.uk,
+fq2054@nyu.edu,fq201@cam.ac.uk, a.schachner@lmu.de
+Abstract:
+We present a comprehensive study of Kähler moduli stabilisation in Type IIB flux compactifications, combining advanced numerical techniques with analytical methods. Our JAX-based
+computational framework enables efficient scanning of the UV parameter space, while incorporating α′ corrections, loop and non-perturbative effects, as well as uplift contributions to the scalar
+potential. The implementation features rigorous vacuum validation protocols derived from analytic
+results. We apply our methods to explicit flux compactifications on more than 80,000 Calabi-Yau
+threefolds with h1,1 ≤ 6 Kähler moduli. By systematically scanning over a wide range of values of
+the flux superpotential W0 and the string coupling gs , we find explicit realisations of every established Kähler moduli stabilisation scenario: for 10−15 ≤ |W0 | ≤ 10−2 we obtain both KKLT-like
+and Kähler uplifted vacua, while for the broader range 10−1 ≤ |W0 | ≤ 102 we recover LVS as well as
+LVS-like hybrid solutions. Notably, we discover significant parameter regions where multiple vacua
+coexist within a single flux potential, including novel configurations pairing AdS, Minkowski, and
+dS minima with different volume hierarchies. These findings enable, for the first time, the analysis
+of vacuum decay processes within fixed flux configurations, complementing the established theory
+of transitions between distinct flux vacua and decays towards decompactification.
+
+Contents
+1 Introduction
+
+1
+
+2 The four-dimensional EFT
+2.1 N = 1 Calabi-Yau flux compactifications
+2.2 Explicit setup and Kähler moduli stabilisation
+
+2
+2
+4
+
+3 Numerical Kähler moduli stabilisation framework
+3.1 Numerical Kähler moduli stabilisation
+3.2 The implementation
+3.3 Minimisation of scalar potentials and validation of solutions
+
+7
+8
+8
+9
+
+4 Numerical landscape analysis and coexisting minima
+4.1 Search parameters and dataset selection
+4.2 Numerical KKLT, LVS and Kähler uplift solutions
+4.3 Additional hybrid minima
+4.4 Coexisting Vacua in the Landscape
+4.5 Adding explicit uplifting sources
+
+10
+10
+11
+16
+17
+19
+
+5 Dynamics in the string landscape
+5.1 Vacuum structure from |W0 | variation
+5.2 Tunnelling and Stability
+
+21
+21
+22
+
+6 Conclusions
+
+24
+
+A Explicit formulas for Kähler metric and the potential
+
+25
+
+1
+
+Introduction
+
+Despite more than two decades of research on flux compactifications in Type IIB string theory,
+the space of concrete models with all moduli stabilised remains remarkably small compared to the
+vast number of potential configurations. Over the years, progress has enabled explicit stabilisation
+of complex structure moduli and the dilaton from quantised fluxes, while parallel progress has
+been made in systematic approaches to Kähler moduli stabilisation, including perturbative and
+non-perturbative effects [1–5] (for general reviews see e.g. [6–8], for the state of the art see [9]).
+Given that moduli stabilisation represents the primary challenge for connecting string theory
+to observable physics, it is crucial to both expand the catalogue of explicit flux compactification
+solutions and extract more general principles. Of particular importance is the task of locating de
+Sitter solutions in physically viable parameter ranges, which would provide compelling evidence for
+their existence.
+Building on prior analytic and numerical studies such as [10–15], we develop a comprehensive
+framework to address problems within the realm of numerical Kähler moduli stabilisation. To handle
+the exponential increase in numerical cost as the number of moduli grows, we leverage the JAX
+ecosystem [16], using just-in-time (JIT) compilation, and automatic differentiation to compute the
+full Type IIB scalar potential efficiently. With this implementation we can flexibly specify general
+
+–1–
+
+expressions for both the superpotential W and the Kähler potential K as well as include additional
+potential contributions from uplifting.
+Let us note that our analysis currently assumes prior stabilisation of complex structure moduli
+and the dilaton by fluxes, focusing specifically on the Kähler sector. In the long run, our methods
+can be integrated with existing software tools like JAXVacua [15] to stabilise all moduli simultaneously, enabling systematic studies of backreaction and cross-coupling effects within a single, unified
+computational environment.
+In this work, we specifically implement a benchmark scenario that incorporates the full set of
+effects needed for controlled Kähler moduli stabilisation: the non-perturbative terms in W from
+Euclidean D3-brane instantons and D7-brane gaugino condensation, the leading (α′ )3 correction to
+K computed in [17], logarithmic volume redefinitions [18, 19], and a positive uplift term modelling
+the energy of an anti-D3-brane as in [2]. Alternative uplift mechanisms, such as from T-branes [20],
+or additional perturbative corrections, like the one-loop string corrections derived in [21], can be
+incorporated straightforwardly.
+Our pipeline begins by selecting a Calabi-Yau geometry from established databases like [22],
+and computes the total supergravity scalar potential for given UV parameters, such as the flux
+superpotential W0 , and the string coupling constant gs . With our routines, we systematically
+explore vacuum structures across all Calabi-Yau manifolds with h1,1 ≤ 6 Kähler moduli obtained
+from [23]. By scanning over values of W0 and gs , a variety of vacua are found for geometries with
+h1,1 ≤ 6. For small values |W0 | ≲ 10−2 , we reproduce supersymmetric AdS KKLT minima [2] and
+non-supersymmetric Kähler uplifted solutions [10, 24], both of which can be uplifted to de Sitter
+by standard contributions such as anti-D3-branes. For generic values |W0 | ≳ 10−1 , we recover the
+familiar LVS-type non-supersymmetric AdS solutions [3, 4]. We further identify hybrid solutions
+resembling those in [13], blending traits of different established vacua constructions.
+By varying |W0 | continuously, we demonstrate how LVS minima smoothly transition into either
+KKLT or Kähler uplifted solutions. Strikingly, over a range of intermediate values of |W0 |, two
+distinct local minima coexist in the same scalar potential.1 Upon adding an explicit uplift term to
+the potential, we find all combinations of AdS, Minkowski, and dS vacua for both branches. This
+simultaneous realisation of multiple vacua in a single potential, rather than across distinct flux
+choices as studied e.g. in [26], provides a novel setting for studying vacuum transitions in string
+compactifications. Depending on parameters, the small-volume minimum can have either higher or
+lower vacuum energy, enabling cosmological applications such as inflation.
+We organise the paper as follows. After a brief introduction in §2, we describe our numerical
+implementation in §3. Subsequently, we present our main findings in §4, starting with reproducing
+known KKLT, LVS and Kähler uplifted solutions (§4.2) before describing novel configurations like
+coexisting minima in §4.4. In §5, we study the behaviour of our numerical solutions under variations
+of |W0 | (cf. §5.1) as well as implications for stability and tunnelling rates in the landscape (cf. §5.2).
+
+2
+
+The four-dimensional EFT
+
+In this section, we briefly describe the four-dimensional EFT implemented in our numerical framework. Further, we summarise three of the established Kähler moduli stabilisation scenarios which
+will show up later in our numerical results.
+2.1
+
+N = 1 Calabi-Yau flux compactifications
+
+We consider Type IIB superstring theory compactified on a Calabi-Yau threefold X. Concretely,
+we focus on Calabi-Yau hypersurfaces X embedded in toric varieties obtained from triangulations
+1 Recently, coexisting F -flat flux vacua for complex structure moduli for the same choice of 3-form fluxes have
+been discovered in [25] via the numerical techniques of [15].
+
+–2–
+
+of four-dimensional reflexive polytopes in the Kreuzer-Skarke list [22]. After orientifolding, the
+resulting N = 1 four-dimensional EFT features chiral multiplets whose scalar components contain
+2,1
+α
+h1,1
++ Kähler moduli Ti , h− complex structure moduli z , and the axio-dilaton τ . For simplicity, we
+1,1
+1,1
+limit our attention to O3/O7 orientifolds with h− = 0 such that h1,1
+. Such orientifolds can
++ =h
+be constructed systematically with the methods of [27], see also [28]. Throughout, we work with
+the database of O3/O7 orientifolds with h1,1 ≤ 6 compiled in [23].
+h1,1 (X)
+
+h1,1 (X)
+
+Let us introduce a basis {ω i }i=1
+of H 4 (X, Z) together with its dual basis {ωi }i=1
+of
+R
+2
+i
+i
+H (X, Z) so that X ω ∧ ωj = δ j . In this basis, the triple intersection numbers κijk of X can be
+expressed as
+Z
+ωi ∧ ωj ∧ ωk .
+
+κijk =
+
+(2.1)
+
+X
+
+The Kähler cone KX ⊂ H 1,1 (X, R) of X is furnished by the choices of closed Kähler forms J. We
+h1,1 (X)
+parametrise KX by Kähler parameters {ti }i=1
+so that the Kähler class J can be written as
+X
+
+J=
+
+ti ωi .
+
+(2.2)
+
+i
+
+The classical volume of the Calabi-Yau manifold X in Einstein frame is given by
+Z
+1
+1
+(0)
+V =
+J ∧ J ∧ J = κijk ti tj tk .
+6 X
+6
+
+(2.3)
+
+We write the axio-dilaton as τ = C0 + i s where the dilaton s = e−ϕ is related to the inverse
+string coupling. Further, we introduce the 4-cycle volumes τi (in Einstein frame) and C4 -axions θi
+Z
+Z
+1
+1
+J ∧ J ∧ ωi = κijk tj tk , θi =
+C4 ∧ ωi ,
+(2.4)
+τi =
+2 X
+2
+X
+to define the classical (complexified) Kähler moduli
+Ti = τi + i θi .
+
+(2.5)
+
+Let us note that, in general, the real part of Ti is affected by higher order corrections. That is,
+in the presence of quantum corrections to the Kähler metric Kiȷ̄ , the relationship between Kähler
+parameters ti and holomorphic coordinates Ti changes as described in e.g. [29–35], see [9] for a
+recent discussion.
+The hyperplanes of KX give rise to inequalities of the form
+HAi ti ≥ 0 ,
+
+A ≥ h1,1 (X) .
+
+(2.6)
+
+For the Calabi-Yau threefolds studied in this work, these constraints become more constraining at
+large h1,1 (X) because KX becomes more narrow [36]. On top of that, we typically have to impose
+even stricter bounds on e.g. divisor volumes τi in order to work in the geometric regime where the
+α′ expansion is under control. This will play a crucial role in our numerical analysis of §4.
+The moduli fields ϕI = (z α , τ, Ti ) in our effective theory interact through an F -term scalar
+potential VF which is completely specified by a Kähler potential K and superpotential W . It can
+be written as
+
+
+¯
+VF = eK K I J DI W DJ¯W − 3|W |2 ,
+(2.7)
+¯
+
+where K I J is the inverse Kähler metric and DI W the Kähler covariant derivative defined as
+DI W = ∂I W + KI W .
+
+–3–
+
+(2.8)
+
+In what follows, we assume that all complex structure moduli z α and the axio-dilaton τ can be
+stabilised at high scales by solving Dτ W = Dzα W = 0 in the presence of a 3-form flux background
+[1], see e.g. [15, 25, 37, 38] for progress in numerically finding flux vacua.2 After integrating out z α
+and τ , we work with an effective scalar potential V for the remaining Kähler moduli given by
+
+V = eK K iȷ̄ Di W Dȷ̄ W − 3|W |2 .
+(2.9)
+To compute the scalar potential (2.9), we have to specify a Kähler potential K and a superpotential W . We define the Kähler potential as
+K = Kcs − log(−i(τ − τ̄ )) − 2 log (V) ,
+
+(2.10)
+
+in terms of the corrected Calabi-Yau volume in Einstein frame
+V = V (0) + δV .
+
+(2.11)
+
+Here, V (0) is the classical Calabi-Yau volume defined in Eq. (2.3) and δV = δV(ti , s) incorporates
+general perturbative corrections to the Kähler potential. We reiterate that, for our purposes, Kcs
+in (2.10) is a constant determined by the stabilisation of the complex structure moduli z α .
+The superpotential used in our analysis is given by
+X
+W = W0 +
+AD e−aD TD ,
+(2.12)
+D
+
+where W0 is the VEV of the flux superpotential [40] again determined by the stabilisation of
+complex structure moduli. The second term accounts for non-perturbative contributions from Dbrane instantons hosted on some effective divisor D = ci Di , ci ∈ Z, such as Euclidean D3-branes
+and gaugino condensation on seven-branes [41]. We write aD = 2π/cD in terms of the dual Coxeter
+number cD of the corresponding gauge theory living on the worldvolume of the brane configuration
+wrapping D. In general, the sum in Eq. (2.12) ranges over smooth,3 rigid divisors D for which the
+Pfaffian prefactors are non-vanishing [41]. In addition, the sum also includes “rigidified” divisors,
+i.e., non-rigid divisors for which certain deformation modes have been lifted through suitable gauge
+fluxes FD [43–46], see also [12, 47].
+2.2
+
+Explicit setup and Kähler moduli stabilisation
+
+Let us now describe the explicit ansatz that we make for the perturbative corrections δV to K as
+defined in (2.11). For this ansatz, we compute the F -term conditions and the scalar potential for
+the Kähler moduli analytically which we occasionally use to compare our numerical implementation
+with. Moreover, we review the established Kähler moduli stabilisation procedures, namely KKLT
+[2], LVS [3] and Kähler uplifting [10, 24], for our explicit ansatz for K and W .
+We will work with the Kähler potential including the leading perturbative corrections corresponding to the tree-level (α′ )3 correction of BBHL [17, 48] and a logarithmic volume redefinition
+following the arguments in [18, 19].4 Explicitly, we can write for the corrections δV
+δV = δVBBHL + δVlog
+
+(2.13)
+
+2 Alternatively, non-supersymmetric flux vacua with D W ̸= 0, D α W ̸= 0, but ∂ V = ∂ α V = 0 can also be
+τ
+τ F
+z
+z
+F
+
+found via the methods of [39].
+3 Under certain conditions, there can also be contributions from singular divisors to the non-perturbative superpotential as studied in [42].
+4 It is important to note that, unlike the BBHL correction, these logarithmic corrections are not yet fully established
+in concrete string constructions. As discussed in [49, 50], corrections to the scalar potential scaling as V −8/3 may
+compete with or even dominate over the BBHL term. For a proposal that employs a resummation of these corrections
+to achieve perturbative moduli stabilisation, see [51].
+
+–4–
+
+in terms of the BBHL correction
+δVBBHL =
+
+ξ 3/2
+ξˆ
+s
+= ,
+2
+2
+
+with ξ = −
+
+ζ(3)χ(X)
+,
+2(2π)3
+
+(2.14)
+
+and the logarithmic correction
+δVlog = −α(V (0) )2/3 ln(V (0) ) .
+
+(2.15)
+
+Similar to [52], we assume that α is small and positive. It is important to emphasise that the microscopic origin of corrections of the form (2.15) remains an open question; for a detailed discussion,
+see [19].
+For the moment, we remain agnostic about the underlying mechanism generating contributions
+to the superpotential (2.12). In what follows, we assume for simplicity that our basis of H4 (X, Z)
+includes h1,1 rigid divisors contributing non-trivially to the superpotential (2.12), while neglecting
+commensurate contributions from additional rigid divisors. Then, computing the inverse Kähler
+metric explicitly for the ansatz (2.13), the scalar potential can be written as
+h
+i
+X
+(i)
+e−K V =|W0 |2 ϕ0 + 2
+Ai |W0 |e−ai τi cos(ai θi + θ0 ) ϕ0 + ϕ1
+i
+
++
+
+X
+
+Ai Aj e
+
+−ai τi −aj τ
+
+h
+i
+(i)
+(j)
+(i,j)
+cos(ai θi − aj θj ) ϕ0 + ϕ1 + ϕ1 + ϕ2
+,
+
+(2.16)
+
+i,j
+(i)
+
+(i,j)
+
+where the various terms ϕ0 , ϕ1 , ϕ2
+are collected in App. A. This master equation generalises
+the expressions of [13, 53] by including additional perturbative corrections, see also [9] for similar
+expressions for V and its derivatives. We stress that our numerical implementation does not use
+(2.16), but rather derives (2.9) directly.
+We note that, to accurately determine the axion VEVs, one would need to know the phases of
+Ai which we typically set to zero by hand. Since finding the axion VEVs is mostly straight forward,
+we will refrain from commenting on them in what follows.
+Below, we revisit the three established Kähler moduli stabilisation procedures KKLT [2], LVS [3]
+and Kähler uplifting [10, 24] in the presence of the perturbative corrections as defined in Eq. (2.13).
+KKLT scenario
+The KKLT construction [2] provides an explicit procedure for obtaining supersymmetric AdS vacua
+through non-perturbative effects in the superpotential, with perturbative corrections to the Kähler
+potential playing a secondary role. The solutions can be expressed succinctly by starting from the
+F -term conditions for all Kähler moduli
+Di W = ∂Ti W + (∂Ti K) W = 0 .
+
+(2.17)
+
+Early works, such as [54–56], have already provided evidence for the existence of supersymmetric
+AdS4 vacua satisfying (2.17), though making use of special structures and without hierarchical
+scale-separation. More recently, fully explicit supersymmetric AdS4 minima have been found in
+explicit Calabi-Yau orientifold compactifications containing O(100) moduli fields featuring large
+scale-separation [14] and warped throats [9].These works have provided the tools to numerically
+construct supersymmetric AdS4 minima for any h1,1 , see also §3.1.
+Let us compute (2.17) for our ansatz for the Kähler potential (2.10) and the superpotential
+(2.12) by writing
+
+
+X
+ti
+′
+−ak Tk
+−ai Ti
+(1 + δV ) W0 +
+Ak e
+= 0,
+(2.18)
+−ai Ai e
+−
+2V
+k
+
+–5–
+
+where we introduced the shorthand notation δV ′ = ∂V (0) δV.
+We may write this in the form
+ 
+
+X
+1
+1
+−1
+−1
+i
+−ak Tk
+Ti =
+ln(W0 ) − ln ϵ 1 + W0
+Ak e
+,
+ai
+ai
+
+(2.19)
+
+k
+
+where
+ϵi = −
+
+ti (1 + δV ′ )
+.
+ai Ai 2V
+
+(2.20)
+
+Provided |ϵi | ≪ 1, this can be further simplified to read
+ 
+
+X
+X
+1
+1
+−1
+i
+k
+j k
+Ti =
+ln(W0 ) − ln ϵ 1 +
+Ak ϵ +
+Aj Ak ϵ ϵ + . . .
+,
+ai
+ai
+k
+
+(2.21)
+
+j,k
+
+which is equivalent to a similar expression in §5.1 of [14].
+As long as |ϵi | ≪ 1 is guaranteed, the size of the 4-cycle volumes τi is mainly controlled by
+ln(W0−1 ). Achieving Einstein frame volumes τi ≳ 1 requires |W0 | ≪ 1, which requires sufficient
+tuning through suitable choices of fluxes. In practice, solutions of this type can be systematically
+constructed through perturbatively flat vacua [57] or, alternatively, by fine tuned cancellations in
+the flux superpotential [25].
+Large Volume Scenario
+The Large Volume Scenario (LVS) provides an alternative moduli stabilisation framework in Type
+IIB compactifications, where Kähler moduli are stabilised through a combination of non-perturbative
+effects in the superpotential and perturbative corrections to the Kähler potential.
+To simplify the discussion, let us start with the case of two Kähler moduli by setting h1,1 = 2
+where we denote the two 4-cycle volumes by τb and τs with volume form
+1
+3/2
+V (0) = √ (τb − τs3/2 ) .
+9 2
+
+(2.22)
+
+Then, the analysis begins with the master equation (2.16), taking the large volume limit where τb
+is sent to infinity. Keeping only the leading order terms in this limit, we find the scalar potential
+√ √
+V e−K = h̃|W0 |2 + 2as τs As |W0 |e−as τs cos(as θs + θ0 ) + 12 2 τs a2s A2s V (0) e−2as τs ,
+(2.23)
+where θ0 is the phase of W0 , and h̃ is given by
+
+3 
+h̃ =
+δV + V (0) (3 V (0) δV ′′ − δV ′ )
+(0)
+2V
+
+(2.24)
+
+in terms of δV ′′ = ∂V2 (0) δV. As this potential depends on a single axion θs , minimisation along this
+direction yields as θs = π − θ0 . The stabilisation of the Kähler moduli depends critically on the sign
+of h̃. Provided that h̃ > 0, the first and third term in (2.23) are positive and compete with the
+second term in such a way that a minimum materialises at
+V (0) ∼ |W0 | eas τs ,
+
+τs ∼ 1/gs ,
+
+⟨V ⟩ ∼ −
+
+|W0 |2
+.
+V3
+
+(2.25)
+
+Given that LVS depends on this delicate balance between non-perturbative and perturbative
+corrections in (2.23), the explicit form of the Kähler potential K in (2.10) is imperative. In particular, for the perturbative corrections in Eq. (2.13), we find
+h̃ =
+
+3ξˆ
+3α
++ (0) 2/3 .
+4V (0)
+(V )
+
+–6–
+
+(2.26)
+
+Hence, the first term in (2.23) receives two competing contributions: the BBHL correction 4V3ξ̂(0)
+3α
+(positive for h2,1 > h1,1 ) and the logarithmic correction (V (0)
+(positive for α > 0). Clearly, the
+)2/3
+latter generically dominates unless α is appreciably small.
+For compactifications with h1,1 > 2, the above process leaves h1,1 − 2 moduli τj (j ̸= s, b) as flat
+directions at this order. These can be stabilised through two distinct mechanisms: either by higherorder string corrections to the Kähler potential, leading to a hierarchy τb > τj ≫ τs , or through
+additional non-perturbative effects, producing τb ≫ τj > τs [58]. The specific stabilisation pattern
+depends on the relative strength of these corrections in a given compactification. Throughout, we
+only focus on additional non-perturbative contributions to W to stabilise the remaining Kähler
+moduli.
+Kähler uplifting
+The third type of solutions appearing frequently in our numerical analysis below were proposed in
+[24] and subsequently refined in [10, 59]. This class of minima of V uses the interplay of α′ effects
+in the Kähler potential and non-perturbative contributions to the superpotential W . Indeed, they
+emerge for values of |W0 | exceeding a critical threshold |W0max |, beyond which KKLT solutions
+cease to exist. Specifically, starting from a solution to Di W = 0 for sufficiently small |W0 | and
+increasing the value of |W0 | iteratively, supersymmetry breaking can occur at some V (0) > δV when
+|W0 | = |W0max |. Then, depending on the range of |W0 | ≳ |W0max | in which a minimum persists,
+these non-supersymmetric Kähler uplifted solutions are either anti-de Sitter or de Sitter.
+Since V (0) at the minimum decreases with increasing |W0 |, these minima are typically plagued
+by issues related to control over perturbative corrections. Although we will not address these
+concerns in this work, we point out that our framework described in §3 can be employed to study
+such control problems quite systemically and efficiently.
+In practice, de Sitter solutions of this form have been previously found in [47, 60]. In our
+investigations, we find a special variant of these solutions due to the specific form of δV as defined
+in Eq. (2.13).
+Classification of different scenarios
+Beyond the three established scenarios KKLT, LVS and Kähler uplift mentioned above, it is conceivable that moduli can be stabilised through unknown mechanisms. For example, there can be
+hybrid vacua [13] that exhibit characteristics of both standard LVS vacua and conventional KKLT
+models.
+More generally, it is therefore useful to classify models by the process in which each Kähler
+modulus is stabilised. For instance, one can imagine the following scenarios:
+• All moduli are stabilised by non-perturbative effects (like in KKLT).
+• Some moduli are stabilised by non-perturbative effects but others by perturbative effects as
+in LVS, including fibre moduli stabilisation [61].
+• All moduli are stabilised by perturbative effects as in recent proposals such as [51, 52, 62, 63].
+All of these scenarios can be easily studied within our numerical framework, which will be introduced
+in the next section.
+
+3
+
+Numerical Kähler moduli stabilisation framework
+
+In the section, we detail our computational framework for large scale numerical Kähler moduli
+stabilisation. The layout of our implementation is summarised in Fig. 1. First, we briefly summarise the status quo for numerical moduli stabilisation and lay out the plan and target for our
+implementation.
+
+–7–
+
+Choose Calabi-Yau orientifold
+and fix other parameters
+(e.g. gs, W0 etc.)
+
+Choose search
+parameters and
+CY geometry
+
+Classify the solutions by type (KKLT,
+LVS, dS, Ads etc.) and look for
+multiple solutions.
+
+Choose which of the three optimisers
+to run (KKLT, generic or iterative).
+
+Generate points
+in Kähler cone
+
+Select and run
+optimisation
+scheme
+
+Find random points in the Kähler cone
+using linear programming.
+
+Validate
+solutions
+
+Filter solutions by
+type & look for
+double minima
+
+Pass the solutions through
+validation protocol.
+
+Figure 1: A schematic summary of the process followed to obtain string vacua numerically using the
+techniques and tests outlined in §3.3.
+
+3.1
+
+Numerical Kähler moduli stabilisation
+
+The primary challenge in applying numerical methods to string moduli stabilisation stems from the
+high dimensionality and complex functional form of the scalar potential given in equation (2.16).
+For a system with h1,1 complex Kähler moduli Ti , we must search a (2h1,1 )-dimensional field
+space parametrised by (ti , θi ). The task is basically a (2h1,1 )-dimensional constrained optimisation
+problem involving huge systems of coupled, highly non-linear equations.
+A first step towards systematically exploring moduli potentials with the help of numerical tools
+was taken in [13] by working with an explicit implementation of (2.16) (with α = 0). Hybrid optimisation algorithms and other computational techniques were employed to systematically explore
+scalar potentials in Calabi-Yau compactifications of Type IIB with h1,1 ≤ 3 for minima.
+In principle, one could envision developing algorithms capable of handling hundreds of Kähler
+moduli, similar to those described previously [9, 14].5 While such implementations currently favour
+KKLT-like solutions, the minimisation algorithm of [14] is capable of exploring the extended Kähler
+cone and, after suitable modifications, allows to include anti-D3-uplifts and backreaction from
+complex structure moduli [9]. Moreover, by implementing detailed analytic expressions summarised
+in App. D of [9], all tree level α′ corrections including worldsheet instanton contributions can be
+incorporated in the analysis.
+3.2
+
+The implementation
+
+In this work, we make progress by providing a versatile and efficient implementation to expedite
+the numerical search for string vacua. The F -term scalar potential is completely specified by the
+notion of the Kähler potential K, the holomorphic Kähler coordinates Ti and the superpotential
+W . By providing only K, W and Ti as inputs, our code derives the full effective theory with the
+help of automatic differentiation.
+To achieve this, we are using the JAX ecosystem [16] which provides various features. By using
+auto-differentiation, it allows for efficient, and precise gradient computations in models with complex
+mathematical structures, such as those found in string compactifications. Compared to traditional
+means to compute derivatives like via finite differences or symbolic differentiation, this approach
+proves particularly powerful in enabling scalable explorations of high-dimensional parameter spaces.
+Building on this foundation, we have developed an algorithmic framework that generates all necessary functions to evaluate both the scalar potential and F -term conditions. These general-purpose
+5 See also [64] for progress in finding axion minima.
+
+–8–
+
+functions remain model-agnostic until supplied with compactification data from the Calabi-Yau
+orientifold, including χ and h1,1 , and specific parameters from higher-scale physics (such as gs , Kcs ,
+and W0 ).
+A clear advantage is that our implementation is less prone to errors. Previous implementations
+can only be used for a very specific ansatz for K, W and Ti making them susceptible to errors
+whenever significant modifications are required. Instead, our framework is completely modular
+allowing us to work with arbitrary inputs for K, W and Ti . In this sense, our approach allows
+to explore the string landscape more broadly by modelling different forms of the perturbative
+corrections to K (and Ti ) as well as by being able to find arbitrary minima for Kähler moduli as
+explained in the subsequent section. In this work, we will work with the specific expressions (2.13)
+and (2.12) for K and W .
+Beyond these enhancements to physics capabilities, our implementation features increased computational speed. While for standard python implementations the computational cost of evaluating
+the scalar potential and its derivatives typically scales unfavourably with h1,1 , our algorithms alleviate this problem through just-in-time compilation as previously argued in [15] for flux vacua.
+3.3
+
+Minimisation of scalar potentials and validation of solutions
+
+To locate minima of the scalar potential, we employ three distinct numerical approaches. The first
+procedure directly solves the F -term conditions via Eq. (2.21). The remaining two procedures are
+solution-agnostic, working with the full scalar potential, thereby enabling broader exploration of
+vacua; they differ primarily in how the parameter space is sampled.
+We introduce ti0 as the initial guess for the two-cycle volumes. To sample ti0 inside the Kähler
+cone KX of the Calabi-Yau threefold X, we impose the Kähler cone conditions in Eq. (2.6)
+on the ti0 as a set of numerical inequalities. These are solved using linear programming via
+scipy.optimize.linprog to generate valid starting points ti0 ∈ KX .
+We employ the following three strategies to obtain a minimum of the scalar potential, whose
+associated Kähler parameters are denoted by ti⋆ :
+1. We solve the F -term conditions Di W = 0 numerically. As discussed in §4.2 and similar to
+[9, 14], the logarithmic form of these conditions in Eq. (2.21) offers significant computational
+advantages.
+2. We operate directly on the scalar potential trying to find solutions to the extremum equations
+∂i V = 0. This allows us to locate non-supersymmetric minima of the Kähler moduli potential,
+including LVS-type solutions.6
+3. By again working with the full scalar potential, we employ the iterative method described
+in §2.2 by first locating KKLT solutions and then using these as initial conditions to search
+for non-SUSY vacua at incrementally larger values of |W0 |. This approach proves effective in
+identifying Kähler uplifted solutions that would otherwise be inaccessible via direct minimisation.7
+For each strategy, we solve the resulting system of equations via scipy.optimize.root. For each
+candidate solution, we check that the minimum lies inside Kähler cone ti⋆ ∈ KX and that the Hessian
+eigenvalues are positive.8
+6 Of course, a subset of solutions obtained in this way may still preserve supersymmetry due to D W = 0 as we
+i
+will see later in §4.2.
+7 Similar strategies were employed in [9] to find de Sitter minima from anti-D3-brane uplifts.
+8 In principle, we could allow for some negative eigenvalues in AdS minima provided that the tachyonic mass is
+above the Breitenlohner-Freedman (BF) bound [65].
+
+–9–
+
+h1,1
+2
+3
+4
+5
+6
+
+# Geometries
+39
+274
+1,760
+11,713
+74,503
+
+% Success
+21%
+6.4%
+2.2%
+0.3%
+0.3%
+
+Time per run (s)
+0.95s
+1.2s
+2.0s
+2.9s
+4.0s
+
+Table 1: Table summarising the performance of the algorithm over of our shallow scan over all geometries
+in the database of [23] with h1,1 ≤ 6 where optimisation was attempted for 18 combinations of (gs , W0 )
+per geometry. It should be noted that ‘time per run’ refers to the average time9 taken to conduct the first
+4 of 5 steps in Fig. 1, from generating a start point in the Kähler cone to running all three optimisation
+methods and passing any solutions found through our checks.
+
+Beyond these minimisation methods, we strategically choose initial points ti0 ∈ KX to optimise
+convergence. E.g., in two-modulus LVS scenarios, prior knowledge guides the selection of starting
+points: the large modulus typically stabilises near τb ∼ V 2/3 and the small modulus satisfies as τs ∼
+ln(V), cf. Eq. (2.25). By finding the corresponding Kähler parameters ti0 ∈ KX where these
+conditions are approximately satisfied, we increase the likelihood of finding LVS solutions, even in
+examples with h1,1 > 2.
+
+4
+
+Numerical landscape analysis and coexisting minima
+
+In this section, we present the numerical results obtained using the computational framework described in the previous section. First, we describe our selection of datasets in §4.1. Subsequently,
+we demonstrate in §4.2 that applying in our numerical techniques successfully recovered all known
+minimum types described in §2.2 across all sampled geometries with 2 ≤ h1,1 ≤ 6. We also perform
+more in-depth searches in §4.2 on individual manifolds to highlight the prevalence and parametric
+distributions of certain string vacua within our datasets.
+A particularly interesting outcome of our numerical searches is the generic appearance of double
+minima candidates in manifolds supporting multiple solution types. As detailed in §4.4, we consistently find pairs of minima — including AdS-AdS, Minkowski-AdS, and dS-AdS configurations —
+existing simultaneously within the same potential (i.e., for identical values of parameters such as
+χ, gs , W0 , etc.). We comment on the broader implications of vacuum stability and inter-minima
+tunnelling in §5. In §4.5, we extend our analysis beyond the F -term scalar potential by including
+explicit uplift terms, particularly from anti-D3 branes. These uplift mechanisms allow us to convert
+AdS vacua into metastable de Sitter vacua.
+4.1
+
+Search parameters and dataset selection
+
+Initially, we performed large scale searches across the toric Calabi-Yau database of [23] for h1,1 ≤ 6.
+Specifically, we run superficial scans using the three approaches described in §3.3 using three values
+of gs ∈ {0.03, 0.1, 0.3} and six values of −W0 ∈ [10−15 , 100.5 ], for a total of 18 parameter points per
+geometry. Furthermore, we assume all h1,1 Kähler moduli to contribute to the non-perturbative
+superpotential.10 Geometries were then ranked by their success rate in this quick scan, guiding our
+selection for more detailed, fine-grained searches described in §4.2. The computational efficiency of
+9 The average time was taken for the first 1,000 geometries for h1,1 ≥ 4 rather than the whole database for
+efficiency.
+10 Although this has been explicitly confirmed for large values of h1,1 , for smaller values it must be verified on
+a case-by-case basis. In this sense, our analysis applies only to cases where the h1,1 4-cycles are rigid or can be
+rigidified.
+
+– 10 –
+
+Figure 2: Success rate (left) and largest volume solution (right) for the large scan over the geometries listed
+in Table 1. Here, the different colours correspond to the individual minimisation strategies as explained
+in §3.3: blue for supersymmetric, yellow for general non-supersymmetric and green for solutions found via
+the iterative procedure. We observe that the success rate of all strategies decreases with h1,1 , whereas the
+largest volume obtained in any of the solutions stays roughly constant.
+
+our approach is demonstrated by successful identifications of both SUSY and non-SUSY minima,
+with typical runtimes of just a few seconds on standard laptop hardware. We summarise the number
+of geometries per h1,1 , the average success rate for finding vacua as well as the average time per
+run in Table 1.11
+Fig. 2 shows the success rate for the three different minimisation strategies separately as well as
+the largest volume solution obtained for each h1,1 . The drop in success rate for uncovering minima
+per starting point is a natural consequence of our coarse initial scan and can be substantially
+improved with more targeted, in-depth searches. Indeed, this preliminary survey was designed
+to pinpoint the most promising geometries for the more detailed investigations that follow below.
+Specifically, we next demonstrate that our framework, detailed in §3, can be efficiently used to
+recover all established solution types described in §2.2, namely KKLT, LVS, and Kähler uplifted
+solutions, as well as hybrid solutions as found previously in [13].
+4.2
+
+Numerical KKLT, LVS and Kähler uplift solutions
+
+We now present solutions that are anticipated based on the analytic considerations of §2.2, before
+summarising novel solution types subsequently.
+KKLT solutions
+The KKLT minimisation method proves particularly efficient, consistently outperforming direct
+minimisation of the full scalar potential by solving the simpler F -term conditions directly. A key
+advantage is the usage of the logarithmic expression (2.21) for the Kähler moduli Ti .
+Fig. 3 illustrates a representative KKLT minimum identified for compactifications on the degree
+18 hypersurface in P4[1,1,1,6,9] by our F -term solver and subsequently verified through direct scalar
+potential minimisation. The potential is generated for parameters
+gs = 10−1.5 , W0 = −10−12 , A1 = A2 = 1 , a1 =
+
+π
+π
+, a2 =
+, α = 10−1 .
+24
+22
+
+(4.1)
+
+11 We use the counting of FRST classes of [66]. We note that, while these Calabi-Yau threefolds have distinct Wall
+
+data, they can still be topologically equivalent as complex manifolds. Topological inequivalence classes of Calabi-Yau
+hypersurfaces constructed from triangulations of reflexive polytopes in four dimensions for h1,1 ≤ 5 were enumerated
+in [66], see also [67] for related attempts.
+
+– 11 –
+
+Figure 3: Example SUSY AdS minimum obtained by solving the F -term conditions for a potential generated with parameters as specified in Eq. (4.1).
+
+The calculation incorporates both BBHL and logarithmic Kähler potential corrections, with α =
+10−1 , yielding a SUSY minimum at
+V (0) ≈ 1,410 ,
+
+δVBBHL
+∼ 10−1 ,
+V (0)
+
+δVlog
+∼ −10−2 .
+V (0)
+
+(4.2)
+
+The vacuum energy is given by
+⟨V ⟩ ≈ −5.7 × 10−34 .
+
+(4.3)
+
+As a representative case study, Fig. 4 presents results from scanning a CY manifold with h1,1 = 3
+whose polytope is specified by the following vertices
+1 −3 −2 −2
+ 0 −1 −1 0
+
+ 0 −1 0 −1
+0 −2 0 0
+
+
+0
+0
+1
+0
+
+0
+1
+0
+0
+
+
+1
+1
+.
+1
+2
+
+(4.4)
+
+The triangulation is determined by the height vector (−1, 0, 3, 3, 0, 0, 0, 0). As can be verified explicitly, this geometry has more than h11 rigid divisors (see e.g. [23]). Our search employed the
+F -term conditions directly, exploring 50 values of gs in [10−2.5 , 100.5 ] and 100 values of |W0 | in
+[10−10 , 101 ] totalling 5,000 individual runs.
+Fig. 4 displays the parameter space regions where KKLT solutions exist, with coloured points
+indicating solutions and colours representing the stabilised volume. As anticipated for KKLT solutions, the volume depends strongly on |W0 | ∼ Ae−aτ but remains largely insensitive to the value
+of gs . This behaviour follows from Eq. (2.21), where gs influences Kähler moduli stabilisation only
+through subleading perturbative corrections to the Kähler potential. Consequently, the inclusion
+of gs -dependent perturbative corrections produces negligible changes in the stabilised volumes.
+Comparing scans with and without perturbative corrections shows that the presence of gs dependent corrections shrink the viable |W0 | window for KKLT minima. In particular, the BBHL
+−3/2
+correction scales as gs
+, pushing viable vacua to ever smaller |W0 | as gs decreases. As discussed in
+§2.2, the full scalar potential (cf. Eq. (2.16)) develops singularities when V ∼ δV(ti , s). For KKLT
+solutions, the volume scaling ai Re(Ti ) ∼ ln(|W0 |−1 ) (recall Eq. (2.21)) motivates the dotted line in
+each plot showing ln(|W0 |−1 ) = χ2/3 a1 /gs , which approximates where V ≈ δVBBHL and correctly
+predicts the observed scaling behaviour.
+
+– 12 –
+
+Figure 4: Solution space obtained from solving the F -term conditions (Eq. (2.21)) across the parameter
+ranges of gs and |W0 | described in the text. Left panel displays results without perturbative Kähler potential
+corrections, while right panel includes both BBHL and logarithmic corrections (Eq. (2.13)). Data obtained
+for Calabi-Yau manifold from polytope with vertices (4.4) (h1,1 = 3) using parameters: Ai = 1, ai = 2π/22,
+Euler characteristic χ = −112, and logarithmic correction coefficient α = 10−1 .
+
+Figure 5: LVS minimum identified through direct minimisation of the scalar potential with parameters as
+specified in Eq. (4.5).
+
+LVS solutions
+Next, let us employ our search algorithm to identify LVS minima by working directly with the full
+scalar potential in Eq. (2.16). That is, instead of solving DTi W = 0 as in the previous section, we
+are searching for solutions to ∂ti V = ∂θi V = 0 from random starting points ti0 within the Kähler
+cone KX . A priori, this may not automatically give rise to an LVS-type solution, but simply to a
+generic (non-)SUSY (A)dS4 minimum. Locating such non-SUSY AdS4 minima therefore presents
+significantly greater challenges than their supersymmetric counterparts.
+We present one representative minimum at h1,1 = 2 in Fig. 5. This minimum shows the expected
+characteristics of LVS solutions. As before, we consider compactifications on P4[1,1,1,6,9] [18] with both
+BBHL and logarithmic perturbative corrections. The minimum was obtained for the parameters
+gs = 0.1 , W0 = −0.628 , A1 = A2 = 1 , a1 = a2 = 2π/20 , α = 10−1 .
+
+(4.5)
+
+The minimum occurs at
+V (0) ≈ 23,400 ,
+
+δVBBHL
+∼ 10−3 ,
+V (0)
+
+– 13 –
+
+δVlog
+∼ −10−3
+V (0)
+
+(4.6)
+
+Figure 6: Solution space obtained by directly minimising the full potential for compactifications on
+P4[1,1,1,6,9] [18] (h1,1 = 2) with Ai = 1, ai = 2π/20, χ = −540, and α = 10−1 . In total, we show 19,484 vacua
+found (including KKLT-type solutions) containing 2,750 LVS minima.
+
+with vacuum energy
+⟨V ⟩ ≈ −4.9 × 10−15 .
+
+(4.7)
+
+The solution exhibits characteristic LVS scaling as derived in Eq. (2.25). That is, the blow-up and
+volume modulus satisfy
+τs = τ2 ≈ 31.4 ≈ 0.98 a−1
+s ln(V) ;
+
+τb = τ1 ≈ 927 ≈ 1.21 V 2/3 .
+
+(4.8)
+
+Our numerical algorithms successfully generate comprehensive LVS solution datasets, revealing
+characteristic parameter scalings. Fig. 6 presents results from scanning 50,000 parameter combinations across gs ∈ [0.03, 0.3] and |W0 | ∈ [10−5 , 102 ]. By minimising the full potential, we see that
+our method finds a large majority of supersymmetric solutions. This is not surprising as the LVS
+solutions lie in asymptotic regions of the moduli space and are therefore much harder to find.12 After filtering out supersymmetric solutions, we obtain the plot on the right hand side in Fig. 6. This
+plot shows that, as we vary |W0 | and gs , the lower volume LVS solutions coalesces with KKLT-like
+solutions, which are growing in volume. This is a hint that, for a single choice of parameters like
+W0 and gs , the same potential can host both LVS- and KKLT-like minima. This will be explored
+further in §5.1.
+Much as in Fig. 4, the first two panels of Fig. 6 map where vacua appear in the (|W0 |, gs )plane. Unlike the KKLT case where V depends almost exclusively on |W0 |, LVS minima show
+a two-parameter sensitivity: volumes decrease as |W0 | is lowered but grow for smaller gs . This
+−1/2
+|W0 | e1/gs , and explains why LVS vacua
+behaviour matches the characteristic LVS scaling V ∼ gs
+persist to much larger |W0 | than their KKLT counterparts, even overlapping in parameter space,
+see §4.4 and the stability discussion in §5.2.
+The third plot in Fig. 6 demonstrates our LVS check from §3.3. Here, we test how close our
+solutions come to satisfying the standard LVS relations as τs ∼ ln(V) and τb ∼ V 2/3 . We thereby
+identify valid LVS solutions within a defined region around the origin.
+Kähler uplifted minima
+Next, let us describe our results for the third class of solutions, namely Kähler uplifted minima
+[10, 24] as reviewed in §2.2. To reiterate, these solutions emerge when |W0 | exceeds a certain
+threshold where SUSY-breaking effects from α′ -corrections provide a source for uplifting.
+Our search algorithm employs an iterative approach: beginning with a known KKLT minimum
+at small |W0 |, we gradually increase |W0 | while using each solution as the initial guess for subsequent
+optimisations for ∂ti V = ∂θi V = 0. This incremental parameter variation combined with informed
+12 In principle, one can devise methods to find approximate LVS solutions:
+
+starting from some point ti0 ∈ KX ,
+i
+locate points t1 ∈ KX in Kähler moduli space τk ∼ ln(V) for some k = 1, . . . , h1,1 and subsequently use ti1 ∈ KX
+as the starting point for finding the true minimum of the potential. Similar ideas were employed in [9, 14] to find
+KKLT minima.
+
+– 14 –
+
+Figure 7: Kähler uplifted AdS minimum obtained for the Calabi-Yau hypersurface at h1,1 = 3 obtained
+from the polytope defined by (4.4). The parameters for this minimum are given in Eq. (4.9)
+
+Figure 8: We obtained 2,864 Kähler uplifted minima across the scanned parameter ranges of gs and |W0 |
+with de Sitter minima singled out in the plot on the right. The data is obtained for the same Calabi-Yau
+threefold h1,1 = 3 as in Fig. 4 and parameters Ai = 1, ai = 2π/22, χ = −112, and α = 10−1 .
+
+starting points enables efficient tracking of solutions to non-SUSY AdS4 minima and potential uplift
+to dS4 vacua at shrinking volumes. Fig. 7 illustrates a representative example of a non-SUSY AdS4
+minimum found for the toric Calabi-Yau hypersurface with polytope determined by the vertices in
+(4.4) which has χ = −112. We obtained a minimum for the following choice of parameters
+gs = 0.0703 , W0 = −1.23 , A1 = A2 = A3 = 1 , a1 = a2 = a3 =
+
+2π
+, α = 10−1 .
+22
+
+(4.9)
+
+The minimum occurs at volume
+δVBBHL
+≈ 0.5 ,
+V (0)
+
+V (0) ≈ 19.7 ,
+
+δVlog
+∼ −10−2 ,
+V (0)
+
+(4.10)
+
+yielding a value for the vacuum energy
+⟨V ⟩ ≈ −1.23 × 10−4 .
+
+(4.11)
+
+Clearly, looking at the size of the volume and corrections in (4.10), this vacuum most likely lies
+outside the regime of perturbative control.
+Kähler uplifted solutions emerge at larger |W0 | values where F -term minimisation cannot be
+achieved within the regime of perturbative control. To map this transition, we conduct parallel
+scans for both KKLT and non-SUSY solutions across identical parameter ranges.
+
+– 15 –
+
+Figure 9: De Sitter solutions from Kähler uplifting in the small-volume non-SUSY regime. A subset of
+solutions to Eq. (2.16) yield positive potential values, confirming the prediction of [60] for the Calabi-Yau
+threefold P4[1,1,1,6,9] [18] at h1,1 = 2. The yellow curve shows their proposed relation |W0 | ∼ 70.2 gs2.35 where
+dS minima are expected to occur. For this plot, we use the same parameters as [60]: Ai = {1.11, 1},
+ai = {2π/24, 2π/22}, χ = −540, eKcs = 0.03, and α = 0.
+
+Fig. 4 previously established the existence of a critical |W0 | threshold (marked by the red
+dotted line at V (0) ∼ δV) beyond which KKLT solutions vanish. Using our iterative minimisation
+approach on the complete potential, we successfully extend the solution space beyond this boundary.
+The resulting Kähler uplifted minima, stabilised at smaller volumes through SUSY-breaking uplift
+effects, are presented in Fig. 8.
+These Kähler uplifted minima exhibit several distinctive features. First, these solutions occupy
+parameter regions with larger |W0 | values than their KKLT counterparts, corresponding to smaller
+volumes. However, unlike KKLT solutions where volume decreases monotonically with |W0 |, the
+Kähler uplifted solutions show volume growth as |W0 | increases further. Second, the volume of the
+solutions is small with V (0) ∼ 10 signalling a probable loss of perturbative control.
+Perturbative corrections establish an upper |W0 | bound for KKLT solutions, beyond which
+Kähler uplifted solutions emerge in narrow W0 bands for each gs . These bands represent the delicate
+balance where corrections provide sufficient uplift without inducing runaway decompactification.
+The required parameter tuning reflects the KKLT solution’s weak sensitivity to perturbative effects
+- in some cases, like the CY manifold of Fig. 8, the potential transitions directly to runaway before
+achieving positive values.
+The most interesting feature of these solutions is their ability to stabilise all moduli in de
+Sitter configurations through pure Kähler uplifting, without explicit uplift terms. Fig. 9 validates
+the prediction of [60] that solutions along specific gs -W0 trajectories (yellow line) receive sufficient
+Kähler uplift to produce small-volume de Sitter minima. More specifically, [60] provide a condition
+on the value of the flux-induced superpotential and the topological data of the Calabi–Yau threefold
+that, if satisfied, ensures the existence of a metastable de Sitter vacuum. Indeed, working with
+the same choice of parameters as in [60] for the Calabi-Yau threefold P4[1,1,1,6,9] [18] at h1,1 = 2,
+our numerical analysis verifies that de Sitter vacua indeed arise along the expected trajectory
+|W0 | ∼ 70.2 gs2.35 , see Fig. 2 in [60].
+4.3
+
+Additional hybrid minima
+
+Throughout §2 and §4, we have organised vacua into three well-known classes, namely KKLT, LVS,
+and Kähler uplifted solutions, even though our numerical minimiser from §3 is agnostic about which
+type of solution it finds. One might therefore expect hybrid minima outside these categories, as
+reported in [13].13 Such solutions can arise whenever moduli are stabilised e.g. through a combination perturbative corrections to the Kähler potential and non-perturbative corrections to the
+superpotential, but in the absence of a swiss-cheese like structure of the volume. More specifically, extending the LVS mechanism to h1,1 > 2 generally demands additional perturbative or
+13 We stress that our categorisation is slightly different to the one used in [13].
+
+– 16 –
+
+Figure 10: LVS minimum identified in a h1,1 = 6 scenario through direct minimisation of the scalar
+potential specified by the parameters in Eq. (4.13).
+
+non-perturbative ingredients. Whenever one modulus, say τb , satisfies τb ∼ V 2/3 and is stabilised
+by perturbative corrections, with the remaining small cycles fixed non-perturbatively, one recovers
+a genuine LVS vacuum. In geometries without a clear swiss-cheese structure, or with multiple cycles receiving leading-order perturbative stabilisation, one instead finds hybrid minima that behave
+qualitatively like LVS vacua. Solutions of this type were coined LVS-like hybrid minima in [13].
+Our numerical framework readily identifies both pure LVS and these LVS-like hybrid solutions
+even at higher h1,1 . For example, we looked at the Calabi-Yau threefold with h1,1 = 6 obtained
+from a triangulation of the polytope with vertices given by
+
+
+0 0 −1 0 0 0 1 1 −1 0
+ 0 0 0 0 1 −1 −1 0 0 −1 
+
+
+(4.12)
+ 1 −1 0 0 0 −1 0 0 0 −1  .
+0 −1
+
+1
+
+1
+
+0
+
+0
+
+0
+
+0
+
+0 −1
+
+For this geometry, we obtained the solution shown in Fig. 10 for the parameter choice
+gs = 0.03 , W0 = −100.5 , Ai = 1 , ai =
+
+2π
+, α = 0 , χ(X) = −90 .
+22
+
+(4.13)
+
+The minimum occurs at
+V (0) ≈ 3,590
+
+(4.14)
+
+⟨V ⟩ ≈ −3.0 × 10−11 .
+
+(4.15)
+
+τs ≈ 21.4 ≈ 0.7a−1
+s ln(V) ,
+
+(4.16)
+
+and vacuum energy
+The blow-up modulus τs = τ2 satisfies
+
+while other divisor volumes τi̸=s ≳ 150 are much larger.
+For this geometry, we obtained the solution shown in Fig. 10. Here, τs = τ2 stabilises at
+hierarchically smaller values than the other five moduli, characteristic of LVS stabilisation where
+the τs non-perturbative term competes with leading-order contributions.
+4.4
+
+Coexisting Vacua in the Landscape
+
+Our numerical searches revealed the intriguing phenomenon of multiple minima coexisting within
+the same scalar potential for specific (gs , W0 ) parameter values.14 We identified several distinct
+14 This feature, exhibiting multiple solutions for a single set of parameters has also been observed in [11].
+
+– 17 –
+
+Figure 11: Coexisting minima in the scalar potential for P4[1,1,1,6,9] [18] at h1,1 = 2 with Kähler cone
+condition 0 < t2 < 31 t1 and with parameters Ai = {1.11, 1}, ai = {2π/24, 2π/22}, χ = −540, eKcs = 0.03,
+and α = 10−6 . Left: Potential with gs = 0.055, W0 = −0.024 exhibiting both a SUSY KKLT minimum at
+V (0) = 112 (⟨V ⟩ = −3.46 × 10−11 ) and an LVS minimum at V (0) = 67,000 (⟨V ⟩ = −4.77 × 10−21 ). Right:
+Potential with gs = 0.075, W0 = −0.192 containing a Kähler uplifted de Sitter minimum at V (0) = 68
+(⟨V ⟩ = +4.22 × 10−9 ) alongside an LVS minimum at V (0) = 16,000 (⟨V ⟩ = −2.92 × 10−17 ).
+
+coexistence scenarios; LVS minima paired with KKLT solutions, and LVS minima coexisting with
+Kähler uplifted solutions. Notably absent were potentials containing both KKLT and Kähler uplifted minima simultaneously; a finding consistent with the theoretical framework developed in
+§2.2 and the numerical results presented in §4.2. These multiple-minima configurations appear
+generically across various manifolds, requiring only the existence of LVS-type solutions.
+Our identification protocol builds upon the minimisation and filtering procedures from §4.2. We
+systematically compare solutions across three categorised lists (KKLT, LVS, and Kähler uplifted) for
+the same values of (gs , W0 ). Solutions consistently appear in either KKLT-LVS or Kähler upliftedLVS pairs, with the LVS solution always occupying the larger volume region. The coexistence of
+an LVS solution with a partner minimum depends primarily on the value of |W0 |. Indeed, for
+KKLT-LVS pairs, the KKLT solution exists when |W0 | is sufficiently small to produce volumes
+V (0) > δV(ti , gs ). When present, these KKLT solutions naturally coexist with LVS minima in the
+same potential. In contrast, for Kähler uplifted-LVS pairs, Kähler uplifted solutions typically exceed
+the KKLT threshold on |W0 | and hence they can pair with LVS minima at larger |W0 | values. The
+detailed evolution of solution types with varying |W0 | is analysed in §5.1.
+LVS solutions consistently appear at larger volumes, but the relative depths of minima vary.
+In KKLT–LVS pairs (both AdS), the KKLT minimum is always deeper and at smaller volume.
+In contrast, Kähler uplifted–LVS pairs show more varied behaviour due to the uplift mechanism,
+ranging from deep AdS to Minkowski, or dS minima, depending on the uplift strength.15
+This progression yields several possible double-minima configurations within the same potential
+such as: two AdS minima with the smaller-volume solution deeper (KKLT-LVS or Kähler UpliftedLVS pairs), two AdS minima with the larger-volume solution deeper (Kähler Uplifted-LVS pairs),
+Minkowski (Kähler Uplifted) + AdS (LVS) pair, and dS (Kähler Uplifted) + AdS (LVS) pair. An
+example of both a KKLT-LVs (AdS - AdS) pair and a Kähler Uplifted - LVS (dS - AdS) pair are
+shown in Fig. 11.
+Fig. 12 displays the regions in the (gs , W0 ) parameter space where double minima were identified
+for the P4[1,1,1,6,9] [18] Calabi-Yau manifold. In this scan, we sampled 200 values of gs in the range
+15 In some cases, full dS uplift is not achieved before a runaway direction develops, leading to higher AdS minima
+compared to the LVS solution instead.
+
+– 18 –
+
+Figure 12: Parameter space (gs , W0 ) exhibiting coexisting minima in compactifications on P4[1,1,1,6,9] [18].
+Colours indicate the volume of the LVS solution in each double-minimum configuration. The evolution
+of LVS volumes with varying |W0 | is analysed in detail in §5.1. Parameters: h1,1 = 2, Ai = {1.11, 1},
+ai = {2π/24, 2π/22}, χ = −540, eKcs = 0.03, and α = 10−6 .
+
+(0.03, 0.5), and for each, 5,000 values of −|W0 | in the range (10−3 , 102 ), with all other parameters
+fixed as specified in the caption of Fig. 12. This produced approximately 4.5 × 105 , 2.5 × 105 , and
+6.6 × 105 solutions. After removing SUSY KKLT solutions, we found 14,819 instances of multiple
+minima arising within the same potential.
+4.5
+
+Adding explicit uplifting sources
+
+Thus far, we have focused exclusively on the F -term potential. In typical compactifications, additional uplifting terms, e.g. from anti-D3 branes, T-branes or D-terms, arise that can raise AdS
+minima to de Sitter. These uplift contributions scale as ∼ V −n , n < 3, with the overall volume V.
+Indeed, the introduction of an explicit uplifting term in our analysis enables new possibilities.
+Specifically, we will consider anti-D3 brane uplifts16 which lead to an additional contribution
+Vup =
+
+Dup
+>0
+V 4/3
+
+(4.17)
+
+in the full scalar potential. We keep the coefficient Dup here as a free parameter, and simply note
+that it can in principle be computed in explicit examples where warped Klebanov-Strassler throats
+[1, 73] can be realised, see in particular [9] and [74] for recent discussions in the context of KKLT
+and LVS respectively.
+Adding an explicit uplift term unlocks vacuum pairings beyond those found in §4.4. In particular, we can now engineer a small-volume AdS minimum coexisting with a larger-volume Minkowski
+or de Sitter vacuum — configurations unattainable by Kähler uplifting alone. As described in §4.2
+and §4.2, LVS and KKLT minima often coexist for the same (gs , W0 ). After applying the uplift
+of Eq. (4.17), the LVS branch becomes a metastable dS solution while the KKLT branch remains
+a deep, slightly SUSY-broken AdS vacuum. In §5.2 we analyse the resulting tunnelling dynamics.
+More generally, by varying the uplift strength one can realise any combination of AdS, Minkowski,
+and dS minima at both small and large volumes in a single potential.
+We explore the landscape of double dS solutions by first considering the pairs of double minima
+we found in Fig.12 (where we in effect had Dup = 0). This provides a start point for us to run two
+16 An explicit bound on the net D3-tadpole required to maintain control over warping corrections in LVS in the
+
+presence of anti-D3 branes has been derived in [68]. Similarly, control issues in KKLT due to warping effects have
+been identified e.g. in the context of the singular bulk problem [69–71], see also [72] for a strengthened version of
+the problem.
+
+– 19 –
+
+Figure 13: Uplifted KKLT-LVS double minimum configuration. Starting from an AdS pair (Dup = 0) with
+KKLT minimum at V = 22.796 (V = −1.1971 × 10−6 ) and LVS minimum at V = 315 (V = −8.66 × 10−11 ),
+we introduce the uplifting term (Eq. (4.17)) and increase Dup until achieving a dS LVS solution. At
+Dup = 2.82 × 10−7 , the LVS minimum uplifts to V = 549 (V = +1.94 × 10−11 ) while the KKLT minimum
+remains nearly unchanged at V = 22.802 (V = −1.1928×10−6 ). Computed for P4[1,1,1,6,9] [18] with gs = 0.18,
+W0 = −0.6, and other parameters matching Fig. 12.
+
+Figure 14: Parameter combinations yielding multiple minima for compactifications on P4[1,1,1,6,9] [18] that
+can be simultaneously uplifted to dS via Eq. (4.17). The discrete scattering of values reflect the finite
+resolution of our numerical scan; the underlying behaviour is expected to be continuous. Each point
+corresponds to a point in the parameter space where double minima are found, the colour corresponds to
+the volume of the smaller solution.
+
+simultaneous ‘iterative’ optimisation processes that takes the non-uplifted minimum and tracks it
+as we slowly increase Dup , in a procedure reminiscent of how we found the Kähler Uplifted solutions
+by increasing |W0 | when starting from a KKLT solution. The algorithm continues to increase the
+uplift parameter until one of our solutions disappears (in effect the potential is now runaway at
+that point). The solutions shown in Fig. 14 correspond to the double minima found in Fig. 12 that
+survived uplifting both solutions to dS. All pairs of solutions that could be uplifted to double dS
+minima contained a combination of Kähler uplifted and LVS-type solutions; all KKLT minima were
+too deep and the uplift required to bring them to dS caused the LVS solution to be uplifted to a
+runaway. Shown in Fig. 13 is an example of a KKLT-LVS solution pair, we can seen in the second
+plot that when Dup ∼ 10−7 we have sufficient uplift to promote the LVS solution to dS, but the
+KKLT solution is only effected at the 4th significant figure.
+
+– 20 –
+
+Figure 15: Evolution of both KKLT and LVS solution with decreasing |W0 |. Starting from an initial value
+|W0 | ∼ 10−2 where both solutions coexist, we observe opposite scaling as we dial the flux superpotential
+down to |W0 | ∼ 10−15 . Left: Beginning from either the KKLT branch (top left) or the LVS branch
+(top right), lowering |W0 | causes the KKLT volume to grow, while the LVS volume shrinks. The shaded
+region shows the values of |W0 | for which both vacua coexist. Middle: The scale of SUSY breaking
+P
+|DW | = i |Di W | as a function of the volume. Right: Deviation from characteristic LVS scaling τb ∼ V 2/3 ,
+as τs ∼ ln V.
+
+5
+
+Dynamics in the string landscape
+
+This section presents applications of our numerical framework that showcase its utility in studying
+the string theory landscape. Our approach enables both efficient large-scale parameter scans and
+detailed investigations of vacuum dynamics and stability. The framework is highly parallelisable,
+allowing for extensive scans over values of the flux-induced superpotential W0 . This facilitates systematic studies of vacuum properties across wide regions of parameter space, and helps identifying
+regions that support de Sitter solutions or exhibit interesting phenomenological features. Building on these results, our methods provide a foundation for studying dynamical processes in the
+landscape — such as vacuum transitions and tunnelling.
+5.1
+
+Vacuum structure from |W0 | variation
+
+We now proceed to examine the transitions between different vacuum types by systematically
+scanning the flux parameter W0 . In KKLT solutions, the overall volume scales exponentially with
+the divisor volumes |W0 | ∼ e−an τn , recall Eq. (2.21), whereas in the LVS regime one finds the
+opposite scaling behaviour |W0 | ∼ V (recall Eq. (2.25)). Our numerical framework allows us to
+probe these competing scalings within a single scalar potential by tracking, for example, how the
+LVS minimum deepens and then gives way to a KKLT minimum as |W0 | is decreased. This allows
+us to understand the continuous deformation between the two solution branches and the parameter
+windows in which they coexist.
+Let us first test the prediction that an LVS AdS vacuum shrinks as |W0 | decreases, whereas
+below some critical |W0 | value a KKLT-like solution exists. We start from a potential with coexisting
+LVS and supersymmetric KKLT minima obtained for flux compactifications on P4[1,1,1,6,9] [18] using
+the same parameters as in Fig. 11, with τ1 ≡ τb and τ2 ≡ τs . We then tracked the volume of
+each solution separately as |W0 | was lowered. As shown in Fig. 15, the volume indeed decreases
+when starting from the LVS solution (top right), while the KKLT volume increases (top left).
+Interestingly, the LVS solution branch eventually disappears below some threshold value |W0 | ∼
+10−7 at which point the KKLT branch takes over.
+We can similarly investigate the reverse transition, with increasing |W0 |, the vacuum shifts from
+a KKLT AdS minimum to a non-supersymmetric Kähler-uplifted solution. As anticipated in §2.2,
+once |W0 | exceeds a critical value, the family of KKLT solutions ceases to exist and is replaced
+by a SUSY-breaking minimum. Fig. 16 illustrates this behaviour: starting from a small-volume
+dS vacuum at large |W0 |, lowering |W0 | suppresses the uplift, first driving the solution to AdS,
+
+– 21 –
+
+Figure 16: Evolution of a small-volume de Sitter vacuum, coexisting with an LVS minimum, as |W0 |
+is decreased. The solutions are computed using the iterative procedure of §3.2 for compactifications on
+P4[1,1,1,6,9] [18] with the same parameters as in Fig. 15. Note that the LVS minimum remains present across
+the entire scanned range of |W0 |.
+
+then causing the Kähler-uplift branch to disappear below which the familiar KKLT AdS vacuum
+reemerges, satisfying Di W = 0 and exhibiting the expected scaling.
+Interestingly, the transition occurs while LVS solutions persist in the potential, enabling observation of various coexisting minima configurations through |W0 | variation alone:17
+• dS (small-volume) + AdS (LVS) pairs
+• Minkowski (small-volume) + AdS (LVS) pairs
+• AdS (small-volume deeper) + AdS (LVS) pairs
+• AdS (KKLT deeper) + AdS (LVS) pairs
+Once uplifting terms are added, all combinations of dS/Minkowski/AdS exist.
+5.2
+
+Tunnelling and Stability
+
+A second application of our results concerns vacuum decays. The stability of vacua in the string
+landscape, including those identified in our analysis, has been the subject of sustained investigation [2, 59, 75–80]. Previous studies have examined both KKLT and LVS minima in a range of
+configurations, considering their uplifted de Sitter versions (analysing tunnelling to larger-volume
+solutions or decompactification) as well as their non-uplifted anti-de Sitter counterparts.
+To date, the discussion has primarily focused on two decay channels:
+1. decay of a candidate de Sitter vacuum towards the runaway decompactification regime, studied
+via the Coleman–De Luccia formalism [81], and
+2. transitions between distinct flux configurations, analysed using the Brown-Teitelboim formalism [82] of bubble nucleation, which determines viable decay channels and corresponding
+vacuum lifetimes.
+The decay probability per unit volume and time follows the standard exponential form
+Γ ∼ e−B ,
+
+B = Sinstanton − Sbackground ,
+
+17 Recall that what we call small-volume is still larger than the string scale.
+
+– 22 –
+
+(5.1)
+
+where S denotes the Euclidean action. In general, decay towards decompactification, although
+exponentially suppressed, tends to dominate over decay to other flux vacua.18
+Here, we propose a third decay channel that has not been previously considered. In Sections §4.4
+and §4.5, we demonstrated the existence of configurations with multiple minima arising from fixed
+flux choices, in which an LVS-type minimum coexists with either a KKLT or Kähler uplifted one.
+The availability of explicit examples of scalar potentials in which all saddle points are known and
+which, in principle, span different energy scales, offers a rich theoretical laboratory for investigating
+the population of the landscape and cosmological implications. A comprehensive analysis of decay
+rates between these vacua and their broader physical consequences lies beyond the scope of this
+work. Here, we restrict ourselves to outlining some of their key potential implications:
+• Vacuum decay towards another local minimum. Concrete calculations can be performed in order to determine the transition rate from a high energy de Sitter minimum to
+the second local minimum for which the cosmological constant can be naturally tuned by the
+fluxes to have zero or very small value. The decay rate to decompactification can be estimated
+in a similar way. Notice that we have found all possible combinations in which the higher
+minimum corresponds to smaller or larger volume. Naively the decay rate from a de Sitter
+vacuum to a Minkowski vacuum is given by
+
+Γ = exp −
+
+1+
+
+Z φ1
+
+
+
+S(φ0 )
+
+4V0 2
+
+,
+
+3σ 2
+
+σ=
+
+p
+dφ 2V (φ) ,
+
+(5.2)
+
+φ0
+
+where S(φ0 ) = 24π 2 /V0 and σ is the bubble’s tension with φ1 the location of the second local
+minimum. In order to compare this decay rate to the one towards the runaway minimum,
+we would need to compare the values of the wall tension in both cases, the value of V (φ0 ),
+the value of the potential at the local maximum V (φmax ) or saddle that separates the two
+local minima in order to estimate the height of the barrier, the validity of the thin-wall ap√
+proximations, etc. In particular, we would need to compare the values of ∆φ Vmax for both
+transitions in order to compare the wall’s tension in both cases. Hawking-Moss transitions
+may also be implemented. All of this varies from case to case depending on the particular
+compactification and flux choice and requires a systematic analysis. Furthermore, the coexistence of Minkowski and AdS minima allows us to explicitly provide a flux compactification
+realising the second example discussed in [81], decay from Minkowski towards an AdS crunch
+for which Γ is as above by changing the plus by a minus sign in the denominator.
+• Runaway dilatonic domain walls. A quantitative analysis can be done for the existence
+or not of the corresponding bounce solution connecting the two local minima in the presence
+of the runaway, extending the discussion on runaway dilatonic domain walls in [78, 79].
+• Not bubble of nothing decay. The fact that the value of the potential at the LVS minimum
+decreases with decreasing W0 would naively lead one to believe that the minimum will continue
+decreasing until it disappears to an unbounded from below potential. This is what happens
+in 6d and it has been given an interpretation to a decay towards a bubble of nothing [83].
+However, here we confirm the argument of [75] in which, at a critical value of W0 , the LVS
+minimum disappears but a KKLT minimum appears and as W0 decreases further the value of
+the potential at the minimum increases rather than decreases, avoiding the bubble of nothing
+decay.
+18 In [78, 79], it was argued that an instanton connecting two finite-volume vacua may not exist, potentially
+obstructing the population of the landscape. See also the subsequent analysis in [80].
+
+– 23 –
+
+• Potential instability of AdS minima. For the case of double AdS minima, where either
+Kähler uplifted-LVS or SUSY KKLT-LVS pairs coexist within the same potential, Coleman-de
+Luccia transitions from LVS vacua to deeper minima at smaller volumes may occur, establishing the LVS solution as metastable. Notice that in this case there is no transition towards
+decompactification (following the standard Coleman-de-Luccia prescription, see however [84]).
+Since there is a dominant decay mode to another AdS this may have impact in attempts to
+construct CFT duals of these AdS LVS minima [85, 86].
+• Volume modulus inflation. The tuning of the fluxes that gives rise to two local (nonrunaway) minima can be used to smoothly deform the higher minimum such that this minimum disappears and gives rise to a potential which is naturally flat at high energies providing
+an excellent candidate to realise volume modulus inflation [87]. As usual in the landscape,
+the tuning is given by the richness of flux vacua. This may also lead to a period of kination
+and its many potential cosmological implications as recently studied in [88–92].
+• AdS wormholes and inflation. The fact that we can also get coexisting dS and AdS vacua
+provides a concrete example of the scenario proposed in [93, 94] in which an Euclidean AdS
+wormhole can give rise to a natural period of inflation with the dS vacuum responsible for
+the current acceleration. This is an interesting alternative proposal for initial conditions as
+compared to the Vilenkin, Hartle-Hawking proposals for the wave function of the universe.
+Note also that in our examples we have both cases with the dS corresponding either to the
+smaller or the larger volume case.
+
+6
+
+Conclusions
+
+We have developed a unified computational framework for assembling and evaluating the full scalar
+potential in Type IIB flux compactifications, including both perturbative and non-perturbative
+ingredients. This implementation leverages just-in-time compilation, and automatic differentiation
+based on the JAX environment [16] to deliver an efficient, scalable toolkit for systematic landscape
+explorations. As a proof of principle, we have used this implementation to carry out non-exhaustive
+searches for vacua across a range of Calabi-Yau orientifolds with h1,1 ≤ 6.
+Our large-scale numerical study of Type IIB flux compactifications has uncovered new features
+of vacuum structures which may have implications on the stability of such solutions in the string
+landscape. By employing the optimised framework described in §3, we systematically surveyed
+moduli stabilisation scenarios on Calabi-Yau threefolds with 2 ≤ h1,1 ≤ 6. In particular, we
+confirm that as |W0 | is dialled down from large values, the LVS AdS minimum deepens until it
+ceases to exist, at which point a KKLT-like minimum emerges and its energy increases as |W0 |
+continues to decrease.
+We further establish that distinct stabilisation mechanisms, specifically KKLT, LVS and Kähler
+uplifted, often coexist for the same choice of flux parameters (cf. §4.4), even in the presence of explicit
+uplifting contributions (cf. §4.5). Across all examined Calabi-Yau geometries, pairs of minima with
+any combination of AdS, Minkowski, or dS vacua can arise simultaneously. The generic occurrence
+of multiple local vacua at a single point in parameter space opens new avenues for vacuum selection
+dynamics, tunnelling phenomena, and novel inflationary scenarios.
+Our results reveal a richer web of interconnected vacua in the string landscape. The numerical
+toolkit introduced here offers a potent platform for systematically charting this complex terrain.
+Looking ahead, there are several exciting avenues to extend this work. First, integrating our
+JAX-based Kähler-moduli implementation with complementary packages such as JAXVacua [15]
+would enable fully unified scans that stabilise the axio-dilaton, complex structure, and Kähler
+moduli in one pass, opening the door to systematic investigations of backreaction effects. Second,
+
+– 24 –
+
+the modular design of our framework means that additional corrections — such as higher-order
+loop and α′ effects, brane-induced threshold corrections, or alternative uplifts like T-branes — can
+be included with minimal effort, allowing a quantitative assessment of control and convergence.
+Third, the discovery of coexisting minima suggests fertile ground for studying vacuum dynamics:
+by computing tunnelling actions between vacua in a fixed potential, one could explore new channels
+for vacuum decay and cosmological transitions within a single flux choice. Finally, pushing to larger
+h1,1 and incorporating additional search strategies, maybe even guided by Machine Learning, may
+uncover novel corners of the landscape, bringing us closer to concrete, fully stabilised de Sitter
+constructions.
+
+Acknowledgements
+We would like to thank Michele Cicoli, Pellegrino Piantadosi, Mario Ramos-Hamud and Gonzalo
+Villa for useful conversations. CH thanks K. Önder and N. McStay for multiple helpful discussions
+related to this work. We thank Panos Betzios, Ioannis Gialamas and Olga Papadoulaki for communications about their work in [93, 94]. The work of CH has been partially supported by Cambridge
+Trust, NUI and by STFC consolidated grants ST/T000694/1 and ST/X000664/1. The work of FQ
+has been partially supported by STFC consolidated grants ST/P000681/1, ST/T000694/1 and by
+a NYUAD research grant.
+
+A
+
+Explicit formulas for Kähler metric and the potential
+
+Starting with a Kähler potential of eq. (2.10) and considering perturbative corrections δV(V, s) as
+defined in Eq. (2.13), we calculate analytic expression for the Kähler metric and the corresponding
+terms in the scalar potential. First, we find
+KTn T̄m = c1 tm tn + c2
+
+∂tn
+,
+∂τm
+
+Kτ τ̄ =
+
+1
++ cτ ,
+4s2
+
+KTn τ̄ = cT tn ,
+
+(A.1)
+
+where
+
+1
+(1 + δVV )
+,
+(1 + δVV )2 − V δVVV ,
+c2 = −
+4V 2
+4V
+
+δVs2 − δVss V
+V δVVs − (1 + δVV )δVs
+cτ =
+,
+cT =
+.
+2
+2V
+4V 2
+c1 =
+
+(A.2)
+(A.3)
+
+This can be checked against the calculations of [13] where only the BBHL correction was considered.
+Inverting the Kähler metric and using the expression for the F -terms in Eq. (2.18), we compute
+the coefficient functions ϕn in the expression for the scalar potential (2.16) which are given by
+!
+3V (0) (1 + δVV )2
+ϕ0 =
+c2 + 6V (0) (S −1 c2T + c1 ) − 3 ,
+2V 2 (6c1 V (0) + c2 )2
+!
+ai τi (1 + δVV )
+(i)
+(0)
+−1 2
+(A.4)
+ϕ1 =
+c2 + 6V (S cT + c1 ) ,
+V(6c1 V (0) + c2 )2
+
+
+4
+c2T
+c1
+1
+(i,j)
+ϕ2 =
++
+τi τj + κijk tk ,
+(0)
+(0)
+c2
+6c1 V + c2 S(6c1 V + c2 ) c2
+where we introduced, S, is the Schur complement of the Kähler metric.
+S=
+
+6V (0) c2T
+1
++
+c
+−
+.
+τ
+4s2
+c2 (6V (0) c1 + c2 )
+
+– 25 –
+
+(A.5)
+
+References
+[1] S. B. Giddings, S. Kachru, and J. Polchinski, “Hierarchies from fluxes in string compactifications,”
+Phys. Rev. D 66 (2002) 106006, arXiv:hep-th/0105097.
+[2] S. Kachru, R. Kallosh, A. D. Linde, and S. P. Trivedi, “De Sitter vacua in string theory,” Phys. Rev.
+D 68 (2003) 046005, arXiv:hep-th/0301240.
+[3] V. Balasubramanian, P. Berglund, J. P. Conlon, and F. Quevedo, “Systematics of moduli
+stabilisation in Calabi-Yau flux compactifications,” JHEP 03 (2005) 007, arXiv:hep-th/0502058.
+[4] J. P. Conlon, F. Quevedo, and K. Suruliz, “Large-volume flux compactifications: Moduli spectrum
+and D3/D7 soft supersymmetry breaking,” JHEP 08 (2005) 007, arXiv:hep-th/0505076.
+[5] J. P. Conlon, S. S. Abdussalam, F. Quevedo, and K. Suruliz, “Soft SUSY Breaking Terms for Chiral
+Matter in IIB String Compactifications,” JHEP 01 (2007) 032, arXiv:hep-th/0610129.
+[6] M. R. Douglas and S. Kachru, “Flux compactification,” Rev. Mod. Phys. 79 (2007) 733–796,
+arXiv:hep-th/0610102.
+[7] F. Denef, “Lectures on constructing string vacua,” Les Houches 87 (2008) 483–610,
+arXiv:0803.1194 [hep-th].
+[8] L. McAllister and F. Quevedo, “Moduli Stabilization in String Theory,” arXiv:2310.20559
+[hep-th].
+[9] L. McAllister, J. Moritz, R. Nally, and A. Schachner, “Candidate de Sitter Vacua,”
+arXiv:2406.13751 [hep-th].
+[10] A. Westphal, “de Sitter string vacua from Kahler uplifting,” JHEP 03 (2007) 102,
+arXiv:hep-th/0611332.
+[11] S. S. AbdusSalam, J. P. Conlon, F. Quevedo, and K. Suruliz, “Scanning the Landscape of Flux
+Compactifications: Vacuum Structure and Soft Supersymmetry Breaking,” JHEP 12 (2007) 036,
+arXiv:0709.0221 [hep-th].
+[12] M. Cicoli, S. Krippendorf, C. Mayrhofer, F. Quevedo, and R. Valandro, “D-Branes at del Pezzo
+Singularities: Global Embedding and Moduli Stabilisation,” JHEP 09 (2012) 019, arXiv:1206.5237
+[hep-th].
+[13] S. AbdusSalam, S. Abel, M. Cicoli, F. Quevedo, and P. Shukla, “A systematic approach to Kähler
+moduli stabilisation,” JHEP 08 no. 08, (2020) 047, arXiv:2005.11329 [hep-th].
+[14] M. Demirtas, M. Kim, L. McAllister, J. Moritz, and A. Rios-Tascon, “Small cosmological constants
+in string theory,” JHEP 12 (2021) 136, arXiv:2107.09064 [hep-th].
+[15] A. Dubey, S. Krippendorf, and A. Schachner, “JAXVacua — a framework for sampling string
+vacua,” JHEP 12 (2023) 146, arXiv:2306.06160 [hep-th].
+[16] J. Bradbury, R. Frostig, P. Hawkins, M. J. Johnson, C. Leary, D. Maclaurin, G. Necula, A. Paszke,
+J. VanderPlas, S. Wanderman-Milne, and Q. Zhang, “JAX: composable transformations of
+Python+NumPy programs,” 2018. http://github.com/jax-ml/jax.
+[17] K. Becker, M. Becker, M. Haack, and J. Louis, “Supersymmetry breaking and alpha-prime
+corrections to flux induced potentials,” JHEP 06 (2002) 060, arXiv:hep-th/0204254.
+[18] J. P. Conlon and E. Palti, “Gauge Threshold Corrections for Local Orientifolds,” JHEP 09 (2009)
+019, arXiv:0906.1920 [hep-th].
+[19] J. P. Conlon and F. G. Pedro, “Moduli Redefinitions and Moduli Stabilisation,” JHEP 06 (2010)
+082, arXiv:1003.0388 [hep-th].
+[20] M. Cicoli, F. Quevedo, and R. Valandro, “De Sitter from T-branes,” JHEP 03 (2016) 141,
+arXiv:1512.04558 [hep-th].
+
+– 26 –
+
+[21] M. Berg, M. Haack, and B. Kors, “String loop corrections to Kahler potentials in orientifolds,”
+JHEP 11 (2005) 030, arXiv:hep-th/0508043.
+[22] M. Kreuzer and H. Skarke, “Complete classification of reflexive polyhedra in four-dimensions,” Adv.
+Theor. Math. Phys. 4 (2000) 1209–1230, arXiv:hep-th/0002240.
+[23] C. Crinò, F. Quevedo, A. Schachner, and R. Valandro, “A database of Calabi-Yau orientifolds and
+the size of D3-tadpoles,” JHEP 08 (2022) 050, arXiv:2204.13115 [hep-th].
+[24] V. Balasubramanian and P. Berglund, “Stringy corrections to Kahler potentials, SUSY breaking, and
+the cosmological constant problem,” JHEP 11 (2004) 085, arXiv:hep-th/0408054.
+[25] A. Chauhan, M. Cicoli, S. Krippendorf, A. Maharana, P. Piantadosi, and A. Schachner, “Deep
+observations of the Type IIB flux landscape,” arXiv:2501.03984 [hep-th].
+[26] R. Bousso and J. Polchinski, “Quantization of four form fluxes and dynamical neutralization of the
+cosmological constant,” JHEP 06 (2000) 006, arXiv:hep-th/0004134.
+[27] J. Moritz, “Orientifolding Kreuzer-Skarke,” arXiv:2305.06363 [hep-th].
+[28] P. Jefferson and M. Kim, “On the intermediate Jacobian of M5-branes,” JHEP 05 (2024) 180,
+arXiv:2211.00210 [hep-th].
+[29] S. Cecotti, S. Ferrara, and L. Girardello, “Geometry of Type II Superstrings and the Moduli of
+Superconformal Field Theories,” Int. J. Mod. Phys. A 4 (1989) 2475.
+[30] T. W. Grimm and J. Louis, “The Effective action of N = 1 Calabi-Yau orientifolds,” Nucl. Phys. B
+699 (2004) 387–426, arXiv:hep-th/0403067.
+[31] D. Robles-Llana, M. Rocek, F. Saueressig, U. Theis, and S. Vandoren, “Nonperturbative corrections
+to 4D string theory effective actions from SL(2,Z) duality and supersymmetry,” Phys. Rev. Lett. 98
+(2007) 211602, arXiv:hep-th/0612027.
+[32] D. Robles-Llana, F. Saueressig, U. Theis, and S. Vandoren, “Membrane instantons from mirror
+symmetry,” Commun. Num. Theor. Phys. 1 (2007) 681–711, arXiv:0707.0838 [hep-th].
+[33] T. W. Grimm, “Non-Perturbative Corrections and Modularity in N=1 Type IIB Compactifications,”
+JHEP 10 (2007) 004, arXiv:0705.3253 [hep-th].
+[34] F. Baume, F. Marchesano, and M. Wiesner, “Instanton Corrections and Emergent Strings,” JHEP
+04 (2020) 174, arXiv:1912.02218 [hep-th].
+[35] F. Marchesano and M. Wiesner, “Instantons and infinite distances,” JHEP 08 (2019) 088,
+arXiv:1904.04848 [hep-th].
+[36] M. Demirtas, C. Long, L. McAllister, and M. Stillman, “The Kreuzer-Skarke Axiverse,” JHEP 04
+(2020) 138, arXiv:1808.01282 [hep-th].
+[37] J. Ebelt, S. Krippendorf, and A. Schachner, “W0 sample = np.random.normal(0,1)?,” Phys. Lett. B
+855 (2024) 138786, arXiv:2307.15749 [hep-th].
+[38] E. Plauschinn and L. Schlechter, “Flux vacua of the mirror octic,” JHEP 01 (2024) 157,
+arXiv:2310.06040 [hep-th].
+[39] S. Krippendorf and A. Schachner, “New non-supersymmetric flux vacua in string theory,” JHEP 12
+(2023) 145, arXiv:2308.15525 [hep-th].
+[40] S. Gukov, C. Vafa, and E. Witten, “CFT’s from Calabi-Yau four folds,” Nucl. Phys. B 584 (2000)
+69–108, arXiv:hep-th/9906070. [Erratum: Nucl.Phys.B 608, 477–478 (2001)].
+[41] E. Witten, “Nonperturbative superpotentials in string theory,” Nucl. Phys. B 474 (1996) 343–360,
+arXiv:hep-th/9604030.
+[42] N. Gendler, M. Kim, L. McAllister, J. Moritz, and M. Stillman, “Superpotentials from singular
+divisors,” JHEP 11 (2022) 142, arXiv:2204.06566 [hep-th].
+
+– 27 –
+
+[43] L. Martucci, “D-branes on general N=1 backgrounds: Superpotentials and D-terms,” JHEP 06
+(2006) 033, arXiv:hep-th/0602129.
+[44] M. Bianchi, A. Collinucci, and L. Martucci, “Magnetized E3-brane instantons in F-theory,” JHEP
+12 (2011) 045, arXiv:1107.3732 [hep-th].
+[45] M. Bianchi, A. Collinucci, and L. Martucci, “Freezing E3-brane instantons with fluxes,” Fortsch.
+Phys. 60 (2012) 914–920, arXiv:1202.5045 [hep-th].
+[46] M. Bianchi, G. Inverso, and L. Martucci, “Brane instantons and fluxes in F-theory,” JHEP 07
+(2013) 037, arXiv:1212.0024 [hep-th].
+[47] J. Louis, M. Rummel, R. Valandro, and A. Westphal, “Building an explicit de Sitter,” JHEP 10
+(2012) 163, arXiv:1208.3208 [hep-th].
+[48] I. Antoniadis, S. Ferrara, R. Minasian, and K. S. Narain, “R**4 couplings in M and type II theories
+on Calabi-Yau spaces,” Nucl. Phys. B 507 (1997) 571–588, arXiv:hep-th/9707013.
+[49] C. P. Burgess, M. Cicoli, D. Ciupke, S. Krippendorf, and F. Quevedo, “UV Shadows in EFTs:
+Accidental Symmetries, Robustness and No-Scale Supergravity,” Fortsch. Phys. 68 no. 10, (2020)
+2000076, arXiv:2006.06694 [hep-th].
+[50] M. Cicoli, F. Quevedo, R. Savelli, A. Schachner, and R. Valandro, “Systematics of the α’ expansion
+in F-theory,” JHEP 08 (2021) 099, arXiv:2106.04592 [hep-th].
+[51] C. P. Burgess and F. Quevedo, “RG-induced modulus stabilization: perturbative de Sitter vacua and
+improved D3-D3 inflation,” JHEP 06 (2022) 167, arXiv:2202.05344 [hep-th].
+[52] M. Cicoli, C. Hughes, A. R. Kamal, F. Marino, F. Quevedo, M. Ramos-Hamud, and G. Villa, “Back
+to the origins of brane–antibrane inflation,” Eur. Phys. J. C 85 no. 3, (2025) 315, arXiv:2410.00097
+[hep-th].
+[53] M. Cicoli, A. Schachner, and P. Shukla, “Systematics of type IIB moduli stabilisation with odd
+axions,” JHEP 04 (2022) 003, arXiv:2109.14624 [hep-th].
+[54] F. Denef, M. R. Douglas, and B. Florea, “Building a better racetrack,” JHEP 06 (2004) 034,
+arXiv:hep-th/0404257.
+[55] F. Denef, M. R. Douglas, B. Florea, A. Grassi, and S. Kachru, “Fixing all moduli in a simple f-theory
+compactification,” Adv. Theor. Math. Phys. 9 no. 6, (2005) 861–929, arXiv:hep-th/0503124.
+[56] D. Lust, S. Reffert, E. Scheidegger, W. Schulgin, and S. Stieberger, “Moduli Stabilization in Type
+IIB Orientifolds (II),” Nucl. Phys. B 766 (2007) 178–231, arXiv:hep-th/0609013.
+[57] M. Demirtas, M. Kim, L. Mcallister, and J. Moritz, “Vacua with Small Flux Superpotential,” Phys.
+Rev. Lett. 124 no. 21, (2020) 211603, arXiv:1912.10047 [hep-th].
+[58] S. Bansal, L. Brunelli, M. Cicoli, A. Hebecker, and R. Kuespert, “Loop Blow-up Inflation,”
+arXiv:2403.04831 [hep-th].
+[59] A. Westphal, “Eternal inflation with alpha-prime-corrections,” JCAP 11 (2005) 003,
+arXiv:hep-th/0507079.
+[60] M. Rummel and A. Westphal, “A sufficient condition for de Sitter vacua in type IIB string theory,”
+JHEP 01 (2012) 020, arXiv:1107.2115 [hep-th].
+[61] M. Cicoli, C. P. Burgess, and F. Quevedo, “Fibre Inflation: Observable Gravity Waves from IIB
+String Compactifications,” JCAP 03 (2009) 013, arXiv:0808.0691 [hep-th].
+[62] I. Antoniadis, Y. Chen, and G. K. Leontaris, “Perturbative moduli stabilisation in type IIB/F-theory
+framework,” Eur. Phys. J. C 78 no. 9, (2018) 766, arXiv:1803.08941 [hep-th].
+[63] G. K. Leontaris and P. Shukla, “Stabilising all Kähler moduli in perturbative LVS,” JHEP 07 (2022)
+047, arXiv:2203.03362 [hep-th].
+
+– 28 –
+
+[64] N. Gendler, O. Janssen, M. Kleban, J. La Madrid, and V. M. Mehta, “Axion minima in string
+theory,” JHEP 02 (2025) 134, arXiv:2309.01831 [hep-th].
+[65] P. Breitenlohner and D. Z. Freedman, “Stability in Gauged Extended Supergravity,” Annals Phys.
+144 (1982) 249.
+[66] N. Gendler, N. MacFadden, L. McAllister, J. Moritz, R. Nally, A. Schachner, and M. Stillman,
+“Counting Calabi-Yau Threefolds,” arXiv:2310.06820 [hep-th].
+[67] A. Chandra, A. Constantin, C. S. Fraser-Taliente, T. R. Harvey, and A. Lukas, “Enumerating
+Calabi-Yau Manifolds: Placing Bounds on the Number of Diffeomorphism Classes in the
+Kreuzer-Skarke List,” Fortsch. Phys. 72 no. 5, (2024) 2300264, arXiv:2310.05909 [hep-th].
+[68] X. Gao, A. Hebecker, S. Schreyer, and G. Venken, “The LVS parametric tadpole constraint,” JHEP
+07 (2022) 056, arXiv:2202.04087 [hep-th].
+[69] F. Carta, J. Moritz, and A. Westphal, “Gaugino condensation and small uplifts in KKLT,” JHEP 08
+(2019) 141, arXiv:1902.01412 [hep-th].
+[70] X. Gao, A. Hebecker, and D. Junghans, “Control issues of KKLT,” Fortsch. Phys. 68 (2020)
+2000089, arXiv:2009.03914 [hep-th].
+[71] F. Carta and J. Moritz, “Resolving spacetime singularities in flux compactifications & KKLT,”
+JHEP 08 (2021) 093, arXiv:2101.05281 [hep-th].
+[72] J. Moritz, “G2 -manifolds from Diophantine equations,” arXiv:2505.15883 [hep-th].
+[73] I. R. Klebanov and M. J. Strassler, “Supergravity and a confining gauge theory: Duality cascades
+and chi SB resolution of naked singularities,” JHEP 08 (2000) 052, arXiv:hep-th/0007191.
+[74] C. Crinò, F. Quevedo, and R. Valandro, “On de Sitter String Vacua from Anti-D3-Branes in the
+Large Volume Scenario,” JHEP 03 (2021) 258, arXiv:2010.15903 [hep-th].
+[75] S. de Alwis, R. Gupta, E. Hatefi, and F. Quevedo, “Stability, Tunneling and Flux Changing de Sitter
+Transitions in the Large Volume String Scenario,” JHEP 11 (2013) 179, arXiv:1308.1222 [hep-th].
+[76] B. Freivogel, M. Kleban, M. Rodriguez Martinez, and L. Susskind, “Observational consequences of a
+landscape,” JHEP 03 (2006) 039, arXiv:hep-th/0505232.
+[77] M. C. D. Marsh and K. Sousa, “Universal Properties of Type IIB and F-theory Flux
+Compactifications at Large Complex Structure,” JHEP 03 (2016) 064, arXiv:1512.08549 [hep-th].
+[78] M. C. Johnson and M. Larfors, “An Obstacle to populating the string theory landscape,” Phys. Rev.
+D 78 (2008) 123513, arXiv:0809.2604 [hep-th].
+[79] A. Aguirre, M. C. Johnson, and M. Larfors, “Runaway dilatonic domain walls,” Phys. Rev. D 81
+(2010) 043527, arXiv:0911.4342 [hep-th].
+[80] A. R. Brown and A. Dahlen, “Populating the Whole Landscape,” Phys. Rev. Lett. 107 (2011)
+171301, arXiv:1108.0119 [hep-th].
+[81] S. R. Coleman and F. De Luccia, “Gravitational Effects on and of Vacuum Decay,” Phys. Rev. D 21
+(1980) 3305.
+[82] J. D. Brown and C. Teitelboim, “Neutralization of the Cosmological Constant by Membrane
+Creation,” Nucl. Phys. B 297 (1988) 787–836.
+[83] A. R. Brown and A. Dahlen, “On ’nothing’ as an infinitely negatively curved spacetime,” Phys. Rev.
+D 85 (2012) 104026, arXiv:1111.0301 [hep-th].
+[84] S. Cespedes, S. de Alwis, F. Muia, and F. Quevedo, “Quantum transitions, detailed balance, black
+holes, and nothingness,” Phys. Rev. D 109 no. 10, (2024) 105027, arXiv:2307.13614 [hep-th].
+[85] J. P. Conlon and F. Quevedo, “Putting the Boot into the Swampland,” JHEP 03 (2019) 005,
+arXiv:1811.06276 [hep-th].
+
+– 29 –
+
+[86] S. de Alwis, R. K. Gupta, F. Quevedo, and R. Valandro, “On KKLT/CFT and LVS/CFT Dualities,”
+JHEP 07 (2015) 036, arXiv:1412.6999 [hep-th].
+[87] J. P. Conlon, R. Kallosh, A. D. Linde, and F. Quevedo, “Volume Modulus Inflation and the
+Gravitino Mass Problem,” JCAP 09 (2008) 011, arXiv:0806.0809 [hep-th].
+[88] J. P. Conlon and F. Revello, “Catch-me-if-you-can: the overshoot problem and the weak/inflation
+hierarchy,” JHEP 11 (2022) 155, arXiv:2207.00567 [hep-th].
+[89] F. Apers, J. P. Conlon, M. Mosny, and F. Revello, “Kination, meet Kasner: on the asymptotic
+cosmology of string compactifications,” JHEP 08 (2023) 156, arXiv:2212.10293 [hep-th].
+[90] J. P. Conlon, E. J. Copeland, E. Hardy, and N. S. González, “Percolating Cosmic String Networks
+from Kination,” arXiv:2406.12637 [hep-ph].
+[91] F. Revello and G. Villa, “Cosmic (super)strings with a time-varying tension,” JCAP 04 (2025) 049,
+arXiv:2411.04186 [hep-ph].
+[92] A. Ghoshal, F. Revello, and G. Villa, “Cosmic superstrings in large volume compactifications: PTAs,
+LISA and time-varying tension,” arXiv:2504.20994 [astro-ph.CO].
+[93] P. Betzios and O. Papadoulaki, “Inflationary Cosmology from Anti-de Sitter Wormholes,” Phys. Rev.
+Lett. 133 no. 2, (2024) 021501, arXiv:2403.17046 [hep-th].
+[94] P. Betzios, I. D. Gialamas, and O. Papadoulaki, “Magnetic Anti-de Sitter Wormholes as seeds for
+Higgs Inflation,” arXiv:2412.03639 [hep-th].
+
+– 30 –
+
+

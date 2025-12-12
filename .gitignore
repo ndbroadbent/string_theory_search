@@ -21,7 +21,8 @@ cluster_state.json
 web/.cta.json
 web/.vscode/
 tests/snapshots/
-resources/small_cc_2107.09064_source/
 web/test-results/.last-run.json
 src/string_theory.egg-info/
 
+resources/small_cc_2107.09064_source/
+resources/coexisting_flux_2507_source/

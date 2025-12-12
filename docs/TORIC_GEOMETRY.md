@@ -196,48 +196,137 @@ From CYTools paper arXiv:2211.03823 §5.4.1:
 
 ---
 
-## The Unsolved Problem
+## The Height → Kähler Mapping (SOLVED!)
 
-### Given: Heights h defining a triangulation
-### Want: Kähler moduli t inside the Kähler cone
+### CYTools Implementation
 
-### What We Know
+CYTools provides the mapping in `cytools/utils.py`:
 
-1. Heights h define a triangulation T
-2. T has a secondary cone SecCone(T) ⊂ ℝⁿ
-3. The Kähler cone K ⊂ ℝ^h¹¹ is derived from SecCone(T)
-4. We need a point t inside K
+```python
+from cytools.utils import heights_to_kahler, project_heights_to_kahler, kahler_to_heights
+```
 
-### What McAllister Does
+### Algorithm: `project_heights_to_kahler`
 
-From arXiv:2107.09064 Section 5:
+Given heights h ∈ ℝⁿ⁺¹ (including origin), compute Kähler parameters:
 
-1. Pick random h_init in secondary fan
-2. This gives triangulation T and "associated" t_init
-3. Solve KKLT iteratively: t_init → τ_init → τ_target → t_final
+```python
+def project_heights_to_kahler(poly, heights_in, prime_divisors=None):
+    # 1. Get GLSM basis indices
+    basis = [i-1 for i in poly.glsm_basis(include_origin=True)]
 
-**The paper says heights are "naturally associated" to t but doesn't specify the explicit map!**
+    # 2. Get effective cone rays for non-basis divisors
+    if prime_divisors is None:
+        prime_divisors = [r for i,r in enumerate(effective_cone.rays()) if i not in basis]
 
-### Why This Is Hard for Large h¹¹
+    # 3. Subtract origin height from all others
+    origin_height = heights_in[0]
+    kahler_parameters = heights_in[1:] - origin_height
 
-For h¹¹ ≤ 12, CYTools can compute `tip_of_stretched_cone()` to get a valid starting point.
+    # 4. Apply corrections using linear relations from effective cone
+    for e, ee in enumerate(prime_divisors):
+        prime_ind = extra_divs[e]
+        prime_height = kahler_parameters[prime_ind]
+        # Linear relation: basis coefficients = ee, prime coeff = -1
+        lin_rel[basis] = ee
+        lin_rel[prime_ind] = -1
+        # Apply correction
+        kahler_parameters += prime_height * lin_rel
 
-For h¹¹ = 214:
-- `tip_of_stretched_cone()` is computationally intractable
-- Warning: "This operation might take a while for d > ~12 and is likely impossible for d > ~18"
-- The cone has 214 dimensions with complex geometry
+    return kahler_parameters
+```
 
-### Attempted Solutions That Failed
+### The Key Insight
 
-1. **Newton iteration for unit τ**: Jacobian is rank-deficient (rank 65 vs 214)
-2. **L-BFGS-B optimization**: Found spurious local minimum (V=-4478 vs +4712)
-3. **Direct GLSM projection Q @ h**: Gives negative correlation with actual t
+The mapping from heights to Kähler parameters is:
 
-### What We Still Need
+1. **Translate by origin**: `t_raw = h[1:] - h[0]`
+2. **Project using linear relations**: Apply corrections from the effective cone to ensure non-basis divisors are properly related to basis divisors
 
-The explicit algorithm/formula to:
-1. Take heights h ∈ ℝⁿ
-2. Produce valid Kähler moduli t ∈ ℝ^h¹¹ inside the Kähler cone
+This projection uses the **effective cone** (dual of Mori cone) to enforce linear relations between divisors.
+
+### Inverse: `kahler_to_heights`
+
+```python
+def kahler_to_heights(poly, kahler_in):
+    # Set basis coordinates from Kähler params, non-basis to 0
+    basis = poly.glsm_basis(include_origin=True)
+    return [t_i if i in basis else 0 for i in range(h11+5)]
+```
+
+### Usage Example
+
+```python
+import numpy as np
+from cytools import Polytope
+from cytools.utils import heights_to_kahler, kahler_to_heights
+
+# Load polytope and triangulation with specific heights
+poly = Polytope(points)
+heights = np.loadtxt("heights.dat")
+tri = poly.triangulate(heights=heights)
+
+# Convert heights to Kähler moduli
+t = heights_to_kahler(poly, heights)  # Returns h11-dimensional vector
+
+# Inverse: Kähler to heights (note: loses information for non-basis)
+h_recovered = kahler_to_heights(poly, t)
+```
+
+---
+
+## KKLT Solver Implementation (VALIDATED)
+
+The KKLT solver in `mcallister_2107/compute_kklt_iterative.py` has been validated against
+McAllister's data with **0.0003% error** on V_string = 4711.83.
+
+### Key Findings
+
+1. **heights_to_kahler() Doesn't Work for McAllister 4-214-647**
+   - `heights_to_kahler(poly, heights)` gives t with **negative correlation** (-0.61) to the solution
+   - This is specific to this polytope/triangulation combination
+   - For validation, use `kahler_param.dat` (uncorrected) scaled to match τ_target
+
+2. **Extended Kähler Cone is Essential**
+   - The solution has 19/214 negative t values
+   - The solver MUST allow negative t (fixed backtracking bug)
+   - What matters is positive divisor volumes τ, not positive t
+
+3. **Starting Point Determines Solution**
+   - The map τ(t) → t has multiple solutions
+   - Starting from scaled `kahler_param.dat` converges to correct solution
+   - Starting from uniform t converges to different (wrong) solution
+
+### Validated Results
+
+```
+V_string (computed) = 4711.85
+V_string (expected) = 4711.83
+V error = 0.0003%
+||t_ours - t_corrected|| / ||t_corrected|| = 0.000061
+```
+
+### For New Polytopes
+
+For arbitrary polytopes (not McAllister validation), the challenge remains:
+finding a good starting point t_init. Options:
+
+1. **Random sampling** in extended Kähler cone and take best solution by V
+2. **Tip of stretched cone** (if computable for small h11)
+3. **Heights-based** (may work for some polytopes, test correlation first)
+
+---
+
+## Important: Basis Mismatch (See CLAUDE.md)
+
+**CYTools versions use different divisor bases!**
+
+- **CYTools 2021** (McAllister's paper): `vendor/cytools_mcallister_2107`
+- **CYTools 2025** (latest): `vendor/cytools_latest`
+
+Use `mcallister_2107/transform_km_to_new_cytools_basis.py` to convert between them.
+
+See CLAUDE.md "CYTools (Two Versions!)" section for details.
 
 ---
 

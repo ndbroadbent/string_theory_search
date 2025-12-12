@@ -22,9 +22,30 @@ Genetic algorithm searching through Calabi-Yau compactifications to find configu
 
 ## External Tools (../xxx_source/)
 
-### CYTools (`vendor/cytools_latest`)
+### CYTools (Two Versions!)
+
 Python package for analyzing Calabi-Yau manifolds from toric geometry.
-**What it computes:**
+
+**CRITICAL: We have TWO versions with different divisor bases:**
+
+| Version | Path | Use For |
+|---------|------|---------|
+| **Latest (2025)** | `vendor/cytools_latest` | General GA pipeline, new code |
+| **McAllister (2021)** | `vendor/cytools_mcallister_2107` | Exact reproduction of arXiv:2107.09064 |
+
+**When to use which:**
+- **Building general KKLT/physics pipeline** → use `vendor/cytools_latest`
+- **Validating against McAllister's published data** → use `vendor/cytools_mcallister_2107`
+- **Comparing results between versions** → use `mcallister_2107/transform_km_to_new_cytools_basis.py`
+
+**Basis differences:**
+```
+CYTools 2021 (McAllister): basis [3,4,5,8], K=[-3,-5,8,6], M=[10,11,-11,-5]
+CYTools 2025 (Latest):     basis [5,6,7,8], K=[8,5,-8,6],  M=[-10,-1,11,-5]
+```
+See `mcallister_2107/LATEST_CYTOOLS_RESULT.md` for transformation details.
+
+**What CYTools computes:**
 - Polytope analysis (reflexivity, vertices, lattice points)
 - Triangulations
 - Hodge numbers (h¹¹, h²¹)
@@ -32,6 +53,7 @@ Python package for analyzing Calabi-Yau manifolds from toric geometry.
 - Kähler cone
 - CY volume V = (1/6) κᵢⱼₖ tⁱ tʲ tᵏ
 - Divisor/curve volumes
+- **Heights ↔ Kähler moduli**: `cytools.utils.heights_to_kahler()`, `kahler_to_heights()`
 
 **What it CANNOT compute:**
 - Periods (requires Picard-Fuchs equations)
@@ -84,6 +106,7 @@ To compute periods, need:
 3. Tools: Klemm-Kreuzer "Instanton" code, or implement from scratch
 
 See FORMULAS.md for complete formula reference.
+See docs/TORIC_GEOMETRY.md for heights, secondary fan, and Kähler cone theory.
 
 ### IMPORTANT: Always Download Relevant Papers
 When you find a relevant arXiv paper or other academic PDF during research:

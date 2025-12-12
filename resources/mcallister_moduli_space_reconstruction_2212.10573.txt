@@ -1,0 +1,3921 @@
+ACFI-T22-10
+
+Moduli Space Reconstruction
+and Weak Gravity
+or
+
+arXiv:2212.10573v2 [hep-th] 27 Dec 2023
+
+Unto the Ends of the Moduli Space
+With Illustrations by the Authors
+
+Naomi Gendler,a,b Ben Heidenreich,c Liam McAllister,a
+Jakob Moritz,a,d and Tom Rudeliuse,f
+a
+
+Department of Physics, Cornell University, Ithaca, NY 14853, USA
+Department of Physics, Harvard University, Cambridge, MA 02138, USA
+c
+Department of Physics, University of Massachusetts, Amherst, MA 01003, USA
+d
+Department of Theoretical Physics, CERN, 1211 Meyrin, Switzerland
+e
+Department of Physics, University of California, Berkeley, CA 94720, USA
+f
+Department of Mathematical Sciences, Durham University, Durham DH1 3LE, UK
+b
+
+Abstract
+
+We present a method to construct the extended Kähler cone of any Calabi-Yau threefold by using Gopakumar-Vafa invariants to identify all geometric phases that are related
+by flops or Weyl reflections. In this way we obtain the Kähler moduli spaces of all favorable Calabi-Yau threefold hypersurfaces with h1,1 ≤ 4, including toric and non-toric
+phases. In this setting we perform an explicit test of the Weak Gravity Conjecture by
+using the Gopakumar-Vafa invariants to count BPS states. All of our examples satisfy the
+tower/sublattice WGC, and in fact they even satisfy the stronger lattice WGC.
+
+Contents
+1 Introduction
+
+2
+
+2 Review of Calabi-Yau Compactifications
+2.1 Effective theory . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+2.2 Calabi-Yau geometry and BPS states . . . . . . . . . . . . . . . . . . . . .
+
+3
+3
+6
+
+3 Moduli Space Reconstruction from GV Invariants
+3.1 Facets of the Kähler cone . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+3.1.1 Flop transitions . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+3.1.2 Weyl reflections . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+3.1.3 Tensionless string CFTs . . . . . . . . . . . . . . . . . . . . . . . .
+3.1.4 Asymptotic boundaries . . . . . . . . . . . . . . . . . . . . . . . . .
+3.2 Moduli space from genus zero GV invariants . . . . . . . . . . . . . . . . .
+3.3 Geometric data from analytic continuation . . . . . . . . . . . . . . . . . .
+3.4 Assembly algorithm . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+3.5 An example . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
+14
+14
+14
+15
+18
+18
+18
+20
+21
+22
+
+4 Checks of the Weak Gravity Conjecture
+4.1 The lattice WGC for BPS states . . . . . . . . . . . . . . . . . . . . . . . .
+4.2 Testing the lattice WGC . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
+24
+24
+25
+
+5 Conclusions
+
+29
+
+A Computational Algorithm
+
+30
+
+B Toric Technology and Notation
+
+34
+
+C Examples
+
+35
+
+1
+
+1
+
+Introduction
+
+The physics resulting from a compactification of string theory often varies across a moduli
+space of geometries. Characterizing the moduli space is then a prerequisite for understanding the imprint of quantum gravity on low-energy physics. In general the moduli space is
+the union of a number of regions, for example corresponding to distinct geometric phases,
+and a primary task is to map out the transitions among these components.
+In this work we will consider the Kähler moduli space of birationally-equivalent CalabiYau threefolds. This moduli space is a cone, the extended Kähler cone K, whose dimension
+is given by the Hodge number h1,1 of the threefold. The extended Kähler cone is the
+union of a collection of smaller cones, each corresponding to the Kähler cone of a distinct
+geometric phase, and linked to its neighbors by birational transformations: see Figure 1.
+The number of phases grows rapidly as h1,1 increases, so much so that constructing K
+becomes challenging for h1,1 > 2.
+The first result of this paper is a general algorithm for constructing the extended Kähler
+cone. We probe the Calabi-Yau via compactification of M-theory. Starting from one phase,
+one needs to know which other phases to adjoin via flop transitions. We show how to use
+the Gopakumar-Vafa (GV) invariants of curves to identify the set of curves that can be
+flopped. In the process we also identify curves associated to su(2) enhancements, and we
+show how to account for the gauge redundancy resulting from their Weyl reflections. We
+then use the data of flops and Weyl reflections to map out the entire Kähler moduli space.1
+In the case of Calabi-Yau threefold hypersurfaces in toric varieties, one can compute the
+GV invariants by means of mirror symmetry [2,3], for example using CYTools [4,5]. In this
+setting we construct the Kähler moduli spaces of all favorable geometries with h1,1 ≤ 4,
+and of a selection of geometries with h1,1 = 5.
+The second result of this paper is an application of the first: we test the Weak Gravity
+Conjecture (WGC) [6] in our ensemble of compactifications on Calabi-Yau threefold hypersurfaces by reconstructing the Kähler moduli space in each case. The WGC predicts
+that certain superextremal states should exist. In particular, in the region in charge space
+where BPS black holes2 exist, denoted hereafter by CBH , the WGC predicts the existence
+of BPS particles.3 The GV invariants are BPS indices, and so a sufficient — but not nec1
+
+As explained in [1], the data of the extended Kähler cone also provides a means of studying the
+complete effective cones in these geometries, but we defer this application to future work.
+2
+These black holes need not be spherically symmetric, and could in fact be multi-centered.
+3
+Specifically, the lattice WGC predicts the existence of a BPS particle for each site in the intersection
+of the charge lattice with CBH ; the sublattice WGC predicts the existence of a BPS particle on a full-
+
+2
+
+essary — condition for the existence of a BPS particle of a given electric charge is that the
+corresponding GV invariant is nonzero. Building on [1], we show how to compute a region
+contained in CBH by carrying out all flops, as well as all Weyl reflections across which all
+BPS states remain stable. Upon computing this region and the GV invariants of charges
+therein, we find that the tower and sublattice WGC [7, 8], and even the stronger lattice
+WGC [9], are obeyed in all our examples, out to the highest charges we examined. This
+is somewhat surprising because there are known counterexamples to the lattice WGC [7],
+which arise in certain toroidal compactifications of type II/heterotic string theory. It is
+significant, perhaps, that no such counterexamples arise in the class of Calabi-Yau compactifications considered here.
+The structure of this paper is as follows. In §2 we review some salient aspects of CalabiYau geometry. In §3 we explain the transitions that can occur when passing through a
+wall in the Kähler moduli space. We show how to use the data of GV invariants to identify
+curves that can be flopped, and thus connect birationally-equivalent Calabi-Yau threefolds.
+We present an algorithm to assemble the extended Kähler cone by combining all possible
+flops, unto the ends of the moduli space. In §4 we construct the extended Kähler cones of
+an ensemble of Calabi-Yau threefold hypersurfaces and use this knowledge to carry out a
+large-scale test of the WGC. We conclude in §5.
+
+2
+
+Review of Calabi-Yau Compactifications
+
+In this section we will briefly review a few results from compactifications of M-theory and
+type IIA string theory on Calabi-Yau threefolds, focusing on the definitions and interrelations of a number of cones, and on their connections to Gopakumar-Vafa invariants.
+
+2.1
+
+Effective theory
+
+We begin by compactifying M-theory on a Calabi-Yau threefold X. The result is a fivedimensional N = 1 effective supergravity theory. The massless particle spectrum is given
+by the gravity multiplet, h2,1 (X)+1 hypermultiplets, and n := h1,1 (X)−1 vector multiplets.
+The 4h2,1 (X) + 4 scalar degrees of freedom in the hypermultiplets are furnished by the
+2h2,1 (X) complex structure moduli of X, the 2h2,1 + 3 axions from dimensional reduction
+of the eleven-dimensional three-form, and the overall volume modulus of X, while the n
+dimensional sublattice in CBH ; and the tower WGC predicts an infinite tower of BPS particles along each
+rational ray in CBH .
+
+3
+
+scalars parameterizing the vector multiplet moduli space come from the Kähler moduli of
+X that leave the overall volume fixed. At generic points in Kähler moduli space the gauge
+group is U (1)n+1 , where n of the abelian vector fields live in the n vector multiplets and
+one lives in the gravity multiplet.
+
+h1,1 (X)
+A general Kähler form J can be expanded in a basis of divisor classes [Ha ] a=1 ,
+h1,1 (X)
+
+J=
+
+X
+
+ta [Ha ] ,
+
+(2.1)
+
+a=1
+
+and one can think of the Kähler parameters ta as projective coordinates on vector multiplet
+moduli space. By a choice of normalization, integrating J over effective curves in X yields
+curve volumes in units of the eleven-dimensional Planck length ℓ11 .4
+Neglecting the hypermultiplets, the bosonic action can be written as
+√
+
+
+
+1
+i
+j
+d x −g R − gij (ϕ)∂ϕ · ∂ϕ
+2
+Z
+Z
+1
+1
+a
+b
+−
+fab (ϕ)F ∧ ⋆F −
+κabc Aa ∧ F b ∧ F c ,
+2
+4πℓ5
+24π
+
+2π
+S= 3
+ℓ5
+
+Z
+
+5
+
+(2.2)
+
+where the ϕi , i = 1, . . . , n, are affine coordinates on moduli space, and the Aa are the n + 1
+R
+gauge potentials, with field strengths F a = dAa . Moreover, the κabc := X [Ha ] ∧ [Hb ] ∧ [Hc ]
+are the triple intersection numbers, and ℓ5 is the five-dimensional Planck length.
+The scalar and gauge field kinetic terms are obtained by dimensional reduction of the
+eleven-dimensional effective action and can be written in terms of a homogeneous degreethree prepotential in the projective coordinates ta ,
+F M [t] =
+
+1
+κabc ta tb tc .
+3!
+
+(2.3)
+
+We may choose the ϕi as coordinates of the n-dimensional hypersurface F M [t] = 1, thus
+gauge fixing the projective equivalence ta ∼ λta . The kinetic terms are then
+M
+,
+fab = FaM FbM − Fab
+
+gij = fab ∂i ta ∂j tb ,
+
+(2.4)
+
+M
+where FaM := ∂a F M and Fab
+:= ∂a ∂b F M .
+Importantly, as the overall volume modulus is in a hypermultiplet, the full prepotential
+4
+
+We define ℓ11 via the eleven-dimensional Einstein-Hilbert action SEH = ℓ2π
+9
+
+11
+
+4
+
+R
+
+⋆R.
+
+F M [t] can be computed in the large volume limit where it is classical, and thus receives
+neither perturbative nor non-perturbative corrections. This allows one to completely classify the possible behavior of the EFT at boundaries of the moduli space [10], as we review
+in §3.1.
+We can also compactify type IIA string theory on X, which is equivalent to reducing
+the above five-dimensional theory on a circle. The result is a four-dimensional N = 2
+effective supergravity theory, including h2,1 (X) + 1 hypermultiplets directly inherited from
+the five-dimensional theory. The n five-dimensional vector multiplets descend to fourdimensional vector multiplets, and the reduction of the five-dimensional gravity multiplet
+to four dimensions provides one more vector multiplet, for h1,1 in total.
+The bosonic action, again neglecting hypermultiplets, is
+
+√ 
+d4 x −g R − 2Kab̄ ∂z a ∂z b
+Z
+
+1
++
+Im(NAB )F A ∧ ⋆F B + Re(NAB )F A ∧ F B ,
+4π
+
+2π
+S= 2
+ℓ4
+
+Z
+
+(2.5)
+
+where A, B = 0, . . . , h1,1 and a, b = 1, . . . , h1,1 . The Kähler metric Kab̄ := ∂a ∂b K and the
+gauge-kinetic matrix NAB can be written in terms of a holomorphic prepotential F IIA ,
+which is homogeneous of degree two in projective coordinates Z A :
+i
+ h
+K = − log i Z A FAIIA − Z A FAIIA ,
+IIA
+NAB = FAB
++ 2i
+
+IIA
+IIA
+Im(FAC
+)Z C Im(FBD
+)Z D
+.
+IIA
+M N
+Im(FM
+N )Z Z
+
+(2.6)
+(2.7)
+
+The type IIA prepotential can be expanded around large volume as
+F IIA [Z]
+1
+1
+1
+ζ(3)χ(X)
+= − κabc z a z b z c + aab z a z b + ca z a +
+0
+2
+(Z )
+3!
+2
+24
+2(2πi)3
+X
+1
+−
+n0[C] Li3 (q [C] )
+(2πi)3
+
+(2.8)
+
+[C]∈MX
+
+where z a := Z a /Z 0 are h1,1 complex affine coordinates on Kähler moduli space. The real
+parts ba := Re(z a ) are the integrals of the ten-dimensional two-form B2 over a basis of
+H2 (X, Z), and the imaginary parts t̃a := Im(z a ) measure string frame curve volumes.5
+5
+
+The string frame curve volumes t̃a are related to the curve volumes ta in eleven-dimensional Planck
+2
+units via t̃a = gs3 ta ≡ Vol(S 1 )/ℓ11 ta , with gs the type IIA string coupling.
+
+5
+
+As in (2.3), κabc are the triple intersection numbers of X. The leading term in (2.8) is
+inherited classically from the five-dimensional prepotential, but in four dimensions there
+are also perturbative corrections in α′ parameterized by
+Z
+ca =
+X
+
+c2 (X) ∧ [Ha ],
+
+
+1 κaab
+aab =
+2 κ
+abb
+
+a≥b
+
+Z
+, and χ(X) =
+
+a<b
+
+c3 (X),
+
+(2.9)
+
+X
+
+with c2 (X) and c3 (X) the second and third Chern classes of X, respectively. Furthermore,
+the perturbative result is corrected by a series of worldsheet instanton corrections from
+strings wrapping effective curves in X, or equivalently BPS particles in the five-dimensional
+theory traveling around the compactification circle. The coefficients n0[C] are the BPS indices
+of the five-dimensional theory, namely genus zero GV invariants, and
+q
+
+[C]
+
+
+
+Z
+C
+:= exp 2πi JIIA ,
+
+(2.10)
+
+C
+
+P
+C
+where JIIA
+:= B2 + iJIIA and JIIA = a t̃a [Ha ] is the Kähler form measuring string frame
+volumes. Decompactifying the four-dimensional theory back to five dimensions corresponds
+to taking the limit
+t̃a → λ2 t̃a , gs → λ3 gs , λ → ∞ ,
+(2.11)
+IIA
+
+.
+and indeed one recovers the five-dimensional prepotential F M [ta ] = −i lim gF2 (Z 0[Z]
+)2
+λ→∞
+
+2.2
+
+s
+
+Calabi-Yau geometry and BPS states
+
+Let us review a few well-known facts about Calabi-Yau threefolds and their Kähler moduli
+spaces. First, we recall the following theorem:
+Wall’s theorem [11]: The diffeomorphism class of a Calabi-Yau threefold X is classified
+by its Hodge numbers, h1,1 and h2,1 ; its triple intersection numbers, κabc ; and its second
+Chern class, c2 .
+Positivity of the Hermitian metric on X restricts the Kähler form J of X, introduced
+in (2.1), to take values in the Kähler cone KX ⊂ H 1,1 (X) ∩ H 2 (X, R), which is equal to the
+cone of ample line bundles. KX is dual to the Mori cone of X, MX , which is generated
+by the effective curve classes of X. As effective curves C are calibrated with respect to the
+
+6
+
+Kähler form J,
+Z
+Vol(C) =
+
+J,
+
+(2.12)
+
+C
+
+it follows that along the facets of KX , one or more effective curves shrink.
+The effective divisor classes in H 2 (X, Z) generate the effective cone, E, which is dual
+to the cone of movable curves [12], denoted Mov, generated by the effective curves whose
+moduli space sweeps out a dense open subset of X.
+Along some facets of KX , only effective curves shrink, but no divisors shrink. The
+curves that can shrink along such facets are always isolated rational curves [13,14], i.e., P1 ’s
+without continuous moduli spaces, and their normal bundles are isomorphic to O(−1) ⊕
+O(−1), O ⊕ O(−2), or O(1) ⊕ O(−3) [15, 16]. Continuing past such a facet of KX , where
+an effective curve class [C] shrinks, amounts to a birational morphism
+X\ ∪C∈[C] C → X ′ \ ∪C ′ ∈[C ′ ] C ′ ,
+
+(2.13)
+
+called a flop transition, where X ′ is in general a topologically distinct Calabi-Yau threefold,
+and [C ′ ] is an effective curve class in X ′ . Divisors in X are identified with divisors in X ′
+via blowdown maps, and thus we have canonical isomorphisms H 2 (X, Z) ≃ H 2 (X ′ , Z) and
+H2 (X, Z) ≃ H2 (X ′ , Z). The Mori cone MX ′ differs from MX because the curve class [C]
+ceases to be effective in X ′ , and instead [C ′ ] ≃ −[C] is effective. Moreover, the Calabi-Yau
+X ′ is uniquely characterized (via Wall’s theorem) by its intersection numbers and second
+Chern class
+κ′abc = κabc −
+c′a = ca + 2
+
+X
+C∈[C]
+
+X
+C∈[C]
+
+Ca Cb Cc ,
+
+Ca ,
+
+(2.14)
+(2.15)
+
+R
+where Ca := X [C] ∧ [Ha ].
+Thus, the Kähler cones KX and KX ′ adjoin along a common facet. Exhausting all
+possible flops in this way, and adjoining their respective Kähler cones, one obtains a central
+object of this work, the extended Kähler cone
+K :=
+
+[
+X∈[X]b
+
+KX ,
+
+where [X]b is the birational equivalence class of X.
+7
+
+(2.16)
+
+Note that some of the cones we have discussed—such as the Kähler cone KX or the
+Mori cone MX —depend on the specific Calabi-Yau threefold X, whereas others—such
+as the extended Kähler cone K and the effective cone E—only depend on the birational
+equivalence class [X]b . In our notation, cones in the former class are written with an
+explicit X subscript, whereas those in the latter class lack such a subscript.
+A variety of behaviors are possible at the boundaries of the extended Kähler cone. However, as argued in [1], each known possibility is accompanied by a shrinking (pseudo)effective
+divisor class. As effective divisors are calibrated with respect to 21 J ∧ J, this is best described in dual coordinates
+1
+(2.17)
+Ta := κabc tb tc ,
+2
+which are related to the Kähler coordinates by the map
+1
+T : J 7→ J ∧ J ,
+2
+
+i.e.
+
+ta 7→
+
+1
+κabc tb tc .
+2
+
+(2.18)
+
+The dual-coordinate image of the extended Kähler cone is the cone of dual coordinates
+T := T (K).6 The observation of [1] can then be summarized as T = E ∨ , i.e., T is precisely
+the cone of movable curves.7 Since T , viewed as a map from K to T , is invertible,8 both K
+and T provide equally good descriptions of the moduli space, with the preferred description
+depending on the context.
+In practice, a simple way to obtain an ensemble of birationally-equivalent Calabi-Yau
+threefolds is to consider Calabi-Yau hypersurfaces in simplicial toric fourfolds, defined via
+distinct fine, regular and star triangulations (FRSTs) of a fixed reflexive polytope ∆◦ ,
+henceforth referred to as toric phases. By adjoining the Kähler cones of the different
+toric fourfolds one obtains a sub-cone of the extended Kähler cone K that includes all
+birational transformations of the threefold that are inherited from bistellar flips, which are
+the building blocks of birational transformations of the toric varieties. Henceforth we will
+refer to such flops of the threefold as toric flops. In general, by exploring toric flops one
+does not obtain all of K, i.e., there generally are flops intrinsic to the threefold for which one
+lacks an embedding into a pair of birationally-equivalent toric fourfolds. We will denote
+these as non-toric flops. Indeed, by exploring non-toric flops one can often define new
+Calabi-Yau threefolds for which one lacks a known hypersurface embedding into any toric
+e in [1].
+This cone was denoted K
+It would be interesting to mathematically prove this equivalence, but we view the arguments given
+in [1] as both compelling and consistent with all known examples.
+8
+This is proved, e.g., in §4.1 of [1] using the fact that K is convex.
+6
+7
+
+8
+
+Figure 1: A cartoon of an extended Kähler cone. Each cone represents the Kähler cone of
+an individual Calabi-Yau. The cones shaded blue represent Calabi-Yaus obtained as hypersurfaces in a toric variety, whereas those shaded red represent Calabi-Yaus that are not
+manifestly obtained by performing birational transformations on a toric ambient variety,
+but can nonetheless be reached by flops of curves in the Calabi-Yaus. One of the main
+results of this work is a method for assembling extended Kähler cones.
+variety. We will refer to such geometric models as non-toric phases to distinguish them
+from hypersurfaces in toric varieties. Assembling the extended Kähler cone via collecting
+and adjoining both toric as well as non-toric phases will be the main focus of this work:
+see Figure 1 for an illustration.
+As we will explain in detail in §3, along some facets of K an effective divisor shrinks to a
+curve of genus g, where the transverse space to each point on the curve is an A1 singularity.
+Along such facets, the moduli space ends in a Z2 orbifold singularity, corresponding to the
+origin of the Coulomb branch of an su(2) gauge sector in the low-energy EFT. One can
+equally well describe the moduli space redundantly by passing to a covering space of K that
+includes its images under a discrete (but not necessarily finite) Weyl group W. Although
+these Weyl images are not genuinely new geometric phases—but rather gauge-redundant
+copies of the original—this Weyl-extended description is useful not only for describing
+the BPS black hole solutions [1], but also (we will find) for the program of moduli space
+reconstruction.
+However, the full Weyl-extended moduli space is in general a branched cover of the
+Weyl orbit of K,
+[
+W(K) :=
+w(K) ,
+(2.19)
+w∈W
+
+where the branch points arise from CFTs appearing on codimension-two faces of the Kähler
+9
+
+cone (see the example of §C.4). A smaller Weyl extension of moduli space without such
+subtleties can be obtained by considering only the subgroup Wstable of Weyl reflections
+that do not involve crossing any walls of marginal stability, i.e., across which all BPS
+states remain stable. We refer to such Weyl reflections as stable Weyl reflections, and we
+refer to the orbit of K under this subgroup as the hyperextended Kähler cone,
+Khyp := Wstable (K) =
+
+[
+
+w(K) .
+
+(2.20)
+
+w∈Wstable
+
+Next, we turn to a short discussion of BPS states and their relevant indices, following
+[17]. In a compactification of M-theory on X, M2-branes wrapped on an effective curve C
+give rise to a spectrum of massive BPS particle states that transform under the massive
+little group SO(4) ≃ SU (2)L × SU (2)R in a representation
+
+R[C] =
+
+
+ X
+1
+j1 ,j2
+, 0 ⊕ 2(0, 0) ⊗
+N[C]
+· (j1 , j2 ) ,
+2
+j ,j
+1
+
+(2.21)
+
+2
+
+j1 ,j2
+with some degeneracies N[C]
+. Their contribution to the genus g BPS indices ng[C] , which
+are the GV invariants, keeps track of the SU (2)L representations but traces out the SU (2)R
+spin content with sign (−1)2j2 . Specifically, the ng[C] are computed via the decomposition
+
+X
+
+(−1)
+
+2j2
+
+j1 ,j2
+(2j2 + 1)N[C]
+(j1 ) =
+
+j1 ,j2
+
+X
+
+ng[C]
+
+g≥0
+
+g
+ 
+1
++ 2(0) ,
+2
+
+(2.22)
+
+where the right-hand side is a formal sum of vector spaces with possibly negative coefficients. One notes that a multiplet with largest right-spin j2 generically contributes to
+all ng[C] with g ≤ 2j2 . For instance, hypermultiplets and vector multiplets contribute +1
+respectively −2 to the genus zero GV invariants, and to none of the ng>0
+[C] .
+g
+From a mathematical perspective, the GV invariants n[C] are a particular resummation
+of Gromov-Witten invariants ñg[C] , which, roughly, count maps from genus g Riemann
+surfaces into X as computed by the topological A-model [18, 19]. Specifically, we have the
+relation [17, 20, 21]
+∞
+X X
+
+ñg[C] q [C] λ2g−2 =
+
+[C]∈MX g=0
+
+and in particular, at genus zero
+
+∞ X
+∞
+X X
+
+1
+2 sin
+k
+
+ng[C]
+
+[C]∈MX g=0 k=1
+0 [C]
+=
+[C]∈MX ñ[C] q
+
+P
+
+10
+
+kλ
+2
+
+2g−2 k[C]
+q ,
+
+(2.23)
+
+0
+[C]
+[C]∈MX n[C] Li3 (q ), with Li3 (q) :=
+
+P
+
+Figure 2: Mori cone MX of a Calabi-Yau
+threefold X, and its integer sites populated by non-vanishing genus zero GV
+invariants. Depicted in red: a generator
+of MX that is nilpotent and lies outside
+of M∞ , shown in yellow.
+
+Figure 3: Mori cone MX ′ of another
+Calabi-Yau X ′ related to X by a flop
+transition, and sites populated by nonvanishing genus zero GV invariants. Depicted in red: the flopped generator of
+MX . In this example, K is the dual of
+M∞ .
+
+P∞
+
+k
+3
+k=1 q /k .
+
+We will define MGV
+X,g to be the cone generated by all homology classes [C] of curves with
+non-vanishing GV invariants ng[C] . As M2-branes wrapped on curves in classes outside the
+Mori cone break all the supersymmetries, they do not generate BPS states, and thus their
+GV invariants ng[C] must vanish. We therefore have the inclusion MGV
+X,g ⊆ MX for all g.
+GV
+The cone MGV
+X ≡ MX,g=0 will be of interest because its generators may collapse at finite
+distance in moduli space, as we discuss in §3.9
+We will furthermore divide rational rays in MX into two classes, following [24, 25]. In
+the first class are rays that host an infinite number of curve classes with non-vanishing
+genus zero GV invariants: these we term potent rays. The second type of ray hosts only a
+finite number of non-vanishing genus zero GV invariants, and we will call this a nilpotent
+ray, see Figure 2 for an example. Curve classes along potent and nilpotent rays are likewise
+termed potent and nilpotent, respectively.
+An important object in this work is the infinity cone, M∞ , defined as the closure of
+the cone generated by all potent rays. One of our main claims, substantiated in §3, is that
+9
+
+In contrast, the generators of MGV
+X,g>0 can never shrink at finite distance in moduli space, as this
+would lead to finitely many massless higher spin degrees of freedom non-trivially coupled to each other at
+the two-derivative level, in conflict with classic results [22, 23].
+
+11
+
+the dual of the infinity cone is the hyperextended Kähler cone Khyp , i.e.
+Khyp = M∨∞ .
+
+(2.24)
+
+We now relate the aforementioned cones to the charges of BPS black holes. In particular,
+for any point Ta⋆ in the (dual-coordinate) moduli space, let CBH (Ta⋆ ) be the cone of charges
+of BPS black holes with asymptotic moduli values Ta → Ta⋆ .10 As shown in [1],
+T ⊆ CBH (Ta⋆ )
+
+for any
+
+Ta⋆ ∈ T .
+
+(2.25)
+
+This is because T is convex (since T = E ∨ ) and spherically symmetric BPS attractor flows
+are straight lines in dual coordinates.
+However, since the potent GV invariants remain unchanged across the entire hyperextended moduli space, our checks of the lattice WGC in fact depend only on the larger
+(hyperextended) cone of BPS black holes
+CBH :=
+
+[
+Ta⋆ ∈Thyp
+
+CBH (Ta⋆ ) ,
+
+(2.26)
+
+where Thyp := T (Khyp ) is the hyperextended cone of dual coordinates. In particular,
+because invariably Ta⋆ ∈ CBH (Ta⋆ ),11 we have12
+Thyp ⊆ CBH ,
+
+(2.27)
+
+hence the lattice WGC predicts BPS particles throughout Thyp . One can sometimes establish a stronger inclusion than (2.27): see Appendix C.1.
+While the somewhat-complicated relations given above are sufficient for our present
+purposes, we now argue that the situation may actually be simpler than this. Continuously
+changing the asymptotic values of the moduli Ta⋆ should not change a solution with smooth
+horizons into a singular solution. Instead, BPS black hole solutions of a given charge may
+cease to exist another way, by falling apart into infinitely separated components at walls
+of marginal stability. If these expectations hold, then CBH (Ta⋆ ) can only change at walls of
+10
+
+Note that CBH (Ta⋆ ) is necessarily convex, because we consider multi-center solutions to be BPS black
+holes.
+11
+The corresponding BPS black hole solutions are of the five-dimensional Reissner-Nordström type,
+with constant values for all the moduli.
+12
+If Thyp is convex then the stronger statement Thyp ⊆ CBH (Ta⋆ ) also holds. In all examples we have
+checked, Thyp is indeed convex, but we know of no general proof.
+
+12
+
+Symbol
+
+Description
+
+Relations
+
+KX
+
+Kähler cone of phase X
+
+≡ M∨X
+
+MX
+K
+
+M
+
+Mori cone of phase X
+extended Kähler cone
+intersection of Mori cones
+
+E
+
+effective cone
+
+Mov
+
+cone of movable curves
+
+M∞
+
+infinity cone
+
+Khyp
+
+hyperextended Kähler cone
+
+T
+
+cone of dual coordinates
+
+CBH
+
+X∈[X]b MX , ≡ K
+∨
+
+∨
+
+≡ E ∨ , ⊆ K∨
+(3.6)
+
+cone over curves C with nonzero n0[C]
+
+CBH (Ta )
+
+X∈[X]b KX
+
+≡ Mov , ⊇ K
+
+MGV
+X
+
+Thyp
+
+:=
+
+:=
+T
+
+∨
+≡ KX
+S
+
+hyperextended cone of dual coordinates
+
+∨
+= Khyp
+
+(3.4) T
+= w∈WN =4 w(MX )
+S
+(3.6)
+:= w∈Wstable w(K), = M∨∞
+[1]
+
+:= T (K), = Mov
+
+:= T (Khyp ), ⊆ CBH
+∋ Ta , ⊇ T
+
+cone of BPS black holes at Ta
+(hyperextended) cone of BPS black holes
+
+:= CBH (Thyp ), ⊇ Thyp
+
+Table 1: The relevant cones. The map T is defined in (2.18). We use ≡ to denote
+(3.4)
+
+(3.6)
+
+equivalence and := to denote definitions. The relations marked = and = are established
+in the present work, as (3.4) and (3.6), respectively, while an argument for the relation
+[1]
+
+marked = was given in [1].
+marginal stability. Since by construction there are no such walls within Thyp = T (Khyp ),
+we would then have
+?
+
+CBH (Ta⋆ ) = CBH
+
+for any
+
+Ta⋆ ∈ Thyp .
+
+(2.28)
+
+However, the identification (2.28) relies on some non-trivial assumptions that we will not
+test here, and in any event the logic of our analysis is valid without (2.28).
+By now we have defined a daunting number of cones, some more standard than others:
+see Table 1. With these definitions in hand, we can give a concise overview of the rest of
+the paper. In §3, we will establish the relation Khyp = M∨∞ stated in (2.24). By computing
+M∞ from the GV invariants of X and applying (2.24) and (2.18), we arrive at Thyp , a
+region inside CBH . Finally, by examining the GV invariants of curve classes in Thyp , we
+test the WGC in our ensemble of geometries.
+
+13
+
+3
+
+Moduli Space Reconstruction from GV Invariants
+
+We will now explain how the structure of non-vanishing GV invariants determines the
+hyperextended Kähler cone Khyp ⊇ K. We begin in §3.1 with a review of the classification
+of possible low energy physics that can arise along facets of the Kähler cone KX of a CalabiYau threefold, paying special attention to the sequence of genus zero GV invariants along
+the dual generators of the Mori cone. In §3.2 we will use this classification to obtain one of
+our main results: an algorithm to (1) compute a domain of Kähler parameters Khyp that
+contains the Kähler cones of all inequivalent Calabi-Yau threefolds X in a given birational
+equivalence class [X]b , and (2) compute the defining topological data of all X ∈ [X]b .13
+
+3.1
+
+Facets of the Kähler cone
+
+To reconstruct the extended Kähler cone K starting from a phase X, we need to identify
+every effective curve class [C] that can be flopped to reach a new phase X ′ , and then adjoin
+to KX the associated phase KX ′ . To this end, we now review, following Witten [10], the
+possible low energy physics that can arise along facets of the Kähler cone KX , and what
+imprint the corresponding light charged states leave on the spectrum of GV invariants.
+This will allow us to use knowledge of the set of nonzero GV invariants to differentiate
+curves that can be flopped from those that shrink on exterior boundaries of K.
+3.1.1
+
+Flop transitions
+
+Flop transitions always occur at finite distance in moduli space, and the light states that
+arise on the corresponding facets of KX are furnished by M2-branes wrapping the isolated
+volume-minimizing representatives of the shrinking curve class [C], i.e. a set of P1 ’s, contributing a finite number of massless hypermultiplets [31]. The number of such multiplets
+is equal to the genus zero GV invariant of the vanishing curve class. Furthermore, at a
+generic point on such a facet, at most finitely many states fall within any finite mass window, and thus the class [C] is nilpotent (as defined in §2.2) and lies strictly outside of the
+cone M∞ .
+13
+
+See also [26–30] for works on applications of flop transitions in Calabi-Yau threefolds.
+
+14
+
+3.1.2
+
+Weyl reflections
+
+Next we consider a finite distance facet along which an effective curve C, again a P1 ,
+shrinks to a point in X, while simultaneously an effective divisor D degenerates to a genus
+g Riemann surface R worth of A1 singularities. In this case D is a P1 fibration over R,
+where the fiber is the shrinking P1 . Along such facets of KX , a u(1) factor in the generic
+gauge algebra enhances to su(2), and one obtains g charged hypermultiplets [32, 33].14
+These massless electrically charged states come from M2-branes wrapped on the generic
+fiber, while the M5-brane wrapped on the vanishing divisor is interpreted as the ’t HooftPolyakov magnetic monopole string. The genus zero GV invariant of [C] is equal to 2g − 2.
+If the P1 fibration over R defining the shrinking divisor D degenerates over NF points in
+the base, one obtains in addition NF fundamentally charged hypermultiplets from 2NF
+isolated rigid P1 ’s in half the class of the generic fiber (see §C.3 for an example), and if
+NF > 0 the gauge group is SU (2).
+In flat coordinates (as opposed to gauge-invariant coordinates) it makes sense to continue past the facet where [C] and [D] shrink, but the corresponding region in moduli space
+is gauge equivalent to the original Kähler cone via the Weyl group action of the non-abelian
+gauge theory [1],
+[D]a [C]b
+a
+a
+b
+a
+a
+.
+(3.1)
+t ≃w b·t , w b =δ b−2
+⟨C, D⟩
+In general, we define the Weyl group W associated to a birational equivalence class [X]b
+as the group generated by all such Weyl reflections across facets of the extended Kähler
+cone K.
+The shrinking curve class [C] is either a generator of M∞ or else lies strictly outside
+of M∞ . To understand this, we first consider the g = 0 case without fundamentally
+charged matter, where the non-abelian gauge theory in question is pure supersymmetric
+Yang-Mills theory. The four-dimensional theory is asymptotically free, and its Coulomb
+branch receives corrections from gauge instantons that dominate over the classical result at
+Coulomb branch vevs smaller than the dynamical scale of the theory, as famously computed
+by Seiberg and Witten [34]. These corrections can only be accounted for by the known
+expression for the prepotential (2.8) if there are non-vanishing genus zero GV invariants
+along an infinite sequence of curves that grow by multiples of the vanishing curve, i.e. if
+14
+
+As explained in [1], along such facets the generic gauge group U (1)n enhances to either SU (2) ×
+U (1)
+, or U (2) × U (1)n−2 , or SO(3) × U (1)n−1 .
+n−1
+
+15
+
+Figure 4: Mori cone MX of a Calabi-Yau
+threefold X, and its integer sites populated by non-vanishing genus zero GV
+invariants. Depicted in red: a generator
+of MX that is nilpotent and lies on the
+boundary of M∞ .
+
+Figure 5: Non-pointed Mori cone MX ′
+related to MX by an unstable Weyl flop,
+if one assumes no wall-crossing. Depicted
+in red: the flopped generator of MX .
+
+n0[C ′ ] ̸= 0 for sequences of curve classes of the form
+k
+
+[Ck′ ] := [C0′ ] + k · [C] ,
+
+k = 0, . . . , ∞ ,
+
+(3.2)
+
+or infinite sub-sequences thereof. This implies that [C] is a generator of M∞ , even though
+the GV sequence associated with its own integer multiples terminates, i.e. even though [C]
+itself is nilpotent. More generally, whenever the non-abelian gauge theory is asymptotically
+free, i.e. if 4(1 − g) − NF > 0, the shrinking class is a generator of M∞ .
+As an aside we note that this implies the existence of a wall of marginal stability already
+in the five-dimensional theory at the origin of the Coulomb branch: the fact that there
+exists at least one sequence of the form (3.2) implies that upon continuing into a distinct
+Weyl chamber — by passing through the origin of the Coulomb branch — all but finitely
+many BPS indices associated to curve classes in the series must jump to zero. Otherwise,
+the Weyl-transformed Mori cone could not be a pointed cone, as illustrated in Figures 4
+and 5.
+The converse statement is false: gauge instanton corrections to the prepotential of an
+IR-free gauge theory vanish at the origin of the Coulomb branch, but one may still have
+sequences of the form (3.2) that give rise to a holomorphic series with a finite analytic
+continuation to the origin of the Coulomb branch (see §C.3 for an example). Thus, a curve
+C shrinking along a Weyl-reflection locus associated with non-abelian enhancement giving
+16
+
+rise to an IR-free gauge theory in four dimensions can be either a generator of M∞ or lie
+strictly outside of it.
+As far as the spectrum of GV invariants is concerned, a facet of KX featuring nonabelian enhancement with g > 1 hypermultiplets in the adjoint representation and no
+fundamentally charged hypermultiplets cannot be distinguished from a flop of 2g − 2 rational curves.15 Indeed, Weyl flops of genus g > 0 occur only along tuned loci in complex
+structure moduli space, and turn into ordinary flops (if g > 1) or smooth points (if g = 1)
+under a generic perturbation in complex structure [35]. We will single out the case where
+g = 1, again without fundamental matter: here the GV invariant of the shrinking curve
+vanishes, due to the fact that the non-abelian gauge theory is conformal and has accidentally enhanced N = 4 supersymmetry. When such a g = 1 locus exists, the cone over
+non-vanishing genus zero GV invariants MGV
+X is strictly smaller than the Mori cone MX ,
+GV
+and the cone dual to MX is the Kähler cone adjoined by its gauge equivalent copy generated by the Weyl reflection associated with the N = 4 Yang-Mills theory.16 We denote
+the group generated by such Weyl reflections as WN =4 .
+To recap, there are three kinds of qualitatively different Weyl reflections that can occur,
+distinguished by the sign of the beta function in the four-dimensional gauge theory.
+• For an asymptotically free gauge theory, i.e. 4(1 − g) − NF > 0, there is an infinite
+tower of gauge instanton corrections that become important near the origin of the
+Coulomb branch of the four-dimensional theory. As a consequence, the shrinking
+generator of the Mori cone is also a generator of M∞ .
+• In the conformal case 4(1 − g) − NF = 0, the shrinking generator [C] of the Mori
+cone is either strictly outside of M∞ or is on its boundary. In the special case
+(g, NF ) = (1, 0) the gauge theory enhances to the N = 4 theory, and we expect that
+[C] is strictly outside M∞ .
+• For an infrared-free gauge theory, i.e. 4(1 − g) − NF < 0, the shrinking generator of
+the Mori cone can be a generator of M∞ or lie strictly outside of M∞ .
+In general, su(2) enhancements from generators of M∞ have a wall of marginal stability at
+their respective origins of the Coulomb branch (corresponding to unstable Weyl reflections),
+while those from curves outside of M∞ do not (corresponding to stable Weyl reflections).
+15
+Similarly, a genus g > 1 non-abelian enhancement with NF fundamentally charged hypermultiplets
+cannot be distinguished from a length-2 flop with GV invariants (2NF , 2g − 2).
+16
+We assume that no walls of marginal stability can arise at the origin of the Coulomb branch of a
+gauge theory with enhanced supersymmetry.
+
+17
+
+3.1.3
+
+Tensionless string CFTs
+
+A third possibility is that an effective curve [C] shrinks, while simultaneously an effective
+divisor degenerates to a point in X. As explained in [10], an infinite tower of M2-brane
+excitations on curves in D becomes massless, while the magnetically charged string from
+the M5-brane wrapped on D becomes tensionless. One arrives at a non-trivial SCFT in five
+dimensions featuring tensionless strings [10]. The presence of infinitely many electrically
+charged BPS states — barring infinitely many exact cancellations in the index, which we
+will assume does not happen — implies that multiples of the shrinking curve class [C]
+itself contribute an infinite sequence of nonzero GV invariants. Such a point lies at finite
+distance in moduli space. One might expect that a point where an infinite number of states
+becomes massless is necessarily at infinite distance [36,37], but in this case, strong coupling
+in the infrared invalidates this intuition.
+3.1.4
+
+Asymptotic boundaries
+
+The final possibility is a facet of the Kähler cone where a curve class [C] and effective
+divisor class [D] shrink at infinite distance in moduli space. This corresponds to a partial
+decompactification of the five-dimensional theory, and for reasons as in §3.1.3 one expects
+that the GV sequence n0k[C] does not terminate.17
+
+3.2
+
+Moduli space from genus zero GV invariants
+
+We will now apply the classification given in §3.1 to see how flop curves can be identified
+from their GV invariants.
+If [C] is a potent curve, i.e. if the GV sequence n0k[C] does not terminate, then [C] cannot
+be flopped: shrinking [C] corresponds at best to a facet of the Kähler cone that is either a
+tensionless string CFT or an asymptotic boundary.
+Next, if [C] is a nilpotent curve in M∞ — either strictly inside or on the boundary
+— that is not a generator of M∞ , then one cannot shrink [C] without first shrinking a
+generator. Thus without loss of generality we can consider curves that are generators of
+M∞ . A nilpotent generator of M∞ is not a flop curve, but instead corresponds to an
+unstable Weyl reflection.
+17
+
+In the infinite distance limit, this infinite tower of nonvanishing GV invariants leads to an infinite
+tower of light particles, in agreement with the Distance Conjecture of Ooguri and Vafa [38]. Such limits
+have been considered in e.g. [39–41].
+
+18
+
+The only remaining case is that [C] is nilpotent and lies strictly outside the cone M∞
+of potent curves. We call such a curve a nilpotent-outside-potent, or nop, curve. The key
+lesson of §3.1 is that
+[C] is a nop curve ⇔ shrinking [C] yields a flop or a stable Weyl reflection ,
+
+(3.3)
+
+where we refer to a Weyl reflection as stable if it results from su(2) enhancement without
+wall-crossing at the origin of the Coulomb branch. One important consequence is that by
+identifying all nop curves, we determine the group Wstable ⊆ W of stable Weyl reflections.
+Analytically continuing past a wall in the Kähler cone where a nop curve shrinks leads
+either to a topologically distinct Calabi-Yau, or to a Calabi-Yau that gives rise to the same
+physics as the original geometry, either due to a gauge symmetry or an isomorphism of the
+two geometries.
+The discussion above leads us to several useful results. First, the cone over the nonvanishing genus zero GV invariants MGV
+X is equal to the intersection over the N = 4 Weyl
+orbit of the Mori cone:
+\
+w(MX ) .
+(3.4)
+MGV
+=
+X
+w∈WN =4
+
+As WN =4 is non-trivial only for tuned complex structure, we further have that MGV
+X = MX
+at generic points in complex structure moduli space.
+Second, the cone over the rays in the Mori cone hosting infinite series of GV invariants,
+which we denoted M∞ , is equal to the intersection of all Mori cones and their images
+under the stable Weyl group, Wstable :
+M∞ =
+
+\
+
+\
+
+w∈Wstable X∈[X]b
+
+w(MX ) ≡
+
+\
+
+w(M) .
+
+(3.5)
+
+w∈Wstable
+
+In particular, the dual of M∞ is the union over the Wstable orbit of the extended Kähler
+cone,
+[
+M∨∞ =
+w(K) =: Khyp ,
+(3.6)
+w∈Wstable
+
+which is what we previously defined as the hyperextended Kähler cone Khyp . We have
+therefore established the relation (2.24). For generic complex structure we have Khyp = K.
+In summary, one can determine the full Kähler moduli space of M-theory compactifications from the data of genus zero GV invariants, up to possible overcounting of gaugeequivalent chambers.
+19
+
+3.3
+
+Geometric data from analytic continuation
+
+We have explained how to determine an overcomplete domain for Kähler moduli, Khyp :=
+Wstable (K), furnished by the extended Kähler cone and its orbit under stable Weyl reflections. But, in addition to charting out the domain of Kähler moduli one would also like to
+characterize the Calabi-Yau threefold, and evaluate the prepotential F IIA , in each geometric chamber. It turns out that computing the four-dimensional prepotential F IIA in one
+particular representative X of a birational equivalence class [X]b is sufficient to determine
+the defining geometric data (and thus the large volume expansion of the prepotential) in
+all chambers of Khyp , in a way that is readily accessible.
+We will now consider how the prepotential (2.8) transforms across a facet on which a
+nop curve shrinks. In this scenario, the shrinking curve formally acquires negative volume
+on the other side of the transition. Along the facet where the nop curve has zero volume,
+the volumes of all curves in M∞ can be made arbitrarily large by scaling up the Kähler
+parameter, and for each choice of Kähler parameter there exist at most finitely many
+curves in M∞ that have volumes below any fixed finite threshold. Thus, in order to obtain
+the geometric data of all different chambers, one must only make sense out of formally
+negative volumes appearing in finitely many polylogarithms in the expression (2.8).18 This
+is straightforward to do by invoking Jonquière’s identity
+Li3 (e2πi(−u) ) u3 u2
+u
+Li3 (e2πiu )
+=
+−
++
+−
+,
+3
+3
+(2πi)
+(2πi)
+6
+4
+12
+
+(3.7)
+
+which allows one to rewrite an instanton correction with formally negative action as one
+with positive action, supplemented by a polynomial correction term. Geometrically, this is
+interpreted as collapsing a holomorphic curve class [C], continuing past its vanishing locus,
+and re-interpreting its formally negative volume as minus the volume of the new effective
+curve class [C ′ ] = −[C]. The polynomial correction term is interpreted as the perturbative
+correction induced by the passing through the locus where a hypermultiplet has become
+massless, and can be absorbed into the classical geometric data, precisely reproducing
+(2.14) for the case of a flop, where the genus zero GV invariant is a literal count of shrinking
+curves, while also generalizing to the case of a stable Weyl reflection. In summary, upon
+passing through a flop transition, or a Weyl reflection without wall-crossing, whereby an
+18
+The reasoning here is formally similar to that employed in [24] to compute Calabi-Yau periods systematically near conifold boundaries of the large complex structure cone. Indeed, for a flop curve the limit
+of vanishing curve volume is mirror dual to the conifold limit discussed in [24].
+
+20
+
+effective nop curve [C] collapses, the classical geometric data is modified as
+κ′abc = κabc − n0C Ca Cb Cc ,
+
+c′a = ca + 2n0C Ca ,
+
+(3.8)
+
+and the GV invariants remain the same, up to reassigning
+0
+′0
+n′0
+[C ′ ] ≡ n−[C] = n[C] ,
+
+3.4
+
+and n′0
+[C] = 0 .
+
+(3.9)
+
+Assembly algorithm
+
+We can now state an algorithm for constructing the hyperextended Kähler cone Khyp of a
+Calabi-Yau threefold X:
+1. Compute the genus-zero GV invariants of X, up to high enough degree to obtain an
+accurate approximation to M∞ .
+2. Identify all nop curves, i.e. nilpotent curves on extremal rays that are strictly outside
+M∞ .
+3. Assemble Khyp by adjoining phases related by flops and Weyl reflections, out to the
+boundaries of the moduli space listed in §3.1.3 and §3.1.4.
+In practice, some of the nilpotent curves in step (2) may correspond to stable Weyl reflections, so that the corresponding chambers do not furnish physically new regions of moduli
+space. In fact, the number of chambers of Wstable (K) is often quite large, or even infinite,
+as a consequence of symmetries. We explain in Appendix §A.2 how we replace Khyp with
+a smaller, less redundant cone, containing a finite number of chambers. Using this, our
+assembly algorithm is applicable even to birational equivalence classes featuring infinitely
+many symmetric flops, and non-polyhedral effective cones such as the examples of [27, 29].
+Analogously, our algorithm can be applied to cases where the effective cone becomes nonpolyhedral at special loci in complex structure moduli space, corresponding to an infinite
+order Wstable .
+In contrast, if M∞ is infinitely generated due to the existence of infinitely many flops
+that do not arise as simple reflections across facets of Kähler cones, then any computation
+of GV invariants at finite cutoff degree will yield only an (inner) approximation of M∞ ,
+which asymptotes to the exact result as the cutoff degree is sent to infinity. Similarly, if
+21
+
+any representative in a birational equivalence class has a non-polyhedral Mori cone, then
+GV invariants computed to finite cutoff degree will produce only an approximation of the
+true Mori cone, and likewise M∞ . A famous such example is the Schoen manifold [42].
+
+3.5
+
+An example
+
+As an example, let us consider a Calabi-Yau threefold hypersurface X with h1,1 = 2
+favorably embedded in a toric fourfold V , constructed in a standard way19 from a reflexive
+polytope ∆◦ . The integer points in ∆◦ other than the origin are the columns of
+
+
+−1
+
+−1
+
+−1
+
+−1
+
+0
+0
+0
+1
+
+0
+0
+1
+0
+
+
+0 −1 1
+
+1 1 0
+,
+0 0 0
+
+0 0 0
+
+(3.10)
+
+and are associated with homogeneous coordinates xI , I = 1, . . . , 6, identified via a (C∗ )2
+action with scaling weights
+
+
+x1 x2 x3 x4 x5 x6
+
+
+ 0 0 0 −1 1 1  .
+1 1 1 2 −1 0
+
+(3.11)
+
+The columns of (3.11) are the charges of the divisors DI := {xI = 0} ∩ X. The faces of
+∆◦ are simplices, so V is smooth.
+In a basis of divisor classes {[D1 ], [D6 ]}, the triple intersection numbers and second
+Chern class of X are
+!
+!
+!
+5 5
+5 5
+50
+κ1ab =
+, κ2ab =
+, ca =
+.
+(3.12)
+5 5
+5 3
+42
+The Mori cone inherited from the ambient variety, MV , is generated by the curve classes
+(1, 0) and (0, 1). The genus zero GV invariants are given in Table 2, and the sites in
+MV populated by them are depicted in Figure 2. In particular, the generators of MV
+have non-vanishing GV invariants, so MV ≃ MX , and the generator class [C1 ] := (1, 0) is
+19
+
+For some details on Calabi-Yau threefold hypersurfaces in toric fourfolds, see Appendix B. Further
+examples are given in Appendix C.
+
+22
+
+q2 0
+q1
+0
+∗
+20
+1
+2
+0
+0
+3
+4
+0
+5
+0
+0
+6
+7
+0
+0
+8
+9
+0
+10
+0
+
+1
+56
+2635
+5040
+190
+−40
+3
+0
+0
+0
+0
+0
+
+2
+−272
+2760
+541930
+2973660
+2454600
+67980
+−14960
+3420
+−760
+100
+−6
+
+3
+3240
+−45440
+933760
+277421695
+2644224240
+5829698942
+3084577280
+75341270
+−13884400
+2767590
+−783664
+
+4
+−58432
+1001340
+−18770880
+563282580
+208000930200
+2855250958116
+11119027471400
+14592676836440
+5711374027440
+132960571500
+−21741657848
+
+5
+1303840
+−26330880
+490600080
+−11813767700
+470459159880
+193028959075965
+3465883673329200
+19950547779012810
+45586693863580200
+42020108300555745
+13122339863069280
+
+Table 2: Genus zero GV invariants n0q1 ,q2 for the geometry of §3.5. Charges inside the
+infinity cone M∞ = {q1 − 5q2 , q2 ≥ 0} but outside the cone of dual coordinates T =
+{q2 − q1 , 2q1 − q2 ≥ 0} are shown in yellow. Charges in T are shown in pink.
+nilpotent.20 Moreover, the infinity cone M∞ is generated by the classes (5, 1) and (0, 1).
+Upon shrinking the curve class [C2 ] := (0, 1) the divisor D5 shrinks to a point, generating a
+tensionless string CFT. Indeed, the sequence of GV invariants along this generator of the
+Mori cone is infinite:
+n0k·[C2 ] = {56, −272, 3240, −58432, 1303840, −33255216, . . .}
+
+(3.13)
+
+We now note that the curve class [C1 ] lies outside M∞ (and it is the only curve class that
+does). Therefore, one can flop this curve21
+[C1 ] −→ −[C1 ] ,
+
+(3.14)
+
+obtaining a smooth threefold X ′ with genus zero GV invariants as depicted in Figure 3.
+This flop is not inherited from any birational transformation of the toric ambient variety,
+so is non-toric in the sense described in §2.2.
+As this phase is non-toric, we will determine its Mori cone from the data of GV invariants. The generators of MGV
+X ′ = ∩w∈WN =4 w(MX ′ ) are −[C1 ] = (−1, 0) and [C3 ] := (5, 1).
+The flopped triple intersection numbers and second Chern class, expressed in their natural
+20
+
+Computing the exact Mori cone by showing that the GV invariants of the torically inherited cone
+MV are non-zero has also been employed in earlier works, e.g., [29, 43].
+21
+One can check that no divisors shrink in this limit, and so this is a true flop.
+
+23
+
+basis, the generators (−[C1 ], [C3 ]) of MGV
+X ′ , are
+κ′1ab =
+
+90 30
+30 10
+
+!
+,
+
+κ′2ab =
+
+30 10
+10 3
+
+!
+,
+
+c′a =
+
+!
+120
+,
+42
+
+(3.15)
+
+showing that X ′ is not isomorphic to X.
+If WN =4 were non-trivial, it would have to map the set of generators of MGV
+X ′ to
+themselves. Thus, in this example, at least one element would have to exchange its two
+generators. However, this cannot be a symmetry as the GV invariants of the two generators
+of MGV
+X ′ are distinct: they turn out to be 20 and 3 respectively (cf. Table 2). Therefore
+WN =4 is trivial and we can determine the exact Mori cone: MX ′ = MGV
+X ′ . Along the facet
+of KX ′ where the curve class [C3 ] shrinks, the toric divisor D4 shrinks to a point, leading to
+another tensionless string CFT. Again, the sequence of GV invariants along this generator
+of the Mori cone MX ′ is infinite:
+n0k·[C3 ] = {3, −6, 27, −192, 1695, −17064, . . .}
+
+(3.16)
+
+The extended Kähler cone K is equal to the dual of the infinity cone M∞ in this
+example, and, expressed in the original basis of divisor classes ([D1 ], [D6 ]), it is generated
+by the classes (1, 0) and (−1, 5). Absent any Weyl group we have Khyp = K. The cone
+of dual coordinates T is generated by (1, 1) and (1, 2) and is indeed dual to the effective
+cone, generated by the divisors [D4 ] = (−1, 2) and [D5 ] = (1, −1).
+
+4
+
+Checks of the Weak Gravity Conjecture
+
+The WGC [6] provides an interesting constraint on the spectra of effective theories that
+arise as low-energy limits of quantum gravity. We will now describe a direct check of
+the WGC in a large ensemble of Calabi-Yau hypersurface compactifications of M-theory.
+This analysis relies on using Gopakumar-Vafa invariants to reconstruct the Kähler moduli
+spaces of Calabi-Yau threefolds, via the algorithm we described in §3.
+
+4.1
+
+The lattice WGC for BPS states
+
+The WGC states that in an effective field theory that admits a UV-completion to a theory of
+quantum gravity, black holes must be able to decay. In its simplest form, for a theory with
+a single U (1) gauge field, this condition states there must be a (super)extremal particle,
+24
+
+i.e., a particle whose charge to mass ratio satisfies
+Q
+Q
+≥
+,
+M
+M ext
+
+(4.1)
+
+where the quantity on the right-hand side is the charge to mass ratio of an extremal black
+hole.
+In theories with more than one U (1) gauge field, the condition that black holes must
+be able to decay translates to the condition that the convex hull of charge to mass ratios of
+particles in the spectrum must contain the region in charge to mass space where black holes
+can exist [44]. The convex hull condition is the minimal requirement for black holes to
+decay in a given theory, but a more stringent version of the conjecture was proposed [7] for
+reasons of consistency under dimensional reduction (see also [8,45]). This stronger version,
+known as the lattice WGC, holds that every site in the charge lattice must support a
+(super)extremal particle.
+In full generality, the lattice WGC is difficult to check: the spectrum of light states is
+unknown, and for theories with moduli, the black hole extremality bound deviates nontrivially from the Reissner-Nordström result. Nonetheless, in certain regions of charge
+space, one can take advantage of the properties of BPS states. Recall that we have denoted by CBH the cone in charge space where BPS black holes exist. The lattice WGC is
+satisfied in the BPS region of charge space if and only if for each site in CBH , there exists
+a (super)extremal state.
+Following [1], in the region CBH the BPS bound implies that a (super)extremal state is
+indeed extremal, and BPS. Thus, the lattice WGC implies the existence of a single-particle
+BPS state for every charge in CBH . We will apply this fact to test the lattice WGC by
+using GV invariants to count BPS states in a subcone of CBH . Specifically, as explained
+in §2.2, we have the containment relation Thyp ⊆ CBH , where Thyp is the cone of dual
+coordinates defined in (2.18). In §3.2 we established how to compute Thyp from the data
+of GV invariants, and thus we are now equipped to test the lattice WGC in Thyp .
+
+4.2
+
+Testing the lattice WGC
+
+We have applied the above logic to check the lattice WGC in a large ensemble of compactifications of M-theory on Calabi-Yau threefolds constructed as hypersurfaces in toric
+varieties. We used CYTools [4, 5] to compute genus-zero GV invariants, and so carried out
+the algorithm outlined in §3.4.
+25
+
+In fact, in this setting one can first perform a more efficient test of a sufficient condition
+for the lattice WGC, and for many geometries this test obviates the full process of §3.4.
+The process is as follows: one finds the cone EV of effective divisors inherited from the
+ambient toric variety V , which obeys EV ⊆ E, and therefore
+Thyp ⊆ EV∨ .
+
+(4.2)
+
+The analogue of (4.2) also holds if EV is replaced by any other inner bound on the true
+effective cone E. A sufficient test of the lattice WGC is to check that every site in EV∨ is
+populated with a non-vanishing GV invariant. If there are empty sites in EV∨ , then either
+the lattice WGC is false, or there exist autochthonous divisors, i.e. effective divisors in the
+Calabi-Yau that are not inherited from the ambient variety. In this way, the lattice WGC
+makes non-trivial predictions for geometry, specifically for the cone of effective divisors
+(cf. [46, 47]).
+A subclass of autochthonous divisors that we will refer to as min-face divisors are
+readily obtained from polytope data, by examining simple factorizations of the defining
+polynomial. In practice, we construct the cone Einner generated by all inherited effective
+divisors, as well as any min-face divisors, which obeys
+EV ⊆ Einner ⊆ E .
+
+(4.3)
+
+∨
+, up to some cutoff degree. If there
+We then check whether there are empty sites in Einner
+are no such empty sites, the lattice WGC holds in the example in question, up to the cutoff
+degree tested.
+∨
+In cases where Einner
+contains empty sites, then either the lattice WGC is false, or there
+are further autochthonous divisors that are not of min-face type. To analyze such cases,
+we proceed by using the GV invariants to obtain Thyp ⊆ CBH , as described in §3.3. This
+approach is more computationally expensive, because one has to adjoin all phases resulting
+from flops, but it is also exhaustive.
+We can now describe the general algorithm to check the lattice WGC in the BPS cone
+of a Calabi-Yau threefold, X. Given an arbitrarily chosen grading vector ⃗vg ∈ H 2 (X, Z)
+that lies strictly interior to K, we define the degree of a charge ⃗q ∈ H2 (X, Z) as d = ⃗vg · ⃗q.
+Then, up to a cutoff degree d ≤ dcutoff , we implement the following procedure:
+∨
+1. For each site q ∈ Einner
+with dq ≤ dcutoff , compute the GV invariant. If all sites have
+non-vanishing GV invariants, the lattice WGC is satisfied up to cutoff degree dcutoff .
+
+26
+
+If not, continue.
+2. Using the methods described in §3.3, identify all possible flops of X, and calculate
+triple intersection numbers in each one.
+3. Compute Thyp using (3.6) and (2.18).
+4. For each site in q ∈ Thyp with degree less than dcutoff , compute the GV invariant. If
+all such sites have non-vanishing GV invariant, the lattice WGC passes this test.
+Because this approach involves a computation up to a finite cutoff degree, there are
+several subtleties associated to possible misidentifications. For example, an apparent violation of the lattice WGC could in principle arise due to an overestimation of CBH , though
+in all examples considered in this paper we have been able to compute GV invariants to
+high enough order to avoid this issue. In §A.3 we give a comprehensive discussion of the
+potential problems of a finite computation, and we explain how we have mitigated them.
+We have performed the above analysis beginning with a set of seed Calabi-Yau threefolds, from which we obtain the rest of the phases via flop transitions. The 2062 seed
+threefolds result from a single FRST of each of the 1464 four-dimensional reflexive polytopes with 2 ≤ h1,1 ≤ 4, as well as 598 additional favorable polytopes with h1,1 = 5. For
+each seed geometry X, we compute the GV invariants and subsequently identify the geometric phases of the given birational equivalence class [X]b , obtained via flop transitions
+from the original phase X.
+One of the key results of this work is that, via flop transitions of toric hypersurface
+Calabi-Yaus, we can discover Calabi-Yau threefolds that cannot be written as hypersurfaces
+in the initial ambient toric variety, as in the example presented in §3.5. In fact, this method
+sometimes allows one to discover Calabi-Yaus that cannot be obtained via a triangulation
+of any four-dimensional reflexive polytope.22 But in general we do not distinguish between
+the two cases in this work, and we use ‘non-toric phase’ to refer to a phase for which we
+have found no manifest description as a hypersurface in a toric variety. Figure 6 shows the
+number of geometric phases obtained from FRSTs of polytopes, as well as the number of
+non-toric phases obtained through flops.
+We carried out the algorithm outlined above to test the lattice WGC in 2062 polytopes.
+We found no violations of the lattice WGC.
+It should be noted that there are known counterexamples to the lattice WGC, all of
+which arise from compactifications on toroidal orbifolds [7] (see also the recent work [49]).
+22
+
+This is the case for the non-toric phase in the example in §3.5.
+
+27
+
+(a) h1,1 = 2
+
+(b) h1,1 = 3
+
+(c) h1,1 = 4
+
+Figure 6: The number of apparently-inequivalent toric and non-toric phases that we found.
+For h1,1 = 2, 3, 4 we have (36, 6), (274, 123), and (1760, 2180) toric and non-toric phases,
+respectively. The polytope IDs are ordered as in [48], and in particular h2,1 increases to
+the right.
+Nonetheless, in the present work we have found no evidence against the proposition that the
+lattice WGC holds in M-theory compactifications on Calabi-Yau threefold hypersurfaces.
+Even so, we hasten to remind the reader that the present computation is in a limited
+ensemble, at h1,1 ≤ 5, and only checks the lattice WGC in the BPS sector, up to a finite
+cutoff degree.
+We also note that in 1170 of these cases the lattice WGC predicted autochthonous
+divisors, and of these cases, 493 geometries predicted further autochthonous divisors beyond
+min-face ones. These predictions were then confirmed with the full algorithm.
+
+28
+
+5
+
+Conclusions
+
+A primary result of this work is a method for computing the complete Kähler moduli space
+of a Calabi-Yau threefold X from knowledge of its genus zero Gopakumar-Vafa invariants.
+We have shown that an efficient way to identify all phase transitions in Kähler moduli
+space is to compute M∞ ⊂ H2 (X), i.e. the closure of the cone generated by rays supporting
+infinite series of nonvanishing GV invariants. Curves in the complement of M∞ within
+the Mori cone shrink across phase transitions. Some of these are flop transitions, while
+others are Weyl reflections associated with non-abelian gauge enhancements. By passing
+through all such phase transitions, unto the boundaries of moduli space, one assembles
+an object that we call the hyperextended Kähler cone, Khyp . In the absence of Weyl
+reflections, Khyp coincides with the extended Kähler cone K, while in general Khyp ⊇ K
+gives a gauge-redundant parametrization of K.
+We carried out this algorithm in an ensemble of geometries, including all favorable
+hypersurfaces with 1 ≤ h1,1 ≤ 4 resulting from the Kreuzer-Skarke list, as well as 598
+examples with h1,1 = 5. Using CYTools [4] to compute GV invariants, we constructed the
+Kähler moduli spaces in each case.
+The other major result of this work is a test of the Weak Gravity Conjecture in compactifications of M-theory on Calabi-Yau threefold hypersurfaces. The lattice WGC predicts
+that in the region in charge space where BPS black holes exist, which we denoted CBH ,
+there must exist a complete lattice of BPS particles. We showed that a subcone Thyp of
+CBH is determined by the data of Khyp : see (2.27). Moreover, a nonzero GV invariant for
+a given charge implies the existence of a corresponding BPS particle. Thus, GV invariants
+serve a dual purpose: they determine M∞ , from which we obtain Khyp and in turn the
+region Thyp where we test the WGC, and they also provide information on the BPS particle
+spectrum, which is the quantity being tested.
+In the geometries we studied, we checked the prediction of the WGC for every charge
+in Thyp ⊆ CBH up to a finite cutoff degree. We found that not just the tower and sublattice
+WGC, but even the full lattice WGC, holds for the charges in question. We stress that
+our computation provides no information about BPS particles beyond the chosen cutoff
+degree, nor any information about non-BPS particles. Thus, our result should be read as
+confirming the predictions of the lattice WGC in a finite subregion of the charge lattice.
+
+29
+
+Acknowledgments
+We thank Manki Kim, Nate MacFadden, Jake McNamara, Richard Nally, Andres RiosTascon, Andreas Schachner, and Mike Stillman for helpful discussions. N.G., L.M., and
+J.M. were supported in part by NSF grant PHY-1719877. B.H. was supported by NSF
+grants PHY-1914934 and PHY-2112800. T.R. was supported in part by the Berkeley
+Center for Theoretical Physics; by the Department of Energy, Office of Science, Office
+of High Energy Physics under QuantISED Award DE-SC0019380 and under contract DEAC02-05CH11231; and by the National Science Foundation under Award Number 2112880.
+
+A
+
+Computational Algorithm
+
+In this Appendix, we give details of the algorithm for reconstructing the Kähler moduli
+space and testing the WGC. We discuss the residual gauge redundancy, as well as the
+possible misidentifications of flops that can result from a computation of the GV invariants
+of finitely many curves.
+
+A.1
+
+Identifying flop curves and stable Weyl reflections
+
+We first describe how to identify flop curves given a Calabi-Yau obtained as a hypersurface
+in a toric variety, together with the charges and associated GV invariants computed up
+to a finite cutoff degree dcutoff using a grading vector ⃗vg (given by a suitable point in the
+Kähler cone). We will denote by C the set of charges with nonzero GV invariants up to
+this cutoff.
+We start by creating a list N of curve classes that appear nilpotent based on a computation of GV invariants up to cutoff degree dcutoff . To do this, for each co-prime curve
+class [C] we check if multiples of [C] have nonzero GV invariants, up to the cutoff dcutoff .
+Given a charge [C], if there exists a positive integer multiple k ∗ such that
+k ∗ [C] · ⃗vg ≤ dcutoff
+
+and
+
+n0k∗ [C] = 0 ,
+
+(A.1)
+
+Pk∗ −1 2 0
+and k=1
+k · nk[C] > 0, then the charge [C] is added to N.
+Given the set of (apparently) nilpotent charges N and the set of (apparently) potent
+charges C\N, we would like to determine the set F ⊆ N of nop curves. This is done in two
+steps:
+
+30
+
+1. For each curve [C] ∈ N, determine whether [C] is on the boundary of the closure
+of the cone generated by C\N. Intuitively, if [C] lies strictly outside of the cone
+generated by C\N, the ray that passes through [C] diverges from all potent rays (and
+even other nilpotent rays). In practice we will test for this feature in the following
+non-unique way: we find the largest integer k such that k[C] lies on or below the
+affine subspace defined by half the cutoff degree, i.e. k[C] · ⃗vg ≤ dcutoff /2. Then,
+having determined k, we define a codimension one lattice by the intersection of the
+affine subspace generated by all curves [C ′ ] with degree equal to k[C] · ⃗vg , declaring
+k[C] as the new origin, and find a reduced lattice basis using LLL reduction [50].
+In the lattice-reduced basis we compute d, defined as the smallest norm || · ||∞ of
+all integer points that arise from rays in C\N. We use this quantity as an integer
+notion of distance between the candidate nilpotent ray and the potent rays along a
+slice through the Mori cone defined by half the cutoff degree. Then, we repeat this
+process, similarly computing an integer distance d′ but with dcutoff /2 replaced by the
+full cutoff degree dcutoff . If d′ > d, we conclude that, up to the chosen cutoff degree,
+the ray passing through [C] diverges from the potent rays and is thus a candidate
+nop curve. We add it to a list of candidate nop curves, F0 .
+2. Assuming that all curves strictly interior to M∞ with sufficiently large degree are
+in fact potent, step (1) will reliably identify all nop curves of sufficiently low degree.
+However, one frequently finds examples where regions inside M∞ are not populated
+by potent rays (see e.g. the GV invariants in Table 4 of our example §C.3). In order
+to deal with this we repeat step (1) for all the candidate nop curves in F0 with the
+following difference: in computing the pair (d, d′ ) we take the norm of all integer
+points that arise from rays in the convex cone generated by the complement C\F0 ,
+as opposed to just the potent rays. All curves in F0 that still appear to diverge from
+the potent rays via this notion of distance are added to the list F, and treated as nop
+curves.
+It is not hard to convince oneself that for every nop curve there exists a finite cutoff degree
+such that the above algorithm will find the nop curve. Similarly, every nilpotent ray on
+the boundary of M∞ will be rejected for sufficiently large cutoff. Conversely, for any fixed
+cutoff dcutoff one may over or underestimate the true set of nop curves, a subtlety which
+we discuss in more detail in §A.3.
+
+31
+
+A.2
+
+Gauge equivalence and isomorphisms
+
+The set F is the set of curves that can be flopped in some phase to reconstruct the hyperextended Kähler cone, Khyp . Many (sometimes infinitely many—see [29]) chambers of Khyp
+are redundant, either because of gauge symmetries or topological isomorphisms between
+the Calabi-Yaus. In practice, we construct a less redundant subset of the hyperextended
+Kähler cone, K◦ ⊆ Khyp , by identifying the curves in F that, when flopped, produce Weylsymmetric or isomorphic phases. To this end, given a particular Calabi-Yau X and the
+generators of MGV
+X , we perform the following test:
+1. For each MGV
+X generator [C] ∈ F, one tests whether there exists a non-vanishing
+d⃗ ∈ H 1,1 (X, Z), such that κabc da tb tc ≡ 0 along the dual facet of KX . If not, the
+facet where [C] shrinks marks a flop transition, and one computes the transformed
+geometrical data κ′abc , c′a and GV invariants of a new Calabi-Yau X ′ using (3.8) and
+(3.9), and adjoins a new geometrical chamber equal to the dual of MGV
+X′ .
+2. If, on the other hand, there exists a d⃗ such that κabc da tb tc ≡ 0 along the dual facet
+of KX , one computes the map w of (3.1), and tests whether κmnl wm a wn b wl c is equal
+to κ′abc computed from (3.8). If so, one has proven that the newly encountered geometrical chamber is gauge-equivalent to the original one, either via a Weyl reflection
+or via a flop transition between two diffeomorphic Calabi-Yau’s, and can thus be
+omitted. Otherwise, one records the new phase X ′ , and adjoins a new geometrical
+chamber equal to the dual of MGV
+X′ .
+For every geometric chamber thus obtained one reruns the above algorithm, and further
+omits geometric chambers that have previously been generated. Finally, one quotients the
+result by whatever subgroup of the symmetry group of the birational equivalence class [X]b
+one has access to.
+Three kinds of gauge-redundancies remain in K◦ :
+• N = 4 Weyl reflections.
+• neighboring phases X and X ′ may still be diffeomorphic if the basis change of
+H 2 (X, Z) needed to make the equivalence of triple intersection numbers and second Chern class manifest, is not equal to a simple reflection across their joined facet
+of Kähler cones.
+• non-neighboring X and X ′ may be diffeomorphic, but not related to each other by a
+known symmetry of [X]b .
+32
+
+A.3
+
+Limitations of a finite cutoff
+
+In applying a computation of the GV invariants up to a finite degree d to characterize a
+(0)
+ray r, several misidentifications are possible. For each possible error we denote by Thyp the
+resulting approximation to the true Thyp . The relevant possibilities are:
+1. A ray r is effective and in M∞ but is misidentified as being non-effective, because
+(0)
+the first nonzero GV invariant along r has degree > d. In this case Thyp ⊋ Thyp .
+2. A ray r is potent but is misidentified as being nilpotent and containing a nop curve,
+because the infinite series of nonzero GV invariants begins at degree > d. In this
+(0)
+case Thyp ⊋ Thyp .
+3. A ray r is nilpotent and on the boundary of M∞ but is misidentified as containing
+(0)
+a nop curve. In this case Thyp ⊋ Thyp .
+4. A ray r is nilpotent and contains a nop curve but is misidentified as being potent,
+(0)
+because the GV invariants are nonzero up to degree d. In this case Thyp ⊊ Thyp .
+5. A ray r is nilpotent and contains a nop curve but is misidentified as being on the
+(0)
+boundary of M∞ . In this case Thyp ⊊ Thyp .
+In practice, by repeating our computation with ever-increasing d, we have reduced the
+incidence of each of these errors.
+
+A.4
+
+Checking the lattice WGC up to a finite cutoff
+
+Given the set C of charges with nonzero GV invariants, the set F of nilpotent curves outside
+of M∞ , and all of their associated GV invariants, we can reconstruct an approximation
+(0)
+K◦ to the cone K◦ using the methods described in §A.1 and §A.2. We then construct
+(0)
+(0)
+(0) 
+T◦ := T (K◦ ). To check the lattice WGC, we compute points in Conv T◦
+subject to
+the condition
+p⃗ · ⃗vg ≤ dcutoff .
+
+(A.2)
+
+Here, as defined above, ⃗vg is the grading vector and dcutoff is the chosen cutoff degree. We
+then compute the GV invariant for each curve class p⃗. If all such GV invariants are nonzero,
+(0)
+(0)
+we conclude that the lattice WGC is satisfied in T◦ up to the cutoff dcutoff . Because T◦
+33
+
+is a fundamental domain for Thyp under (a subgroup of) the automorphism group, we can
+thereby conclude that the lattice WGC is satisfied in all of Thyp up to the specified cutoff.23
+
+B
+
+Toric Technology and Notation
+
+In this appendix, we review some of the necessary technology that underlies both our
+general scans as well as the examples discussed in §3.5 and Appendix C, simultaneously
+setting notation for these examples.
+Following Batyrev [51], we describe Calabi-Yau hypersurfaces in simplicial toric fourfolds, constructed in the following standard way from the four-dimensional reflexive polytopes classified by Kreuzer and Skarke [48]. The cones over the faces of a reflexive polytope
+∆◦ ⊂ Z4 define a toric fan of a singular toric variety. A fine, regular and star triangulation
+(FRST) T of ∆◦ defines a desingularized toric fourfold V∆◦ ,T with toric fan assembled from
+the cones over the simplices of T. The generic anticanonical hypersurface X∆◦ ,T is smooth
+and Calabi-Yau. The toric divisors associated with points strictly interior to facets do not
+intersect X∆◦ ,T , and thus we will in practice be concerned with triangulations that ignore
+such points. Thus, each integer point p ∈ ∆◦ not interior to a facet and other than the
+origin defines a generator of the Cox ring xp of homogeneous coordinates, and we may
+1,1
+index the generators as {xI }hI=1+4 with h1,1 ≡ h1,1 (V∆◦ ,T ), and likewise for the points pI .
+The linear relations among the pI define the toric C∗ -scaling weights of the homogeneous
+coordinates xI , conveniently organized in a GLSM charge matrix Qa I whose rows are a
+Z-basis of linear relations,
+X
+
+Q a I pI = 0 ,
+
+a = 1, . . . , h1,1 .
+
+(B.1)
+
+I
+
+We have
+[x1 : . . . : xh1,1 +4 ] =
+
+"h1,1
+Y
+a=1
+
+1,1
+
+Qa
+
+λ a 1 x1 : . . . :
+
+h
+Y
+
+Qa 1,1
+λa h +4 xh1,1 +4
+
+a=1
+
+#
+,
+
+1,1
+
+∀λ ∈ (C∗ )h
+
+,
+
+(B.2)
+
+parameterizing the part of the group of toric scaling relations Gtoric that is continuously
+P
+connected to the identity. The full Gtoric consists of η I such that I η I pI ∈ Z4 , leading to
+23
+
+(0)
+
+Note that if T◦ is not convex then we may have
+ actually checked a region that is somewhat larger
+than Thyp , but not necessarily as large as Conv Thyp , since the union of the convex hulls of a set of regions
+is sometimes smaller than the convex hull of the union of the regions.
+
+34
+
+equivalence relations
+1
+
+[x1 : . . . : xh1,1 +4 ] = [e2πiη x1 : . . . : e2πiη
+
+h1,1 +4
+
+xh1,1 +4 ] .
+
+(B.3)
+
+We will denote the toric divisors of the toric fourfold by D̂I := {xI = 0} ⊂ V∆◦ ,T , and the
+prime toric divisors of the Calabi-Yau threefold DI := D̂I ∩ X∆◦ ,T . The D̂I generate the
+divisor lattice H 2 (V∆◦ ,T , Z), as well as the cone of effective divisors E(V∆◦ ,T ). A choice of
+Qa I is equivalent to a choice of basis of curve classes in H2 (V∆◦ ,T , Z) whose intersection
+pairing with the toric divisors D̂I are the rows of the GLSM charge matrix, and we will
+specify a basis of curve classes in this manner. We will fix the basis of divisor classes to
+be its dual. Cones in T are in one-to-one correspondence with torus-invariant subvarieties
+equal to the simultaneous vanishing of the homogeneous coordinates associated with onedimensional sub-cones. All subsets of homogeneous coordinates not associated with a cone
+in T in this way generate the Stanley-Reisner (SR) ideal.
+All our examples will be favorable in the sense that the natural inclusion H2 (X∆◦ ,T , Z) ,→
+H2 (V∆◦ ,T , Z) is an isomorphism. The basis of curve and divisor classes in X∆◦ ,T will be
+the one induced from this isomorphism. We note that different FRSTs of ∆◦ lead to
+Calabi-Yau hypersurfaces in the same birational equivalence class. If a pair of FRSTs have
+equivalent induced triangulations on all two-faces of ∆◦ , the corresponding Calabi-Yau hypersurface remains smooth as one transitions from one FRST to the other. We will make
+∪
+defined as the union over all Kähler cones of ambient varieties V∆◦ ,T obtained
+use of KX
+from the same polytope ∆◦ , but from distinct FRSTs T that agree on two-faces. We have
+∪
+KX
+⊆ KX . Furthermore, we define M∩X ⊇ MX as its dual cone.
+Finally, we will often drop the subscripts (∆◦ , T) and refer to the toric variety simply
+as V and the Calabi-Yau hypersurface as X, when no confusion is likely to arise.
+
+C
+
+Examples
+
+In this appendix we work out a few examples in detail that illuminate features we have
+discussed abstractly in §3. Some of the required toric technology with our chosen notational
+conventions can be found in Appendix B.
+
+35
+
+C.1
+
+Additional constraints on CBH
+
+First, we discuss some properties of the cone of BPS black holes CBH that will be relevant in the following examples. Although we placed several inner bounds on it, this cone
+is generally hard to compute exactly for two reasons. Firstly, it may be generated by
+non-spherically-symmetric solutions, which are difficult to construct explicitly. Secondly,
+even upon restricting our attention to the cone of spherically symmetric BPS black holes
+spherical
+CBH
+⊆ CBH , the resulting attractor flows can run into strongly-coupled CFT boundaries (see [1] for more information), which makes it difficult to determine whether a smooth
+horizon exists or not.
+In our main analysis, we have sidestepped these issues by only relying on the inclusion
+Thyp ⊆ CBH in (2.27) when checking the lattice WGC. Here we will be more specific to
+better understand the following examples.
+At any given point in the moduli space Ta⋆ , the cone of BPS black holes CBH (Ta⋆ )
+certainly includes the spherically symmetric solutions that can be explicitly constructed
+using BPS attractor flows that avoid strongly-coupled CFT boundaries. This region is
+precisely
+explicit
+CBH
+(Ta⋆ ) = Vis(Ta⋆ ) ,
+(C.1)
+where Vis(Ta⋆ ) denotes the region of the Weyl-extended dual-coordinate moduli space that is
+“visible” from Ta⋆ , i.e., that can be reached from Ta⋆ along a straight line in dual coordinates
+without crossing any boundaries of the Weyl-extended moduli space. Note that Vis(Ta⋆ )
+is not necessarily contained in Thyp , i.e., we can freely cross through unstable Weyl flops;
+the low-energy effective field theory remains under control at these flops despite the wallcrossing phenomena that occur in the ultraviolet BPS spectrum.
+explicit
+Thus, since CBH
+(Ta⋆ ) ⊆ CBH (Ta⋆ ), we can strengthen the inclusion (2.27) to
+Vis(Thyp ) ⊆ CBH ,
+
+(C.2)
+
+S
+where Vis(Thyp ) := Ta⋆ ∈Thyp Vis(Ta⋆ ).
+Note that, as the fully Weyl-extended dual-coordinate moduli space is not in general
+explicit
+(Ta⋆ ) = Vis(Ta⋆ ) generically does depends on Ta⋆ . This does not contradict the
+convex, CBH
+explicit
+conjecture (2.28), because the inclusion CBH
+(Ta⋆ ) ⊆ CBH (Ta⋆ ) need not be strict. If there
+are no CFT boundaries at codimension one in the dual-coordinate moduli space then we
+spherical
+explicit
+can say a bit more. In this case, CBH
+(Ta⋆ ) and CBH
+(Ta⋆ ) are essentially the same—at
+most up to a measure-zero set of points. If the fully Weyl-extended dual-coordinate moduli
+36
+
+space still fails to be convex, as occurs in the example discussed in §C.4, then for some Ta⋆ ,
+spherical
+spherical
+:=
+CBH
+(Ta⋆ ) ⊊ CBH
+
+[
+Ta⋆ ∈Thyp
+
+spherical
+CBH
+(Ta⋆ ) .
+
+(C.3)
+
+spherical
+spherical
+.
+Given the existence of such examples, we conclude that in general CBH
+(Ta⋆ ) ̸= CBH
+This once again does not contradict (2.28) because the cone of BPS black holes may be
+generated by solutions that are not spherically symmetric. However, settling this question
+would require constructing all such solutions and characterizing their properties, a highly
+non-trivial problem that we leave to future work.
+
+C.2
+
+An unstable Weyl flop with fully-determined CBH
+
+We begin with a simple example that contains an unstable Weyl flop, but no CFT boundspherical
+aries. As a consequence, there are no indeterminate flows and we can determine CBH
+exactly: it turns out to be a strict subcone of the infinity cone, M∞ . Moreover, while we
+lack the tools to check this explicitly, the general features of the computed GV invariants
+spherical
+suggest that CBH = CBH
+in this example.
+The geometry consists of a Calabi-Yau threefold hypersurface with h1,1 = 2 in a toric
+variety, constructed from an FRST of the reflexive polytope ∆◦ whose points other than
+the origin are
+
+
+−1 0 0 0 1 2
+
+
+−1 0 0 1 0 0 
+
+
+(C.4)
+ 0 0 1 0 0 −1 .
+
+
+0 1 0 0 0 −1
+A GLSM charge matrix is given by
+
+
+x1 x2 x 3 x 4 x5 x6
+
+
+ 0 1 1 0 −2 1  .
+1 0 0 1 1 0
+
+(C.5)
+
+The faces of ∆◦ are simplices, so no FRST needs to be specified.
+In the GLSM basis, the Mori cone MV inherited from the toric ambient variety is
+simply the first quadrant. The GV invariants of both generators are nonzero, and thus
+MX = MV and the Kähler cone is given by KX = {t1 , t2 ≥ 0}. The geometry has no flop
+transitions, so K = KX .
+37
+
+q2 0
+q1
+0
+∗
+−2
+1
+2
+0
+0
+3
+4
+0
+5
+0
+0
+6
+7
+0
+0
+8
+
+1
+177
+178
+3
+5
+7
+9
+11
+13
+15
+
+2
+177
+20291
+−177
+−708
+−1068
+−1448
+−1880
+−2412
+−3122
+
+3
+186
+317172
+332040
+44790
+75225
+110271
+157734
+231979
+356005
+
+4
+177
+2998628
+73458379
+794368
+−4468169
+−7157586
+−11253268
+−18701330
+−32878062
+
+5
+177
+21195310
+3048964748
+3122149716
+243105088
+396368217
+676476353
+1241479305
+2432078638
+
+6
+186
+123413576
+67638465983
+710345698242
+54329854510
+−27580928924
+−48092153649
+−87415077360
+−172868371620
+
+7
+177
+622393836
+1034258133329
+46445530268176
+46884487081241
+2382035587157
+2530899579921
+4793679740747
+10041154974639
+
+8
+177
+2806637500
+12232084778113
+1663087069097865
+10524250865224651
+1540781601550297
+−241894701950815
+−439028227820944
+−797065258455869
+
+Table 3: Genus zero GV invariants n0q1 ,q2 for the geometry of §C.2. Charges inside the
+infinity cone M∞ = {q1 , q2 ≥ 0} but outside the cone of spherically-symmetric BPS black
+spherical
+spherical
+holes CBH
+= {q2 ≥ q1 ≥ 0} are marked in yellow, charges inside CBH
+but outside
+the cone of dual coordinates T = {q2 ≥ 2q1 ≥ 0} are shown in green, and charges inside
+spherical
+T are shown in pink. The absence of zeros within CBH
+is consistent with the lattice
+WGC.
+The geometry in question has independent triple intersection numbers
+κ111 = 0 ,
+
+κ112 = 3 ,
+
+κ122 = 7 ,
+
+κ222 = 14 .
+
+(C.6)
+
+These triple intersection numbers lead to the five-dimensional prepotential
+3
+7
+7
+F = (t1 )2 t2 + t1 (t2 )2 + (t2 )3 .
+2
+2
+3
+
+(C.7)
+
+The boundary t2 → 0 is an asymptotic boundary, which lies at infinite distance. The
+boundary t1 = 0 is the locus of a genus zero Weyl reflection, where the toric divisor D6
+shrinks to a P1 . The Weyl reflection acts on the Kähler coordinates as
+w : t1 → −t1 ,
+
+t2 → t2 + t1 .
+
+(C.8)
+
+Note that this Weyl reflection is unstable, and correspondingly there are no nop curves
+in this geometry. Accordingly, the hyperextended Kähler cone is equal to the extended
+Kähler cone, Khyp = K = KX .
+The GV invariants for this geometry are shown in Table 3. The infinity cone M∞ is
+∨
+simply equal to the Mori cone, consistent with the relation M∞ = Khyp
+.
+The dual coordinates Ta are given by
+7
+T1 = 3t1 t2 + (t2 )2 ,
+2
+
+3
+T2 = (t1 )2 + 7t1 t2 + 7(t2 )2 .
+2
+38
+
+(C.9)
+
+These parametrize the cone of dual coordinates,
+T = {T2 ≥ 2T1 ≥ 0} ,
+
+(C.10)
+
+which is indeed dual to the effective cone, generated by the divisor classes [D5 ] and [D6 ].
+Under the Weyl reflection, these coordinates transform as T1 → T2 − T1 , T2 → T2 , and
+the cone of dual coordinates transforms to
+w(T ) = {2T1 ≥ T2 ,
+
+T2 ≥ T1 } .
+
+(C.11)
+
+Since the Weyl-extended dual-coordinate moduli space W(T ) = T ∪ w(T ) is (trivially)
+convex, the cone of spherically-symmetric BPS black holes is simply
+spherical
+CBH
+= Vis(Thyp ) = W(T ) = {T2 ≥ T1 ≥ 0} .
+
+(C.12)
+
+As can be seen in Table 3, all the GV invariants within this cone are nonzero up to the
+degree calculated, in agreement with the lattice WGC.
+Finally, we note that the genus zero GV invariants in Table 3 have different characterisspherical
+tics inside and outside CBH
+. For example, their sign strictly alternates by column outspherical
+spherical
+side CBH
+, whereas they are mostly positive within CBH
+. These and other patterns
+spherical
+suggest that different physics contributes inside and outside CBH
+, which is perhaps
+spherical
+indicative that CBH
+may be the full cone of BPS black holes CBH in this example.
+
+C.3
+
+SU (2) enhancement with fundamental matter
+
+Our next example illustrates two new phenomena: (1) the su(2) gauge theory arising at a
+Weyl flop can have massless, fundamentally charged matter and (2) even though it is typically finitely generated, the Weyl group need not be a finite group because different Weyl
+flops need not commute (even in the absence of a higher-rank nonabelian enhancement).
+We consider the toric variety V and its Calabi-Yau hypersurface X arising from the
+four-dimensional reflexive polytope ∆◦ whose points not interior to facets and other than
+
+39
+
+the origin are the columns of
+
+
+
+1 −3 0 −1 0 −2 0
+
+
+0 1 0 −1 0 −1 1
+
+
+0 −2 0 1 1 0 0 .
+
+
+0 −1 1 0 0 0 0
+
+(C.13)
+
+A GLSM charge matrix is given by
+
+
+x1 x2 x3 x4 x5 x6 x7
+
+
+ 1 0 0 1 −1 0 1 
+
+
+ 1 0 0 −1 1 1 0  .
+
+
+3 1 1 0
+2 0 −1
+
+(C.14)
+
+Evidently, we have h1,1 = 3. All FRSTs of ∆◦ give are equivalent along two-faces. We
+choose, arbitrarily, one such FRST, whose SR ideal is generated by the monomials
+SR = ⟨x4 x7 , x1 x5 x6 , x1 x6 x7 , x2 x3 x4 , x2 x3 x5 ⟩ .
+
+(C.15)
+
+The independent triple intersection numbers κabc are
+κ111 = κ112 = κ113 = κ123 = κ133 = κ222 = κ233 = 1
+κ122 = κ223 = −1 ,
+
+κ333 = 0 .
+
+(C.16)
+
+The GV invariants of the generators of M∩X are all non-vanishing and therefore MX = M∩X .
+The generators, denoted {[C i ]}4i=1 ⊂ H2 (X, Z), expressed in the basis (C.14), are
+
+
+
+1
+0
+0
+1
+
+
+
+
+[C 1 ] [C 2 ] [C 3 ] [C 4 ] = 0 1 0 −1 .
+0 0 1 1
+
+(C.17)
+
+In other words, the Kähler cone is defined by ta > 0, a = 1, 2, 3, and t1 − t2 + t3 >
+0. The two-faces of the Mori cone are generated by the pairs ([C i ], [C j ]) with (i, j) ∈
+{(1, 2), (2, 3), (3, 4), (4, 1)}.
+For suitable choice of defining polynomial and Kähler class, the Calabi-Yau X has a
+
+40
+
+Z2 symmetry acting as
+
+s2 : H2 (X, Z) → H2 (X, Z) :
+
+[C] 7→ Λ · [C] ,
+
+
+
+0 1 1
+
+
+Λ := 1 0 −1 ,
+0 0 1
+
+(C.18)
+
+which interchanges [C 1 ] ↔ [C 2 ] and [C 3 ] ↔ [C 4 ].
+In the limit t1 → 0 the curve C1 shrinks to a point, and the prime toric divisor D5 shrinks
+linearly in t1 , i.e. D5 degenerates to a curve. Indeed, D5 is a non-trivial P1 fibration over
+P1 and in the above limit the fiber, in the class 2[C 1 ] ∈ H2 (X, Z), shrinks. To see this one
+notes that the generic anticanonical polynomial f in V can be written, up to overall scale,
+as
+f =x21 + x26 x27
++ x36 x7 x4
++ x46 x24
+
+4
+X
+i=0
+3
+X
+
+i=0
+3
+X
+i=0
+
+g8−2i [x2 : x3 ] · (x4 x5 )i
+i
+
+k7−2i [x2 : x3 ] · (x4 x5 )
+
++ x6 x37 x5
+
+m6−2i [x2 : x3 ] · (x4 x5 )i + x47 x25
+
+3
+X
+i=0
+
+3
+X
+i=0
+
+l7−2i [x2 : x3 ] · (x4 x5 )i
+
+n6−2i [x2 : x3 ] · (x4 x5 )i ,
+
+(C.19)
+
+where {gi , ki , li , mi , ni } are generic homogeneous degree i polynomials in (x2 , x3 ). Therefore, we have
+f |x5 =0 = x21 + g8 [x2 : x3 ]x26 x27 + k7 [x2 : x3 ]x4 x36 x7 + m6 [x2 : x3 ]x24 x26 .
+
+(C.20)
+
+Along D5 , without loss we may assume x6 ̸= 0, and can thus gauge fix x6 = 1.24 The
+remaining scaling relations are then summarized in a conveniently reordered charge matrix
+
+
+x2 x3 x1 x4 x7
+
+
+0 0 1 1 1  ,
+1 1 3 0 −1
+
+(C.21)
+
+associated with the three-dimensional toric variety D̂5 .
+We can therefore view the divisor D5 as a hypersurface in the toric threefold D̂5 . One
+24
+
+Setting x6 = 0 along D5 , the vanishing of f |x5 =x6 would enforce that x1 = 0. But the monomial
+x1 x5 x6 is in the Stanley-Reisner ideal of V and thus x6 ̸= 0 along D5 .
+
+41
+
+immediately sees that D̂5 is a P2 fibration over P1 :
+P2f ,→ D̂5 ↠ P1b ,
+
+(C.22)
+
+and the polynomial (C.20) defines a quadratic hypersurface in P2f , i.e. a P1 in the class
+2[H] where [H] is the hyperplane class of the fiber, over each point of P1b parameterized by
+the projective coordinates [x2 : x3 ]. Therefore, the divisor D5 is a P1 fibration over P1 ,
+P2f ⊃ P12[H] ,→ D5 ↠ P1b ,
+
+(C.23)
+
+which degenerates over all points in the base along which the discriminant
+∆f := 4m6 g8 − (k7 )2
+
+(C.24)
+
+vanishes. For generic choice of {g8 , k7 , m6 } the P12[H] fiber thus degenerates to the union of
+two P1 ’s, each in the hyperplane class [H] of P2f , over 14 points in the base P1 , thus totaling
+28 isolated rigid P1 ’s.
+The generic P1 fiber is obtained by intersecting D5 with a generic representative of the
+class [D2 ] = [D3 ]. By intersecting with a basis of divisors, one computes that it is in the
+homology class 2[C 1 ] ∈ H2 (X, Z). Its curve moduli space M2[C 1 ] is equal to the base of the
+P1 fibration (C.23), and thus its GV invariant is
+n02[C 1 ] = (−1)dim(M2[C1 ] ) χ(M2[C 1 ] ) = −2 .
+
+(C.25)
+
+As in [32,33], M2-branes wrapped on the P1 fiber become massless W-bosons in the singular
+limit, and the gauge group enhances an SU (2) factor. The presence of 28 isolated P1 ’s in
+the class [C 1 ] on the other hand implies that
+n0[C 1 ] = 28 ,
+
+(C.26)
+
+and in the singular limit M2-branes wrapped on these curves lead to 28 massless hypermultiplets with half the Cartan-U (1) charge of the W-bosons, which therefore must organize
+into 14 hypermultiplets in the fundamental representation of the gauge group SU (2). This
+direct prediction for the GV invariants is confirmed by an independent systematic computation of GV invariants using mirror symmetry [2, 3, 5], see Table 4.
+As usual, their contribution to the prepotential of the type IIA compactification has a
+42
+
+logarithmic branch cut starting at the singular locus Z := [C 1 ]a z a = z 1 = 0,
+F IIA ⊃ −
+
+ 1 2
+1
+log(1/Z)
+2πiZ
+4πiZ
+28
+Li
+(e
+)
+−
+2
+Li
+(e
+)
+≃ Z (28 − 4 × 2)
++ hol. , (C.27)
+3
+3
+3
+(2πi)
+2
+(2πi)
+
+leading to running of the U (1) gauge coupling
+a
+
+τU (1) = ∂Z [D5 ] ∂a F
+
+IIA
+
+
+
+i
+=−
+× 2bYM × log
+2π
+
+
+
+ΛL
+Z
+
+
+
+2πi
+
+τ
+
++ O(Z/MP ) ,
+
+(C.28)
+
+with
+8π 2
+= 2Nc − NF = −10 ,
+bYM := µ∂µ 2
+gYM (µ)
+
+ΛL := µUV e bYM YM
+
+(µUV )
+
+,
+
+τYM (µUV ) = z 2 ,
+
+(C.29)
+with UV matching scale µUV := MP e , where K is defined in (2.6) and Z := −2πiµUV Z.
+Here, Nc = 2 is the dual Coxeter number of the gauge group SU (2), NF = 14 is the
+number of adjoint hypermultiplets, ΛL is the Landau pole of the IR-free gauge theory, and
+ℓ5 · τYM (µUV ) is the classical gauge coupling of the five-dimensional theory as a function of
+the remaining Kähler parameters.
+The Weyl group associated with the SU (2) gauge group is generated by
+K
+2
+
+
+
+w : H2 (X, Z) → H2 (X, Z) ,
+
+
+−1 2 4
+
+
+[C] →
+7  0 1 0 · [C] ,
+0 0 1
+
+(C.30)
+
+but the GV invariants turn out to not be invariant under this Weyl group action (cf. Table
+4), implying a non-trivial wall-crossing phenomenon at the origin of the Coulomb branch.
+The physics described above of course applies equally well to the codimension-one facet
+of the Kähler cone where the curve C 2 shrinks, via the symmetry (C.18). As the curve
+classes ([C 1 ], [C 2 ]) span a two-face of the Mori cone, one might expect that the simultaneous
+shrinking of these two curves leads to higher rank non-abelian enhancement. This, however,
+is not so: the diagonal limit (t1 , t2 ) → 0 lies at infinite distance in moduli space, where X
+degenerates into a complex surface. We further note that passing through Weyl reflections
+associated with the shrinking curves C 1 and C 2 in alternating order, one obtains the infinite-
+
+43
+
+T3
+T1+T2 +T3
+
+t3
+t +t 3
+1
+
+1
+
+1
+
+0
+
+1
+
+t2
+t +t 3
+1
+
+0
+
+1
+
+T1
+T1+T2 +T3
+
+Figure 7: Left: Two-dimensional cross-section of the Weyl-group orbit of the Kähler
+cone. Interior lines mark Weyl-reflection loci, while exterior walls mark the CFT limits. Right: Two-dimensional cross-section of the Weyl-group orbit of the cone of movable
+curves (black), embedded into the Mori cone (pink). Again, Weyl-reflection loci are marked
+by white lines. The lower two vertices are the curves that shrink to give rise to su(2) enhancements while the upper two correspond to the CFT limits.
+order Weyl group W generated by
+
+
+w′ := s2 ◦ w : H2 (X, Z) → H2 (X, Z) ,
+
+
+0 1 1
+
+
+[C] →
+7 −1 2 3 · [C] .
+0 0 1
+
+(C.31)
+
+The Weyl orbit of the Kähler cone is an infinitely generated convex cone, and the Weyl orbit
+of the cone of movable curves is likewise an infinitely generated convex sub-cone of the Mori
+cone (see Figure 7). All Weyl-group images of the Kähler cone intersect at an accumulation
+point, which is the aforementioned intersection of both non-abelian enhancement loci, lying
+at infinite distance in the moduli space.
+Along the other two facets of the Kähler cone the prime toric divisors D6 and D7 shrink
+to points, so the low energy physics is a strongly coupled tensionless string CFT in the
+five-dimensional theory.
+Absent any flop transitions, we have K ≡ KX and the effective cone is generated by the
+(rigid) prime toric divisors {D4 , D5 , D6 , D7 }. Its dual, the cone of movable curves Mov,
+44
+
+q3 = 0
+q3 = 1
+q2
+−2
+q1
+0
+−
+1
+−
+2
+−9252
+3
+0
+4
+0
+5
+0
+6
+0
+
+−1
+−
+0
+143640
+1005480
+143640
+0
+0
+
+q3 = 4
+
+0
+252
+26144
+161240
+34336
+−16132
+24576
+−32768
+
+1
+28
+196
+28
+0
+0
+0
+0
+
+1
+0
+161240
+3389568
+11865384
+3618944
+−297512
+688128
+
+2
+0
+34336
+11865384
+144023712
+379678864
+147415200
+5082408
+
+0
+−9252
+143640
+107389712
+1982306472
+6785861560
+2202638504
+−365781232
+
+2
+−2
+28
+176
+28
+−2
+0
+0
+
+1
+0
+1005480
+1982306472
+74208835520
+669904166680
+1684741323120
+699283955480
+
+q2
+−3
+q1
+0
+−
+1
+−
+2
+−
+3
+848628
+4
+0
+5
+0
+
+−2
+−
+−
+0
+−18865280
+−132056960
+−18865280
+
+−1
+−
+0
+0
+1000128720
+19800596480
+69523670960
+
+q2
+−4
+q1
+0
+−
+1
+−
+2
+−
+3
+−
+4
+−114265008
+5
+0
+
+−3
+−
+−
+−
+0
+3226808340
+22587658380
+
+−2
+−
+−
+0
+0
+−149516774740
+−2854273434600
+
+q3 = 3
+
+q3 = 2
+
+q2 −1
+q1
+0
+−
+1
+252
+2
+0
+3
+0
+0
+4
+5
+0
+6
+0
+
+q2 0
+q1
+0
+∗
+1
+28
+−2
+2
+3
+0
+4
+0
+0
+5
+6
+0
+
+3
+0
+0
+28
+196
+28
+0
+0
+
+4
+0
+0
+−2
+28
+176
+28
+−2
+
+5
+0
+0
+0
+0
+28
+196
+28
+
+3
+0
+−16132
+3618944
+379678864
+3340910720
+7490806028
+3376234624
+
+4
+0
+24576
+−297512
+147415200
+7490806028
+52954926336
+107008961736
+
+2
+0
+143640
+6785861560
+669904166680
+13132156970304
+82543157015248
+172178353335592
+
+0
+848628
+−18865280
+1000128720
+1155156240800
+37248393860088
+317060747387520
+
+6
+0
+0
+0
+0
+−2
+28
+176
+
+3
+0
+0
+2202638504
+1684741323120
+82543157015248
+1115085309377792
+5538585837897800
+
+1
+0
+−132056960
+19800596480
+37248393860088
+1975319069667328
+30784544966451680
+
+−1
+−
+0
+0
+5158112400
+12435686082500
+427372552969920
+
+5
+0
+−32768
+688128
+5082408
+3376234624
+107008961736
+643290939648
+
+4
+0
+0
+−365781232
+699283955480
+172178353335592
+5538585837897800
+57882723471476816
+
+2
+0
+−18865280
+69523670960
+317060747387520
+30784544966451680
+832309647138723328
+
+0
+−114265008
+3226808340
+−149516774740
+12435686082500
+18251242470992832
+850602661974296708
+
+1
+0
+22587658380
+−2854273434600
+427372552969920
+850602661974296708
+58131312791048887904
+
+Table 4: Genus zero GV invariants n0q1 ,q2 ,q3 for the geometry of Appendix C.3. The sites
+labeled “−” lie outside the (non-simplicial) Mori cone. The infinity cone is equal to the
+Mori cone and is marked in yellow. The cone T is marked in pink and its images under
+w′ and w′−1 of eq. (C.31) are marked in green (higher order images do not have integer
+sites in their interior that fall into the displayed window). Together, the pink and green
+sites denote the largest region Vis(Thyp ) where BPS black holes are known to exist. These
+charges are fully populated by non-vanishing GV-invariants, in agreement with the lattice
+WGC.
+
+45
+
+turns out to be fully populated by non-vanishing genus zero GV invariants, as predicted
+by the lattice WGC, and is indeed equal to the cone of dual coordinates T .
+The hyperextended Kähler cone Khyp is also equal to K, as all loci of su(2) enhancement
+are unstable. Therefore, by our discussion in §3, the infinity cone M∞ should be equal to
+the entire Mori cone. This indeed appears to be borne out in this example: the sequence
+of GV invariants associated with either of the two CFT limits is
+ng(0,0,k) = {252, −9252, 848628, −114265008, 18958064400, −3589587111852,
+744530011302420, −165076694998001856, 38512679141944848024,
+−9353163584375938364400, 2346467355966572489025540, . . .} ,
+
+(C.32)
+
+and does not appear to terminate. Likewise, adding arbitrary multiples of one of the
+generators that shrinks at an su(2)-enhancement locus to a suitable curve class gives rise
+to a sequence of GV invariants that appears infinite, e.g.:
+n(1,2,1)+k·(1,0,0) = {34336, 11865384, 144023712, 379678864, 147415200, 5082408, 10208800,
+−13565952, 16957440, −20348928, 23740416, −27131904, 30523392,
+−33914880, 37306368, −40697856, 44089344, −47480832, . . .} .
+
+(C.33)
+
+Finally, despite the presence of walls of marginal stability along the Weyl-reflection
+loci in moduli space, the entire Weyl-orbit W(T ) of the cone of dual coordinates is fully
+populated by non-vanishing GV invariants, see Table 4. Because this region is convex
+in the present example, this is precisely Vis(Thyp ), so the absence of any vanishing GV
+invariants within this larger cone provides a more stringent test of the lattice WGC.
+
+C.4
+
+Monodromy in the Weyl-extended moduli space
+
+Our final example involves yet another new feature: branch cuts and monodromy in the
+fully Weyl-extended moduli space. This example has two Weyl flops, one stable and one
+unstable, with a CFT boundary at their codimension-two intersection. Upon passing
+through the two Weyl flops alternately in sequence, one discovers that the CFT point is a
+branch point for the fully Weyl-extended moduli space, with a monodromy in the central
+charges as one moves around this branch point. This monodromy is not visible when one
+restricts attention to the hyperextended moduli space Thyp (avoiding the unstable Weyl
+flop). Indeed, since Khyp = M∨hyp is convex, the T map is invertible throughout Khyp ,
+46
+
+forbidding such a monodromy.
+Let us consider the h1,1 = 3 Calabi-Yau threefold hypersurface constructed from an
+FRST of the reflexive polytope ∆◦ whose points not interior to facets, excluding the origin,
+are the columns of
+
+
+−9 0 0 1 1 −4 −2
+
+
+−5 0 1 0 1 −2 −1
+
+
+(C.34)
+−3 1 0 0 1 −1 0  .
+
+
+−2 0 0 0 2 0
+0
+A GLSM charge matrix is given by
+
+
+x1 x2 x3 x4 x 5 x6 x7
+
+
+ 1 0 0 0 1 −2 0 
+
+
+ 0 1 0 0 0 1 −2 .
+
+
+0 0 1 2 0 0
+1
+
+(C.35)
+
+All FRSTs of ∆◦ are equivalent along two-faces, so without loss we can choose a single
+arbitrary FRST of ∆◦ . The cone M∩X is the first octant in the basis (C.35).
+Our geometry has nonzero independent triple intersection numbers
+κ123 = 1 ,
+
+κ223 = κ133 = 2 ,
+
+κ233 = 4 ,
+
+κ333 = 8 ,
+
+(C.36)
+
+while the rest vanish. These triple intersection numbers lead to the 5d prepotential
+F = t1 t2 t3 + (t2 )2 t3 + t1 (t3 )2 + 2t2 (t3 )2 + 4(t3 )3 /3 .
+
+(C.37)
+
+In the limit t3 → 0 the Calabi-Yau volume vanishes, so this limit corresponds to a facet of
+the Kähler cone that lies at infinite distance in moduli space. At t1 = 0 the prime toric
+divisor D6 shrinks to a curve of genus one, while as t2 = 0 the prime toric divisor D7
+shrinks to a curve of genus zero.25 Along each of these latter two boundaries, there is an
+su(2) enhancement of the gauge symmetry, and there is a Weyl reflection of the moduli
+space through the boundary. Thus, the Mori cone is simplicial and its generators coincide
+with our choice of basis.
+25
+
+One sees this from the data of the polytope as follows: the prime toric divisors D6,7 are associated to
+points interior to one-faces of ∆◦ . Their P1 fibers — the curves that shrink at the respective facets of the
+Kähler cone — are associated to edges of the triangulation interior to two-faces that end in the respective
+one-face points. The genera of the curves they degenerate to are equal to the genera of the one-faces,
+defined as the number of points interior to the dual two-faces of the dual polytope.
+
+47
+
+The genus one Weyl reflection is given by
+w1 : t1 → −t1 ,
+
+t2 → t2 + t1 ,
+
+t3 → t3 ,
+
+(C.38)
+
+under which the prepotential in (C.37) is invariant. Relatedly, the genus zero GV invariant
+n01,0,0 vanishes due to a cancelation between hypermultiplets and vector multiplets, which
+become massless at the wall t1 = 0.
+Meanwhile, under the genus zero Weyl reflection,
+w2 : t1 → t1 , t2 → −t2 , t3 → t3 + t2 ,
+
+(C.39)
+
+the prepotential shifts as F → F + (t2 )3 /3. The corresponding shift κ222 → κ222 + 2 can be
+read off from the GV invariant n00,1,0 = −2, which tells us that a charged vector multiplet
+(and no hypermultiplets) becomes massless at t2 = 0, as expected for a genus zero Weyl
+reflection.
+This geometry has no flop transitions, so the extended Kähler cone K is given simply
+by KX .
+The dual coordinates are given by Ta := 21 κabc tb tc , so by (C.36) they take the form
+T1 = t2 t3 +(t3 )2 , T2 = t1 t3 +2t2 t3 +2(t3 )2 , T3 = t1 t2 +(t2 )2 +2t1 t3 +4t2 t3 +4(t3 )2 . (C.40)
+These parametrize the cone of dual coordinates,
+T = {T1 ≥ 0 ,
+
+T2 ≥ 2T1 ,
+
+T3 ≥ 2T2 } .
+
+(C.41)
+
+As expected, T is contained in the Mori cone, MX , which is by definition the dual of the
+Kähler cone:
+∨
+MX = K X
+= {T1 , T2 , T3 ≥ 0} .
+(C.42)
+Meanwhile, the effective cone is
+
+E = T ∨ = t1 + 2t2 + 4t3 ≥ 0 , t2 + 2t3 ≥ 0 , t3 ≥ 0 ,
+
+(C.43)
+
+and in this case is generated by the prime toric divisors {D1 , D6 , D7 }.
+The only nop curve class is the one of charge qa = (1, 0, 0), which shrinks to zero size at
+the boundary of the Kähler cone associated with the genus one Weyl reflection. By (C.38),
+
+48
+
+<latexit sha1_base64="DbJ6HHQbTRK9wv3hJNsq0xz8VmA=">AAACBHicbVC7TsMwFL3hWcqrwMhiUSF1KkmpgLESC2OR+pLaKHJcp7XqOJHtIFVRV3ZW+AU2xMp/8Ad8Bk6bgbYcydLROffl48ecKW3b39bG5tb2zm5hr7h/cHh0XDo57agokYS2ScQj2fOxopwJ2tZMc9qLJcWhz2nXn9xnfveJSsUi0dLTmLohHgkWMIK1kbotr3bV8q69Utmu2nOgdeLkpAw5ml7pZzCMSBJSoQnHSvUdO9ZuiqVmhNNZcZAoGmMywSPaN1TgkCo3nZ87Q5dGGaIgkuYJjebq344Uh0pNQ99UhliP1aqXif95/UQHd27KRJxoKshiUZBwpCOU/R0NmaRE86khmEhmbkVkjCUm2iRUXFqTDZcqUDMTjbMaxDrp1KrOTbX+WC83KnlIBTiHC6iAA7fQgAdoQhsITOAFXuHNerberQ/rc1G6YeU9Z7AE6+sXwveYDA==</latexit>
+
+T2 /T3
+<latexit
+sha1_base64="P2ZtbaLJTbAICgNGAa7Ug3lHliw=">AAACCnicbVDLSsNAFL2pr1pfVZduBosgCCWpRd0IBTcuK6QPaEOYTCft0MnDmYlQQv/AvVv9BXfi1p/wD/wMJ20WtvXAhcM598XxYs6kMs1vo7C2vrG5Vdwu7ezu7R+UD4/aMkoEoS0S8Uh0PSwpZyFtKaY47caC4sDjtOON7zK/80SFZFFoq0lMnQAPQ+YzgpWWHNu9RLfIdq0L26255YpZNWdAq8TKSQVyNN3yT38QkSSgoSIcS9mzzFg5KRaKEU6npX4iaYzJGA9pT9MQB1Q66ezpKTrTygD5kdAVKjRT/06kOJByEni6M8BqJJe9TPzP6yXKv3FSFsaJoiGZH/ITjlSEsgTQgAlKFJ9ogolg+ldERlhgonROpYUz2XIhfTnV0VjLQaySdq1qXVXrD/VKA+UhFeEETuEcLLiGBtxDE1pA4BFe4BXejGfj3fgwPuetBSOfOYYFGF+/28uZnQ==</latexit>
+
+T3
+
+T1
+
+=
+T1
+
+T3
+
+sha1_base64="9nDY+yhD0mkqQMomOQpmRvEngKs=">AAACEHicbVDLTsJAFL3FF+Kr6NLNRGLiRtIiUTcmJG5cYgJIAk0zHaYwYfrIzFRDGn7CvVv9BXfGrX/gH/gZTqELAU8yk5Nz7ivHizmTyrK+jcLa+sbmVnG7tLO7t39glg87MkoEoW0S8Uh0PSwpZyFtK6Y47caC4sDj9MEb32b+wyMVkkVhS01i6gR4GDKfEay05JrllnuBblANtdwaOte/7ZoVq2rNgFaJnZMK5Gi65k9/EJEkoKEiHEvZs61YOSkWihFOp6V+ImmMyRgPaU/TEAdUOuns9Ck61coA+ZHQL1Ropv7tSHEg5STwdGWA1Ugue5n4n9dLlH/tpCyME0VDMl/kJxypCGU5oAETlCg+0QQTwfStiIywwETptEoLa7LhQvpyqqOxl4NYJZ1a1b6s1u/rlQbKQyrCMZzAGdhwBQ24gya0gcATvMArvBnPxrvxYXzOSwtG3nMECzC+fgHjg5qK</latexit>
+<latexit
+
+1
+
+T
+=
+2
+
+sha1_base64="cnO6dZk3Ou2qf5EzilCrQw6tyHk=">AAACBnicbVDLSsNAFL2pr1pfVZduBovgqiSlqBuh4MZlhb6kDWEynbRDJ5MwMxFK6N69W/0Fd+LW3/AP/AwnbRa29cDA4Zz7muPHnClt299WYWNza3unuFva2z84PCofn3RUlEhC2yTikez5WFHOBG1rpjntxZLi0Oe060/uMr/7RKVikWjpaUzdEI8ECxjB2kiPLa+GblHLc7xyxa7ac6B14uSkAjmaXvlnMIxIElKhCcdK9R071m6KpWaE01lpkCgaYzLBI9o3VOCQKjedHzxDF0YZoiCS5gmN5urfjhSHSk1D31SGWI/VqpeJ/3n9RAc3bspEnGgqyGJRkHCkI5T9Hg2ZpETzqSGYSGZuRWSMJSbaZFRaWpMNlypQMxONsxrEOunUqs5Vtf5QrzRQHlIRzuAcLsGBa2jAPTShDQRCeIFXeLOerXfrw/pclBasvOcUlmB9/QKHlZhk</latexit>
+
+T
+
+sha1_base64="819mMOk1f9H/L2FXg4RRxHu9zxg=">AAACBnicbVC7TsMwFL3hWcqrwILEYlEhMVVJVQFjJRbGItEHaqPIcZ3Wqp1EtkNVRd3ZWeEX2BArv8Ef8Bk4bQbaciRbR+fc63t9/JgzpW3721pb39jc2i7sFHf39g8OS0fHLRUlktAmiXgkOz5WlLOQNjXTnHZiSbHwOW37o9vMbz9RqVgUPuhJTF2BByELGMHaSI9jzxl7VXN7pbJdsWdAq8TJSRlyNLzST68fkUTQUBOOleo6dqzdFEvNCKfTYi9RNMZkhAe0a2iIBVVuOlt4ii6M0kdBJM0JNZqpfztSLJSaCN9UCqyHatnLxP+8bqKDGzdlYZxoGpL5oCDhSEco+z3qM0mJ5hNDMJHM7IrIEEtMtMmouDAme1yqQE1NNM5yEKukVa04V5Xafa1cP81DKsAZnMMlOHANdbiDBjSBgIAXeIU369l6tz6sz3npmpX3nMACrK9f1iWZLA==</latexit>
+
+<latexit
+
+<latexit
+
+w2
+
+w
+
+<latexit sha1_base64="xvK/ZojDkpkDXNNhJGk1v5B9VRM=">AAACAHicbVDLSsNAFL2pr1pfVTeCm8EiuCpJKeqy4MZlRfuANpTJdNIOnUzCzEQJoRv3bvUX3Ilb/8Q/8DOctFnY1gMDh3Pua44Xcaa0bX9bhbX1jc2t4nZpZ3dv/6B8eNRWYSwJbZGQh7LrYUU5E7Slmea0G0mKA4/Tjje5yfzOI5WKheJBJxF1AzwSzGcEayPdPw1qg3LFrtozoFXi5KQCOZqD8k9/GJI4oEITjpXqOXak3RRLzQin01I/VjTCZIJHtGeowAFVbjo7dYrOjTJEfijNExrN1L8dKQ6USgLPVAZYj9Wyl4n/eb1Y+9duykQUayrIfJEfc6RDlP0bDZmkRPPEEEwkM7ciMsYSE23SKS2syYZL5aupicZZDmKVtGtV57Jav6tXGid5SEU4hTO4AAeuoAG30IQWEBjBC7zCm/VsvVsf1ue8tGDlPcewAOvrF6GPluI=</latexit>
+
+1w
+2w
+1
+
+<latexit sha1_base64="oSYXXLFIOBoTCvT9LEExz7AgIBU=">AAACBHicbVDLSgMxFL1TX7W+qi7dBIvgqsxIUTdCwY3LCn1BO5RMmmlDk8yQZIQydOverf6CO3Hrf/gHfoaZdha29UDgcM595QQxZ9q47rdT2Njc2t4p7pb29g8Oj8rHJ20dJYrQFol4pLoB1pQzSVuGGU67saJYBJx2gsl95neeqNIskk0zjakv8EiykBFsrNRpDjx0h9xBueJW3TnQOvFyUoEcjUH5pz+MSCKoNIRjrXueGxs/xcowwums1E80jTGZ4BHtWSqxoNpP5+fO0IVVhiiMlH3SoLn6tyPFQuupCGylwGasV71M/M/rJSa89VMm48RQSRaLwoQjE6Hs72jIFCWGTy3BRDF7KyJjrDAxNqHS0ppsuNKhntlovNUg1kn7qupdV2uPtUod5SEV4QzO4RI8uIE6PEADWkBgAi/wCm/Os/PufDifi9KCk/ecwhKcr18Xx5eb</latexit>
+
+w2 w1 w2
+
+T2
+
+T1 = 0
+
++
+
+<latexit sha1_base64="BzrkU0tMJteXcCZk1Nf0bM0pvfY=">AAACBnicbVC7TsMwFL3hWcqrwILEYlEhMVVJVQFjJRbGItEHaqPIcZ3Wqp1EtkNVRd3ZWeEX2BArv8Ef8Bk4bQbaciRbR+fc63t9/JgzpW3721pb39jc2i7sFHf39g8OS0fHLRUlktAmiXgkOz5WlLOQNjXTnHZiSbHwOW37o9vMbz9RqVgUPuhJTF2BByELGMHaSI9jrzr2HHN7pbJdsWdAq8TJSRlyNLzST68fkUTQUBOOleo6dqzdFEvNCKfTYi9RNMZkhAe0a2iIBVVuOlt4ii6M0kdBJM0JNZqpfztSLJSaCN9UCqyHatnLxP+8bqKDGzdlYZxoGpL5oCDhSEco+z3qM0mJ5hNDMJHM7IrIEEtMtMmouDAme1yqQE1NNM5yEKukVa04V5Xafa1cP81DKsAZnMMlOHANdbiDBjSBgIAXeIU369l6tz6sz3npmpX3nMACrK9f18KZLQ==</latexit>
+
+T2
+=2
+
+<latexit sha1_base64="YImdQ55vURiHC0oN/YxtJW2hYjk=">AAACAXicbVDLSsNAFJ3UV62vqBvBTbAIXZVEirosuHFZoS9oQphMJ+3QyYOZGzGEuPFX3LhQxK1/4c6/cdJmoa0HLhzOuZd77/FiziSY5rdWWVvf2Nyqbtd2dvf2D/TDo76MEkFoj0Q8EkMPS8pZSHvAgNNhLCgOPE4H3uym8Af3VEgWhV1IY+oEeBIynxEMSnL1EzvAMCWYZ93czWygD5BN0zjPXb1uNs05jFVilaSOSnRc/cseRyQJaAiEYylHlhmDk2EBjHCa1+xE0hiTGZ7QkaIhDqh0svkHuXGulLHhR0JVCMZc/T2R4UDKNPBUZ3GvXPYK8T9vlIB/7WQsjBOgIVks8hNuQGQUcRhjJigBniqCiWDqVoNMscAEVGg1FYK1/PIq6V80rctm665VbzfKOKroFJ2hBrLQFWqjW9RBPUTQI3pGr+hNe9JetHftY9Fa0cqZY/QH2ucP92yXzQ==</latexit>
+
+<latexit sha1_base64="VYO0yZ925oh6EuI7H29EH6RrPyU=">AAAB8nicbVDLSgMxFL1TX7W+qi7dBKvgqsxIUZcFNy4r9AXToWTSTBuaSYYkI5Shn+HGhSJu/Rp3/o2ZdhbaeiBwOOdecu4JE860cd1vp7SxubW9U96t7O0fHB5Vj0+6WqaK0A6RXKp+iDXlTNCOYYbTfqIojkNOe+H0Pvd7T1RpJkXbzBIaxHgsWMQINlbyBzE2E4J51p4PqzW37i6A1olXkBoUaA2rX4ORJGlMhSEca+17bmKCDCvDCKfzyiDVNMFkisfUt1TgmOogW0Seo0urjFAklX3CoIX6eyPDsdazOLSTeUS96uXif56fmuguyJhIUkMFWX4UpRwZifL70YgpSgyfWYKJYjYrIhOsMDG2pYotwVs9eZ10r+veTb3x2Kg1L4o6ynAG53AFHtxCEx6gBR0gIOEZXuHNMc6L8+58LEdLTrFzCn/gfP4AhxWRVQ==</latexit>
+
+T
+
+<latexit sha1_base64="IcZeyzI/CrFtQWs+ExlqYA6hw1w=">AAACAHicbVDLSgMxFL3xWeur6kZwEyyCqzIjRV0W3LisaB/QDiWTZtrQTGZIMkoZunHvVn/Bnbj1T/wDP8NMOwvbeiBwOOe+cvxYcG0c5xutrK6tb2wWtorbO7t7+6WDw6aOEkVZg0YiUm2faCa4ZA3DjWDtWDES+oK1/NFN5rcemdI8kg9mHDMvJAPJA06JsdL9U8/tlcpOxZkCLxM3J2XIUe+Vfrr9iCYhk4YKonXHdWLjpUQZTgWbFLuJZjGhIzJgHUslCZn20umpE3xmlT4OImWfNHiq/u1ISaj1OPRtZUjMUC96mfif10lMcO2lXMaJYZLOFgWJwCbC2b9xnytGjRhbQqji9lZMh0QRamw6xbk12XClAz2x0biLQSyT5kXFvaxU76rl2nEeUgFO4BTOwYUrqMEt1KEBFAbwAq/whp7RO/pAn7PSFZT3HMEc0Ncvn/WW4Q==</latexit>
+
+Thyp
+
+<latexit sha1_base64="WGed9qYugROq43cgOnvXi1fuufQ=">AAAB+3icbVC7TsMwFHXKq5RXKCOLoSCVpUpQBYyVWBiL1JfURJHjOq1Vx4lsB6ii/AoLAwix8iNs/A1OmwFajmTp6Jx7dY+PHzMqlWV9G6W19Y3NrfJ2ZWd3b//APKz2ZJQITLo4YpEY+EgSRjnpKqoYGcSCoNBnpO9Pb3O//0CEpBHvqFlM3BCNOQ0oRkpLnll99GznpO6ESE0wYmknu/DMmtWw5oCrxC5IDRRoe+aXM4pwEhKuMENSDm0rVm6KhKKYkaziJJLECE/RmAw15Sgk0k3n2TN4rpURDCKhH1dwrv7eSFEo5Sz09WSeUS57ufifN0xUcOOmlMeJIhwvDgUJgyqCeRFwRAXBis00QVhQnRXiCRIIK11XRZdgL395lfQuG/ZVo3nfrLXOijrK4BicgjqwwTVogTvQBl2AwRN4Bq/gzciMF+Pd+FiMloxi5wj8gfH5A+b2k6E=</latexit>
+
+w1(T )
+
+w1
+
+<latexit sha1_base64="Pn9RQeiklyWqSCjrVQ7Uuszekik=">AAACBHicbVC7TsMwFL0pr1JeBUYWiwqpU0mgAsZKLIxF6ktqo8hxndaq40S2g1RFXdlZ4RfYECv/wR/wGThtBtpyJEtH59yXjx9zprRtf1uFjc2t7Z3ibmlv/+DwqHx80lFRIgltk4hHsudjRTkTtK2Z5rQXS4pDn9OuP7nP/O4TlYpFoqWnMXVDPBIsYARrI3VbnnPZ8q69csWu2XOgdeLkpAI5ml75ZzCMSBJSoQnHSvUdO9ZuiqVmhNNZaZAoGmMywSPaN1TgkCo3nZ87QxdGGaIgkuYJjebq344Uh0pNQ99UhliP1aqXif95/UQHd27KRJxoKshiUZBwpCOU/R0NmaRE86khmEhmbkVkjCUm2iRUWlqTDZcqUDMTjbMaxDrpXNWcm1r9sV5pVPOQinAG51AFB26hAQ/QhDYQmMALvMKb9Wy9Wx/W56K0YOU9p7AE6+sXwVmYCw==</latexit>
+
+T1 /T3
+Figure 8: Regions in the space of dual coordinates. The hyperextended cone of dual
+coordinates Thyp is the union of the cone of dual coordinates T (shaded dusty rose) and
+its image under the genus one Weyl reflection, w1 (T ), shaded lavender. Additional regions
+of moduli space may be accessed by further Weyl reflections, and the (non-convex) part
+of moduli space Vis(Thyp ) that may be connected by straight lines through moduli space
+to Thyp is bounded in green. By the analysis of [1], BPS black holes necessarily exist in
+Vis(Thyp ).
+
+49
+
+3
+96
+69376
+69376
+96
+0
+0
+0
+
+4
+144
+631788
+4281984
+631788
+144
+0
+0
+
+2
+0
+5384
+−7968
+−15936
+−23904
+−31872
+−39840
+
+3
+0
+69376
+227200
+473472
+789120
+1104768
+1420416
+
+4
+0
+631788
+47491408
+−9517380
+−20298336
+−30447504
+−40596672
+
+1
+0
+0
+0
+480
+3360
+12960
+36960
+
+2
+0
+0
+144
+−15936
+−150480
+−677376
+−2128560
+
+3
+0
+0
+69376
+473472
+4375040
+23110528
+81523584
+
+4
+0
+0
+4281984
+−9517380
+−82286208
+−563180076
+−2360300928
+
+5
+0
+0
+119221248
+1720814976
+5273528256
+16877260800
+63452512704
+
+1
+0
+0
+0
+0
+672
+12960
+105600
+
+2
+0
+0
+0
+0
+−23904
+−677376
+−6674400
+
+3
+0
+0
+0
+96
+789120
+23110528
+267266592
+
+4
+0
+0
+0
+631788
+−20298336
+−563180076
+−7543925760
+
+5
+0
+0
+0
+119221248
+571788736
+16877260800
+201410856192
+
+1
+0
+0
+0
+0
+0
+864
+36960
+
+2
+0
+0
+0
+0
+0
+−31872
+−2128560
+
+3
+0
+0
+0
+0
+0
+1104768
+81523584
+
+4
+0
+0
+0
+0
+144
+−30447504
+−2360300928
+
+5
+0
+0
+0
+0
+4247296
+945902400
+63452512704
+
+q1 = 3
+
+q1 = 2
+
+q1 = 1
+
+q1 = 0
+
+2
+144
+5384
+144
+0
+0
+0
+0
+
+q3 0
+q2
+0
+0
+1
+−2
+−4
+2
+3
+−6
+4
+−8
+5
+−10
+6
+−12
+
+q3
+0
+q2
+0
+0
+1
+0
+2
+0
+3
+−6
+4
+−32
+5
+−110
+6
+−288
+
+q3
+0
+q2
+0
+0
+1
+0
+2
+0
+3
+0
+4
+−8
+5
+−110
+6
+−756
+
+q1 = 4
+
+q3 0
+q2
+0
+∗
+1
+−2
+2
+0
+0
+3
+4
+0
+5
+0
+6
+0
+
+q3
+0
+q2
+0
+0
+1
+0
+2
+0
+3
+0
+4
+0
+5
+−10
+6
+−288
+
+1
+0
+96
+288
+480
+672
+864
+1056
+
+1
+96
+96
+0
+0
+0
+0
+0
+
+5
+96
+4247296
+119221248
+119221248
+4247296
+96
+0
+
+6
+144
+24219184
+2152806016
+8128381416
+2152806016
+24219184
+144
+
+5
+0
+4247296
+1531634496
+1720814976
+571788736
+945902400
+1324263360
+
+6
+0
+24219184
+29149503744
+324341564352
+20359924864
+−17554938576
+−26368736640
+
+6
+0
+0
+2152806016
+324341564352
+−61597979328
+−205787147392
+−1056669477312
+
+6
+0
+0
+0
+8128381416
+20359924864
+−205787147392
+−4254252869280
+
+6
+0
+0
+0
+0
+2152806016
+−17554938576
+−1056669477312
+
+Table 5: Genus zero GV invariants n0q1 ,q2 ,q3 for the geometry of Appendix C.4. The cone
+of dual coordinates T is shown in pink, the region Vis(Thyp ) \ T is shown in green, and the
+region M∞ \ Vis(Thyp ) is shown in yellow. There are nonzero GV invariants everywhere
+in the region Vis(Thyp ) where BPS black holes are known to exist, in agreement with the
+lattice WGC.
+
+50
+
+we have
+
+w1 (K) = t2 ≥ −t1 ≥ 0 , t3 ≥ 0 .
+
+(C.44)
+
+Correspondingly, the hyperextended Kähler cone is given by
+Khyp =
+
+[
+w∈Wstable
+
+
+w(K) = K ∪ w1 (K) = t2 , t3 ≥ 0 , t1 ≥ −t2 .
+
+(C.45)
+
+In §3, we argued that the infinity cone M∞ is dual to the hyperextended Kähler cone,
+(3.6)
+
+∨
+M∞ = Khyp
+= {T2 ≥ T1 ≥ 0 , T3 ≥ 0} .
+
+(C.46)
+
+We may compare this with the GV invariants of Table 5. We have n0q1 ,q2 ,q3 ̸= 0 everywhere
+∨
+in the interior of M∞ , i.e. for all q2 > q1 > 0, q3 > 0, implying that indeed M∞ = Khyp
+.
+The hyperextended Kähler cone maps to a region in dual coordinates of the form
+Thyp = {T2 ≥ T1 ≥ 0 , T3 ≥ 2T2 } .
+
+(C.47)
+
+Note that Thyp ⊂ M∞ , as required by the lattice WGC, since Thyp ⊆ CBH .
+In fact, Vis(Thyp ) ⊆ CBH as discussed in §C.1. Upon examining the fully Weyl-extended
+moduli space, we encounter a surprise: as shown in Figure 8, this moduli space is a branched
+cover of the Weyl orbit W(Thyp ). In fact, passing repeatedly around the branch point,
+much of this moduli space turns out to lie outside M∞ . This sounds worrying from the
+perspective of the lattice WGC, but only Vis(Thyp ) ⊆ CBH really matters for our analysis.
+Explicitly, this region is
+Vis(Thyp ) = T ∪ w1 (T ) ∪ w2 (T ) ∪ w2 ◦ w1 (T ) ∪ w1 ◦ w2 (T )) ∪ w1 ◦ w2 ◦ w1 (T )
+= {T2 ≥ T1 ≥ 0 , T3 ≥ min(T1 + T2 , 2T2 − T1 )} ,
+
+(C.48)
+
+i.e., the (non-convex) vee-shaped region outlined by the green lines in Figure 8. One can
+then verify that every GV invariant within this cone is non-zero up to the degree calculated
+— see Table 5 — so the predictions of the lattice WGC are actually satisfied. The fact that
+the fully Weyl-extended moduli space eventually passes outside M∞ is rather an indication
+that the BPS black hole solutions undergo wall crossing at the unstable Weyl flop. This
+would be very interesting to verify explicitly.
+
+51
+
+References
+[1] M. Alim, B. Heidenreich, and T. Rudelius, “The Weak Gravity Conjecture and BPS
+Particles,” Fortsch. Phys. 69 no. 11-12, (2021) 2100125, arXiv:2108.08309
+[hep-th].
+[2] S. Hosono, A. Klemm, S. Theisen, and S.-T. Yau, “Mirror symmetry, mirror map
+and applications to Calabi-Yau hypersurfaces,” Commun. Math. Phys. 167 (1995)
+301–350, arXiv:hep-th/9308122 [hep-th].
+[3] S. Hosono, A. Klemm, S. Theisen, and S.-T. Yau, “Mirror symmetry, mirror map
+and applications to complete intersection Calabi-Yau spaces,” Nucl. Phys. B433
+(1995) 501–554, arXiv:hep-th/9406055 [hep-th]. [AMS/IP Stud. Adv.
+Math.1,545(1996)].
+[4] M. Demirtas, A. Rios-Tascon, and L. McAllister, “CYTools: A Software Package for
+Analyzing Calabi-Yau Manifolds,” arXiv:2211.03823 [hep-th].
+[5] M. Demirtas, M. Kim, L. McAllister, J. Moritz, and A. Rios-Tascon,
+“Computational Mirror Symmetry,” to appear .
+[6] N. Arkani-Hamed, L. Motl, A. Nicolis, and C. Vafa, “The String landscape, black
+holes and gravity as the weakest force,” JHEP 06 (2007) 060,
+arXiv:hep-th/0601001.
+[7] B. Heidenreich, M. Reece, and T. Rudelius, “Evidence for a sublattice weak gravity
+conjecture,” JHEP 08 (2017) 025, arXiv:1606.08437 [hep-th].
+[8] S. Andriolo, D. Junghans, T. Noumi, and G. Shiu, “A Tower Weak Gravity
+Conjecture from Infrared Consistency,” Fortsch. Phys. 66 no. 5, (2018) 1800020,
+arXiv:1802.04287 [hep-th].
+[9] B. Heidenreich, M. Reece, and T. Rudelius, “Sharpening the Weak Gravity
+Conjecture with Dimensional Reduction,” JHEP 02 (2016) 140, arXiv:1509.06374
+[hep-th].
+[10] E. Witten, “Phase transitions in M theory and F theory,” Nucl. Phys. B471 (1996)
+195–216, arXiv:hep-th/9603150 [hep-th].
+
+52
+
+[11] C. T. C. Wall, “Classification Problems in Differential Topology. V. On Certain
+6-Manifolds.,” Inventiones Mathematicae 1 (Jan., 1966) 355.
+[12] S. Boucksom, J.-P. Demailly, M. Paun, and T. Peternell, “The pseudo-effective cone
+of a compact kähler manifold and varieties of negative kodaira dimension,” 2004.
+https://arxiv.org/abs/math/0405285.
+[13] M. F. Atiyah, “On analytic surfaces with double points,” Proceedings of the Royal
+Society of London. Series A. Mathematical and Physical Sciences 247 no. 1249,
+(1958) 237–244.
+[14] P. Candelas and X. C. de la Ossa, “Comments on Conifolds,” Nucl. Phys. B 342
+(1990) 246–268.
+[15] H. B. Laufer, “On rational singularities,” American Journal of Mathematics 94
+no. 2, (1972) 597–608. http://www.jstor.org/stable/2374639.
+[16] S. Katz and D. R. Morrison, “Gorenstein Threefold Singularities with Small
+Resolutions via Invariant Theory for Weyl Groups,” arXiv e-prints (Feb., 1992)
+alg–geom/9202002, arXiv:alg-geom/9202002 [math.AG].
+[17] R. Gopakumar and C. Vafa, “M theory and topological strings. 2.,”
+arXiv:hep-th/9812127 [hep-th].
+[18] E. Witten, “Topological Sigma Models,” Commun. Math. Phys. 118 (1988) 411.
+[19] E. Witten, “Mirror manifolds and topological field theory,” AMS/IP Stud. Adv.
+Math. 9 (1998) 121–160, arXiv:hep-th/9112056.
+[20] R. Gopakumar and C. Vafa, “M theory and topological strings. 1.,”
+arXiv:hep-th/9809187 [hep-th].
+[21] M. Dedushenko and E. Witten, “Some Details On The Gopakumar-Vafa and
+Ooguri-Vafa Formulas,” Adv. Theor. Math. Phys. 20 (2016) 1–133,
+arXiv:1411.7108 [hep-th].
+[22] S. Weinberg, “Photons and gravitons in s-matrix theory: Derivation of charge
+conservation and equality of gravitational and inertial mass,” Phys. Rev. 135 (Aug,
+1964) B1049–B1056. https://link.aps.org/doi/10.1103/PhysRev.135.B1049.
+
+53
+
+[23] M. T. Grisaru, H. N. Pendleton, and P. van Nieuwenhuizen, “Supergravity and the s
+matrix,” Phys. Rev. D 15 (Feb, 1977) 996–1006.
+https://link.aps.org/doi/10.1103/PhysRevD.15.996.
+[24] M. Demirtas, M. Kim, L. McAllister, and J. Moritz, “Conifold Vacua with Small
+Flux Superpotential,” Fortsch. Phys. 68 (2020) 2000085, arXiv:2009.03312
+[hep-th].
+[25] M. Demirtas, M. Kim, L. McAllister, J. Moritz, and A. Rios-Tascon, “Small
+cosmological constants in string theory,” JHEP 12 (2021) 136, arXiv:2107.09064
+[hep-th].
+[26] C. R. Brodie, A. Constantin, and A. Lukas, “Flops, Gromov-Witten invariants and
+symmetries of line bundle cohomology on Calabi-Yau three-folds,” J. Geom. Phys.
+171 (2022) 104398, arXiv:2010.06597 [hep-th].
+[27] C. R. Brodie, A. Constantin, A. Lukas, and F. Ruehle, “Swampland conjectures and
+infinite flop chains,” Phys. Rev. D 104 no. 4, (2021) 046008, arXiv:2104.03325
+[hep-th].
+[28] C. Brodie, A. Constantin, A. Lukas, and F. Ruehle, “Flops for Complete Intersection
+Calabi-Yau Threefolds,” arXiv:2112.12106 [hep-th].
+[29] N. Gendler, M. Kim, L. McAllister, J. Moritz, and M. Stillman, “Superpotentials
+from singular divisors,” JHEP 11 (2022) 142, arXiv:2204.06566 [hep-th].
+[30] A. Lukas and F. Ruehle, “Symmetries of Calabi-Yau Prepotentials with Isomorphic
+Flops,” arXiv:2210.09369 [hep-th].
+[31] A. Strominger, “Massless black holes and conifolds in string theory,” Nucl. Phys.
+B451 (1995) 96–108, arXiv:hep-th/9504090 [hep-th].
+[32] P. S. Aspinwall, “Enhanced gauge symmetries and Calabi-Yau threefolds,” Phys.
+Lett. B371 (1996) 231–237, arXiv:hep-th/9511171 [hep-th].
+[33] S. H. Katz, D. R. Morrison, and M. R. Plesser, “Enhanced gauge symmetry in type
+II string theory,” Nucl. Phys. B477 (1996) 105–140, arXiv:hep-th/9601108
+[hep-th].
+
+54
+
+[34] N. Seiberg and E. Witten, “Electric - magnetic duality, monopole condensation, and
+confinement in N=2 supersymmetric Yang-Mills theory,” Nucl. Phys. B 426 (1994)
+19–52, arXiv:hep-th/9407087. [Erratum: Nucl.Phys.B 430, 485–486 (1994)].
+[35] P. M. H. Wilson, “The Kähler cone on Calabi-Yau threefolds,” Invent. Math. 107
+no. 3, (1992) 561–583. https://doi.org/10.1007/BF01231902.
+[36] T. W. Grimm, E. Palti, and I. Valenzuela, “Infinite Distances in Field Space and
+Massless Towers of States,” arXiv:1802.08264 [hep-th].
+[37] B. Heidenreich, M. Reece, and T. Rudelius, “Emergence of Weak Coupling at Large
+Distance in Quantum Gravity,” Phys. Rev. Lett. 121 no. 5, (2018) 051601,
+arXiv:1802.08698 [hep-th].
+[38] H. Ooguri and C. Vafa, “On the Geometry of the String Landscape and the
+Swampland,” Nucl. Phys. B766 (2007) 21–33, arXiv:hep-th/0605264 [hep-th].
+[39] T. W. Grimm, C. Li, and E. Palti, “Infinite Distance Networks in Field Space and
+Charge Orbits,” arXiv:1811.02571 [hep-th].
+[40] P. Corvilain, T. W. Grimm, and I. Valenzuela, “The Swampland Distance
+Conjecture for Kähler moduli,” JHEP 08 (2019) 075, arXiv:1812.07548 [hep-th].
+[41] N. Gendler and I. Valenzuela, “Merging the Weak Gravity and Distance Conjectures
+Using BPS Extremal Black Holes,” arXiv:2004.10768 [hep-th].
+[42] C. Schoen, “On fiber products of rational elliptic surfaces with section,”
+Mathematische Zeitschrift 197 no. 2, (1988) 177–199.
+https://doi.org/10.1007/BF01215188.
+[43] L. B. Anderson, X. Gao, J. Gray, and S.-J. Lee, “Fibrations in CICY Threefolds,”
+JHEP 10 (2017) 077, arXiv:1708.07907 [hep-th].
+[44] C. Cheung and G. N. Remmen, “Naturalness and the Weak Gravity Conjecture,”
+Phys. Rev. Lett. 113 (2014) 051601, arXiv:1402.2287 [hep-ph].
+[45] M. Montero, G. Shiu, and P. Soler, “The Weak Gravity Conjecture in three
+dimensions,” JHEP 10 (2016) 159, arXiv:1606.08438 [hep-th].
+
+55
+
+[46] M. Demirtas, C. Long, L. McAllister, and M. Stillman, “Minimal Surfaces and Weak
+Gravity,” JHEP 03 (2020) 021, arXiv:1906.08262 [hep-th].
+[47] C. Long, A. Sheshmani, C. Vafa, and S.-T. Yau, “Non-Holomorphic Cycles and
+Non-BPS Black Branes,” arXiv:2104.06420 [hep-th].
+[48] M. Kreuzer and H. Skarke, “Complete classification of reflexive polyhedra in
+four-dimensions,” Adv. Theor. Math. Phys. 4 (2002) 1209–1230,
+arXiv:hep-th/0002240 [hep-th].
+[49] M. Montero and H. Parra de Freitas, “New Supersymmetric String Theories from
+Discrete Theta Angles,” arXiv:2209.03361 [hep-th].
+[50] A. K. Lenstra, J. Hendrik W. Lenstra, and L. Lovász, “Factoring polynomials with
+rational coefficients,” Mathematische Annalen 261 (1982) 515–534. URL:
+http://cr.yp.to/bib/entries.html#1982/lenstra-lll.
+[51] V. V. Batyrev and L. A. Borisov, “On Calabi-Yau complete intersections in toric
+varieties,” arXiv:alg-geom/9412017 [alg-geom].
+
+56
+
+

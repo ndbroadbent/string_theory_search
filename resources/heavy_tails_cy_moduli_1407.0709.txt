@@ -1,0 +1,3051 @@
+arXiv:1407.0709v1 [hep-th] 2 Jul 2014
+
+Heavy Tails in Calabi-Yau Moduli Spaces
+
+Cody Long, Liam McAllister, and Paul McGuirk
+Department of Physics, Cornell University, Ithaca, New York, 14853, USA
+
+cel89@cornell.edu, mcallister@cornell.edu, mcguirk@cornell.edu
+
+We study the statistics of the metric on Kähler moduli space in compactifications of string
+theory on Calabi-Yau hypersurfaces in toric varieties. We find striking hierarchies in the
+eigenvalues of the metric and of the Riemann curvature contribution to the Hessian matrix:
+both spectra display heavy tails. The curvature contribution to the Hessian is non-positive,
+suggesting a reduced probability of metastability compared to cases in which the derivatives
+of the Kähler potential are uncorrelated. To facilitate our analysis, we have developed a
+novel triangulation algorithm that allows efficient study of hypersurfaces with h1,1 as large
+as 25, which is difficult using algorithms internal to packages such as Sage. Our results serve
+as input for statistical studies of the vacuum structure in flux compactifications, and of the
+distribution of axion decay constants in string theory.
+
+Contents
+1 Introduction
+
+2
+
+2 Random Kähler Metrics and Random Supergravities
+2.1 The supergravity Hessian
+2.2 Random supergravities
+
+5
+5
+6
+
+3 The Kähler Moduli Space of O3/O7 Orientifolds
+3.1 The Kähler cone
+3.2 The metric and curvature on moduli space
+3.3 The Riemann contribution to the Hessian
+
+9
+9
+11
+12
+
+4 Method
+4.1 Generating metrics
+4.2 Constructing curvature Hessians
+
+14
+14
+15
+
+5 Results
+5.1 Metric eigenvalue spectra
+5.2 The curvature Hessian in an example
+5.3 Evidence for heavy-tailed spectra
+5.4 Explaining the tails in the spectra
+5.5 Implications for stability
+5.6 Other string theories
+
+16
+16
+18
+19
+24
+27
+31
+
+6 Reference Models
+6.1 Random intersection numbers
+6.2 Random positive Riemann curvature
+6.3 Random Bergman metrics
+
+31
+32
+34
+34
+
+7 Spectra of Axion Decay Constants
+
+37
+
+8 Conclusions
+
+39
+
+A Toric Geometry
+
+40
+
+B Triangulation Algorithm
+
+42
+
+–1–
+
+1
+
+Introduction
+
+The vacuum structure of compactifications of string theory to four dimensions is extremely
+complex, and direct enumeration of all vacua appears impossible. Moreover, it is plausible that
+the number of vacua of string theory that are consistent with all present observations vastly
+exceeds the number of measurements of fundamental parameters that could be performed in
+the future. In this situation it is impractical, and for many purposes misguided, to pursue
+individual vacua of string theory as candidate models of the observed universe. A more fruitful
+course is to determine the characteristic properties of classes of vacua, and make statistical
+predictions [1].
+An idealized enumerative approach to vacuum statistics would begin with discrete data,
+including the compactification topology and a specification of quantized fluxes, and compute
+the full four-dimensional low-energy effective action as a function of these integer inputs. One
+could then study the statistics of physical observables of interest in the ensemble of effective
+actions resulting from all possible choices of discrete data. However, despite extensive efforts
+to understand the statistics of string vacua (for reviews with references, see [2–4]), the present
+reality falls short of this ideal. In particular, quantum corrections to the effective action
+are poorly understood, and many of the most incisive results concern the distribution of
+supersymmetric Minkowski vacua of a subsector of the theory, in the classical approximation.
+For example, the elegant result of [5] in type IIB flux vacua describes an index approximating
+the distribution of configurations for which the classical F-flatness conditions for the complex
+structure moduli hold. The Kähler moduli, which can parameterize important instabilities,
+are not included.
+A central idea advanced in [1, 5–7] is that a reasonable approximation to the true distribution of string vacua can be obtained by determining the statistics of vacua in an associated
+ensemble of N = 1 supergravity theories that are random in an appropriate sense. The expectation is that the Wilson coefficients of operators in the associated ensemble, when viewed
+as stochastic variables, will closely follow the distribution of the true Wilson coefficients that
+would be obtained if one could produce and study a large ensemble of genuine string vacua.
+Ideally, this expectation can be checked and refined by comparison to small ensembles of
+string vacua in computable special cases.
+To specify an appropriate ensemble of random supergravity theories, one must provide
+an ensemble of superpotentials W , each of which is a holomorphic section of a nontrivial
+holomorphic line bundle over the moduli space M parameterized by the scalar fields φa of
+the theory, as well as a corresponding ensemble of Kähler potentials, which in local coordinates
+are real analytic functions of the φa and their conjugates φ̄ā . In the simple special case of
+supersymmetric Minkowski solutions, the vacua are determined by holomorphic equations of
+the form
+∂W
+= 0,
+(1.1)
+∂φa
+with no dependence on the Kähler potential. The task of computing the distribution of super-
+
+–2–
+
+symmetric Minkowski vacua therefore requires only the specification of statistical properties
+of superpotentials, and some significant mathematical results are applicable to this problem:
+there exists a precise notion of a random holomorphic section of a random holomorphic line
+bundle in this context [8].
+Unfortunately, knowledge of the superpotential alone is insufficient for studying supersymmetric vacua with nonvanishing cosmological constant, or non-supersymmetric vacua of
+any type: one must also specify the Kähler potential. Rather little is known about what one
+could reasonably call a random Kähler potential, or a random Kähler metric, especially for
+dimC M > 1, which is the case of primary interest (though see [9] for recent progress). Because possible Kähler potentials are poorly characterized, it appears difficult to give a precise
+definition of a random supergravity theory, and thereby to create a well-defined ensemble of
+effective theories whose statistics could accurately model the statistics of non-supersymmetric
+solutions of string theory.
+In this work we begin to address this question, by exploring the characteristics of Kähler
+metrics in a well-motivated ensemble of effective theories. Specifically, we study the Kähler
+moduli spaces of compactifications of string theory on Calabi-Yau hypersurfaces in toric varieties, considering in detail O3/O7 orientifolds of type IIB. A primary goal is to understand
+the extent to which the resulting ensemble of Kähler metrics can be viewed as an ensemble
+of random matrices without “special” properties. Said differently, our null hypothesis —
+assumed implicitly or explicitly in earlier works such as [1, 5–7, 10] — is that the various
+covariant derivatives of the Kähler potential at a fixed point in field space are tensors whose
+components are statistically independent and identically distributed (i.i.d.). For brevity, we
+will say that the Kähler potential is an i.i.d. function.1 This is a rather strong assumption,
+which few would argue describes the actual set of Kähler potentials arising in Calabi-Yau
+compactifications, but it has been used in the past for want of a ready alternative. By exploring an ensemble of explicit Calabi-Yau compactifications gathered from the Kreuzer-Skarke
+database [12] we will be able to reject the null hypothesis and expose some of the underlying
+structure of the metrics on Calabi-Yau moduli spaces.2 This is a step toward specifying the
+ensemble of possible non-holomorphic data along the lines that possible superpotentials were
+characterized in [8].
+More specifically, our null hypothesis is that the curvature contribution to the Hessian
+matrix,
+
+¯
+(1.2)
+HR ab̄ := −eK Rab̄cd̄ F̄ c F d ,
+1
+
+We use the term “i.i.d. function” to avoid confusion with other notions of random functions, which can
+entail correlations among derivatives. See [11] for an analysis of Gaussian random functions in a related
+context.
+2
+Kähler potential data of an ensemble of Calabi-Yau manifolds gathered from the Kreuzer-Skarke database
+were also used in [13] to explore the prevalence of the Large Volume Scenario vacua of [14].
+
+–3–
+
+can be modeled, as proposed in [10], as the sum of a Wigner matrix and a Wishart matrix,
+
+
+c d¯
+WW
+c d¯
+HR ab̄ ≈ HR
+(1.3)
+:= Kace Kb̄de
+¯ F̄ F − Kab̄cd¯F̄ F .
+ab̄
+{z
+} | {z }
+|
+Wishart
+
+Wigner
+
+where Kb̄de
+¯ and Kab̄cd̄ denote derivatives of the Kähler potential K, and Fa is the F-term.
+We find compelling evidence against (1.3). For Calabi-Yau hypersurfaces in toric varieties,
+the eigenvalue distributions of HR constructed from explicit Kähler potential data have much
+longer tails than predicted by (1.3). The spectra we obtain are very leptokurtic, with a sharp
+peak and heavy tails. We obtain a related result for the Kähler metrics themselves: the
+eigenvalue spectra of the metrics on Kähler moduli spaces exhibit large hierarchies and heavy
+tails, at least in the case of O3/O7 orientifolds that we study directly.
+We then argue that for Calabi-Yau hypersurfaces in toric varieties, the structure of the
+Kähler metric on M leads to distinctive changes in a basic statistical observable, the probability of metastability, in comparison to the probability resulting from the null hypothesis for the
+Kähler metric. Specifically, significant correlations originating in the geometry of the moduli
+space ensure that the covariant derivatives of K are not all independent, and we argue that, in
+the case of O3/O7 projections of type IIB, these correlations turn out to make the probability
+of metastability lower in the actual effective theory than it is in an effective theory where
+the Kähler potential is an i.i.d. function. As a result, even though our analysis establishes
+that one of the working assumptions of [10], namely (1.3), must be modified substantially to
+reflect actual Calabi-Yau compactifications, the qualitative conclusion of [10], which is that
+instabilities are extremely prevalent at generic points in the moduli space, appears to be
+strengthened by our findings, at least in this corner of the landscape.
+The presence of lengthy tails in the distribution of eigenvalues of the metric also has
+significant consequences for model-building with axions in string theory, because axion decay
+constants fa are given by (the square roots of) eigenvalues of the Kähler metric. While
+individual axion decay constants have been computed in special cases [15], trends in models
+with multiple axions have not previously been characterized. Our finding that the largest
+eigenvalues are hierarchically larger than the median eigenvalues implies qualitative changes
+in scenarios for axion inflation in string theory.
+This paper is organized as follows. In §2 we review the application of random matrix
+theory to the supergravity Hessian, and then discuss how to include deterministic data on
+Kähler metrics in this approach. In §3 we review the Kähler moduli space of O3/O7 orientifolds of Calabi-Yau manifolds and prove an important negativity result for the curvature
+Hessian HR (1.2). In §4 we describe our method for generating an ensemble of moduli space
+metrics and curvature Hessians. In §5, we present our primary results, demonstrating the
+existence of hierarchies and heavy tails in the spectra of the metric and HR . We also elucidate
+the source of the heavy tails in HR and discuss potential implications for metastability. In §6
+we discuss alternatives to the i.i.d. model for the curvature Hessian, including a qualitatively
+successful approach in which the metric on moduli space is modeled as a Bergman metric.
+In §7, we consider the consequences of the eigenvalue distribution of the Kähler metric for
+
+–4–
+
+the spectra of axion decay constants. Our conclusions appear in §8. Appendix A contains
+an abbreviated review of toric varieties and their Calabi-Yau hypersurfaces, which are the
+focus of our study. Finally, in Appendix B we present an efficient algorithm to triangulate
+the polytopes encoding the toric variety data.
+
+2
+
+Random Kähler Metrics and Random Supergravities
+
+In this section, we review the Hessian matrix in four-dimensional supergravity (§2.1) and
+recall how it can be modeled using the tools of random matrix theory, following [7, 10] (§2.2).
+2.1
+
+The supergravity Hessian
+
+A four-dimensional N = 1 supergravity theory with N chiral supermultiplets containing
+
+complex scalar fields φa is specified by a real Kähler potential K φa , φ̄b̄ and a holomorphic
+superpotential W (φa ). The bosonic action is
+
+
+Z
+1
+4 √
+a µ b̄
+S = d x −g R − Kab̄ ∂µ φ ∂ φ̄ − V ,
+(2.1)
+2
+in which we have set the reduced Planck mass to unity, R is the Ricci scalar associated with
+the four-dimensional spacetime metric gµν , and the F-term potential is
+
+
+2
+K
+a
+V = e Fa F̄ − 3 W
+,
+(2.2)
+where Fa is the Kähler-covariant derivative of the superpotential,
+Fa = ∂a W + Ka W .
+
+(2.3)
+
+Indices are raised and lowered with the Kähler metric Kab̄ . The action (2.1) is invariant under
+the Kähler transformations K → K + f + f¯, W → e−f W , where f is a holomorphic function of
+the scalar fields. The Hessian matrix is constructed from second derivatives of the potential
+!
+Vab̄ Vab
+H=
+,
+(2.4a)
+Vāb̄ Vāb
+and takes the form
+
+in which
+
+
+¯
+2
+,
+Vab̄ = eK Za c̄ Z̄c̄b̄ − Fa F̄b̄ − Rab̄cd¯F̄ c F d + Kab Fc F̄ c − 2 W
+
+Vab = eK Uabc F̄ c − Zab W̄ ,
+Zab = Da Fb ,
+
+Uabc = Da Db Fc ,
+
+(2.4b)
+(2.4c)
+(2.5)
+
+where Da is the Kähler-covariant and geometrically-covariant derivative. Since the field space
+is Kähler, the Riemann tensor can be expressed in terms of ordinary derivatives of the Kähler
+potential as
+(2.6)
+Rab̄cd¯ = Kab̄cd̄ − Kace Kb̄de
+¯ .
+
+–5–
+
+2.2
+
+Random supergravities
+
+Creating a globally well-defined potential energy function depending on N fields is exponentially expensive at large N . However, to understand the behavior at a collection of critical
+points, including the particularly interesting case of metastable minima, only certain local
+data about the potential are necessary: it suffices to specify the first four derivatives of the
+Kähler potential K, and the first three derivatives of the superpotential W , at each point
+of interest. By performing Taylor expansions of the N = 1 data at a set of well-separated
+points, one can construct an ensemble of Hessian matrices, and characterize the probability
+of metastability (or of any other outcome of interest) in this ensemble. In this approach, no
+information about correlations from point to point is retained. Understanding correlations
+in field space is left as a problem for future work.3
+The essential assumption made in random supergravity approaches to the Hessian (2.4)
+is that the Kähler potential and the superpotential are real and holomorphic i.i.d. functions,
+respectively, on the moduli space [7, 10]. That is, expressing the Kähler potential via a Taylor
+series around a fixed origin,
+K = K0 + Ka φa + Kā φ̄ā + Kab̄ φa φ̄b̄ + · · · ,
+
+(2.7)
+
+the elements of each tensor Kab···c̄d···
+¯ are taken to be independent and identically distributed
+variables: each element is drawn from some statistical distribution Ω, and although the same
+distribution is used for every element, each element is drawn independently from the others
+(up to the symmetries of the tensor). We use the notation x ∈ Ω (µ, σ) to denote that the
+real number x is drawn from a distribution with mean µ and standard deviation σ. When z
+is complex, z ∈ Ω (µ, σ) means that z = x eiθ , where x is a real number drawn from Ω and the
+phase θ is drawn from a uniform distribution. We will often work with normal distributions,
+though universality in random matrix theory ensures that most results will be independent
+of the details of the distribution Ω, for sufficiently large N .
+At a particular critical point of the potential, we can perform a Kähler transformation
+and coordinate redefinition to set
+K = 0,
+
+Kab̄ = δab̄ ,
+
+Fa = δa1 F eiϑF ,
+
+(2.8)
+
+in which F is positive and ϑF is an unimportant phase. The random supergravity approach
+is then to model the higher derivatives as i.i.d. variables,
+
+Kab̄c ∈ Ω 0, σ ,
+
+
+Kab̄cd¯ ∈ Ω 0, σ ,
+
+The choice σ = N −1/2 is purely for later convenience.
+3
+
+See [11] for recent progress on incorporating global constraints.
+
+–6–
+
+σ = N −1/2 .
+
+(2.9)
+
+−2
+
+−1
+
+1
+
+2
+
+1
+
+(a) Wigner ensemble (2.11)
+
+2
+
+3
+
+4
+
+(b) Wishart ensemble (2.12) with q = n
+
+Figure 1: Eigenvalue distributions for two classical matrix ensembles. The data displayed
+√
+result from collections of 1000 matrices with 200 × 200 i.i.d. entries with σ = 1/ 200.
+The covariant derivatives of the superpotential are likewise taken to be i.i.d. variables4
+with
+
+
+Zab ∈ msusy Ω 0, σ , Uabc ∈ msusy Ω 0, σ .
+(2.10)
+
+in which msusy is a characteristic scale for supersymmetric mass terms. At generic critical
+points, we expect that msusy ∼ F (in Planck units).
+Two classical ensembles of matrices are particularly relevant for our analysis and for the
+models of [7, 10]. The first is the complex Wigner ensemble [16], which consists of n × n
+Hermitian matrices of the form
+M = A + A† ,
+(2.11)
+in which each element of A is an i.i.d. complex variable. The other relevant ensemble is the
+complex Wishart ensemble [17], consisting of n × n Hermitian matrices of the form
+M = AA† ,
+
+(2.12)
+
+in which A is an n × q matrix (q ≥ n) with i.i.d. complex entries. The eigenvalue spectra for
+these ensembles take on the characteristic shapes shown in Figure 1.
+The structure of the Hessian (2.4) and the special structure of the Riemann tensor (2.6)
+suggest that, under the i.i.d. assumptions (2.9) and (2.10), the various contributions to the
+4
+
+The requirement of being at a critical point necessarily spoils the i.i.d. assumption, as the potential is
+subject to the 2N conditions ∂a V = 0 at that point. However, since these are O (N ) conditions on a matrix
+
+with O N 2 entries, at large N imposing the critical point equation does not significantly affect positivity
+properties [10].
+
+–7–
+
+2
+
+4
+
+−1
+
+6
+
+1
+
+(a) HWWW
+
+2
+
+3
+
+4
+
+WW
+(b) HR
+
+Figure 2: Eigenvalue distributions for random matrix models of the i.i.d. Hessian Hi.i.d. ≈
+i.i.d. ≈
+HWWW (2.13) (taken with 3 |W |2 /F 2 = .01) and of the Riemann contribution HR
+2
+WW (1.3). In both cases, the spectra are in units of |F | . Figure 2a is adapted from Figure
+HR
+3 of [10].
+
+Hessian can be approximated by these classical distributions and a constant shift matrix [10]
+!
+!
+0
+Uab1 F̄ 1 − Zab W̄
+−K
+0
+ab̄11̄
++ F2
+H=
+Ūāb̄1̄ F 1̄ − Z̄āb̄ W̄
+0
+0
+Kbā11̄
+{z
+}
+|
+≈Wigner
+
+!
+
+Za c̄ Z̄b̄c̄
+0
++
++F2
+0
+Z̄ā c Zbc
+|
+{z
+} |
+2
+
+≈Wishart
+2
+
++ F −2 W
+|
+
+1−F
+
+2
+
+{z
+
+!
+Ka1e Kb̄1̄e
+0
+0
+Kā1̄ē Kb1ē
+{z
+}
+
+(2.13)
+
+≈Wishart
+δa δb̄ − F 2 δā 1̄ δb 1 ,
+1
+
+1̄
+
+≈shift
+
+}
+
+where we are locally working in a basis such that (2.8) holds at the critical point under
+consideration. In [10], it was established that the typical spectrum of eigenvalues of an
+ensemble of i.i.d. supergravity Hessians is well-modeled by the sum
+Hi.i.d. ≈ HWWW = Wigner + Wishart + Wishart .
+
+(2.14)
+
+The spectrum of the ensemble HWWW is shown in Figure 2a. In [10], it was found that the
+p
+probability for a generic critical point to be metastable scales as e−cN , where p ≈ 1.5 for
+Hi.i.d. and p ≈ 1.9 for HWWW .
+This random supergravity approach must be modified when one or more of the i.i.d. assumptions (2.9) and (2.10) is invalid. Some form of modification is clearly necessary to give
+a detailed model of string compactifications, as the resulting supergravity data are expected
+to exhibit significant correlations. Although a complete incorporation of all such correlations
+
+–8–
+
+is impossible given current knowledge, we can make considerable progress by incorporating
+information about the classical Kähler potential.
+In the following sections, we revisit the supergravity Hessian (2.4) using ensembles of
+Kähler potentials for the classical metrics on Kähler moduli space in explicit Calabi-Yau
+compactifications. Since our focus is on how correlations in the Kähler geometry impact the
+Hessian, we retain an i.i.d. approach to the F-terms and focus on the Riemann contribution
+to the Hessian, HR , which can be analyzed without further modeling of the superpotential
+and its higher derivatives Zab and Uabc .
+
+3
+
+The Kähler Moduli Space of O3/O7 Orientifolds
+
+In this section, we review the Kähler moduli space of compactifications of type IIB string
+theory on O3/O7 orientifolds of Calabi-Yau manifolds. These compactifications are wellexplored, and allow for a separation of scales between the masses of the stabilized complex
+structure moduli and Kähler moduli as in [14, 18]. We will assume that such a separation
+has been achieved and so limit our treatment to the Kähler moduli sector. In the following
+sections, we will make use of the corresponding classical Kähler potential to improve upon
+the i.i.d. treatments discussed in §2.
+After reviewing some of the basic properties of the moduli space, we provide expressions
+for the metric and Riemann curvature that will be useful for our scan of moduli spaces, and
+then prove a simple but important negativity property of the curvature contribution to the
+Hessian (2.4).
+3.1
+
+The Kähler cone
+
+A compactification of type IIB string theory on a Calabi-Yau threefold yields an N = 2
+theory in four dimensions.5 The deformations of the Kähler structure, together with scalars
+provided by the p-form potentials C4 , C2 , and B2 , form a quaternionic Kähler moduli space
+of real dimension 4h1,1 , where hp,q are the Hodge numbers of the Calabi-Yau. Reduction to
+an N = 1 theory is accomplished by the introduction of orientifold planes, and the structure
+of the resulting supergravity theory depends on which orientifold projection is used. We
+will assume an O3/O7 orientifold action, and moreover will take all of the divisors D a of
+the Calabi-Yau to be even under the geometric involution (i.e. h1,1
+− = 0), so that all Kähler
+deformations of the Calabi-Yau are projected in by the orientifold action. In the resulting
+R
+N = 1 theory, the 4-cycle volumes τ a are paired with R-R axions ca = Da C4 to form the
+complex scalar components ρa = τ a + i ca of h1,1 chiral superfields. The classical Kähler
+potential for the Kähler moduli space metric, at leading order in α′ , is given in terms of the
+volume V of the Calabi-Yau by
+K = −2 log V .
+(3.1)
+5
+
+See, for example, [19–21] for reviews of the effective field theories arising in these constructions and in
+their orientifolds.
+
+–9–
+
+If {D a } is a basis of divisors of the Calabi-Yau, then the Kähler form of the Calabi-Yau can
+be expanded in terms of the Poincaré duals [D a ] of these divisors,
+J = ta [D a ] .
+
+(3.2)
+
+Z
+
+(3.3)
+
+The volume of the Calabi-Yau is
+1
+V=
+3!
+
+J3 =
+
+1 abc
+κ ta tb tc ,
+3!
+
+in which κabc = D a · D b · D c are the triple intersection numbers of the divisors. The volume
+of the divisor D a is then
+1
+∂V
+(3.4)
+= κabc tb tc .
+τa =
+∂ta
+2
+The Calabi-Yau volume V and the Kähler potential on moduli space are easily expressed
+in terms of the variables ta , which parameterize the volumes of 2-cycles. However, the 2-cycle
+volumes do not provide good Kähler coordinates in O3/O7 projections, in that we cannot
+write the metric as ∂wa ∂¯w̄b̄ K where wa is a complexification of ta . Because the τ a , rather
+than the ta , provide good coordinates on moduli space, we find it convenient to use lowered
+indices for 2-cycle volumes, even though this goes against convention.
+The Kähler moduli space is specified by the requirement that the volumes of all holomorphic curves and divisors, and of the Calabi-Yau itself, are positive. Since the volumes of such
+R
+objects are of the form J k , where J is the Kähler form (3.2), the moduli space is a cone: if
+~t = (t1 , · · · , th1,1 ) is a point in the moduli space, then so is λ~t for λ > 0.
+The space of curves also forms a cone, called the Mori cone, that is generated by a finite
+set of curves Ci . The condition that all curves have positive volume is equivalent to the
+condition
+Z
+J > 0 , ∀ Ci .
+(3.5)
+Ci
+
+The condition (3.5) suffices to ensure positivity of the volumes of all divisors and of the CalabiYau, and so the Kähler cone is the set of ta that satisfy (3.5). Writing the intersections of
+the divisors with the curves Ci as
+Qai = D a · Ci ,
+(3.6)
+a sufficient condition to be in the interior of the Kähler cone is
+Qai ta > 0 ,
+
+∀i.
+
+(3.7)
+
+In general, there are more than h1,1 generators of the Mori cone, and so Q is not a square
+matrix (though see the discussion in Appendix A). In this case the Kähler cone is said to be
+non-simplicial, meaning that the number of generators of the cone is larger than the dimension
+of the cone (see Figure 3). When Q is square, the Kähler cone is simplicial.
+
+– 10 –
+
+Figure 3: A non-simplicial cone in three dimensions. The cone is generated by the five rays
+originating from the apex.
+
+3.2
+
+The metric and curvature on moduli space
+
+The metric and curvature on moduli space follow from taking derivatives of the Kähler potential with respect to the Kähler coordinates ρa = τ a + i ca . However, since the classical
+Kähler potential is independent of the axions ca , we can make the replacement
+1 ∂
+∂
+→
+.
+a
+∂ρ
+2 ∂τ a
+
+(3.8)
+
+Expressed as (3.3), the volume of the Calabi-Yau, and hence the Kähler potential, is only an
+implicit function of the coordinates τ a . We therefore make extensive use of the chain rule
+∂
+∂
+= Aba
+,
+∂τ a
+∂tb
+
+Aba :=
+
+∂ta
+.
+∂τ b
+
+(3.9)
+
+
+One can show that A has mostly negative eigenvalues, with signature 1, h1,1 − 1 . The
+inverse of A takes the simple form6
+A−1
+
+ab
+
+=
+
+∂τ a
+∂2V
+=
+= κabc tc .
+∂tb
+∂ta ∂tb
+
+(3.10)
+
+Note that due to the symmetry properties of κabc , A−1 and A are symmetric matrices.
+Since the coordinates τ a are defined via (3.4), Aab is difficult to calculate directly from its
+definition (3.9), but can be calculated by inverting (3.10). In what follows, we will perform
+the inversion numerically, as the analytic computation is expensive when h1,1 is large. Higher
+derivatives of the Kähler potential will involve differentiating Aab , and numerical differentiation can be avoided by using (3.10):
+de
+∂ A−1
+∂Abc
+= −Abd
+Aec = −Abd κade Aec .
+(3.11)
+∂ta
+∂ta
+6
+
+Our notation differs from that appearing elsewhere in the literature, where A and its inverse are interchanged.
+
+– 11 –
+
+Using the identities Aab τ b = 21 ta and ta τ a = 3V, the relevant derivatives of the Kähler
+potential take the form
+ta tb
+Aab
+,
+−
+2
+8V
+4V
+ab
+Kab̄ =4τ a τ b − 4V A−1 ,
+
+1
+1 
+Kace Kb̄de
+t
+t
+t
+t
+−
+6A
+t
+t
++
+A
+t
+t
++
+A
+t
+t
+¯ =
+a
+c
+ac
+a
+c
+b
+d
+b
+b
+d
+bd
+(ac
+d
+)
+32V 4
+64V 3
+ef
+1
+1
+3
+,
+Sace Sbdf A−1
+Aac Abd −
+t(a S bcd) −
++
+2
+2
+32V
+8V
+16V
+3
+3
+3
+Kab̄cd¯ =
+ta tb tc td −
+A tc t +
+A A
+64V 4
+16V 3 (ab d) 32V 2 (ab cd)
+ef
+3
+1
+t(a S bcd) −
+Se(ab S cd)f A−1
+,
+−
+2
+8V
+16V
+Kab̄ =
+
+(3.12a)
+(3.12b)
+
+(3.12c)
+
+(3.12d)
+
+in which we have defined the totally symmetric tensor
+
+Sabc = κdef Aad Abe Acf ,
+
+(3.13)
+
+and M(a1 ···an ) denotes symmetrization of M . Combining (3.12d) and (3.12c) gives the full
+Riemann tensor (2.6)
+Rab̄cd¯ =
+
+3.3
+
+
+1
+1 
+t
+t
+t
+t
+−
+6A
+t
+t
+−
+A
+t
+t
+−
+A
+t
+t
+a
+c
+ac
+a
+c
+b
+d
+b
+b
+d
+bd
+(ac
+d
+)
+64V 4
+64V 3
+
+ef
+1
+3 
+A(ab A cd) − Aac Abd −
+Sea(b S d)cf A−1
+.
++
+2
+32V
+8V
+
+(3.14)
+
+The Riemann contribution to the Hessian
+
+The Hessian (2.4) receives a contribution from the Riemann tensor on moduli space contracted
+with F-terms (2.4b),
+
+¯
+(3.15)
+HR ab̄ := −eK Rab̄cd̄ F̄ c F d ,
+
+This contribution in turn breaks into two pieces involving the third and fourth derivatives of
+the Kähler metric (2.6),
+(3.16)
+HR = HK(3) + HK(4)
+
+where
+
+¯
+
+(HK(4) )ab̄ := −eK Kabcd F̄ c F d ,
+
+¯
+
+c d
+(HK(3) )ab̄ := eK Kace Kb̄de
+¯ F̄ F .
+
+(3.17)
+
+Although the presentation (3.12c) does not make the positivity of HK(3) manifest, it does
+demonstrate that HK(3) and HK(4) have very similar structures. This similarity is a manifestation of the fact that the higher derivatives of the Kähler potential cannot be taken to
+be entirely independent, a fact which will have important implications for the spectrum of
+the Hessian. Indeed, both HK(4) and HK(3) will be seen to exhibit dramatic tails in their
+eigenvalue distributions that are cancelled to some degree in the full curvature contribution
+to the Hessian, HR = HK(3) + HK(4) . Even so, the residual tails in HR are substantial.
+
+– 12 –
+
+Despite the relative complexity of (3.14), the resulting contribution to the Hessian, HR ,
+exhibits a striking property: when F 6= 0, HR always has at least one strictly negative
+eigenvalue. The proof of this is quite simple, and relies on the fact that the Kähler metric is
+a homogeneous function of the Kähler coordinates. Indeed, under ρa → λρa we have
+Kab̄ → λ−2 Kab̄ .
+
+(3.18)
+
+In order to show that HR has a negative eigenvalue, it suffices to show that (HR )ab̄ ξ a ξ¯b̄ < 0
+for some ξ a . Taking ξ a = τ a , we have
+
+
+∂ ∂
+1 K a b ∂Kcf¯ ∂Kde
+¯
+¯
+ef¯
+a b̄
+K − a b Kcd¯ F̄ c F d .
+τ τ (HR )ab̄ = e τ τ
+(3.19)
+a
+b
+4
+∂τ ∂τ
+∂τ ∂τ
+
+If f (x1 , · · · xn ) is a homogeneous function of degree n, then it satisfies the well known relation
+∂f
+(3.20)
+xi i = nf .
+∂x
+Because Kab̄ is a homogeneous function of degree −2, we have
+∂Kcf¯
+= −2Kcf¯ .
+∂τ a
+On the other hand, ∂Kcd¯/∂τ b is a homogeneous function of degree −3, so
+
+
+∂Kcd¯
+∂K ¯
+a ∂
+τ
+= −3 cbd .
+a
+b
+∂τ
+∂τ
+∂τ
+τa
+
+(3.21)
+
+(3.22)
+
+Together,
+
+
+
+1 K
+1
+2
+ef¯
+c d¯
+K
+−
+6
+K
+τ a τ b̄ (HR )ab̄ = eK 4 Kcf¯Kde
+¯
+cd¯ F̄ F = − e |F | .
+4
+2
+This is non-positive, and so the smallest eigenvalue λmin (HR ) obeys
+λmin (HR ) ≤ 0 ,
+
+(3.23)
+
+(3.24)
+
+with equality only when F = 0, in which case HR is identically zero. It is easy to show
+that this generalizes: if the metric is a homogeneous function of negative degree, then HR
+will always have at least one negative eigenvalue. Moreover, this result holds for Kähler
+moduli spaces in other string theories. However, quantum corrections to the Kähler potential
+will necessarily spoil the homogeneity of the metric (indeed, the homogeneity of the Kähler
+metric is closely related to no-scale structure) and so (3.24) is guaranteed to hold only at
+weak coupling and large volume.
+The negativity result (3.24) is quite different from the expectation of the random supergravity approach discussed in §2.2. In particular, the i.i.d. model for the curvature contribution to the Hessian is well-modeled by the sum of a Wishart matrix and a Wigner matrix, as
+in (1.3) [10]. The resulting distribution of eigenvalues is shown in Figure 2b. Although the
+vast majority of the members of an ensemble of such matrices will have at least one negative
+p
+eigenvalue, there is a small probability P ∼ e−cN that a randomly chosen matrix will be
+positive-definite.
+We now turn to constructing an ensemble of Kähler metrics on Calabi-Yau hypersurfaces,
+where we will find even more dramatic deviations from the model (1.3).
+
+– 13 –
+
+4
+
+Method
+
+Although the classical metric on the Kähler moduli space of a Calabi-Yau compactification
+is given explicitly in terms of 2-cycle volumes and triple intersection numbers by (3.12a),
+for h1,1 & 5 it is difficult to extract meaningful characteristics of the metric analytically.
+Moreover, for the reasons explained in §1, it is most useful to determine general statistical
+properties that hold for most or all members of an ensemble of Calabi-Yau manifolds.
+Our approach is to construct an ensemble of classical Kähler metrics Kab̄ that describe
+the Kähler moduli spaces of Calabi-Yau hypersurfaces in toric varieties. Moreover, by combining this explicit metric data with i.i.d. F-terms, we construct an ensemble of curvature
+contributions HR to the supergravity Hessian matrix. In this section, we provide a detailed
+prescription for generating these ensembles. In short, we triangulate a number of reflexive
+polytopes to obtain the topological data of desingularized Calabi-Yau hypersurfaces in toric
+varieties, making use of the Kreuzer-Skarke database [12] generated by PALP [22, 23], and
+then sample the associated Kähler cones.
+4.1
+
+Generating metrics
+
+The functional form of the classical Kähler potential K is fully specified by the intersection
+numbers, which in the case of a Calabi-Yau hypersurface in a toric variety are determined by a
+triangulation of the associated polytope (see appendix A for a brief review of toric geometry).
+The computational cost of the triangulation process grows very quickly with the number of
+Kähler moduli. In appendix B, we present an efficient triangulation algorithm that allows us
+to study hypersurfaces with h1,1 . 25 using modest computational resources.
+The relevant outputs of the triangulation algorithm, for a given Calabi-Yau, are the
+intersection numbers among divisors, κabc , and between the divisors and generators of the
+Mori cone, Qai . The Kähler cone is generated by a finite number ν of h1,1 -dimensional vectors
+~nα , with α = 1, . . . , ν. That is, every point in the interior of the cone can be written in the
+form
+~t = sα~nα
+(4.1)
+for positive sα . In general, there may be more than h1,1 generators ~nα (i.e., ν > h1,1 ) in
+which case the cone is non-simplicial (see Figure 3).
+Given the intersection numbers κabc , the components of the Kähler metric, expressed
+in a fixed coordinate system, are determined by the 2-cycle volumes ta , i.e. by the vacuum
+expectation values of the Kähler moduli. Thus, to build an ensemble of Kähler metrics arising
+at points in the moduli space of any one Calabi-Yau threefold, we must specify a collection
+of points inside the Kähler cone. Next, to assemble the larger ensemble of metrics arising
+at points in the moduli spaces of a collection of distinct threefolds, we must specify how we
+choose a set of polytopes, a set of associated triangulations, and a collection of points in the
+Kähler cone determined by each triangulation.
+
+– 14 –
+
+Schematically, the probability of some measurable outcome O (e.g., a given hierarchy in
+the eigenvalues of the metric) may be written in the form
+P (O) = P (polytope) × P (triangulation) × P (ti )
+
+(4.2)
+
+where P (ti ) denotes the measure chosen for sampling the Kähler cone. The first two factors in
+(4.3) encode the relative weighting given to distinct choices of topological data. Lacking any
+principle to determine this measure, we give equal weight to each distinct set of intersection
+numbers obtained in our approach.
+Next, one would aspire to choose a sampling measure P (ti ) that reflects broad characteristics of the actual distribution Pvacua (ti ) of string vacua inside the Kähler cone, which can
+be written on general grounds as
+Pvacua (ti ) = Pgeometric (ti ) × Pselection (ti ) ,
+
+(4.3)
+
+where the first factor denotes the geometric measure induced on the Kähler cone by the
+Kähler metric on moduli space, and tends to be peaked near the boundaries of the cone.7
+The second factor encodes additional selection effects: for example, one might expect that
+string vacua are more common near the walls of the Kähler cone because the superpotential
+for the Kähler moduli is exponentially small when all volumes are large. (Here we have in
+mind the general lore that corrections are important where they are not computable [24].)
+Characterizing Pselection requires a complete understanding of dynamics, which is inaccessible
+at present. As a result, we must be agnostic about whether the sampling measure P (ti ) that
+we choose provides a reasonable approximation to Pvacua (ti ).
+The choice of P (ti ) can be encoded in the choice of coefficients sα appearing in (4.1).
+Because the Kähler cone has infinite volume, it is necessary to impose a long-distance cutoff
+on the sampled region. Since the metric and its derivatives are homogeneous functions of
+the 2-cycle volumes, taking sα to be within a finite interval can provide a representative
+sampling of the cone. A natural choice is to draw sα from a uniform distribution, and this is
+the choice that we make for much of our analysis. However, with this prescription the ratios
+of 2-cycle volumes remain within a comparatively small range, and potentially interesting
+behavior near the walls of the Kähler cone, where the ratios of 2-cycle volumes are large, is
+not fully explored. To address this deficiency we draw the sα from a logarithmic distribution
+for a portion of our dataset.
+4.2
+
+Constructing curvature Hessians
+
+The method presented in §4.1 suffices to generate an ensemble of Kähler metrics, but in order
+to specify a scalar potential on field space we must also give a prescription for determining
+W and its derivatives. As discussed previously, we are assuming a hierarchical separation of
+7
+
+The volume of moduli space as measured by the Kähler metric is divergent, even on a constant volume
+slice, due to divergences of the metric near the boundaries of the Kähler cone.
+
+– 15 –
+
+scales between the Kähler moduli and other closed-string moduli, and therefore the effective
+number of chiral multiplets is N = h1,1 .
+The curvature contribution HR to the Hessian, (3.15), depends on the superpotential only
+through the F a , while the remainder of the Hessian receives contributions from ∂a ∂b W and
+∂a ∂b ∂c W as well. For this reason, we focus in this work on the properties of HR , which are
+more directly geometric, and less affected by our limited knowledge of the superpotential, than
+the properties of the full Hessian H. Developing an accurate model of the superpotential and
+characterizing the resulting Hessian matrix, perhaps along the lines of [25], is an important
+problem for the future.
+To construct HR , we take the F-terms Fa of the Kähler moduli ρa , expressed in the toric
+basis, to be i.i.d. variables (cf. (2.8)),
+
+
+√
+(4.4)
+Fa ∈ F Ω 0, 1/ h1,1 .
+The Kähler metric and Riemann tensor scale homogeneously with the volume, so that the
+Hessian for the canonically-normalized fields scales as
+c
+HR
+∼
+
+F2
+.
+V 4/3
+
+(4.5)
+
+We are interested in the shape of the spectrum of HR , rather than the overall scale, so
+throughout we report on the spectrum of the rescaled curvature Hessian for the canonicallynormalized fields,
+V 4/3 c
+CY
+H .
+(4.6)
+HR
+=
+F2 R
+
+5
+
+Results
+
+Following all of the steps laid out in the previous sections, we can now present the eigenvalue
+CY for a collection of 120
+spectra of the Kähler metrics Kab̄ and the curvature Hessians HR
+Calabi-Yau hypersurfaces in toric varieties. Although most of this section pertains to O3/O7
+projections of type IIB, §5.6 contains a brief analysis of the curvature Hessians in other corners
+of the string landscape.
+5.1
+
+Metric eigenvalue spectra
+
+To study the spectrum of metric eigenvalues we fix the basis of Kähler moduli to a basis of
+independent toric divisors, as discussed in Appendix A. We then compute the eigenvalues of
+the moduli space metric in this basis, projected to the V = 1 hypersurface of the Kähler cone.
+The metric scales homogeneously with the volume, so restricting to any other fixed value of
+the volume will only change the overall scale of the metric eigenvalues. In Figures 4 and 5,
+we present the eigenvalue spectra for an ensemble of moduli space metrics for a Calabi-Yau
+threefold with h1,1 = 15. There are two notable features that appear in all of the examples we
+examined: the spectra manifest large hierarchies, with the largest and smallest eigenvalues
+
+– 16 –
+
+0.1
+
+0.2
+
+0.3
+
+0.4
+
+Figure 4: The nine smallest eigenvalues, coded by color, of each of 105 metrics on the Kähler
+moduli space of a threefold with h1,1 = 15.
+
+200
+
+400
+
+600
+
+800
+
+10−4 .01
+
+(a) Largest eigenvalues
+
+1
+
+100 104 106 108
+
+(b) Complete spectrum
+
+Figure 5: The largest eigenvalues and the entire spectrum of the metric on the Kähler
+moduli space of a threefold with h1,1 = 15. In (a), the tail of the distribution was truncated
+to demonstrate the bulk of the distribution. The entire spectrum has support from 2.6 × 10−5
+to 1.2 × 109 .
+
+being very different from the median, and the distributions of the smallest few eigenvalues
+are highly peaked.
+The sharply-localized distributions of the smallest few eigenvalues can be attributed to
+the particular dependence of V on the 4-cycle volumes. It is convenient to work in a basis
+
+– 17 –
+
+200
+
+λgmin
+
+V
+
+0.03
+
+150
+
+0.02
+
+100
+0.01
+
+50
+
+3/2
+
+200
+
+400
+
+600
+
+800
+
+(a) Volume scaling
+
+τL
+
+0.05
+
+0.1
+
+0.15
+
+τL−2
+
+(b) Scaling of the smallest metric eigenvalue
+
+Figure 6: Scalings of the volume and of the smallest metric eigenvalue with the largest
+4-cycle volume, τL . Both relations are approximately linear in this regime.
+
+that diagonalizes the matrix Aab = −∂ 2 V/∂τ a ∂τ b . We refer to the diagonalized A-matrix
+as Â. In Figure 6a we show the relationship between the largest 4-cycle volume τL and the
+compactification volume V, where τL is measured in a basis where Aab = Âab . Because V
+3/2
+is approximately linear in τL , it appears that the single parameter τL controls the overall
+volume of the Calabi-Yau in this region of moduli space. The smallest eigenvalue of the
+metric, λg , is strongly correlated with V — see Figure 6b — and so the rescaling to V = 1
+makes the distribution of λg highly localized. The smaller 4-cycles, on the other hand, do not
+change the volume very much, and the corresponding metric eigenvalues have a larger spread.
+As τL increases, changes to the other 4-cycle volumes result in a smaller relative change to
+the overall volume, and so these tendencies become more pronounced.
+The hierarchies in the metric eigenvalues are an intriguing and important feature that
+we will discuss further in the following sections.
+5.2
+
+The curvature Hessian in an example
+
+CY (3.17) to the Hessian matrices in
+We next turn to examining the curvature contribution HR
+our ensemble. We will begin with the example of a particular Calabi-Yau hypersurface with
+h1,1 = 25, which we call Y25 .
+CY , which we denote by ρ for brevity, is shown for the
+The eigenvalue spectrum of HR
+R
+example of Y25 in Figures 7, 8, and Figure 9. The spectrum exhibits dramatic tails, as
+illustrated in Figure 8. The bulk of the eigenvalue spectrum, with the tails removed to
+emphasize the shape near the peak of the spectrum, appears in Figure 7, while a logarithmic
+plot of the entire spectrum is shown in Figure 9.
+Although ρR displays significant tails in both directions, the tail towards negativity is
+substantially longer than the tail towards positivity. This may come as a surprise, given the
+CY coming from HCY (3.17). Indeed, the eigenvalue
+positive-semidefinite contribution to HR
+K(3)
+
+– 18 –
+
+−10
+
+−8
+
+−6
+
+−4
+
+−2
+
+2
+
+4
+
+CY in
+Figure 7: Distribution of eigenvalues of the curvature contribution to the Hessian HR
+1,1
+an ensemble of 5000 curvature Hessians derived from Y25 , a Calabi-Yau with h = 25. The
+tails of the distribution extend for a few decades in either direction (see Figure 8) and so have
+been truncated to make the bulk of the spectrum more visible. This distribution is to be
+contrasted with Figure 2b, which is the distribution of eigenvalues for the Wigner+Wishart
+ensemble suggested by the null hypothesis.
+
+CY for Y
+distribution for HK
+25 is positive and exhibits large tails towards positivity (see Fig(3)
+CY and HCY , this positive tail is
+ure 10). However, because of the correlations between HK
+(3)
+K(4)
+CY , and the longest tail that remains is the tail towards negativalmost entirely removed in HR
+ity. These correlations can be seen explicitly in the similar structures in the derivatives of the
+Kähler potential (3.12c) and (3.12d). Indeed, the form of the combined Riemann tensor (3.14)
+demonstrates that significant cancellations have occurred.
+CY
+Although we have focused on a particular example, Y25 , the bulk of the spectra of HR
+calculated on other Calabi-Yau manifolds are qualitatively very similar, especially for larger
+h1,1 (see Figure 11). However, the tails of the distributions behave in quantitatively different
+ways: as we demonstrate in §5.4, the greater the curvature of moduli space, the longer the
+CY .
+corresponding tail of HR
+
+5.3
+
+Evidence for heavy-tailed spectra
+
+The tails in ρR are clearly extensive — see Figure 7. Indeed, the kurtosis of our sample of
+CY on Y
+HR
+25 is 230. In this section we quantify the extent of these tails in comparison to
+those in a number of reference distributions.
+Comparison of the quantiles of the left tail of ρR to the quantiles of a half-normal distribution (Figure 12) establishes that the tails of ρR contain more of the population than do
+
+– 19 –
+
+−2000 −1500 −1000 −500
+
+50
+
+(a) Minimum eigenvalues
+
+100
+
+150
+
+(b) Maximum eigenvalues
+
+CY for Y . For our
+Figure 8: The spectra of minimum and maximum eigenvalues of HR
+25
+sample, the minimum eigenvalues lie in the range [−2573, −3.2] and the maximum eigenvalues
+lie in the range [−.03, 167].
+
+−1000 −10
+
+−.1
+
+.1
+
+10
+
+1000
+
+−1000 −10
+
+CY
+(a) HR
+
+−.1
+
+.1
+
+10
+
+1000
+
+WW
+(b) HR
+
+CY
+Figure 9: Distribution of eigenvalues of the curvature contribution to the Hessian HR
+WW
+and HR , presented on a logarithmic scale. Note the lengthy tail toward negativity in the
+CY .
+spectrum of HR
+
+the tails of a half-normal distribution. The kurtosis of the left tail (K ≈ 149) is much larger
+than that of a half-normal distribution (K ≈ 3.87), and the kurtosis of the right tail is also
+significant (K ≈ 77.4). In the remainder of this section we will focus on the tail towards
+negativity and so for graphical purposes, and only within this section, we will reverse the sign
+of ρR and shift the origin, so that the tail toward negativity in ρR is displayed extending to
+the right and peaking at zero.
+By definition, a distribution is heavy-tailed when the tail is not exponentially bounded.
+Specifically, the survival (or tail) function of a distribution with probability distribution func-
+
+– 20 –
+
+−1000 −100
+
+−10
+
+−1
+
+−.1
+
+.1
+
+CY
+(a) HK
+(4)
+
+1
+
+10
+
+100
+
+1000
+
+CY
+(b) HK
+(3)
+
+CY for Y . The eigenvalues
+Figure 10: The spectra of the K(3) and K(4) contributions to HR
+25
+CY can be of either sign, but only the negative eigenvalues have been plotted. HCY is
+of HK
+(4)
+K(3)
+non-negative.
+
+tion (pdf) f is defined as
+
+
+S x =
+
+Z ∞
+
+dt f (t) .
+
+(5.1)
+
+x
+
+The distribution is heavy-tailed if and only if for all γ > 0, eγx S (x) diverges as x → ∞. A
+canonical example of a heavy-tailed distribution is the Pareto distribution, for which the pdf
+fβ;k (x) = β kβ x−β−1 has support for x > k. For a normal distribution, eγx S (x) → 0 for
+any γ > 0, so the tails are not heavy. Exponential distributions fκ = κe−κx (κ > 0) are a
+marginal case in which the limit vanishes, diverges, or converges to a finite value depending
+on whether γ is less than, greater than, or equal to κ.
+A sufficient condition for a distribution to be heavy-tailed is that the hazard function
+h(x) := − log S(x) is strictly concave downward. In Figure 13a, we compare simulated hazard
+functions for the Pareto, half-normal, and exponential distributions to that of the last 10% of
+CY computed for Y . The hazard
+the left (negative) tail of the eigenvalue spectrum ρR of HR
+25
+curves for the half-normal and power law distributions are strictly concave up and down,
+indicating light and heavy tails, respectively. The simulation of the hazard function for the
+exponential distribution does not clearly possess either concavity, and indeed the analytic
+result is h(x) = κ x.
+The hazard function for ρR in Figure 13 appears to be very slightly concave downward.
+A straightforward way to determine the concavity is to fit the hazard function to the form
+ĥ = a + b x1+w . When w > 0, the model curve is concave upward, while when w < 0, the
+model curve is concave downward. In Figure 13b, we show the χ2 calculated from the best fit
+for a variety of values of w, indicating that the data are well-fitted by a curve that is concave
+down: by this measure, w ≥ 0 is excluded with extremely high confidence. A rough estimate
+of errors was obtained by subdividing the populations into five equal groups and combining
+
+– 21 –
+
+−5
+
+5
+
+−5
+
+5
+−5
+Top row: h1,1 = 25
+
+5
+
+−5
+
+5
+
+−5
+
+5
+
+−5
+
+5
+−5
+Second row: h1,1 = 20
+
+5
+
+−5
+
+5
+
+−5
+
+5
+
+−5
+
+5
+−5
+Third row: h1,1 = 15
+
+5
+
+−5
+
+5
+
+−5
+
+5
+
+−5
+
+5
+−5
+1,1
+Fourth row: h = 10
+
+5
+
+−5
+
+5
+
+−5
+
+5
+
+−5
+
+5
+−5
+1,1
+Bottom row: h = 5
+
+5
+
+−5
+
+5
+
+CY for a collection of Calabi-Yau manifolds. The
+Figure 11: Distributions of eigenvalues HR
+tails of all of the distributions have been truncated to focus on the bulks of the distributions,
+which display common features consistent with universality.
+
+the resulting hazard functions using the standard error.
+However, using a parametric test for concavity is potentially problematic, as a concaveupward curve may in principle give a better fit to the data. A non-parametric test for
+concavity was described in [26]. Given a function y = f (x) and three points {x1 , x2 , x3 }, the
+concavity C (x1 , x2 , x3 ) is equal to +1 (−1) if the quadratic interpolation between the three
+points (x1 , y1 ), (x2 , y2 ), and (x3 , y3 ) is concave up (down), and equals 0 if the points are
+collinear. The method described in [26] yields an approximation to the expectation value of
+
+– 22 –
+
+Y25
+150
+100
+50
+50
+
+100
+
+150
+
+Nσ
+
+200
+
+CY computed in
+Figure 12: Quantiles of the left half of the spectrum ρR of eigenvalues of HR
+the example of Y25 , against the same quantiles of a half-normal distribution Nσ . The variance
+of H is chosen to give the best fit to the left tail of ρR . The dashed line is the curve that
+would result if ρR were half-normal.
+
+χ̄2
+Exp
+
+10
+8
+
+HN
+
+800
+
+Y25
+
+600
+
+6
+
+Y25
+
+400
+
+Pow
+
+4
+
+Exp
+
+200
+
+2
+500 1000 1500 2000 2500
+
+−.5
+
+.5
+
+1.0
+
+w
+
+(b) χ2 per degree of freedom
+
+(a) Hazard functions
+
+CY eigenvalues
+Figure 13: (a): Hazard functions for the last 10% of the distribution of HR
+of Y25 compared to best-fit half-normal, exponential, and power (Pareto) distributions. (b):
+Goodness of fits (χ2 per degree of freedom) of the hazard functions of ρR and of an exponential
+distribution to the form a+b x1+w . Nonnegative concavity (w ≥ 0) in the case of ρR is rejected
+with overwhelming significance.
+
+the concavity of a function. For the hazard function of ρR , sampled with 100 points, we find
+hCi = −0.62±.06, giving strong evidence for downward concavity. Removing the points in the
+beginning of the distribution (which constitute the bulk of the distribution rather than the
+tail) or the end (which are statistically limited) tends to increase the significance of concavity.
+For comparison, an analysis for the hazard function of a corresponding amount of simulated
+data from an exponential distribution gives hCi = 0.02 ± 0.06, and so an absence of curvature
+
+– 23 –
+
+cannot be statistically rejected.
+CY in the example of Y
+In summary, the eigenvalue spectrum ρR of HR
+25 has large positive
+excess kurtosis (i.e., is leptokurtic), with much longer tails than those of a normal distribution.
+Moreover, from the negative concavity of the hazard function we conclude that ρR is in
+fact a heavy-tailed distribution, with a survival function that falls off more slowly than any
+exponential.
+While we will not present here the corresponding analyses for other examples of CalabiCY in all of
+Yau threefolds, we find similarly pronounced tails in the eigenvalue spectra ρR of HR
+the threefolds. Indeed, in an ensemble of threefolds with h1,1 = 10, . . . , 25 and five threefolds
+at each h1,1 , we find that the average best fit value to ĥ = a + b x1+w is w = −0.52 ± 0.15.
+We find comparable results for the metric eigenvalue spectrum as well: not only are the
+tails of the metric distributions quite extensive (see Figure 5b), they are formally heavy.
+5.4
+
+Explaining the tails in the spectra
+
+CY in Calabi-Yau
+Having established the existence of heavy tails in the spectra ρR of HR
+hypersurface examples, we turn to explaining the causes of these tails. From the form
+¯
+(HR )ab̄ = −Rab̄cd¯F̄ c F d , it is easy to see that the length of the tails in HR is intimately
+related to the curvature of moduli space as measured by
+
+R 2 := Rabcd Rabcd ,
+
+(5.2)
+
+¯
+
+which, like the Ricci scalar R = −Kad Kb̄c Rab̄cd¯, is invariant under the homogeneous rescaling
+~t → λ~t. Let us explore this connection in detail. At any given point in moduli space, we can
+adopt Kähler normal coordinates in which Kab̄ = δab̄ , in which case the curvature contribution
+to the Hessian becomes
+¯
+
+¯
+
+(HR )ab̄ = −Rab̄cd̄ F̄ c F d = −Rab̄cd̄ δcē δf d Ff F̄ē .
+
+(5.3)
+
+For fixed F 2 , parametrically large eigenvalues occur when Fa points in directions of large
+curvature. In Kähler normal coordinates, R 2 is just the sum of the squares of the entries in
+the Riemann curvature tensor, and so the minimum eigenvalues satisfy
+λR,min ≥ −R |F |2 .
+
+(5.4)
+
+The precise alignment of the F-terms with the Riemann tensor required to saturate the
+bound (5.4) will not occur in generic cases: instead there will be a misalignment by a random
+rotation. Therefore, generically the eigenvalues of HR will respect the approximate bound
+λR & −R |F |2 /h1,1 .
+
+(5.5)
+
+One might think that an even stronger bound may result due to cancellations between
+opposite-sign terms in the curvature tensor. However, we find empirically that in the deep
+interior of the Kähler cone, the components Rab̄cd¯ of the Riemann tensor (in the toric basis
+
+– 24 –
+
+used throughout this work) are mostly positive.8 Indeed, if the components of the Riemann
+tensor had no statistical preference for either sign then an ensemble of Ricci scalars taken from
+a Calabi-Yau example would be clustered around zero. As shown in Figure 14, R is negative
+and linearly correlated with R, which is a manifestation of the preference of the components
+of Riemann Rab̄cd¯ to have a positive sign.9 To understand this finding, we compare to a few
+simple reference cases. First, the Ricci scalar of a Riemann tensor that has i.i.d. components
+with zero mean has no preference for either sign, and there is no significant correlation between
+the invariants: see Figure 15a. In the special case of a Kähler manifold for which the metric
+depends only on the real part of the coordinates, the Ricci scalar has a slight preference to
+be negative, but there is little correlation between R and R (Figure 15b). Finally, in an
+ensemble of Riemann tensors on a Kähler manifold with i.i.d. positive coefficients, the Ricci
+scalar indeed turns out to be negative, but with only a very slight correlation (Figure 15c).
+Clearly, the structure of the Riemann tensor on a Calabi-Yau Kähler moduli space is more
+intricate than that of these reference models. The empirical results just described are related
+to the conjectured bounds on the sectional curvature proposed in [27] (see also [28] for a
+related proposal and [29] for counterexamples). However, not all examples that we examined
+have a negative Ricci scalar.
+Similar behavior occurs for other threefolds, though the characteristic sizes of the curvatures can be quite different for different threefolds, with no simple scaling with h1,1 . An
+example Calabi-Yau with h1,1 = 20 exhibits smaller curvatures and correspondingly less negCY : see Figure 16.
+ative eigenvalues of HR
+The bound (5.5) is simply a scaling result, with the factor of h1,1 determined by modeling
+a random rotation in a space of dimension h1,1 , and we can only expect it to hold up to an
+O (1) multiplicative factor. Figure 17 compares the minimum eigenvalues of an ensemble of
+CY , for a number of threefolds, to the curvature invariants R. We observe that
+spectra of HR
+1,1
+76% of the data satisfy the bound (5.5), while 96% satisfy the weaker bound λCY
+R,min < 2R/h .
+The scaling of the Hessian eigenvalues with curvature is modulated by the fact that
+alignment of the F-terms with the directions of maximum curvature is non-generic. It is
+then interesting to consider the effect that changing the direction of F̂a = Fa / |F | has on
+the tail population. Finding the direction of F̂ that minimizes the smallest eigenvalue is
+computationally challenging at even modest h1,1 , and so we consider an example with h1,1 = 4.
+In a particular basis and at a fixed point in moduli space, the maximal sectional curvature
+is R11̄11̄ ≈ 103, where we have rotated coordinates so that the direction of largest sectional
+CY is λCY
+curvature is the 1 direction. The corresponding minimum eigenvalue of HR
+R,min ≈ −200.
+CY
+min
+The direction that results in the most negative HR , F̂ , has a large overlap with the
+8
+
+Note that this does not violate the antisymmetry of the Riemann tensor, which requires for example that
+Rab̄cd̄ = −Rb̄acd̄ .
+9
+That the curvatures are large compared to unity might cause concern since the curvature of moduli space
+often diverges near the boundaries of the Kähler cone, where cycles collapse and the supergravity approximation
+is no longer trustable. However, the points that we consider here are in the bulk of the cone, where α′ corrections
+are under control.
+
+– 25 –
+
+R
+−47000
+
+−52000
+
+−57000
+
+R
+36000
+38000
+40000
+42000
+44000
+
+
+¯ 1/2
+Figure 14: Values of R = Rab̄cd¯Rab̄cd
+and the Ricci scalar R taken from an ensemble
+of points in Y25 . Contrast Figure 15.
+34000
+
+1 direction, F̂1min ≈ 0.8. Remaining at the same point in moduli space, we generate an
+ensemble of Hessians by choosing randomly oriented F-terms. In Figure 18 we plot the
+CY against the angle between F̂ and F̂ min . One can see that the
+smallest eigenvalue of HR
+orientation of F̂ plays an important role in the population of the tail. For larger h1,1 , finding
+the direction of F̂ that results in the largest tails towards negativity is computationally
+challenging, but we observe empirically that when the tails are particularly extensive, F̂ has
+large overlap with the directions in which the curvature is large.
+CY .
+The maximum value of R sets an approximate bound for the minimum eigenvalue of HR
+Although the curvature is well behaved, albeit often large, in the interior of the cone, the metric may degenerate and the curvature diverge near the boundary (typically near boundaries
+that have codimension greater than 1). The boundaries of the Kähler cone are marked by
+the collapse of one or more 2-cycles where corrections to the leading-order Kähler potential
+become important, and so we have remained away from the boundaries in all of our analysis
+thus far. However, to expose the relationships between curvature and eigenvalue hierarchies
+derived from the leading-order Kähler potential, it is useful to approach the boundaries, with
+the understanding that in actual string compactifications there would be large corrections to
+these results.
+We illustrate this in an example with h1,1 = 15, approaching a codimension two boundary
+of the Kähler cone where Aab = ∂ta /∂τ b degenerates. The distance to the wall is parameterized by t, which measures the volume of the two 2-cycles that are shrinking. In Figure 19a
+we demonstrate the relationship between R and t: the curvature diverges as we approach
+
+– 26 –
+
+R
+
+R
+
+150
+
+0
+
+75
+
+−5
+
+0
+
+−10
+
+−75
+
+−15
+
+−150
+
+1955
+
+1960
+
+R
+
+1965
+
+40
+
+(a) Riemann tensors with i.i.d. entries, in
+spaces of real dimension 50
+
+42
+
+44
+
+46
+
+48
+
+R
+
+(b) Riemann tensors with i.i.d. entries, in
+Kähler manifolds of complex dimension 15
+
+R
+−20
+
+−25
+
+−30
+
+−35
+
+−40
+40
+
+42
+
+44
+
+46
+
+48
+
+R
+
+(c) Riemann tensors with i.i.d. positive entries for Rab̄cd̄ , in Kähler manifolds of complex
+dimension 15
+
+Figure 15: Curvature invariants of random Riemann tensors with increasing amounts of
+structure. These simple reference models are to be contrasted with the strong correlation
+exhibited in a Calabi-Yau (Figure 14).
+
+this boundary. A related effect is that A−1 develops a zero eigenvalue and consequently,
+via (3.12a), one of the eigenvalues of the metric Kab̄ diverges (Figure 19b). To explore the
+behavior of the curvature Hessian, at each point in moduli space we generate 105 random
+CY . In figure 19c, we demonstrate the correlation
+F-terms, and calculate the eigenvalues of HR
+between the minimum eigenvalue and R: as t → 0 and R grows, the length of the tail in
+CY also grows.
+HR
+5.5
+
+Implications for stability
+
+The presence of heavy tails in the distribution of negative eigenvalues of the curvature conCY to the total Hessian H may have considerable impact on the probability P
+tribution HR
++
+
+– 27 –
+
+R
+−1350
+−1550
+−1750
+−200
+
+−150
+
+−100
+
+−50
+
+700
+
+(a) Minimum eigenvalues
+
+900
+
+1100
+
+R
+
+(b) Curvature invariants
+
+CY and the correlation between the
+Figure 16: The spectrum of minimum eigenvalues of HR
+Ricci scalar and R for a Calabi-Yau with h1,1 = 20. This ensemble consists of 5000 matrices.
+
+λCY
+R,min
+103
+
+100
+
+10
+
+1
+
+1
+
+10
+
+100
+
+103
+
+R/h1,1
+
+CY (in units of |F |2 ) to the rescaled
+Figure 17: Comparison of the minimum eigenvalue of HR
+curvature R/h1,1 . The data were gathered from a collection of Calabi-Yau threefolds between
+h1,1 = 2 and h1,1 = 25, with five distinct threefolds for each value of h1,1 and about 1000
+points in moduli space from each threefold. Each color corresponds to a different value of
+h1,1 . Well inside the Kähler cone there is typically little variation in curvature, and hence
+curvature invariants for each Calabi-Yau tend to cluster in vertical stripes. Those points
+below the line satisfy the bound (5.5).
+
+– 28 –
+
+
+
+λCY
+R,min θ /λR,min θ = 0
+
+0.2
+
+0.4
+
+0.6
+
+0.8
+
+1.0
+
+sin θ
+
+−0.2
+−0.4
+−0.6
+−0.8
+−1.0
+CY as a function of the angle of
+Figure 18: Magnitude of the most negative eigenvalue of HR
+F̂ with respect to the direction that produces the most negative eigenvalue. The eigenvalues
+are normalized with respect to the most negative eigenvalue obtained. This sample results
+from a Calabi-Yau with h1,1 = 4.
+
+that a Hessian drawn from the ensemble has only positive eigenvalues. In this section we will
+comment briefly on the effect of heavy tails on P+ .
+Direct study of P+ requires a fully-specified stochastic model for the superpotential and
+its derivatives. While in a characterization of HR the details of the superpotential model have
+little impact, in the full Hessian H they can be determinative. To apply the i.i.d. model of W
+used in [7, 10], it is necessary to fix a physically meaningful ambiguity, namely the relative
+r.m.s. sizes of Fa , Zab , and Uabc . As explained in this context in [10], the relative magnitudes of the F-terms and of the supersymmetric masses encoded in Zab reflect the strength of
+supersymmetry breaking, and the prevalence of corresponding instabilities. Modeling supersymmetry breaking in this manner necessarily introduces a large degree of model-dependence,
+and we defer a detailed analysis to future work.
+Even without modeling the non-curvature Hessian H −HR , we can draw a few qualitative
+conclusions about the impact of the heavy tails toward negativity in HR . We consider the
+fraction of eigenvalues that are negative in our ensemble of curvature Hessians HR , and
+compare this to the fraction of negative eigenvalues in the i.i.d. Wigner+Wishart model
+discussed in §2.2, i.e. for the null hypothesis (1.3).
+Focusing first on Y25 , the mean fraction of negative eigenvalues is 43%, which is significantly higher than the 14% fraction we find in Wigner+Wishart matrices of the same size.
+However, the distribution in the case of Y25 has a wider spread, with a standard deviation of
+2.5% for the Calabi-Yau data and 1.2% for the Wigner+Wishart matrices (see Figure 20). For
+
+– 29 –
+
+λgmax /λgmedian
+4 × 104
+
+R
+1013
+
+4000
+1010
+400
+107
+.005
+
+.05
+
+.5
+
+t
+
+107
+
+1010
+
+1013
+
+R
+
+(b) Correlation between the metric hierarchies and curvature R
+
+(a) Divergence of the curvature
+
+|λCY
+R,min |
+
+1013
+
+108
+
+103
+107
+
+1010
+
+1013
+
+R
+
+(c) Correlation of the smallest eigenvalues of
+ρR with the curvature, with the line indicating
+the bound (5.5)
+
+Figure 19: Behavior of the curvature, metric eigenvalues, and curvature Hessian eigenvalues
+as one approaches a particular boundary of the Kähler cone by taking t → 0. The hierarchies
+in the metric eigenvalues are measured by comparing the largest eigenvalue to the median
+eigenvalue. Corrections to the leading-order Kähler potential are large in this regime, as
+explained in the main text.
+
+a more meaningful comparison we therefore rescale the mean fraction of negative eigenvalues
+by the standard deviation of the corresponding distribution. Repeating this analysis for several different threefolds at different values of h1,1 yields Figure 21. We find that the rescaled
+fraction of negative eigenvalues generally increases more quickly with h1,1 in the threefold
+examples than it does in Wigner+Wishart or Wigner reference models. Although this proxy
+is suggestive of decreased metastability, a more precise result requires detailed study of the
+full Hessian that incorporates superpotential data.
+
+– 30 –
+
+WW
+Y25
+
+0.2
+
+0.4
+
+0.6
+
+0.8
+
+1.0
+
+Figure 20: Distribution of the fraction of negative eigenvalues in the curvature Hessian.
+CY for Y
+WW for 25 complex scalar
+The Hessians are taken from ensembles of HR
+25 and of HR
+fields (1.3). For the Calabi-Yau data, the mean and standard deviation of this distribution
+are 43% and 1.2%, while for the WW distribution, the mean and standard deviation are 2.5%
+and 1.2%.
+
+5.6
+
+Other string theories
+
+In all of the above, we focused on the properties of the Hessian on the Kähler moduli space of
+O3/O7 orientifolds of a Calabi-Yau threefold, in which the Kähler coordinates are complexifications of 4-cycle volumes. In other corners of the landscape, including the heterotic string,
+O5/O9 projections of type IIB, and O6 projections of type IIA, the complexified Kähler moduli are complexifications of 2-cycle volumes, J + i B2 = ̺i ωi (in O5/O9 projections, C2 rather
+than B2 is used). Our methods readily apply to these constructions, and it is interesting to
+CY′ .
+compare the spectra shown in §5 to these cases. We denote the resulting Hessians by HR
+CY′ for Y
+The eigenvalue spectrum of an ensemble of matrices HR
+25 is shown in Figure 22. Just
+as in the O3/O7 projection of type IIB, we find extended tails. One noteworthy difference
+CY′ is typically positive,
+from the O3/O7 projection is that the Ricci scalar in the case of HR
+CY′ exhibits corresponding positive tails. We defer a more complete consideration of
+and HR
+these classes of compactifications to future work.
+
+6
+
+Reference Models
+
+In the previous sections, we identified key statistical properties of the Kähler metrics and
+curvature Hessians HR arising in compactifications on (orientifolds of) explicit Calabi-Yau
+hypersurfaces in toric varieties. The presence of extensive tails — toward positivity for Kab̄ ,
+CY — is the most striking feature of these ensembles.
+and in both directions for HR
+Our findings establish that the i.i.d. Wigner+Wishart model (1.3) for HR proposed in [10]
+must be modified in order to reflect the properties of actual Calabi-Yau compactifications. The
+
+– 31 –
+
+hf i /σf
+50
+
+40
+
+æ
+æ
+30
+
+20
+
+æææ
+
+æ
+
+æ æ
+æ ò
+æ
+òòò
+à
+ò
+æ
+àààà
+à
+òò
+ò
+à
+à
+æ òòòò ààààààà
+òààààà
+òà
+òà
+ò
+à
+à
+ææ
+
+10
+
+æòò
+æ
+ò
+æ ò òææ
+òòòææ
+
+æ
+
+æ
+
+5
+
+10
+
+15
+
+20
+
+25
+
+h1,1
+
+Figure 21: A proposed proxy for the probability of large fluctuations of HR in the direction of positivity: the expectation value of the fraction of negative eigenvalues divided by
+the standard deviation of the distribution of this fraction. The growth of this quantity with
+h1,1 should trace the growth of instabilities with h1,1 . Shown are results for Wigner matrices (N), the Wigner+Wishart model () and Calabi-Yau examples (•). The Wigner and
+Wigner+Wishart data were gathered from ensembles of 5000 matrices at each point, while
+the Calabi-Yau data were gathered from ensembles of 5 threefolds at each h1,1 with 1000
+Hessians from each threefold.
+
+i.i.d. model, however, does have the important virtues of simplicity and extremely low computational cost in comparison to the analysis described in this paper. It would be instructive
+to identify a stochastic model that shares some of the simplicity of the i.i.d. Wigner+Wishart
+model, but more accurately models the geometry of Calabi-Yau moduli spaces. In this section
+we will describe several candidate models for HR , among which the Bergman metric discussed
+in §6.3 has the most qualitative success, though in its simplest form it lacks the heavy tails
+of the Calabi-Yau spectrum.
+6.1
+
+Random intersection numbers
+
+A central result of this paper is that correlations between the various contributions to the
+Hessian will impact the features of the eigenvalue spectrum. Although we focused on the
+particular example of O3/O7 orientifolds of Calabi-Yau manifolds, correlations should be
+a universal feature, and further elucidation of their effect could be obtained by a study of
+
+– 32 –
+
+−1.5
+
+−1.3
+
+−1.1
+
+2000
+
+(a) Minimum eigenvalues, which in this sample fall in [−1.7, −1.0]
+
+4000
+
+6000
+
+8000
+
+(b) Maximum eigenvalues, which in this sample fall in [29, 9300]
+
+−1
+
+1
+
+2
+
+(c) Bulk of the distribution, with the tail towards positivity truncated
+′
+
+CY for Y , with the
+Figure 22: The spectrum of an ensemble of 5000 curvature Hessians HR
+25
+Kähler coordinates that arise in compactification of the heterotic string, O5/O9 projections
+of type IIB, or O6 projections of type IIA.
+
+i.i.d. Kähler potentials. One could hope to model the Kähler potential as
+
+
+1 abc
+K = −2 log
+c ta tb tc ,
+3!
+
+(6.1)
+
+where cabc is a totally symmetric i.i.d. tensor. This approach is immediately problematic:
+for almost all choices of cabc , and for almost all points in the space spanned by ta , the
+metric following from (6.1) has negative eigenvalues. Finding the interior of the Kähler cone
+numerically is then very difficult. In fact there is no guarantee that the Kähler cone will not
+be empty for a generic set of random intersection numbers.10
+10
+
+Further refinement could be obtained by incorporating the consistency requirements for the intersection
+numbers on a Calabi-Yau discussed in [30].
+
+– 33 –
+
+−8
+
+−6
+
+−4
+
+−8
+
+−2
+
+−6
+
+−4
+
+−2
+
+(b) Spectrum of minimum eigenvalues
+
+(a) Eigenvalue spectrum
+
+i.i.d.+
+, in which Rab̄cd¯ are taken to be i.i.d. and positive. Here
+Figure 23: The spectrum of HR
+1,1
+h = 15, and the ensemble consists of 5000 matrices.
+
+6.2
+
+Random positive Riemann curvature
+
+The components Rab̄cd¯ of the Riemann tensors on the Kähler moduli spaces that we study
+are nearly always positive. An ad hoc modification of the i.i.d. approach would be to impose
+positivity on the i.i.d. components. We accomplish this in a very crude way by generating an
+ensemble of Riemann tensors by adding i.i.d. K(3) and K(4) contributions and then taking the
+absolute values of the resulting tensor components. This prescription yields an ensemble of
+i.i.d.+
+which manifest an increased correlation between the curvature tensors (Figmatrices HR
+ure 15c). Correspondingly, the curvature Hessian spectrum displays a tail towards negativity
+as shown in Figure 23. However, these features are not as pronounced as in the Calabi-Yau
+case.
+6.3
+
+Random Bergman metrics
+
+A construction that allows for a definition of a random Kähler potential is the Bergman
+metric, which comes from the embedding of compact Kähler manifolds into projective space
+along the lines of Kodaira.11 In practice, the Bergman metric on a Kähler manifold with
+coordinates z i is specified by the Kähler potential:
+K(z, z) =
+
+
+1
+log f z, z̄ ,
+k
+
+
+f z, z̄ := s̄α (z̄)Pαβ sβ (z) ,
+
+(6.2)
+
+in which {sα (z)} is a basis of polynomials of degree ≤ k and P is a positive-definite Hermitian
+matrix. f is called the Bergman kernel. A particular Bergman metric is defined by a choice
+of positive-definite matrix Pαβ , and by taking the entries of this matrix to be i.i.d., one can
+construct a random Bergman metric, in the spirit of [9].
+11
+
+See [31] for a mathematical review.
+
+– 34 –
+
+One might be tempted to use (6.2) to construct an ensemble of metrics that scale homogeneously under z i → λz i , and thereby model the homogeneous metrics on the moduli space
+of a Calabi-Yau. However, positive-definiteness of the Bergman metric is only guaranteed
+when P is positive-definite, and in particular is not degenerate. Indeed, if P is such that f
+is a homogeneous function under z i → λz i , then the resulting metric is degenerate.12 More
+generally, if P were not positive-definite, then the metric would only be positive-definite in
+certain regions in moduli space, and finding such regions is computationally difficult when
+the dimension of the space is large.
+One way to study a Bergman metric is to fix the matrix P , and then scan over a neighborhood in the coordinates z i . However, when z i z̄ ī is large and k is finite, the kernel is
+dominated by the largest-power monomials in the basis, and so f is well-approximated by a
+homogeneous function of degree 2k. As discussed above, homogeneous kernels are degenerate,
+and so the metric is guaranteed to have singularities for sufficiently large z.
+An alternative to exploring a small region with a fixed kernel is to generate a new Pαβ
+at each point in moduli space, and then redefine the coordinates such that the point under
+consideration is z i = 0. The philosophy is quite similar to the i.i.d. approach in that we
+assume that we work with an ensemble of Hessians generated at points in moduli space that
+have a separation that is large in comparison to the correlation length of P . Therefore, as
+in the i.i.d. approach, we lose information about correlations between Hessians at different
+points but retain correlations between the various derivatives of the Kähler potential at each
+point.13 Since calculation of the Riemann tensor of a Kähler metric requires no more than
+two holomorphic or anti-holomorphic derivatives (see (2.6)) and we are evaluating all tensors
+at z = 0, we can take the sα to be quadratic polynomials.
+We now consider an ensemble of Bergman metrics as described above, taking P to be a
+random Wishart matrix. The Riemann tensor can be calculated entirely in terms of Pαβ . In
+B we need to include F-terms.
+order to construct the associated contribution to the Hessian HR
+As in the O3/O7 case, we take the F-terms to be
+√
+
+Fa ∈ F Ω 0, σ , σ = 1/ N ,
+(6.3)
+and then report on the distribution of eigenvalues of the canonically-normalized and rescaled
+curvature Hessian (cf. (4.6)).
+B has qualitative features that resemble those of the
+The spectrum of eigenvalues of HR
+Calabi-Yau hypersurface examples. In particular, the log-type Kähler potential leads to
+B
+B
+correlations between HK
+(3) and HK(4) , as shown in Figure 24, that are very similar to the
+B and the correlation
+correlations shown in Figure 10. In addition, both the spectrum of HR
+between curvature invariants shown in Figure 25 mirror the Calabi-Yau case. Since the
+12
+
+The argument is very similar to the argument used in §3.3 to argue for the negativity of HR — for a
+homogeneous kernel, contraction of the metric with z i shows that the metric is degenerate.
+13
+Correlations between different points could be incorporated, at least in a statistical sense, by implementing
+the techniques of [11].
+
+– 35 –
+
+.02
+
+.04
+
+.06
+
+−1.75
+
+.08
+
+−1.0
+
+−0.25
+
+0.5
+
+B
+(b) HK
+(4)
+
+B
+(a) HK
+(3)
+
+Figure 24: Eigenvalue spectra for the K(3) and K(4) contributions to the Hessian in the case
+of Bergman metrics. Each ensemble consists of 1000 20 × 20 matrices.
+R
+−20
+−60
+−100
+−1.5
+
+−0.5
+
+.0.5
+
+9
+
+B
+(a) Eigenvalues of HR
+
+11
+
+13
+
+R
+
+(b) Curvature invariants
+
+B at h1,1 = 20, and the correlation between the
+Figure 25: Distribution of eigenvalues for HR
+curvature invariants.
+
+curvature invariants are small, the tails are not as extensive as in the Calabi-Yau case. Indeed,
+repeating the analysis in §5.3, we find no significant evidence for the tails to be heavy.14
+The Bergman metric has features that make it appealing as a model for moduli space
+metrics: it incorporates the correlations between K(3) and K(4) , and appears to have similar
+relationships between R and R as in the Calabi-Yau case. However, although fluctuations
+B are rare, they are not prevented from occurring. Furthermore, at large
+to positivity in HR
+“volume” f , where the argument of the logarithmic Kähler potential is well-modeled by a
+degree-three homogeneous function, one should expect a non-positive spectrum of HR . Said
+14
+If one instead takes the entries of the Pαβ appearing in the Bergman Kähler potential (6.2) to be drawn
+from a heavy-tailed distribution, the resulting metric spectra can have heavy tails.
+
+– 36 –
+
+differently, it is not clear how to connect the preferred coordinates in terms of which the
+volume is homogeneous to the coordinates used in the Bergman metric.
+
+7
+
+Spectra of Axion Decay Constants
+
+A significant application of our results is to the problem of determining axion decay constants.
+The axion decay constant spectrum is relevant for a wide range of questions, including analysis
+of the “axiverse” proposed in [32], the study of axion dark matter, late time decays, etc. For
+the particular purpose of developing models of inflation in string theory, it is important to
+understand whether axion decay constants can reach or exceed the Planck scale, f & Mpl .
+While axion decay constants in string theory have been the subject of intensive study (see [15]
+and the overview in [33]), most results to date have involved either single axions; pairs of
+axions; or, in systems with N ≫ 1 axions, “democratic” estimates in which the N decay
+constants are taken to be essentially comparable and uncorrelated [34, 35]. Here we initiate
+a more systematic study of the statistics of axion decay constants, incorporating the critical
+phenomenon of eigenvalue repulsion.
+In a compactification of type IIB string theory on a Calabi-Yau orientifold with O3-plane
+and O7-plane fixed loci, the intersection numbers determine the classical effective action for
+the Kähler moduli ρa = τ a + i ca , including in particular the axions15
+Z
+a
+C4 .
+(7.1)
+c =
+Da
+
+The kinetic term for these axions is given by the Kähler metric Kab̄ (3.12a): taking the τ a to
+be constants, the low-energy Lagrangian includes
+X
+L ⊃ Kab̄ (τ c ) ∂ca ∂cb −
+Λ4a (τ c ) cos(ca /ζa ) .
+(7.2)
+a
+
+where the potential term represents instanton contributions that break the perturbative shift
+symmetries ca → ca + const. to discrete shifts ca → ca + 2πζa . In the absence of a preferred
+basis for the Kähler moduli space, one could rescale the ρa to arrange that each of the ca has
+period 2π, i.e. setting ζa → 1, but we will not do so here: instead, the metric Kab̄ (τ c ) is taken
+to be expressed in the basis used throughout this work.
+Determining the decay constant f in a model with h1,1
++ = 1 and a corresponding single
+2
+axion c is straightforward: defining Kcc̄ = f , the Lagrangian takes the form
+1
+L = f 2 (∂c)2 − Λ4c cos(c/ζ) .
+2
+
+(7.3)
+
+so that by defining φ = f c we arrive at
+1
+L = (∂φ)2 − Λ4c cos
+2
+15
+
+
+
+φ
+fζ
+
+
+
+.
+
+(7.4)
+
+The same data determine the classical action for axionic fields descending from C2 and B2 , in compactifi1,1
+cations with h1,1
+− > 0, but for simplicity we will describe only the case h− = 0.
+
+– 37 –
+
+The periodicity of the canonically-normalized field φ is then 2πf ζ. As explained in [36], in
+generalizing this result to multiple axions one must carefully account for kinetic mixing, i.e.
+off-diagonal terms Kab̄ , b 6= a: the orthogonal rotation that diagonalizes Kab̄ does not preserve
+the form of the potential in (7.2), in which each field appears in only a single cosine term in
+the potential. Nevertheless, we will define the decay constants in an N -axion system to be
+√
+the (positive square roots of the) eigenvalues λa of the Kähler metric: fa = λa . We will
+order the eigenvalues for convenience, f1 ≤ f2 ≤ . . . ≤ fN , with N = h1,1 .
+A natural goal would be to derive a matrix model for the Kähler metric analogous to
+the Wigner+Wishart+Wishart matrix model for the Hessian obtained in [10], and to obtain
+analytic results for the eigenvalue spectrum, and hence for the spectrum of decay constants.
+This problem is beyond the scope of the present work, and we limit ourselves to conclusions
+that can be extracted from the ensemble of Kähler metrics presented in §5.
+For the purpose of characterizing the spectra of axion decay constants, the principal
+qualitative lesson of our analysis is that the eigenvalue spectrum of the Kähler metric displays
+a pronounced tail to the right of the median. Because the extreme eigenvalues are very
+different from typical eigenvalues, a computation (or an estimate of the moduli dependence
+of) an individual decay constant f⋆ , along the lines of [15], does not directly constrain the
+full spectrum. In particular, depending on whether f⋆ is a typical member of the spectrum,
+or belongs to the left or right tail, the remaining decay constants may extend over several
+decades in either direction.
+Large outliers, i.e. decay constants belonging to the right tail of the spectrum, provide
+the tantalizing prospect of achieving super-Planckian decay constants in a compactification in
+which all parametric expansions are under good control, and typical decay constants are very
+small in Planck units. However, although super-Planckian effective decay constants appear
+possible via collective excitations in systems with N ≫ 1 axions [34] (and can be enlarged
+via kinetic alignment as in [36]) or via decay constant alignment [37] of two axions, in neither
+of these cases is a super-Planckian eigenvalue of the Kähler metric responsible for the large
+decay constant. In generic examples in the interior of the Kähler cone, the parametric bound
+f . 1 of [15] appears to apply to the maximal eigenvalues fN in our ensemble, not to the
+typical eigenvalues. Identifying non-generic exceptions with super-Planckian decay constants,
+while ensuring the validity of the α′ expansion, is an intriguing problem for future work.
+
+– 38 –
+
+8
+
+Conclusions
+
+The primary results of this work are statistical models for the metric on Kähler moduli
+space in string compactifications on Calabi-Yau hypersurfaces in toric varieties, and for the
+corresponding Riemann curvature contribution HR to the Hessian matrix.16 Our starting
+point was the assumption made in [10] (and implicitly in much earlier work) that for the
+purpose of studying vacuum statistics, the derivatives of K may be taken to be independent
+and identically distributed random variables. At the level of random matrix models, assuming
+i.i.d. entries allows one to model HR as the sum of a Wishart matrix and a Wigner matrix
+[10],
+i.i.d.
+WW
+HR
+≈ HR
+,
+(8.1)
+for which the eigenvalue spectrum can be computed analytically, and the fluctuation probabilities can be obtained. In this work we did not take the derivatives of K to be independent, but
+instead accounted for the correlations that follow from the well-known form of the classical
+Kähler potential,
+
+
+1 abc
+κ ta tb tc .
+(8.2)
+K = −2 log V = −2 log
+3!
+WW has a nonvanishing (albeit small) probOne key finding at this level is that although HR
+CY is necessarily non-positive, with at least one negative
+ability to fluctuate to positivity, HR
+eigenvalue. Thus, incorporating the correlations in K reduces the probability of metastability.17
+CY follows directly from the form (8.2), combined with the fact
+The non-positivity of HR
+that V is a homogeneous function of the Kähler moduli. No knowledge of the intersection
+numbers cijk is required. On the other hand, bounding a single eigenvalue is less informative
+than a statistical description of the entire eigenvalue spectrum, which does require additional
+geometric input.
+CY in an ensemble of compactifications
+To go further, we examined the actual form of HR
+CY is strikingly different from
+on Calabi-Yau hypersurfaces in toric varieties. We found that HR
+WW
+CY
+HR : in particular, the eigenvalue spectrum of HR displays heavy tails toward negative
+WW
+eigenvalues (see Figures 7, 8, and 9a), in contrast to the well-localized spectrum of HR
+CY are closely correlated to heavy tails
+(Figures 2b and 9b). We showed that the tails in HR
+in the eigenvalues of the Kähler metric18 (Figure 5), which in turn are tied to hierarchies
+CY are largest at points in
+of 2-cycle volumes (Figure 19). Correspondingly, the tails in HR
+moduli space that are close to a wall of the Kähler cone. However, we argued that the tails
+are not caused by failure of the α′ expansion: heavy tails are present when there are modest
+hierarchies in cycle volumes, even if all cycles are large in string units.
+16
+
+Our most significant results were obtained for O3/O7 orientifolds of type IIB, but other string theories
+were considered in §5.6.
+17
+See [38] for a study of the incidence of instabilities in a related class of geometries.
+18
+Recall that we worked in a fixed coordinate system defined by a specified basis of cycles, so the eigenvalues
+of the metric are meaningful.
+
+– 39 –
+
+Our results shed light on the characteristic properties of mass matrices and metrics on
+moduli space in Calabi-Yau compactifications of string theory. We discussed two signifiCY very plausibly leads to an
+cant implications: first, the heavy tail toward negativity in HR
+WW . Second, the
+increased incidence of instabilities in comparison to the reference model HR
+heavy tails in the eigenvalues of the Kähler metric imply that in Calabi-Yau compactifications
+with many axions, the axion decay constants are hierarchically separated, with the largest
+eigenvalue orders of magnitude larger than the smallest eigenvalue.
+Exploring the consequences of these findings, as well as extending our results to broader
+classes of compactifications, are important problems for the future.
+
+Acknowledgments
+We are grateful to Michael Douglas, Juan Maldacena, and Itamar Yaakov for comments
+that provided inspiration for a portion of this work. We thank Lara Anderson, Thomas
+Bachlechner, James Gray, Jim Halverson, Ben Heidenreich, Jim Sethna, Gary Shiu, John
+Stout, and Timm Wrase for related discussions. We are especially indebted to Julia Goodrich
+for technical assistance. This work was supported by NSF grant PHY-0757868.
+
+A
+
+Toric Geometry
+
+In this appendix we provide a brief review of the aspects of toric varieties and Calabi-Yau
+hypersurfaces that are used in our work. For more complete expositions of toric varieties
+see [4, 39–43].
+A physical definition of a toric variety is as the moduli space of a 2d N = (2, 2) field
+theory. In general, the moduli space of such a theory is a Kähler manifold. To specialize
+to a toric variety, we consider a U(1)s gauge group and r chiral superfields X i , where the
+charge of the ith chiral superfield under the ath U(1) factor is Qai . Each U(1) factor has a
+Fayet-Iliopoulos term ξ a , so that the D-flatness condition is
+X
+Qai X i = ξ a .
+(A.1)
+i
+
+The resulting moduli space is a toric variety.
+A useful collection of divisors are the toric divisors T̂ i defined by X i = 0. Because of the
+U(1)s gauge symmetry, the coordinates X i on Cr , known as homogeneous coordinates, are
+not functions on the toric variety. On the other hand, gauge-invariant combinations of the
+X i are well-defined functions, and the corresponding vanishing loci are homologically trivial.
+Thus, not all of the toric divisors T̂ i are homologically independent, and indeed the number
+of independent divisors is equal to the rank of the gauge group. We will use {D̂ i } to refer to
+a set of independent toric divisors. To our knowledge, there is no natural or canonical basis
+choice for the D̂ i , and we work in the bases adopted in the software packages that we use.
+The intersection numbers among the toric divisors T̂ i (and therefore the independent divisors
+D̂ i ) can be calculated by simultaneously solving X i = 0 subject to the D-term constraint.
+
+– 40 –
+
+The Chern class of a toric variety V is
+
+
+c V =
+
+r
+Y
+i=1
+
+ 
+1 + T̂ i ,
+
+(A.2)
+
+ 
+where T̂ denotes the Poincaré dual of T̂ . From the adjunction formula, it follows that the
+hypersurface
+X
+S=
+T̂ i
+(A.3)
+i
+
+has vanishing first Chern class, and so is Calabi-Yau. Calabi-Yau hypersurfaces of the
+form (A.3) are the only Calabi-Yau manifolds considered in our analysis.
+The intersections of toric divisors D̂ a with the Calabi-Yau hypersurface furnish divisors
+of the hypersurface. When all of the divisors of the Calabi-Yau are inherited from the ambient
+toric variety in this way, the polytope is said to be favorable, and we limit our analysis to
+such cases. One can easily check whether a polytope is favorable by calculating h1,1 from the
+toric data [44].
+The classes of holomorphic curves in an n-dimensional toric variety form a cone called the
+Mori cone, which can be determined by considering the intersections of (n − 1) toric divisors.
+The Mori cone is generated by a set of curves Ĉi , and the intersections between the divisors
+of the toric variety and these curves are given by the charge matrix
+Qai = Ĉi · D̂ a .
+
+(A.4)
+
+Note that the Mori cone of the Calabi-Yau is not in general the same as the Mori cone of
+the ambient toric variety. For example, if a curve of the ambient variety does not intersect
+the Calabi-Yau hypersurface, then the curve may be safely taken to zero volume and even be
+allowed to flop.19 However, positivity of curves of the ambient space implies positivity of the
+curves of the hypersurface.20
+The data of a compact toric variety can be encoded by a polytope, which is a higherdimensional generalization of a polyhedron. We will consider n-dimensional polytopes ∆ that
+are reflexive, meaning that the only point of Zn that is in the interior of ∆ is the origin, and
+that ∆ can be expressed as an intersection of half-spaces
+\
+m ∈ Rn | m · nF ≥ −1 ,
+(A.5)
+∆=
+F
+
+where F denotes a codimension-1 face of ∆, and nF is the shortest vector in Zn that is an
+inward-facing normal to F . Given a polytope ∆, its dual polytope ∆◦ is defined by taking
+the points nF as the vertices of ∆◦ . When ∆ is reflexive, ∆◦ is reflexive.
+The next step is to triangulate ∆◦ : that is, we divide ∆◦ into simplices. In particular, we
+consider triangulations of ∆◦ that are star, which means that all simplices share one common
+19
+
+It has been conjectured that after taking into account this additional freedom, the Kähler cone of a
+Calabi-Yau will always be simplicial (see, for example, [41]).
+20
+See [45] for more work on determining the Mori cone of the hypersurface itself.
+
+– 41 –
+
+point as a vertex. For our purposes this point will be the origin, as each simplex defines a
+cone with the tip being the origin, and one can form a fan by pasting together such cones. To
+each line segment vi that connects to the origin, we associate one of the variables X i . The
+vi satisfy a set of linear relations,
+Qai vi = 0 ,
+(A.6)
+which give the charge matrices. Note that there are multiple ways of triangulating a polytope,
+and thus a polytope does not define a unique toric variety. However, the various varieties are
+related to each other via blowups and blow-downs.
+A necessary condition for a non-empty Kähler cone is that the triangulation is regular,
+meaning that the triangulation is a projection of the bottom part of an (n + 1)-dimensional
+polytope. More precisely, let {mk } be the points of the triangulation of ∆. Then the triangulation is regular if there exists an (n + 1)-dimensional polytope Ξ containing points (mk , λk )
+whose inward-facing normals have positive (n + 1)-dimensional components.
+Toric varieties are generally singular, but when the triangulation is maximal, meaning
+that every point in Zn that is in ∆ is a vertex of a simplex of the triangulation, then the
+variety becomes smooth. In such a situation, the Calabi-Yau hypersurface will also be smooth.
+In fact, total smoothness of the variety is not necessary to ensure smoothness of a generic
+hypersurface: at generic points in the complex structure moduli space of the Calabi-Yau, the
+hypersurface will miss pointlike singularities of the ambient variety. Thus, our triangulations
+need not include the points in the interior of codimension-1 faces (facets) of the polytope.
+We are therefore led to consider complete regular star triangulations of favorable reflexive
+polytopes, ignoring points interior to facets.
+
+B
+
+Triangulation Algorithm
+
+A common way to obtain complete, regular, star triangulations is to calculate all complete,
+regular triangulations and then select those that are star. This is extremely inefficient if one
+is interested only in star triangulations. In order to directly obtain triangulations that are
+star, we recall that by definition, each point in a star triangulation is connected to the origin
+by a line. One can therefore obtain a complete star triangulation by triangulating each of
+the facets, drawing a line from the origin to each point on the facets, and enforcing that the
+triangulations of each facet agree on the overlaps of facets.
+The resulting triangulation is automatically maximal and star, but it is still necessary to
+check for regularity. We present our algorithm below, illustrated for concreteness in the case
+of a polytope P with four facets, Fa , Fb , Fc , and Fd :
+1. Find all regular, complete triangulations of each facet. We obtained these triangulations
+from TOPCOM [46], using Sage as an interface.
+2. Organize the facets into pairs, such that each facet in a pair has nonzero intersection
+with its partner. If facets Fa and Fb intersect, and facets Fc and Fd intersect, create
+the pairs (Fa , Fb ) and (Fc , Fd ).
+
+– 42 –
+
+b
+a
+
+d
+
+Facet 1
+
+c
+Facet 2
+
+Figure 26: Facet 1 and Facet 2 are three-dimensional facets of a four-dimensional polytope.
+The facets overlap along the surface habcdi.
+
+3. For each pair of facets, compare the triangulations of each member of the pair on
+the intersection, retaining only those triangulations that are regular and agree on the
+overlap. That is, let S be the overlap of the facets Fa and Fb , and let ∆a and ∆b be
+triangulations of facets Fa and Fb , respectively. Determine whether ∆a and ∆b agree
+on S, and whether ∆a ∪ ∆b := ∆ab is regular (including the lines drawn to the origin).
+Retain ∆ab if and only if it is regular. Repeat this process for all other pairs of facets.
+4. Combine Fa and Fb into a single intermediate polytope Fab with regular triangulations
+{∆iab }, and combine Fc and Fd into an intermediate polytope Fcd with regular triangu′
+lations {∆icd }. Do the same for all other pairs of facets.
+5. Repeat steps 2, 3, and 4 for the new pairs, such as (Fab , Fcd ), until the full polytope is
+triangulated.
+The above method yields all complete, regular, star triangulations of the polytope P . We
+will illustrate step 2 in toy example. Consider a four-dimensional polytope, where two of the
+facets are cubes that overlap on a square surface. In Figure 26 we show the two facets that
+overlap along the surface habcdi.
+After triangulating each facet individually, we need to ensure that the triangulations
+agree on their overlap. Consider triangulations of facet 1 and facet 2, labeled ∆1 and ∆2 ,
+respectively. If ∆1 and ∆2 induce the same triangulation on habcdi, as shown in Figure 27,
+then the pair of triangulations is good, and we store the pair. If instead the triangulations
+do not agree on the overlap, as in Figure 28, we discard the pair.
+A challenge in the above algorithm is that storing all possible pairs of triangulations
+at each step becomes costly for h1,1 & 15. To access a subset of complete, regular, star
+
+– 43 –
+
+a
+
+c
+
+b
+
+a
+
+d
+
+c
+
+b
+
+d
+Facet 2
+
+Facet 1
+
+Figure 27: The triangulations ∆1 and ∆2 agree on the overlap habcdi.
+a
+
+c
+
+b
+
+a
+
+d
+
+c
+
+b
+
+d
+Facet 2
+
+Facet 1
+
+Figure 28: The triangulations ∆1 and ∆2 do not agree on the overlap habcdi.
+triangulations in examples with larger h1,1 , one can keep only a subset of the possible pairs
+at each step, in the following way.
+1. Start with two overlapping facets Fa and Fb , and determine all regular triangulations
+of each. Of the regular triangulations of each facet that agree on the overlap, retain the
+first j1 pairs, for some number j1 .
+2. Form the intermediate polytope Fab .
+3. Select another overlapping facet Fc , and compute all regular triangulations of Fc . Compare each of these to the j triangulations of Fab , retaining the first j2 triangulations of
+Fc that agree with a triangulation of Fab on the overlap of Fab with Fc , and that are
+regular.
+4. Repeat steps 2 and 3, adding in facets, until one has obtained one or more triangulations
+of the full polytope.
+Since one only keeps jk pairs at step k, this second method is not guaranteed to yield a
+triangulation of the full polytope: one can obtain pairs early on for which there is no regular
+
+– 44 –
+
+completion of the triangulation. Even so, this method is much faster than the available
+alternatives, particularly if the jk are chosen to be small. We have used this approach to
+obtain complete, regular, star triangulations of polytopes with h1,1 as large as 25 on a desktop
+computer. For h1,1 & 25 even triangulating the individual facets becomes expensive, and more
+sophisticated tools are required to obtain triangulations.
+We note that our method of triangulation is most successful with polytopes that have
+many facets. In typical cases, the more facets there are, the fewer triangulations each facet
+admits, so that the time to triangulate each individual facet is decreased. This gives the
+algorithm more opportunities to fail at each step, but since the method is fast once all of
+the facet triangulations are found, we nevertheless find the greatest success for many-faceted
+polytopes.
+After a triangulation is found the resulting fan can be provided as input to Sage, which
+then constructs the corresponding toric variety data, including the intersection ring and Mori
+cone generators of the ambient toric space. The intersection ring can then be pulled back to
+the Calabi-Yau hypersurface.
+
+References
+[1] M. R. Douglas, “The Statistics of String/M Theory Vacua.” JHEP 0305 (2003) 046,
+[hep-th/0303194].
+[2] M. Graña, “Flux Compactifications in String Theory: A Comprehensive Review.” Phys.Rept.
+423 (2006) 91–158, [hep-th/0509003].
+[3] M. R. Douglas and S. Kachru, “Flux Compactification.” Rev.Mod.Phys. 79 (2007) 733–796,
+[hep-th/0610102].
+[4] F. Denef, “Les Houches Lectures on Constructing String Vacua.” arXiv:0803.1194.
+[5] S. Ashok and M. R. Douglas, “Counting Flux Vacua.” JHEP 0401 (2004) 060,
+[hep-th/0307049].
+[6] F. Denef and M. R. Douglas, “Distributions of Flux Vacua.” JHEP 0405 (2004) 072,
+[hep-th/0404116].
+[7] F. Denef and M. R. Douglas, “Distributions of Nonsupersymmetric Flux Vacua.” JHEP 0503
+(2005) 061, [hep-th/0411183].
+[8] M. R. Douglas, B. Shiffman, and S. Zelditch, “Critical Points and Supersymmetric Vacua.”
+Commun. Math. Phys. 252 (2004) 325–358, [math/0402326].
+[9] F. Ferrari, S. Klevtsov, and S. Zelditch, “Random Geometry, Quantum Gravity and the Kähler
+Potential.” Phys.Lett. B705 (2011) 375–378, [arXiv:1107.4022].
+F. Ferrari, S. Klevtsov, and S. Zelditch, “Random Kähler Metrics.” Nucl.Phys. B869 (2013)
+89–110, [arXiv:1107.4575].
+F. Ferrari, S. Klevtsov, and S. Zelditch, “Simple Matrix Models for Random Bergman Metrics.”
+J.Stat.Mech. 2012 (2012) P04012, [arXiv:1112.4382].
+[10] D. Marsh, L. McAllister, and T. Wrase, “The Wasteland of Random Supergravities.” JHEP
+1203 (2012) 102, [arXiv:1112.3034].
+
+– 45 –
+
+[11] T. C. Bachlechner, “On Gaussian Random Supergravity.” JHEP 1404 (2014) 054,
+[arXiv:1401.6187].
+[12] M. Kreuzer and H. Skarke, “Calabi-Yau Data.”
+http://hep.itp.tuwien.ac.at/~kreuzer/CY/.
+[13] J. Gray, Y.-H. He, V. Jejjala, B. Jurke, B. D. Nelson, and J. Simón, “Calabi-Yau Manifolds
+with Large Volume Vacua.” Phys.Rev. D86 (2012) 101901, [arXiv:1207.5801].
+[14] V. Balasubramanian, P. Berglund, J. P. Conlon, and F. Quevedo, “Systematics of Moduli
+Stabilisation in Calabi-Yau Flux Compactifications.” JHEP 0503 (2005) 007,
+[hep-th/0502058].
+[15] T. Banks, M. Dine, P. J. Fox, and E. Gorbatov, “On the Possibility of Large Axion Decay
+Constants.” JCAP 0306 (2003) 001, [hep-th/0303252].
+P. Svrc̆ek and E. Witten, “Axions in String Theory.” JHEP 0606 (2006) 051,
+[hep-th/0605206].
+[16] E. P. Wigner, “On the Statistical Distribution of the Widths and Spacings of Nuclear Resonance
+Levels.” Math. Proc. Cambridge 47 (1951) 790–798. DOI: 10.1017/S0305004100027237.
+E. P. Wigner, “Characteristic Vectors of Bordered Matrices with Infinite Dimensions.” Ann.
+Math. 62 (1955) 548–564. JSTOR: http://www.jstor.org/stable/1970079.
+E. P. Wigner, “Results and Theory of Resonance Absorption.” in Gatlinberg Conference on
+Neutron Physics by Time-of-Flight, pp. 59–70, Oak Ridge National Laboratory, 1957.
+E. P. Wigner, “Statistical Properties of Real Symmetric Matrices with Many Dimensions.” in
+Proceedings of the Fourth Canadian Mathematical Congress, pp. 174–184. University of Toronto
+Press, 1957.
+[17] J. Wishart, “The Generalised Product Moment Distribution in Samples from a Normal
+Multivariate Population.” Biometrika 20A (1928) 32–52.
+[18] S. Kachru, R. Kallosh, A. D. Linde, and S. P. Trivedi, “de Sitter Vacua in String Theory.”
+Phys.Rev. D68 (2003) 046005, [hep-th/0301240].
+[19] T. W. Grimm and J. Louis, “The Effective Action of N = 1 Calabi-Yau Orientifolds.”
+Nucl.Phys. B699 (2004) 387–426, [hep-th/0403067].
+[20] R. Blumenhagen, B. Körs, D. Lüst, and S. Stieberger, “Four-Dimensional String
+Compactifications with D-Branes, Orientifolds and Fluxes.” Phys.Rept. 445 (2007) 1–193,
+[hep-th/0610327].
+[21] J. P. Conlon, “Moduli Stabilisation and Applications in IIB String Theory.” Fortsch.Phys. 55
+(2007) 287–422, [hep-th/0611039].
+[22] M. Kreuzer and H. Skarke, “PALP: A Package for Analyzing Lattice Polytopes with
+Applications to Toric Geometry.” Comput.Phys.Commun. 157 (2004) 87–106, [math/0204356].
+[23] A. P. Braun, J. Knapp, E. Scheidegger, H. Skarke, and N.-O. Walliser, “PALP—A User
+Manual.” arXiv:1205.4147.
+[24] M. Dine and N. Seiberg, “Is the Superstring Weakly Coupled?” Phys.Lett. B162 (1985) 299.
+DOI: 10.1016/0370-2693(85)90927-X.
+[25] M. Rummel and Y. Sumitomo, “Probability of Vacuum Stability in Type IIB Multi-Kähler
+Moduli Models.” JHEP 1312 (2013) 003, [arXiv:1310.4202].
+
+– 46 –
+
+[26] J. Abrevaya and W. Jiang, “A Nonparametric Approach to Measuring and Testing Curvature.”
+Journal of Business and Economic Statistics 23 (205) 1–19. JSTOR:
+http://www.jstor.org/stable/27638790.
+[27] P. Wilson, “Sectional Curvatures of Kähler Moduli.” Mathematical Annalen 330 (2004)
+631–664, [math/0307260].
+[28] H. Ooguri and C. Vafa, “On the Geometry of the String Landscape and the Swampland.”
+Nucl.Phys. B766 (2007) 21–33, [hep-th/0605264].
+[29] T. Trenner and P. Wilson, “Asymptotic Curvature of Moduli Spaces for Calabi-Yau
+Threefolds.” Journal of Geometric Analysis 21 (2011) 409–428, [arXiv:0902.4611].
+[30] A. Kanazawa and P. Wilson, “Trilinear Forms and Chern Classes of Calabi-Yau Threefolds.”
+Osaka J. Math. 51 (2014) 203–215, [arXiv:1201.3266].
+[31] D. Phong and J. Sturm, “Lectures on Stability and Constant Scalar Curvature.” Current
+Developments in Mathematics 2007 (2009) 101–176, [arXiv:0801.4179].
+[32] A. Arvanitaki, S. Dimopoulos, S. Dubovsky, N. Kaloper, and J. March-Russell, “String
+Axiverse.” Phys.Rev. D81 (2010) 123530, [arXiv:0905.4720].
+[33] D. Baumann and L. McAllister, “Inflation and String Theory.” arXiv:1404.2601.
+[34] S. Dimopoulos, S. Kachru, J. McGreevy, and J. G. Wacker, “N-flation.” JCAP 0808 (2008)
+003, [hep-th/0507205].
+[35] R. Easther and L. McAllister, “Random Matrices and the Spectrum of N-flation.” JCAP 0605
+(2006) 018, [hep-th/0512102].
+[36] T. C. Bachlechner, M. Dias, J. Frazer, and L. McAllister, “A New Angle on Chaotic Inflation.”
+arXiv:1404.7496.
+[37] J. E. Kim, H. P. Nilles, and M. Peloso, “Completing Natural Inflation.” JCAP 0501 (2005)
+005, [hep-ph/0409138].
+[38] D. Farquet and C. A. Scrucca, “Scalar Geometry and Masses in Calabi-Yau String Models.”
+JHEP 1209 (2012) 025, [arXiv:1205.5728].
+[39] E. Witten, “Phases of N = 2 Theories in Two Dimensions.” Nucl.Phys. B403 (1993) 159–222,
+[hep-th/9301042].
+[40] B. R. Greene, “String Theory on Calabi-Yau Manifolds.” hep-th/9702155.
+[41] D. Cox and S. Katz, Mirror Symmetry and Algebraic Geometry. American Mathematical
+Society, 2000.
+[42] K. Hori, S. Katz, A. Klemm, R. Pandharipande, C. Vafa, R. Vakil, and E. Zaslow, Mirror
+Symmetry. American Mathematical Society and Clay Mathematics Institute, 2003.
+[43] D. Cox, “What is a Toric Variety?” Unpublished lecture notes available at
+http://www3.amherst.edu/~dacox/ .
+D. A. Cox, J. B. Little, and H. K. Schenck, Toric Varieties. American Mathematical Society,
+2011.
+[44] V. V. Batryev, “Dual Polyhedra and Mirror Symmetry for Calabi-Yau Hypersurfaces in Toric
+Varieties.” J. Alg. Geom (1996) 493–535, [alg-geom/9310003].
+
+– 47 –
+
+[45] V. Braun, “The Moricone of a Calabi-Yau Space from Toric Geometry.” Master’s thesis, The
+University of Texas at Austin, 1998.
+[46] J. Rambau, “Topcom: Triangulations of point configurations and oriented matroids.” in
+Mathematical Software—ICMS 2002 (A. M. Cohen, X.-S. Gao, and N. Takayama, eds.),
+pp. 330–340, World Scientific, 2002.
+
+– 48 –
+
+
