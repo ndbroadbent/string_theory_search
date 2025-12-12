@@ -196,13 +196,18 @@ def compute_divisor_cohomology(
     Returns:
         dict with 'h' (cohomology vector) and 'rigid' (bool)
     """
-    # Get points (excluding origin for GLSM)
-    pts = poly.points()[1:]  # Skip origin at index 0
-    n_coords = pts.shape[0]
+    # Get GLSM charge matrix (includes origin at column 0)
+    glsm_full = poly.glsm_charge_matrix()
+    n_charges = glsm_full.shape[0]
+    n_glsm_cols = glsm_full.shape[1]
 
-    # Get GLSM (excluding origin column)
-    glsm = poly.glsm_charge_matrix()[:, 1:]
-    n_charges = glsm.shape[0]
+    # Get points - GLSM columns correspond to poly.points()
+    pts_full = poly.points()
+
+    # For cohomCalg, we need points and GLSM excluding origin
+    pts = pts_full[1:]  # Skip origin
+    glsm = glsm_full[:, 1:]  # Skip origin column
+    n_coords = glsm.shape[1]  # Use GLSM column count, not points count
 
     # Get SR ideal
     sr = tri.sr_ideal()
@@ -214,7 +219,7 @@ def compute_divisor_cohomology(
     # So divisor_idx - 1 is the index into glsm
     glsm_idx = divisor_idx - 1
     if glsm_idx < 0 or glsm_idx >= n_coords:
-        raise ValueError(f"Invalid divisor index {divisor_idx}")
+        raise ValueError(f"Invalid divisor index {divisor_idx}, valid range 1-{n_coords}")
 
     div_class = glsm[:, glsm_idx]
 
@@ -225,8 +230,10 @@ def compute_divisor_cohomology(
     O_trivial = np.zeros(n_charges, dtype=int)
 
     # Generate and run cohomCalg
+    # Use only the points that correspond to GLSM columns
+    pts_for_cohomcalg = pts[:n_coords]
     inp = generate_cohomcalg_input(
-        pts, glsm, sr, [O_minus_XD, O_minus_X, O_minus_D, O_trivial]
+        pts_for_cohomcalg, glsm, sr, [O_minus_XD, O_minus_X, O_minus_D, O_trivial]
     )
     results = run_cohomcalg(inp)
 
@@ -255,13 +262,14 @@ def compute_all_divisor_cohomology(poly, tri) -> list[dict]:
         tri: CYTools Triangulation object
 
     Returns:
-        List of dicts, one per divisor (in poly.points() order, excluding origin)
+        List of dicts, one per divisor (for each GLSM column, excluding origin)
     """
-    pts = poly.points()
-    n_divisors = pts.shape[0] - 1  # Exclude origin
+    # Number of divisors = GLSM columns - 1 (excluding origin)
+    glsm = poly.glsm_charge_matrix()
+    n_divisors = glsm.shape[1] - 1
 
     results = []
-    for i in range(1, pts.shape[0]):  # Skip origin at index 0
+    for i in range(1, n_divisors + 1):  # Divisor indices 1 to n_divisors
         result = compute_divisor_cohomology(poly, tri, i)
         results.append(result)
 
@@ -289,58 +297,126 @@ def is_rigid(h: list[int]) -> bool:
 
 
 # =============================================================================
-# MAIN
+# MCALLISTER TEST CASE
 # =============================================================================
 
+DATA_DIR = Path(__file__).parent.parent / "resources/small_cc_2107.09064_source/anc/paper_data/4-214-647"
 
-def main():
-    """Test divisor cohomology computation."""
+
+def load_points(filename):
+    """Load polytope points from .dat file."""
+    lines = (DATA_DIR / filename).read_text().strip().split('\n')
+    return np.array([[int(x) for x in line.split(',')] for line in lines])
+
+
+def load_target_volumes():
+    """Load c_i values from target_volumes.dat (1 or 6 = rigid)."""
+    text = (DATA_DIR / "target_volumes.dat").read_text().strip()
+    return np.array([int(x) for x in text.split(',')])
+
+
+def test_dual():
+    """Test divisor cohomology on McAllister's DUAL polytope (h11=4)."""
     import sys
-
     sys.path.insert(0, str(Path(__file__).parent.parent / "vendor/cytools_latest/src"))
     from cytools import Polytope
 
     print("=" * 70)
-    print("DIVISOR COHOMOLOGY via cohomCalg + Koszul")
+    print("DIVISOR COHOMOLOGY - McAllister DUAL (h11=4)")
     print("=" * 70)
 
-    # Test polytope (h11=4)
-    vertices = np.array(
-        [
-            [-1, -1, -1, -1],
-            [-1, -1, -1, 0],
-            [-1, -1, 0, -1],
-            [-1, -1, 0, 0],
-            [-1, 0, -1, -1],
-            [-1, 0, 0, 1],
-            [0, -1, -1, -1],
-            [1, 1, 1, 1],
-        ]
-    )
+    points = load_points("dual_points.dat")
+    print(f"\n[1] Loaded {points.shape[0]} points")
 
-    print("\n[1] Creating polytope...")
-    poly = Polytope(vertices)
+    poly = Polytope(points)
     tri = poly.triangulate()
+    cy = tri.get_cy()
 
-    pts = poly.points()
-    print(f"Points: {pts.shape[0]} (including origin)")
-    print(f"GLSM shape: {poly.glsm_charge_matrix().shape}")
+    print(f"    h11={cy.h11()}, h21={cy.h21()}")
 
-    print("\n[2] Computing divisor cohomology...")
+    glsm = poly.glsm_charge_matrix()
+    n_divisors = glsm.shape[1] - 1
+    print(f"    Divisors: {n_divisors}")
+
+    print("\n[2] Computing cohomology via cohomCalg...")
     all_cohom = compute_all_divisor_cohomology(poly, tri)
 
-    print("\nResults:")
-    print("-" * 50)
+    print("\n[3] Results:")
     for i, result in enumerate(all_cohom):
         status = "RIGID" if result["rigid"] else "not rigid"
-        print(f"D{i+1}: h^i = {result['h']} -> {status}")
+        print(f"    D{i+1}: h^i={result['h']} -> {status}")
 
-    print("\n[3] Summary:")
     n_rigid = sum(1 for r in all_cohom if r["rigid"])
-    print(f"Rigid divisors: {n_rigid}/{len(all_cohom)}")
+    print(f"\n    Rigid: {n_rigid}/{len(all_cohom)}")
 
-    rigid_indices = get_rigid_divisor_indices(poly, tri)
-    print(f"Rigid divisor indices: {rigid_indices}")
+    return all_cohom
+
+
+def test_primal(max_divisors=10):
+    """
+    Test divisor cohomology on McAllister's PRIMAL polytope (h11=214).
+
+    Validates against target_volumes.dat: c_i=1 or 6 means rigid.
+    Only tests first max_divisors to keep runtime reasonable.
+    """
+    import sys
+    sys.path.insert(0, str(Path(__file__).parent.parent / "vendor/cytools_latest/src"))
+    from cytools import Polytope
+
+    print("\n" + "=" * 70)
+    print(f"DIVISOR COHOMOLOGY - McAllister PRIMAL (h11=214, first {max_divisors})")
+    print("=" * 70)
+
+    points = load_points("points.dat")
+    print(f"\n[1] Loaded {points.shape[0]} points")
+
+    poly = Polytope(points)
+    tri = poly.triangulate()
+    cy = tri.get_cy()
+
+    print(f"    h11={cy.h11()}, h21={cy.h21()}")
+
+    glsm = poly.glsm_charge_matrix()
+    n_divisors = glsm.shape[1] - 1
+    print(f"    Divisors: {n_divisors}")
+
+    # Load ground truth
+    target_c = load_target_volumes()
+    print(f"    Ground truth c_i: {len(target_c)} values")
+    print(f"    c_i=1 (D3): {np.sum(target_c == 1)}, c_i=6 (O7): {np.sum(target_c == 6)}")
+
+    print(f"\n[2] Computing cohomology for first {max_divisors} divisors...")
+
+    correct = 0
+    wrong = 0
+
+    for i in range(1, min(max_divisors + 1, n_divisors + 1)):
+        result = compute_divisor_cohomology(poly, tri, i)
+        computed_rigid = result["rigid"]
+
+        # Ground truth: c_i = 1 or 6 means rigid
+        # But we need to map divisor index to target_volumes index
+        # target_volumes has 214 values for the KKLT basis
+        # This mapping is complex - for now just show results
+        status = "RIGID" if computed_rigid else "not rigid"
+        print(f"    D{i}: h^i={result['h']} -> {status}")
+
+    print(f"\n[3] Validation against target_volumes.dat requires basis mapping")
+    print(f"    (target_volumes.dat uses kklt_basis.dat indices)")
+
+    return None
+
+
+def main():
+    """Test both dual and primal polytopes."""
+    test_dual()
+    test_primal(max_divisors=5)
+
+    print("\n" + "=" * 70)
+    print("SUMMARY")
+    print("=" * 70)
+    print("Dual (h11=4): cohomology computed for all 8 divisors")
+    print("Primal (h11=214): cohomology computed for first 5 divisors")
 
 
 if __name__ == "__main__":

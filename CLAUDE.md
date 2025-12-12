@@ -1,5 +1,8 @@
 # String Theory Landscape Explorer
 
+## CRITICAL: Read FORMULAS.md First
+**ALWAYS read `FORMULAS.md` before beginning any physics-related task.** It contains the complete formula reference with warnings about common pitfalls (e.g., classical vs instanton-corrected volumes).
+
 ## What This Does
 Genetic algorithm searching through Calabi-Yau compactifications to find configurations that reproduce Standard Model physics (gauge couplings, generations, cosmological constant).
 
@@ -228,11 +231,80 @@ If we can't compute something ourselves, we don't understand it well enough.
 - Λ = 2.888e-122 (cosmological constant in Planck units)
 
 ## Genome Structure (Compactification)
-- polytope_id: index into Kreuzer-Skarke database
-- kahler_moduli: h11 real positive values (cycle volumes)
-- complex_moduli: h21 complex values
-- flux_f, flux_h: integer flux quanta
-- g_s: string coupling
+
+The GA genome consists of **discrete choices only** - no continuous parameters to search:
+
+```python
+genome = {
+    "polytope_id": int,           # Index into Kreuzer-Skarke database
+    "triangulation_id": int,      # Which triangulation (FRST, etc.)
+    "K": [int] * h21,             # Flux vector K (h21 integers)
+    "M": [int] * h21,             # Flux vector M (h21 integers)
+    "orientifold_mask": [bool],   # Which coordinates to negate (determines O7-planes)
+}
+```
+
+### Key Insight: Everything is Computed from (K, M, orientifold)
+
+**There are NO continuous parameters to search.** All physics is deterministically computed:
+
+```
+(K, M) ──────────────────────────────────────────────────────────────┐
+   │                                                                  │
+   ▼                                                                  │
+N_ab = κ_abc M^c  (contract intersection numbers with M)              │
+   │                                                                  │
+   ▼                                                                  │
+p = N⁻¹ K  (solve for flat direction - Demirtas lemma)               │
+   │                                                                  │
+   ▼                                                                  │
+e^K₀ = (4/3) × (κ_abc p^a p^b p^c)⁻¹                                 │
+   │                                                                  │
+   ▼                                                                  │
+g_s, W₀  (from racetrack stabilization along p)                      │
+   │                                                                  │
+   ▼                                                                  │
+orientifold ──► c_i values (1 for D3-instanton, 6 for O7-plane)      │
+   │                                                                  │
+   ▼                                                                  │
+τ_i = (c_i / 2π) × ln(W₀⁻¹)  (KKLT target divisor volumes)           │
+   │                                                                  │
+   ▼                                                                  │
+Solve: T_i(t) = τ_i  for t^i  (WITH instanton corrections, eq. 4.12) │
+   │            ↑ includes GV invariants, not just classical!         │
+   ▼                                                                  │
+V_string = (1/6) κ_ijk t^i t^j t^k - ζ(3)χ/(4(2π)³)  (BBHL corrected)│
+   │                                                                  │
+   ▼                                                                  │
+V₀ = -3 × e^K₀ × (g_s⁷ / (4×V_string)²) × W₀²  ◄────────────────────┘
+```
+
+### Orientifold Involution (c_i values)
+
+The orientifold is a **model choice** that determines which divisors host:
+- **O7-planes with so(8)**: c_i = 6 (gaugino condensation)
+- **D3-instantons**: c_i = 1 (Euclidean D3-brane)
+
+This is NOT computed from the polytope - it's part of the genome. The involution negates
+a subset of homogeneous coordinates: I: x_{I_α} → -x_{I_α}. Each negated coordinate
+creates an O7-plane on the divisor {x_i = 0}.
+
+For McAllister's 4-214-647:
+- 49 O7-planes (c_i = 6)
+- 165 D3-instantons (c_i = 1)
+- Pre-extracted in: `resources/mcallister_4-214-647_orientifold.json`
+
+See `docs/ORIENTIFOLD_INVOLUTION.md` for full details.
+
+### Why GA Doesn't Work for (K, M) Directly
+
+The fitness landscape at the (K, M) level is essentially random:
+- Changing K from [-3, -5, 8, 6] to [-3, -5, 8, 7] might flip from "valid vacuum" to "singular N matrix"
+- No gradient to follow - mutation is as good as random sampling
+
+The GA works at the **polytope selection** level - learning which geometric features
+correlate with having more valid (K, M) pairs. The inner loop is constrained random
+sampling, not evolution.
 
 ## Three-Generation Filter
 Polytopes filtered by |h11 - h21| = 3 (gives 3 fermion generations).
@@ -299,6 +371,28 @@ Until we can reproduce McAllister, our GA results are meaningless garbage.
 - Don't try to convert 214 params to 4 - just use the primal directly
 - CYTools works with either; physics_bridge should too
 
+### CRITICAL: Latest CYTools Basis Transformation
+**See `mcallister_2107/LATEST_CYTOOLS_RESULT.md` for the validated configuration.**
+
+CYTools versions use different divisor bases. We have successfully ported McAllister's
+configuration to the latest CYTools (2025):
+
+| Basis | K (flux) | M (flux) |
+|-------|----------|----------|
+| CYTools 2021 [3,4,5,8] | [-3, -5, 8, 6] | [10, 11, -11, -5] |
+| **Latest CYTools [5,6,7,8]** | **[8, 5, -8, 6]** | **[-10, -1, 11, -5]** |
+
+The transformation rules are:
+- K transforms as **covariant**: `K_new = T⁻¹ @ K_old`
+- M transforms as **contravariant**: `M_new = T.T @ M_old`
+
+Physics values (invariant under transformation):
+- e^{K₀} = 0.234393
+- g_s = 0.00911134
+- W₀ = 2.30 × 10⁻⁹⁰
+- **V_string = 4711.83** (our validation target)
+- V₀ = -5.5 × 10⁻²⁰³ Mpl⁴
+
 ### Searching the McAllister Paper (PDF)
 The paper has detailed formulas. Extract and search with:
 ```bash
@@ -336,16 +430,23 @@ eᴷ ≈ g_s / (2 V_E²)
 ### Frame Conversions
 ```
 V_E = V_string / g_s^(3/2)     (Einstein frame from string frame)
-V_string = (1/6) κ_ijk t^i t^j t^k   (from intersection numbers)
+V_string = (1/6) κ_ijk t^i t^j t^k - ζ(3)χ/(4(2π)³)   (with BBHL correction!)
 ```
+
+**CRITICAL:** The BBHL α' correction term `-ζ(3)χ/(4(2π)³)` is NOT optional!
+For h11=214, h21=4: BBHL = 0.509. Without it, V is wrong by ~0.5.
 
 ### McAllister 4-214-647 Results (Section 6.4)
 - g_s ≈ 0.00911134 (eq. 6.60: g_s = 2π / (110 × log(528)))
 - W₀ ≈ 2.3 × 10⁻⁹⁰ (eq. 6.61: W₀ = 80 × ζ × 528⁻³³)
 - V[0] ≈ 4711 (string frame volume, from cy_vol.dat)
 - V_E ≈ 5.4 × 10⁶ (Einstein frame volume = V_string / g_s^1.5)
-- δV[0] ≈ -0.4 (instanton correction to volume)
+- BBHL correction ≈ -0.51 (= ζ(3)χ/(4(2π)³) with χ=420)
 - V₀ ≈ -5.5 × 10⁻²⁰³ Mpl⁴ (eq. 6.63: final vacuum energy)
+
+**CRITICAL**: Use `corrected_kahler_param.dat` (not `kahler_param.dat`)!
+The uncorrected t values give V ≈ 17900 (3.8× wrong) because they don't
+account for instanton corrections to divisor volumes (eq. 4.12).
 
 **CRITICAL**: The |W| in V₀ = -3eᴷ|W|² is NOT W₀!
 It's the total W at the KKLT minimum where W_np partially cancels W₀.

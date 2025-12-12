@@ -1,0 +1,5339 @@
+arXiv:1712.04946v1 [hep-th] 13 Dec 2017
+
+The Hodge Numbers of Divisors
+of Calabi-Yau Threefold Hypersurfaces
+Andreas P. Braun,a Cody Long,b Liam McAllister,c
+Michael Stillman,d and Benjamin Sungb
+a
+
+Mathematical Institute, University of Oxford, Oxford OX2 6GG, UK
+Department of Physics, Northeastern University, Boston, MA 02115, USA
+c
+Department of Physics, Cornell University, Ithaca, NY 14853, USA
+d
+Department of Mathematics, Cornell University, Ithaca, NY 14853, USA
+
+b
+
+andreas.braun@maths.ox.ac.uk, co.long@northeastern.edu,
+mcallister@cornell.edu, mike@math.cornell.edu, b.sung@northeastern.edu
+
+We prove a formula for the Hodge numbers of square-free divisors of Calabi-Yau threefold hypersurfaces in toric varieties. Euclidean branes wrapping divisors affect the
+vacuum structure of Calabi-Yau compactifications of type IIB string theory, M-theory,
+and F-theory. Determining the nonperturbative couplings due to Euclidean branes on
+a divisor D requires counting fermion zero modes, which depend on the Hodge numbers hi (OD ). Suppose that X is a smooth Calabi-Yau threefold hypersurface in a toric
+variety V , and let D be the restriction to X of a square-free divisor of V . We give
+a formula for hi (OD ) in terms of combinatorial data. Moreover, we construct a CW
+complex PD such that hi (OD ) = hi (PD ). We describe an efficient algorithm that
+makes possible for the first time the computation of sheaf cohomology for such divisors
+at large h1,1 . As an illustration we compute the Hodge numbers of a class of divisors
+in a threefold with h1,1 = 491. Our results are a step toward a systematic computation
+of Euclidean brane superpotentials in Calabi-Yau hypersurfaces.
+
+December 15, 2017
+
+Contents
+1 Introduction
+
+2
+
+2 Notation and Preliminaries
+2.1 Polytopes and toric varieties . . . . . . . . . . . . . . . . . . . . . . . .
+2.2 The Picard group of X . . . . . . . . . . . . . . . . . . . . . . . . . . .
+2.3 The ravioli complex R . . . . . . . . . . . . . . . . . . . . . . . . . . .
+2.4 The puff complex P . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
+4
+4
+5
+7
+10
+
+3 Spectral Sequence Computation of Hodge Numbers
+3.1 Hypercohomology spectral sequence . . . . . . . . . . . . . . . . . . . .
+3.2 Cohomology from stratification . . . . . . . . . . . . . . . . . . . . . .
+3.3 Proof that ζ = 0 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+3.4 Generalization to Calabi-Yau n-folds . . . . . . . . . . . . . . . . . . .
+
+12
+12
+14
+16
+18
+
+4 Interpretation and an Example
+4.1 Contractible graphs . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+4.2 Example with h1,1 = 491 . . . . . . . . . . . . . . . . . . . . . . . . . .
+
+18
+18
+19
+
+5 Conclusions
+
+23
+
+A Mayer-Vietoris Complexes
+A.1 Distributive lattices of ideals and Mayer-Vietoris complexes of ideals . .
+A.2 Mayer-Vietoris sequences corresponding to divisors and curves . . . . .
+A.3 Background on spectral sequences . . . . . . . . . . . . . . . . . . . . .
+A.4 The hypercohomology spectral sequence . . . . . . . . . . . . . . . . .
+
+25
+26
+29
+31
+32
+
+B Stratification of Toric Hypersurfaces and Hodge Numbers of Strata
+B.1 Toric varieties and stratification . . . . . . . . . . . . . . . . . . . . . .
+B.2 Toric varieties and divisors from polytopes . . . . . . . . . . . . . . . .
+B.3 Resolution of singularities . . . . . . . . . . . . . . . . . . . . . . . . .
+B.4 Computing Hodge-Deligne numbers of strata . . . . . . . . . . . . . . .
+B.5 Calabi-Yau hypersurfaces and reflexive polytopes . . . . . . . . . . . .
+B.6 Topology of subvarieties of Calabi-Yau threefolds . . . . . . . . . . . .
+B.7 Hodge numbers hi,0 of toric divisors of Calabi-Yau n-folds . . . . . . . .
+
+33
+33
+36
+38
+39
+42
+45
+56
+
+C Computation of h2 for a Divisor on a 2-Face
+C.1 Preliminaries . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+C.2 Relating h2 to toric data . . . . . . . . . . . . . . . . . . . . . . . . . .
+C.3 Computation of h2 for a face-limited divisor . . . . . . . . . . . . . . .
+
+61
+61
+63
+64
+
+–1–
+
+1
+
+Introduction
+
+Compactifications of type IIB string theory on orientifolds of Calabi-Yau threefolds,
+and of F-theory on Calabi-Yau fourfolds, provide important classes of four-dimensional
+effective theories with N = 1 supersymmetry. The vacuum structure of these theories depends on the potential for the Kähler moduli, which parameterize the sizes of
+holomorphic submanifolds in the Calabi-Yau manifold. In particular, in lieu of a potential for the Kähler moduli, positive vacuum energy in four dimensions induces an
+instability of the overall volume of the compactification, and therefore realistic particle
+physics and cosmology require a computation of the Kähler moduli potential.
+In principle a minimum of the Kähler moduli potential could be created by competition among purely perturbative corrections to the leading-order Kähler potential.
+However, at present the best-understood constructions of metastable vacua require
+contributions to the superpotential for the Kähler moduli [1–3]. Because of the nonrenormalization theorem, such terms are necessarily nonperturbative, resulting from
+Euclidean branes wrapping cycles — in fact, divisors — in the compact space.1
+An important goal is to determine which divisors in a Calabi-Yau threefold or
+fourfold support nonperturbative superpotential terms from Euclidean branes. Witten
+has shown [4] that Euclidean M5-branes on a smooth effective vertical divisor D of a
+smooth Calabi-Yau fourfold Y give a nonvanishing contribution to the superpotential
+whenever D is rigid, meaning that the Hodge numbers h0,i (D) = hi (D, OD ) = hi (OD )
+obey
+h0,0 (D) = 1 , h0,1 (D) = 0 , h0,2 (D) = 0 , h0,3 (D) = 0 ,
+(1.1)
+which we abbreviate as h• (OD ) = (1, 0, 0, 0). Rigidity corresponds to the absence
+of massless bosonic deformations, and implies that the only zero modes of the Dirac
+operator on the M5-brane are the two universal Goldstino modes that result from
+the supersymmetries broken by the M5-brane. In more general circumstances — when
+either D or Y is singular, when fluxes are included on D or in Y , or when D is a divisor
+of a Calabi-Yau threefold — the conditions for a nonperturbative superpotential are
+more subtle, but the Hodge numbers are still essential data.
+For this reason, a long-term aim is to compute the Hodge numbers of effective
+divisors D of Calabi-Yau manifolds X. This is most manageable in the case of smooth
+Calabi-Yau hypersurfaces in toric varieties: for many years there have been computational algorithms and implementations for computing sheaf cohomology of coherent
+sheaves on toric varieties [5–7], and there are faster implementations for computing sheaf cohomology of line bundles on toric varieties [8, 9]. Unfortunately, all of
+these implementations fail to finish for even very modest sizes of h1,1 (X), say for
+1
+
+Strong gauge dynamics in four dimensions, arising on seven-branes wrapping four-cycles in the
+compact space, is an alternative. The geometric requirements on such cycles closely parallel those in
+the Euclidean brane case, and we will refer only to the latter in this work.
+
+2
+
+h1,1 (X) & 10 − 20. A key open problem in computational algebraic geometry is to find
+algorithms that work for effective divisors or coherent sheaves on all Calabi-Yau threefold hypersurfaces arising from the Kreuzer-Skarke database [10] of four-dimensional
+reflexive polytopes, as well as for Calabi-Yau fourfold hypersurfaces in toric varieties.
+We will not arrive at a fully general answer. However, in the important special
+case in which X is a smooth Calabi-Yau threefold hypersurface in a toric variety V ,
+b on V , we will establish
+and D is the restriction to X of a square-free effective divisor D
+i
+a formula for h (OD ) in terms of the combinatorial data of V . This formula, given in
+Theorem 3, is our main result. As we will see, Theorem 3 allows one to read off the
+Hodge numbers of many divisors by inspection, and moreover it is straightforward to
+turn this formula into an algorithm that computes the Hodge numbers of any squarefree divisor of any X arising from the Kreuzer-Skarke database [11].
+The principal tools in our proof are stratification; the hypercohomology spectral
+sequence of the Mayor-Vietoris complex (3.2); and a correspondence that we establish
+between square-free divisors of a Calabi-Yau hypersurface and CW complexes constructed on a triangulation of the associated reflexive polytope ∆◦ . Let us briefly
+summarize these results. Stratification is the decomposition of an n-dimensional toric
+variety V into tori, and leads to the extremely simple expressions (2.9) for the Hodge
+numbers h0,i of particular subvarieties of a Calabi-Yau hypersurface X ⊂ V . Among
+these subvarieties are prime toric divisors Di , i = 1, . . . h1,1 (X) + 4, each of which corresponds to a lattice point of a reflexive polytope ∆◦ , as we review in §2. The Hodge
+numbers h• (ODi ) and the intersections of the prime toric divisors Di are fully specified
+by elementary combinatorial data: namely, by the simplicial complex T corresponding
+to a triangulation of ∆◦ , together with the number of lattice points interior to each
+face of ∆.
+A square-free divisor D is the union of a collection of distinct prime toric diviP
+sors, D =
+Di . In order to compute hi (OD ), one can appropriately combine the
+data characterizing the constituent prime toric divisors Di ⊂ D. To achieve this, we
+establish (in Appendix A) that the Mayer-Vietoris sheaf sequence associated to D is
+exact, and we then examine the corresponding hypercohomology spectral sequence.
+Formally, these methods are already sufficient to derive an expression for hi (OD ), but
+we find it valuable to carry out the computation, and to express the result, in terms of
+a particular CW complex P that encodes the data of T and ∆. The construction of
+P amounts to attaching cells to each j-face Θ◦ of ∆◦ , in a manner determined by the
+number of lattice points in the relative interior of the dual face Θ ⊂ ∆. A square-free
+divisor D naturally determines a subcomplex PD ⊂ P, and via the hypercohomology
+spectral sequence we are able to relate the sheaf cohomology of OD to the cellular
+homology of the CW complex PD . In particular, we show that hi (OD ) = hi (PD ),
+proving the theorem.
+A subtlety in applying our results to compute Euclidean brane superpotentials is
+
+3
+
+P
+that any nontrivial sum D =
+Di of prime toric divisors Di that is rigid is necessarily
+reducible, and involves normal crossing singularities where the Di intersect. Normal
+crossing singularities present no obstacle to defining and computing hi (OD ), but they
+do complicate the connection between hi (OD ) and the number of fermion zero modes:
+new zero modes can appear at the intersection loci. Thus, the Hodge numbers hi (OD )
+that we compute here mark a significant step toward computing the superpotential,
+but do not provide a final answer. Systematically counting the fermion zero modes
+associated to normal crossing singularities, along the lines of [12–14], is an important
+problem for the future [15].
+The organization of this paper is as follows. In §2 we set notation and recall
+elementary properties of Calabi-Yau hypersurfaces in toric varieties. Then, given any
+square-free divisor D in a Calabi-Yau threefold hypersurface, we define a corresponding
+∆-complex RD and a CW complex PD , which are constructed so that their homology
+encodes the sheaf cohomology of OD . In §3 we prove our main result, Theorem 3,
+which asserts that hi (OD ) = hi (PD ). In §4 we illustrate our findings in the example
+of a Calabi-Yau threefold with h1,1 = 491. We conclude in §5. Appendix A defines
+Mayer-Vietoris complexes and proves some relevant properties. In Appendix B we
+review key results from stratification. In Appendix C we directly compute h2 (OD ) by
+counting lattice points in dual faces, for the special case where TD is restricted to a
+single 2-face of ∆◦ .
+
+2
+
+Notation and Preliminaries
+
+2.1
+
+Polytopes and toric varieties
+
+In this paper we consider Calabi-Yau threefold hypersurfaces X in simplicial toric
+varieties V , as studied by Batyrev in [16] (see also Appendix B for a review). Such
+Calabi-Yau threefolds are constructed from pairs (∆, ∆◦ ) of four-dimensional polytopes
+with vertices in Z4 , obeying
+h∆, ∆◦ i ≥ −1 .
+(2.1)
+A pair of d-dimensional lattice polytopes obeying (2.1) is called a reflexive pair. In
+each dimension, there are only a finite number of reflexive pairs, up to equivalence,
+and those in dimension d ≤ 4 have all been enumerated [10, 17–19].
+Given a four-dimensional reflexive polytope ∆◦ , we choose a fine star regular2
+triangulation Tb of ∆◦ . Since each simplex in Tb contains the origin, this triangulation
+determines a fan Σ, and V := PΣ is the corresponding simplicial toric variety. If F is
+a generic linear combination of the monomials in the Cox ring of V that correspond to
+Fine means that the triangulation uses all the lattice points of ∆◦ . A triangulation is star if
+the origin, which is the unique interior point of a reflexive polytope ∆◦ , is contained in every fourdimensional simplex of Tb . Regularity is a condition that ensures that V , and hence X, is projective.
+2
+
+4
+
+the lattice points of the polytope ∆, then X := {F = 0} ⊂ V is a smooth Calabi-Yau
+threefold hypersurface in V [16]. The toric variety V in general has pointlike orbifold
+singularities, but for generic F , X does not intersect these points, and is smooth.
+We denote the set of faces of ∆◦ by F, the set of faces of dimension at most
+j by F(≤ j), and the sets of vertices, edges, and 2-faces by F(0), F(1), and F(2),
+respectively. For each face Θ◦ in F, there is a unique face Θ of ∆ defined by
+hΘ◦ , Θi = −1 .
+
+(2.2)
+
+Given any face Θ ⊂ ∆, we denote by `∗ (Θ) the number of lattice points in the relative
+interior of Θ. Given a face Θ◦ of ∆◦ , we define its genus g(Θ◦ ) by
+g(Θ◦ ) := `∗ (Θ) ,
+
+(2.3)
+
+i.e. we define the genus of Θ◦ to be the number of interior lattice points of its dual
+face.
+If σ ∈ Tb is a simplex, we define the corresponding minimal face, minface(σ), to
+be the lowest-dimensional face of ∆◦ containing all of the lattice points {pI | I ∈ σ}.
+We define
+µ(σ) := dim minface(σ)
+(2.4)
+and
+g(σ) := g(minface(σ)) .
+2.2
+
+(2.5)
+
+The Picard group of X
+
+For each nonzero lattice point pI on ∆◦ there is an associated ray of the fan Σ and
+a corresponding homogeneous coordinate zI of the toric variety V . We may hence
+b I given by {zI = 0} with the point pI . This notion can
+associate the toric divisor D
+be extended to each d-simplex σ of the triangulation Tb by associating σ with the
+subvariety Vσ := {zI = 0 ∀ pI ∈ σ}. Let Xσ := Vσ ∩ X be the intersection of Vσ with
+the Calabi-Yau hypersurface X. This intersection is nonzero if and only if the simplex
+σ is contained in a 2-face of ∆◦ . It is therefore useful to define
+T := {σ ∈ Tb | µ(σ) ≤ 2} ,
+
+(2.6)
+
+which omits simplices of Tb that pass through facets (3-faces) of ∆◦ , and so correspond
+to varieties that do not intersect a generic Calabi-Yau hypersurface X. In a slight
+abuse of language, we refer to T as a triangulation.
+The Hodge numbers of subvarieties Xσ ⊂ X are given by rather simple formulae
+[20–22]. For the divisor DI of X associated with a lattice point σ = pI ∈ T we find
+
+5
+
+(see Appendix B)
+
+
+
+
+
+1,
+0, g(σ) 
+0
+•
+h (ODI ) =
+for µ(σ) = 1 .
+1,
+g(σ), 0
+
+
+
+1 + g(σ), 0,
+0
+2
+
+(2.7)
+
+In particular, divisors associated with points interior to 2-faces Θ◦ with g(Θ◦ ) > 0
+are reducible. A 1-simplex σ of T connecting a pair of lattice points pI and pJ in T
+corresponds to the intersection CIJ := DI ∩ DJ , with Hodge numbers
+•
+
+
+
+h (OC ) =
+
+1,
+g(σ)
+1 + g(σ), 0
+
+
+
+
+for µ(σ) =
+
+1
+.
+2
+
+(2.8)
+
+That is, a curve C associated with a 1-simplex σ interior to a 1-face Θ◦ is irreducible,
+of genus g(Θ◦ ). A curve C associated with a 1-simplex σ interior to a 2-face Θ◦ is a
+union of g(Θ◦ ) + 1 disjoint P1 s. A 2-simplex σ of T containing three lattice points
+pI , pJ , pK corresponds to the intersection of three divisors, and the corresponding Xσ
+consists of 1 + g(σ) points.
+The above results can be summarized as
+h0,i (Xσ ) = δi,0 + δi,2−µ(σ) g(σ) .
+
+(2.9)
+
+This result easily generalizes to arbitrary dimension: see Appendix B.7. Moreover,
+in Appendix B.6 we give similar, albeit slightly more complicated and triangulationdependent, formulae for the Hodge numbers h1,1 (Xσ ).
+As shown in [16], the Hodge numbers of a Calabi-Yau hypersurface X obey simple
+combinatorial relations as well. In particular, the rank of the Picard group of X satisfies
+X
+X
+h1,1 (X) =
+`∗ (Θ◦ ) − 4 +
+`∗ (Θ◦ )`∗ (Θ)
+(2.10)
+Θ◦ ∈F (≤2)
+
+Θ◦ ∈F (2)
+
+We can identify N := h1,1 (X) + 4 divisors that obey four linear relations, and that
+generate the Picard group of X. First of all, the K ≤ N divisors of X associated with
+lattice points in F(≤ 1) are irreducible. However, the divisor associated with a lattice
+point pr interior to a 2-face Θ◦ has 1 + g(Θ◦ ) irreducible, connected components, which
+we denote Drα , α ∈ {0, . . . , g(Θ◦ )}. The N irreducible divisors
+g(p
+
+)
+
+K+1
+0
+0
+{D1 , . . . DK , DK+1
+, . . . , DK+1
+, DK+2
+, . . .}
+
+(2.11)
+
+then generate the Picard group of X. These can be written collectively as {DIα } with
+
+6
+
+α ∈ {0, . . . , δµ(pI ),2 g(pI )}, but we will reindex them as as
+Di ∈ {D1 , . . . , DN }.
+We refer to the Di as prime toric divisors, even though the Drα do not all
+descend from prime toric divisors on V unless X is favorable, i.e. unless g(Θ)g(Θ◦ ) =
+0 ∀ Θ◦ ∈ F(2). By (2.7), a prime toric divisor Di associated with a lattice point σ has
+
+
+
+ 1, 0, g(σ) 
+0
+•
+h (ODi ) = 1, g(σ), 0
+for µ(σ) = 1 .
+
+
+
+1, 0,
+0
+2
+
+(2.12)
+
+For any subset G ⊆ {1, . . . , N }, there is an associated divisor D (possibly reducible)
+defined by
+X
+D=
+Di .
+(2.13)
+i∈G
+
+We call such a D a square-free divisor. The main purpose of this work is to analyze
+square-free divisors.
+2.3
+
+The ravioli complex R
+
+Every d-simplex of T contained in the relative interior of a face Θ◦ ∈ F(j) for j ≤ 2
+gives rise to a closed subvariety Xσ ⊂ X, of complex dimension 2 − d. When j ≤ 1,
+the simplices in T correspond to irreducible subvarieties of X. However, for j = 2,
+i.e. when σ ∈ T is in the interior of a 2-face Θ◦ of ∆◦ , the simplex σ corresponds to a
+subvariety of X that has 1 + g(Θ◦ ) connected (and irreducible) components, which we
+denote by Xσα , for α = 0, . . . , g(σ).
+The intersection structure of the Xσ is determined by ∆ and by the triangulation
+T of ∆◦ . For each 2-face Θ◦ of ∆◦ , we can choose an ordering of α = 0, . . . , g(σ) such
+that for any σ, λ ∈ T with minface(σ) = minface(λ) = Θ◦ , we have
+Xσα ∩ Xλβ =
+
+(
+α
+δ αβ Xσ∪λ
+∅
+
+if σ ∪ λ ∈ T ,
+if σ ∪ λ ∈
+/T .
+
+(2.14)
+
+Next, for each τ ∈ T with µ(τ ) ≤ 1, the intersection structure with the Xσα can
+be written as
+(
+Xτα∪σ
+if τ ∪ σ ∈ T ,
+Xτ ∩ Xσα =
+(2.15)
+∅
+if τ ∪ σ ∈
+/T .
+
+7
+
+Finally, for τ, ω ∈ T , with µ(τ ) ≤ 1 and µ(ω) ≤ 1, we have:
+Xτ ∩ X ω =
+
+(
+Xτ ∪ω
+
+if τ ∪ ω ∈ T ,
+
+∅
+
+if τ ∪ ω ∈
+/T .
+
+(2.16)
+
+In the special case of (2.16) in which τ ∪ ω ∈ T with minface(τ ∪ ω) = Θ◦ ∈ F(2), we
+can write (2.16) as
+g(Θ◦ )
+
+X τ ∩ Xω =
+
+[
+
+Xτα∪ω .
+
+(2.17)
+
+α=0
+
+We will now define a complex, called the ravioli complex R, that accounts for
+the intersection structure (2.14)-(2.17). Recall that the simplices in T correspond to
+subvarieties in X, which are possibly disconnected and reducible. The cells in R will
+correspond to the connected, irreducible components of the subvarieties in X encoded
+by T . The ravioli complex is defined by
+n
+o n
+o
+R = Xσα σ ∈ T , µ(σ) = 2, 0 ≤ α ≤ g(σ) ∪ Xτ τ ∈ T , µ(τ ) ≤ 1 ,
+(2.18)
+which as a set consists of the irreducible connected components of intersections of the
+Di . The elements of R that have dimension 2 − i in X are called i-cells. For those
+X such that3 g(Θ◦ ) = 0 ∀ Θ◦ ∈ F(2), R is the simplicial complex T . In the general
+case, the i-cells of R are the same as the i-simplices of T , except that each simplex σ
+in the interior of any two-dimensional face Θ◦ ∈ F(2) of ∆◦ is replaced by 1 + g(Θ◦ )
+disjoint copies of itself, after which the (1-cell) boundaries of the 1 + g(Θ◦ ) disjoint
+copies T |Θ◦ of are identified with each other.
+In general R is not a simplicial complex, but instead a ∆-complex:4 the 1-cells
+and 2-cells are not necessarily uniquely specified by the 0-cells that contain them (in
+X). The homology and cohomology complexes of R are readily obtained, and the fact
+that R is not always a simplicial complex does not present difficulties for computation
+or visualization. The origin of the name should be clear from Figures 1 and 2.
+We can now associate a ∆-complex RD ⊆ R to any square-free divisor D as
+follows. The points of RD are the points (0-cells) pi in R corresponding to the divisors
+appearing in (2.13). Some pairs (triples) of the pi may in general be connected by 1cells (2-cells) of the complex R. The pi , together with the set of all 1-cells and 2-cells
+connecting them, therefore define a unique subcomplex RD ⊆ R. An example is shown
+in the bottom image in Figure 1. The points in RD correspond to codimension-one
+Notice that even in the case where X is favorable, i.e. obeying g(Θ)g(Θ◦ ) = 0 ∀ Θ◦ ∈ F(2), R is
+not necessarily equal to T .
+4
+The term ∆-complex is standard in topology, and the symbol ∆ appearing in the name should
+not be confused with the polytope ∆. See [23] for background on ∆-complexes and CW complexes.
+3
+
+8
+
+11
+00
+11
+00
+1
+0
+1
+0
+11
+00
+11
+00
+
+1
+0
+1
+0
+1
+0
+
+1
+0
+1
+0
+1
+0
+
+11
+00
+11
+00
+11
+00
+11
+00
+11
+00
+
+11
+00
+11
+00
+
+11
+00
+11
+00
+
+11
+00
+11
+00
+
+11
+00
+11
+00
+1
+0
+1
+0
+11
+00
+11
+00
+
+1
+0
+1
+0
+1
+0
+
+1
+0
+1
+0
+1
+0
+
+11
+00
+11
+00
+11
+00
+
+11
+00
+11
+00
+11
+00
+11
+00
+11
+00
+
+11
+00
+11
+00
+
+11
+00
+11
+00
+11
+00
+11
+00
+11
+00
+
+11
+00
+11
+00
+
+11
+00
+11
+00
+1
+0
+1
+0
+11
+00
+11
+00
+
+1
+0
+1
+0
+1
+0
+
+11
+00
+11
+00
+11
+00
+
+11
+00
+11
+00
+11
+00
+11
+00
+11
+00
+
+11
+00
+11
+00
+
+1
+0
+1
+0
+1
+0
+11
+00
+11
+00
+11
+00
+11
+00
+11
+00
+
+11
+00
+11
+00
+
+Figure 1: The simplicial complex T defined by a triangulation, the corresponding
+ravioli complex R, and the subcomplex RD ⊂ R associated to a divisor D. The
+upper figure shows two adjacent two-dimensional faces, separated by a thick line, and
+a triangulation. The middle figure shows the associated ravioli complex in case the
+genus of the face on the left is zero and the genus of the face on the right is one, so
+that R has two sheets over the right face. The lower figure shows RD for D the union
+of the four irreducible divisors Di associated with the points pi colored in red.
+
+Figure 2: The ravioli complex over a 2-face.
+subvarieties in X, while the higher-dimensional cells in RD encode intersections among
+the prime toric divisors. One-cells in RD correspond to the intersections of pairs of
+divisors in X, which are irreducible curves in X, and 2-cells in RD correspond to triple
+intersections of divisors in X. Note that a 2-cell in RD always corresponds to a single
+point on X.
+
+9
+
+2.4
+
+The puff complex P
+
+Let us briefly recapitulate. By (2.9), the sheaf cohomology of prime toric divisors and
+their intersections is fully specified once one knows the simplicial complex T determined
+by the triangulation T , together with the genera g(Θ◦ ) of the faces Θ◦ ∈ F(≤ 2). For
+Θ◦ a 2-face, the number g(Θ◦ ) records the extent to which subvarieties corresponding
+to simplices contained in Θ◦ are reducible. By promoting the simplicial complex T to
+the ∆-complex R, we have encoded the information about reducibility directly in the
+complex R. Heuristically, viewed as sets of data about subvarieties,
+n 
+o
+◦
+◦
+R ↔ T , g(Θ )|Θ ∈ F(2) .
+(2.19)
+The next step is to account for the data of {g(Θ◦ )|Θ◦ ∈ F(≤ 1)}. In close analogy
+to the promotion T → R, we now define a CW complex5 P that encodes this data.
+Heuristically,
+n 
+o
+◦
+◦
+(2.20)
+P ↔ T , g(Θ )|Θ ∈ F(≤ 2) ,
+which is made precise by the following:
+Definition 1 The puff complex P is a CW complex constructed from the ravioli
+complex R as follows. For each vertex v and edge e in R, we have natural inclusions
+v ,−
+→ S 2 and e ,−
+→ S 2 , where the latter inclusion induces a cellular structure on S 2 with
+g(v)
+W 2
+an S 1 attached to each interior 0-cell. These induce the inclusions iv : v ,−
+→
+S and
+ie : e ,−
+→ X where X is defined by the following pushout diagram:
+g(e)
+
+qi=1 e
+
+i=1
+
+e
+ϕ
+
+X
+
+qi S 2
+
+Then P is defined by the following pushout diagram:
+
+qi vi qj ej
+
+qi
+
+W
+
+R
+
+qiv qie
+
+ϕ
+
+S 2 qj X
+
+P
+
+5
+
+The property of CW complexes that is relevant here is that a 2-cell or 1-cell σ can be attached
+to the complex by a map that identifies the boundary ∂σ with a 0-cell in the complex.
+
+10
+
+◦[0]
+
+Θ1
+
+◦[1]
+
+◦[0]
+
+Θ1
+
+Θ3
+
+11
+00
+11
+00
+11
+00
+1
+0
+000000000
+111111111
+11 ◦[2]
+00
+1
+0
+000000000
+111111111
+000000000
+111111111
+Θ
+000000000
+111111111
+000000000
+111111111
+111111111
+◦[1] 000000000
+111111111
+Θ2 000000000
+111111111
+000000000
+000000000
+111111111
+◦[1]
+000000000
+111111111
+000000000
+111111111
+Θ3
+111111111
+000000000
+111111111
+000000000
+000000000
+111111111
+11
+00
+111111111
+000000000
+11
+00
+11
+00
+
+11
+00
+11
+00
+11
+00
+
+◦[0]
+
+Θ2
+
+11
+00
+11
+00
+11
+00
+
+11
+00
+11
+00
+11
+00
+
+11
+00
+11
+00
+11
+00
+
+11
+00
+11
+00
+11
+00
+
+11
+00
+1
+0
+111111111
+000000000
+11
+00
+1
+0
+000000000
+111111111
+11
+00
+1
+0
+111111111
+000000000
+111111111
+000000000
+111111111
+000000000
+111111111
+000000000
+000000000
+111111111
+111111111
+000000000
+111111111
+000000000
+111111111
+000000000
+111111111
+000000000
+111111111
+000000000
+000000000
+111111111
+111111111
+000000000
+111111111
+000000000
+111111111
+000000000
+
+11
+00
+11
+00
+11
+00
+
+1
+0
+1
+0
+111111111
+000000000
+1
+0
+000000000
+111111111
+111111111
+000000000
+111111111
+000000000
+111111111
+000000000
+111111111
+000000000
+111111111
+000000000
+000000000
+111111111
+111111111
+000000000
+111111111
+000000000
+111111111
+000000000
+111111111
+000000000
+111111111
+000000000
+111111111
+000000000
+111111111
+000000000
+
+11
+00
+11
+00
+11
+00
+
+Figure 3: The layers of the puff complex for a single face. The lower row shows the
+three layers of P for the triangulated face at the top of the figure. In this example,
+◦[1]
+the genera of the various faces are such that g(Θ◦[2] ) = 1, g(Θi ) = (2, 1, 0) and
+◦[0]
+g(Θi ) = (1, 3, 0).
+
+The CW complex PD associated to a divisor D is the sub-complex of P corresponding
+to the image of RD under the morphism ϕ.
+In other words, to construct PD , we attach a bouquet of g(v) two-spheres to each
+vertex v ∈ G, a bouquet of g(p) circles to each point p ∈ G interior to an edge, and a
+bouquet of cylinders S 1 × I to each connected component of RD restricted to e. These
+spaces are glued together along their common points: in particular, the g(e) cylinders
+over a complete edge e ⊂ RD are pinched down into the two vertices bounding e,
+forming a collection of g(e) two-dimensional voids.
+We will find it useful to divide the puff complex into layers:
+Definition 2 For 0 ≤ j ≤ 2, the jth layer P (j) of the puff complex P is the subset
+of P resulting from replacing points interior to each (2 − j)-face Θ◦ of ∆◦ with g(Θ◦ )
+j-spheres, replacing 1-simplices interior to Θ◦ with g(Θ◦ ) cylinders S j × I, etc., as in
+Definition 1. In particular, P (0) = R.
+Figure 3 contains a sketch of the different layers of the puff complex for a simple
+example.
+The homology of PD is readily obtained. Distinct connected components of PD
+can be examined separately, so we may take h0 (PD ) = 1 without loss of generality.
+Contributions to h1 (PD ) come from
+11
+
+(a) One-cycles in RD .
+(b) For each edge e ⊂ ∆◦ , a bouquet of g(p) cylinders over each connected component
+of RD e that is strictly interior to e.
+Contributions to h2 (PD ) come from
+(c) Two-cycles in RD .
+(d) The bouquet of g(e) pinched cylinders over each edge e such that RD e = e.
+(e) The bouquet of g(v) two-spheres over each vertex v, i.e. the layer P (2) .
+We will prove in §3.1 that these classes of contributions are in one-to-one correspondence with classes of contributions in the hypercohomology spectral sequence that
+computes the cohomology of OD . In other words, the homology of the CW complex
+PD encodes the cohomology of OD . As we will see, this correspondence has both
+computational and heuristic utility.
+
+3
+
+Spectral Sequence Computation of Hodge Numbers
+
+In this section we will prove our principal result:
+P
+Theorem 3 Let D =
+i∈G Di , with G ⊆ {1, . . . , N }, be a square-free divisor, as
+defined above. Denote by P and PD the puff complex and the associated subcomplex
+determined by D, respectively. Then the Hodge numbers hi (OD ) are given by
+hi (OD ) = hi (PD ) .
+
+(3.1)
+
+In the rest of this section, we prove Theorem 3. Our method is based on examining
+a hypercohomology spectral sequence. We use stratification to identify the E 2 page
+of that sequence, and then we use a somewhat indirect argument to show that the
+differentials on the E 2 page are all zero.
+3.1
+
+Hypercohomology spectral sequence
+
+To start, let {D1 , . . . , DN } be the prime toric divisors, as defined in §2. Given a
+square-free toric divisor in X,
+X
+D :=
+Di ,
+i∈G
+
+we will compute the cohomology h• (OD ). Suppose that we have indexed the Di so
+P
+that D = ri=1 Di , for some r ≤ N .
+
+12
+
+The set of divisors {D1 , . . . , Dr } is dimensionally transverse on a smooth variety,
+and so by Proposition 20 of Appendix A, the generalized Mayer-Vietoris sequence
+0 −→ OD −→
+
+r
+M
+
+ODi −→
+
+i=1
+
+M
+
+ODij −→
+
+i<j
+
+M
+
+ODijk −→ 0
+
+(3.2)
+
+i<j<k
+
+is an exact sequence of sheaves. The hypercohomology spectral sequence of this complex will allow us to compute the cohomology of OD .
+Define
+F0 :=
+
+r
+M
+
+ODi ,
+
+i=1
+
+F1 :=
+
+M
+
+ODij ,
+
+i<j
+
+F2 :=
+
+M
+
+ODijk .
+
+(3.3)
+
+i<j<k
+r
+(D)
+The complex of sheaves (3.2) gives rise to a hypercohomology spectral sequence Ep,q
+with differentials denoted by
+r
+r
+r
+δp,q→p
+0 ,q 0 : Ep,q (D) −→ Ep0 ,q 0 (D)
+
+where p0 = p + r and q 0 = q − r + 1. The first page of this spectral sequence is
+H 2 (F0 )
+H 1 (F0 )
+H 0 (F0 )
+
+α
+β
+
+0
+
+0
+
+H 1 (F1 )
+
+0
+
+H 0 (F1 )
+
+γ
+
+H 0 (F2 )
+
+1
+1
+These are indexed such that Ep,q
+(D) = H q (Fp ), and e.g. δ0,1→1,1
+= α.
+2
+The second page, E (D) reads
+
+0
+
+H 2 (F0 )
+
+0
+
+0
+
+ker α
+
+coker α
+
+0
+
+0
+
+0
+
+0
+
+coker γ
+
+0
+
+ζ
+0
+
+ker β
+
+ker γ/ Im β
+
+2
+where ζ := δ0,1→2,0
+is the only nonzero differential on this page.
+The third and final page reads
+
+13
+
+0
+
+H 2 (F0 )
+
+0
+
+0
+
+0
+
+0
+
+ker ζ
+
+coker α
+
+0
+
+0
+
+0
+
+ker β
+
+ker γ/ Im β
+
+coker ζ
+
+0
+
+On this page, the differential δ 3 is zero.
+The hypercohomology spectral sequence converges to the cohomology of OD ,
+meaning that
+dim H 0 (OD ) = dim ker β
+
+(3.4)
+
+dim H 1 (OD ) = dim ker ζ + dim(ker γ/ Im β)
+
+(3.5)
+
+dim H 2 (OD ) = dim H 2 (F0 ) + dim coker α + dim coker ζ
+
+(3.6)
+
+In the special case that ζ is the zero map, we have the simplifications
+dim H 1 (OD ) = dim ker α + dim(ker γ/ Im β)
+
+(3.7)
+
+dim H 2 (OD ) = dim H 2 (F0 ) + dim coker α + dim coker γ
+
+(3.8)
+
+If the dependence on a divisor is understood, we denote the maps α, β, γ, ζ, while if
+a divisor D is specified, we write α(D), etc.
+3.2
+
+Cohomology from stratification
+
+We now use stratification to compute the cohomology organized by the spectral sequence given above.
+Proposition 4 Row 0 of page 1 of the hypercohomology spectral sequence has coho(0)
+mology equal to that of the ravioli complex RD = PD , that is:
+dim ker β = dim H0 (RD )
+
+(3.9)
+
+dim(ker γ/ Im β) = dim H1 (RD )
+
+(3.10)
+
+dim coker γ = dim H2 (RD )
+
+(3.11)
+
+Note: this can be written more succinctly in the form
+(0)
+
+2
+dim Ep,0
+(D) = dim Hp (PD ) ,
+
+(3.12)
+
+2
+for all p, even though dim Ep,0
+(D) can only be nonzero for p = 0, 1, or 2.
+
+Proof. We will identify row 0 of page 1 of the spectral sequence with the cohomology
+complex of the complex RD . In the following, we will take RD (k) to be the set of kfaces of RD . In particular, RD (0) is the set of 0-dimensional faces (i.e. the Di ), RD (1)
+14
+
+is the set of 1-dimensional faces, i.e. one for each connected component of a Di ∩ Dj .
+The same connected component C cannot occur for two different such intersections,
+as otherwise the component C would be contained in the intersection of three or four
+of the Di , which cannot happen since the Di are dimensionally transverse. Finally,
+RD (2) corresponds to the points in each of the triple intersections of three divisors,
+Di ∩ Dj ∩ Dk . Again, each point can only appear in one such intersection. Notice that
+RD is a Delta complex whose cohomology sequence is
+0 −→
+
+r
+M
+
+δ
+
+i=1
+
+δ
+
+M
+
+0
+CeDi −→
+
+1
+CeC −→
+
+M
+
+CeP −→ 0
+
+(3.13)
+
+P ∈RD (2)
+
+C∈RD (1)
+
+where the maps δa are as follows: if C is a connected component of Di ∩ Dj , for i < j,
+(δ0 (eDi ))C = −1 and (δ0 (eDj ))C = 1, and all other components are zero. If C is an
+irreducible component of Di ∩ Dj , and if P is a point of the intersection Di ∩ Dj ∩ Dk ,
+(for i < j), then
+(δ1 (eC ))P = sign(i, j, k).
+Now consider the complex of row 0 in page 1 of the spectral sequence. We see
+L
+L
+Lr
+0
+0
+that H 0 (F0 ) =
+P ∈RD (2) CeP ,
+C∈RD (1) CeC , and H (F2 ) =
+i=1 CeDi , H (F1 ) =
+i.e. the complex
+0
+
+H 0 (F0 )
+
+β
+
+H 0 (F1 )
+
+γ
+
+H 0 (F2 )
+
+0
+
+and the complex (3.13) have the same terms. Under this identification, it is easy to
+see that the maps are identical too, as the morphisms β and γ are canonically induced
+by the generalized Mayer-Vietoris complex. 
+Proposition 4 generalizes to all rows of the second page:
+Proposition 5 For all p and q,
+(q)
+
+2
+dim Ep,q
+(D) = dim Hp+q (PD ).
+
+Proof. We have already established the case q = 0. For q = 2, we note that stratification gives h2 (ODi ) = 0, unless Di corresponds to a vertex of ∆◦ having positive genus
+g(v). Summing these gives
+X
+dim H 2 (F0 ) =
+g(v) ,
+(3.14)
+v∈F (0)
+v∈D
+
+proving Proposition 5 for q = 2.
+The case q = 1 can be established by noting that row 1 of page 1 of the spectral
+sequence, because of stratification, breaks up into a direct sum of complexes, summed
+15
+
+over all edges e in ∆◦ intersecting D:
+
+M
+M
+Cg(e) ⊗ 0 −→
+
+
+C −→
+
+τ ∈TD∩e (0),τ ∈∂e
+/
+
+e∈F (1)
+
+M
+
+C −→ 0
+
+(3.15)
+
+τ ∈TD∩e (1)
+
+The complex in parentheses is simply the relative cochain complex for the pair (TD∩e , TD∩∂e ).
+Note that because e is an edge, (TD∩e , TD∩∂e ) = (RD∩e , RD∩∂e ).
+Therefore the p-th cohomology (for p = 0, 1) of the direct sum of complexes
+L
+(3.15) is the relative cohomology e Cg(e) ⊗ H p (RD∩e , RD∩∂e ), which is the same as
+L g(e)
+(1)
+⊗ Hp (RD∩e , RD∩∂e ), which by the definition of P equals Hp+1 (PD ). 
+eC
+2
+(D) then
+Corollary 6 Given a square-free divisor D, if ζ(D) = δ0,1→2,0
+
+3.3
+
+ζ(D) = 0 ⇐⇒ dim H i (OD ) = dim Hi (PD ) for all i
+
+(3.16)
+
+⇐⇒ dim H 1 (OD ) = dim H1 (PD )
+
+(3.17)
+
+⇐⇒ dim H 2 (OD ) = dim H2 (PD ) .
+
+(3.18)
+
+Proof that ζ = 0
+
+In this section we will prove the following, which also, by Corollary 6, proves Theorem 3.
+Lemma 7 If D corresponds to a square-free divisor on X, then the map
+2
+ζ(D) = δ0,1→2,0
+(D)
+
+is the zero map.
+We prove this result by first splitting D = A + B1 + . . . + Bm , where A and the Bi
+are all square-free divisors having disjoint support. Consider the subgraph TD (≤ 1).
+Suppose that this graph has m components each of which is contained in the strict
+interior of an edge of ∆◦ . Let Bi be the sum of the divisors corresponding to the
+lattice points in the ith component. Let A be the sum of the rest of the divisors.
+P
+Define Aj := A + ji=1 Bi , with A0 = A and Am = D.
+Lemma 8 The map ζ(A) is zero, and so dim H i (OA ) = dim Hi (PA ).
+(1)
+
+2
+Proof. The map is zero, because its domain, E0,1
+(A), which has dimension dim H1 (PA ),
+is zero by construction. 
+
+Lemma 9 dim H 2 (OBi ) = 0.
+Proof. If the given component Bi consists of divisors associated to lattice points
+interior to an edge of genus g, then h• (OBi ) = (1, g, 0). 
+16
+
+Lemma 10 Fix an integer 1 ≤ i ≤ m, and let C := Ai−1 ∩ Bi . Then C is a curve
+whose irreducible components are all P1 ’s, two intersect in at most one point, and
+H 1 (OC ) = 0.
+Proof. C := Ai−1 ∩ Bi is a collection of rational curves C = ∪M CM . As a complex, C
+corresponds to a collection of 1-simplices σM , each with one end in RBi , and the other
+end in an edge not containing RBi , in a 2-face, or in a vertex. Two curves CM and CN
+intersect if and only if σM and σN share a 2-simplex σM,N .
+Now notice that h1 (OC ) 6= 0 is possible only if the CM intersect in such a way as
+to form a nontrivial loop. But this would require a closed loop in which three or more
+1-simplices σ1 , . . . , σK are connected by 2-simplices σ1,2 , . . . , σK−1,K , σK,1 . However,
+because RBi is in the strict interior of an edge, no such loop can be formed. Thus,
+h1 (OC ) = 0. 
+Lemma 11 dim H 2 (OA ) = dim H 2 (OD ).
+Proof. We prove this by induction. Consider Ai = Ai−1 + Bi , where A0 = A. We use
+induction to show that dim H 2 (OA ) = dim H 2 (OAi ), for i = 0, . . . , m. The statement
+is trivial for i = 0, and for i > 0, we use the long exact sequence associated to the
+Mayer-Vietoris sequence
+0 −→ OAi −→ OAi−1 ⊕ OBi −→ OC −→ 0.
+combined with Lemmas 9 and 10. One obtains that H 2 (OAi ) = H 2 (OAi−1 ). 
+Lemma 12 dim H 2 (PA ) = dim H 2 (PD ).
+Proof. There are four cases where an element of H 2 can appear: D contains a vertex
+of genus > 0, D contains an entire edge of genus > 0, D contains at least two full
+sheets over a 2-face, and finally, D contains a collection of full 2-faces that contain a
+void. Since by definition, not all of the lattice points of the edge containing Bi are in
+D, and Bi contains no vertices, PA and PD must have the same H 2 . 
+Proof of Lemma 7, and therefore also the proof of Theorem 3. Lemmas 8,
+11, and 12 imply that
+dim H 2 (PD ) = dim H 2 (PA ) = dim H 2 (OA ) = dim H 2 (OD ),
+and so by Corollary 6, we have ζ(D) = 0, proving the theorem. 
+
+17
+
+3.4
+
+Generalization to Calabi-Yau n-folds
+
+Most aspects of the computation above generalize immediately to Calabi-Yau n-folds.
+Definition 13 Let V be a simplicial toric variety of dimension n + 1, and let X
+be a smooth Calabi-Yau n-fold hypersurface in V , with Nn := h1,1 (X) + n + 1. Let
+P
+D = i∈G Di , with G ⊆ {1, . . . , Nn }, be a square-free divisor. The construction of
+Definition 1 generalizes to any n ≥ 3, and we denote by P and PD the puff complex
+and the associated subcomplex determined by D, respectively.
+We note that the constructions of P and PD are immediate because our results on
+the stratification of subvarieties Xσ ⊂ X apply for any n.
+Next, the Mayer-Vietoris sequence generalizing (3.2) contains n+1 nonzero terms.
+The resulting hypercohomology spectral sequence again converges to the cohomology
+of OD , and it is easy to see that row zero of page one of the hypercohomology spectral
+sequence again has cohomology equal to that of RD . Moreover, Proposition 5 holds
+for arbitrary n [15]. However, for n > 3 there are more diagonal maps, generalizing ζ.
+If for every n the diagonal maps were shown to be identically zero, as we have
+proved in the case n = 3, then we would have hi (OD ) = hi (PD ) for all n. However,
+examining the diagonal maps directly in the same manner as done for ζ in §3.3 would
+be somewhat involved. We defer a proper analysis of these maps to [15], and state
+here only the following:
+Conjecture 14 Let V , X, D, and PD be as in Definition 13, and set n = 4. For
+each such D there exists k(D) ∈ Z≥0 such that
+h• (OD ) = h• (PD ) − (0, k(D), k(D), 0) .
+
+(3.19)
+
+We show in [15] that k(D) = 0 for all D except those obeying a rather restrictive
+condition.
+
+4
+
+Interpretation and an Example
+
+We will now briefly discuss the interpretation of our result, and then illustrate the
+utility of our formula in an example.
+4.1
+
+Contractible graphs
+
+Equation 3.1 depends on only certain topological properties of the complex PD , and
+so two complexes that correspond to divisors that are related to one another by deformations that preserve these topological properties will have identical Hodge numbers.
+This leads to a useful tool in enumerating certain divisors, as we now explain.
+
+18
+
+Given a triangulation T and the associated simplicial complex T , a square-free
+divisor D determines a unique simplicial complex TD ⊂ T , as well as a corresponding
+CW complex PD ⊂ P. The number N of distinct square-free divisors of a given
+1,1
+puff complex P that corresponds to a Calabi-Yau hypersurface X is 2h (X)+4 . Thus,
+the task of working out the Hodge numbers of all possible square-free divisors appears
+formidable for large h1,1 (X). Fortunately, as we will now explain, Theorem 3 implies
+that square-free divisors fall into equivalence classes.
+Suppose that we begin with a set of lattice points G1 ⊂ {1, . . . , N }, which define
+a square-free divisor D1 and a CW complex PG1 . Now let us add or remove one lattice
+point from G1 , so that G1 is changed to some G2 ⊂ {1, . . . , N }. This operation uniquely
+defines a new square-free divisor D2 and a new CW complex PG2 . By Equation (3.1),
+if hi (PG1 ) = hi (PG2 ) then hi (OD1 ) = hi (OD2 ).
+We define a single contraction to be the operation of changing D1 → D2 by
+adding or removing a lattice point, as specified above, in such a way that hi (PD1 ) =
+hi (PD2 ). We define a contraction to be an arbitrary composition of single contractions. Contraction is an equivalence relation on square-free divisors, and all members
+of a contraction equivalence class have the same Hodge numbers. However, two divisors with the same Hodge numbers do not necessarily belong to the same contraction
+equivalence class.
+As an example consider the complex in Figure 4, with associated divisor D =
+D1 + D2 + D3 , where the Di correspond to the points pi . Equation 3.1 gives h• (OD ) =
+(1 + g(f ), 0, 0), where f is the 2-face containing G. We can perform a contraction by,
+for example, first deleting p2 , and then deleting p3 , as in Figure 4. We will present a
+more involved example in §4.2.
+
+D2 → D1
+
+D2
+D1
+
+D3
+
+D3 → D1
+D1
+
+D3
+
+D1
+
+Figure 4: Example of contraction for a graph D = D1 + D2 + D3 , where the Di
+correspond to points interior to a 2-face. First D2 is removed, and then D3 is removed.
+
+4.2
+
+Example with h1,1 = 491
+
+As a demonstration of the utility of Theorem 3 we will now calculate the Hodge numbers of some nontrivial divisors in a Calabi-Yau hypersurface X in a toric variety
+corresponding to a fine, star, regular triangulation of the largest polytope ∆◦L in the
+Kreuzer-Skarke database [10]. In this example, ∆◦L is the convex hull of the columns
+
+19
+
+dim
+0
+0
+0
+0
+0
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+2
+2
+2
+2
+2
+2
+2
+2
+2
+2
+
+face # int pts genus
+0
+1
+0
+1
+1
+0
+2
+1
+1
+3
+1
+3
+4
+1
+6
+0,1
+83
+0
+0,2
+6
+0
+0,3
+2
+0
+0,4
+1
+0
+1,2
+6
+0
+1,3
+2
+0
+1,4
+1
+0
+2,3
+0
+1
+2,4
+0
+2
+3,4
+0
+6
+0,1,2
+246
+0
+0,1,3
+82
+0
+0,1,4
+41
+0
+0,2,3
+6
+0
+0,2,4
+3
+0
+0,3,4
+1
+0
+1,2,3
+6
+0
+1,2,4
+3
+0
+1,3,4
+1
+0
+2,3,4
+0
+1
+
+Table 1: The genera of all vertices, edges, and faces in ∆◦L .
+of
+
+
+
+
+−1 −1 −1 −1 1
+
+
+−1 −1 −1 2 −1
+B=
+
+−1 −1 6 −1 −1
+−1 83 −1 −1 −1
+
+(4.1)
+
+There are 679 nonzero lattice points in ∆◦ , but 184 of these are interior to 3-faces,
+and therefore do not intersect X. X has h1,1 (X) = 491, with 495 toric divisors. The
+face structure is very simple: ∆◦L is a 4-simplex, with vertices indexed by {0,1,2,3,4},
+corresponding to the columns of B. There are 5 vertices, 10 edges, and 10 triangles in
+∆◦L , before triangulation. The genera of all the faces are given in Table 1.
+Consider the largest 2-face f` in ∆◦L , which is a triangle with vertices labeled
+by {0, 1, 2}. This face has 344 lattice points, as shown in Figure 5. All (sub)faces
+
+20
+
+1
+
+0
+
+2
+
+Figure 5: The largest 2-face f` in the largest four-dimensional reflexive polytope ∆◦L ,
+with a ‘banded’ complex show in red. The Hodge numbers of the corresponding divisor
+D are easily read off as h• (OD ) = (1, 9, 1).
+
+except vertex 2 have genus 0, and so the puff complex P restricted to f` is simply
+T restricted to f` , with a single S 2 cell attached to vertex 2. If we choose, excluding
+point 2, a set of points on f` whose corresponding complex is connected and has no
+cycles, then the corresponding divisor will be rigid. The divisor corresponding to
+the entire face has Hodge numbers (1, 0, 1). The divisor corresponding to the line
+connecting 2 to 4 has Hodge numbers (1, 0, 9). As a more nontrivial example we can
+form simplicial complexes with cycles on f` and ∆◦L . The complex defined by taking
+all the boundary points of f` , and none of the interior points, defines a divisor with
+Hodge numbers (1, 1, 1). In Figure 5 we show a triangulation6 of f` , and a choice of a
+more complicated subcomplex containing cycles. Theorem 3 allows us to easily read
+off the Hodge numbers of the corresponding divisor D as h• (OD ) = (1, 9, 1).
+6
+
+This triangulation of f` is for illustrative purposes; the triangulation we have obtained from a
+regular triangulation of ∆◦L is difficult to render.
+
+21
+
+1
+
+1
+
+1
+
+2
+0
+
+3
+(a)
+
+1
+
+2
+0
+
+3
+
+2
+0
+
+(b)
+
+3
+(c)
+
+2
+0
+
+3
+(d)
+
+Figure 6: A facet of ∆◦L defined by the points {0, 1, 2, 3}, with several complexes drawn
+on it. The red points indicate lattice points included in the complex, and the red lines
+cycle-less paths that may include additional lattice points. The red triangles indicate
+entire faces that are included in the complex. Note that the point 1, corresponding to
+(−1, −1, −1, 83), has been scaled in, for visualization purposes. In complex (d) we have
+included the entire boundary of the facet. From Theorem 3 the Hodge numbers of the
+corresponding divisors are h• (ODa ) = (1, 0, 0), h• (ODb ) = (1, 1, 3), h• (ODc ) = (1, 0, 5),
+and h• (ODd ) = (1, 0, 6).
+As a further example of contraction, one can consider complexes that are not
+just restricted to a single 2-face, as depicted in Figure 6. Here we show a facet of ∆◦L
+defined by the points {0, 1, 2, 3}, with several complexes drawn on it. The red points
+indicate lattice points included in the complex, and the red lines cycle-free paths that
+may include additional lattice points. The red triangles indicate entire faces that are
+included in the complex. Note that the point 1, corresponding to (−1, −1, −1, 83),
+has been scaled in, for visualization purposes. In complex (d) we have included the
+entire boundary of the facet. From Theorem 3 we can immediately read off the Hodge
+numbers of the corresponding divisors as h• (ODa ) = (1, 0, 0), h• (ODb ) = (1, 1, 3),
+h• (ODc ) = (1, 0, 5), and h• (ODd ) = (1, 0, 6).
+
+22
+
+5
+
+Conclusions
+
+In this work we have computed the Hodge numbers hi (OD ) of square-free divisors D
+of Calabi-Yau threefold hypersurfaces in toric varieties. Given the data of a simplicial
+complex T corresponding to a triangulation of a four-dimensional reflexive polytope
+∆◦ , we constructed a CW complex P that simultaneously encodes data about ∆◦
+and its dual ∆. The construction of P involves attaching certain cells to T in a
+manner determined by ∆. The specification of a square-free divisor D determines a
+subcomplex PD , as well as an exact Mayer-Vietoris sheaf sequence. By examining the
+corresponding hypercohomology spectral sequence, we proved that hi (OD ) = hi (PD ).
+Here the left-hand side is manifestly the dimension of a sheaf cohomology group, but
+the right-hand side is the dimension of a simplicial (or cellular) homology group.
+Our results are a step forward in the study of divisors in Calabi-Yau hypersurfaces.
+Theorem 3 permits extremely efficient computation of the Hodge numbers of squarefree divisors in threefolds, even for h1,1  1. Conjecture 14 extends these methods to
+fourfolds, enlarging the range of divisors with computable Hodge numbers [15].
+The ultimate goal of this work was to determine which effective divisors D of a
+Calabi-Yau hypersurface support Euclidean brane superpotential terms. Theorem 3
+represents significant progress toward this goal, but further advances will be necessary
+to give a completely general answer. First of all, although the Hodge numbers hi (OD )
+provide essential information about the number of fermion zero modes of a Euclidean
+brane on D, when D is not smooth there can be additional zero modes associated to
+singular loci. The only smooth, rigid, square-free divisors are the prime toric divisors
+Di themselves; a nontrivial square-free divisor that is rigid necessarily involves normal
+crossing singularities where the components Di intersect. One should therefore ask
+how to count fermion zero modes on a divisor with normal crossings. In some cases,
+normal crossings can be shown to yield no new fermion zero modes, so that rigidity is
+a sufficient condition for a superpotential [15]. Moreover, there exist nontrivial smooth
+square-free divisors D with Hodge numbers h• (OD ) = (1, 0, n), with n > 0. In a
+suitably magnetized Euclidean D3-brane wrapping such a divisor, worldvolume flux
+can lift the zero modes counted by h2 (OD ), and so lead to a superpotential term, even
+though D is not rigid. Finally, Donagi and Wijnholt have proposed that in general
+the fermion zero modes can be counted by the logarithmic cohomology of D, h•log (OD )
+[12]. Verifying and applying this idea is a natural task for the future.
+There are many possible extensions of this work. The effects of worldvolume flux
+could plausibly be incorporated along the lines of [24], but including the effects of
+bulk fluxes appears more challenging. A further step would be to compute the Hodge
+numbers of effective divisors that are not square-free. Advances in these directions
+would allow for a truly systematic computation of the nonperturbative superpotential
+for the Kähler moduli in compactifications on Calabi-Yau hypersurfaces.
+
+23
+
+Acknowledgments
+We are grateful to Yuri Berest, Ralph Blumenhagen, Thomas Grimm, Jim Halverson, Tristan Hübsch, John Stout, Wati Taylor, and Timo Weigand for discussions,
+and we thank John Stout for creating Figure 2. We thank the organizers of String
+Phenomenology 2017 at Virginia Tech for providing a stimulating environment for discussing this work. L.M. thanks the theory groups at MIT, Northeastern, and Stanford
+for their hospitality while portions of this work were carried out. C.L. and B.S. thank
+the theory group at MIT for their hospitality while portions of this work were carried
+out. The work of A.P.B. was supported by the SCFT grant ST/L000474/1 and the
+ERC grant 682608 (HIGGSBNDL). The work of C.L. was supported by NSF grant
+PHY-1620526. The work of L.M. was supported in part by NSF grant PHY-1719877.
+The work of M.S. was supported in part by NSF grant DMS-1502294. The work of
+B.S. was supported by NSF RTG grant DMS-1645877.
+
+24
+
+A
+
+Mayer-Vietoris Complexes
+
+In this section we establish the exactness of the generalized Mayer-Vietoris sequence,
+and we give related background on spectral sequences.
+Given closed subvarieties (or subschemes) D and E of a variety (or scheme) X,
+the Mayer-Vietoris complex is
+0 −→ OD∪E −→ OD ⊕ OE −→ OD∩E −→ 0
+
+(A.1)
+
+This is always an exact sequence, and one can view it as an inclusion-exclusion sequence. If I and J are ideals in a ring R, then we have the related exact sequences:
+0 −→ R/I ∩ J −→ R/I ⊕ R/J −→ R/(I + J) −→ 0
+
+(A.2)
+
+0 −→ I ∩ J −→ I ⊕ J −→ I + J −→ 0.
+
+(A.3)
+
+and
+There are well-known generalizations of these sequences to the cases where there are
+more than two subvarieties, ideals, or quotients, but at this level of generality the
+resulting Mayer-Vietoris sequence is often not exact. We will now prove exactness for
+several cases of interest in this paper.
+We start with the case of ideals. Suppose that I1 , . . . , In ⊂ R are ideals in a
+ring R. Define the Mayer-Vietoris ideal sequence, M = M(I1 , . . . , In ), to be the
+cochain complex
+0 −→ (I1 ∩ . . . ∩ In ) −→ M 0 −→ M 1 −→ . . . −→ M n−1 −→ 0,
+
+(A.4)
+
+where
+M p :=
+
+M
+
+(Ii0 + . . . + Iip )
+
+1≤i0 <...<ip ≤n
+
+and the differential dp : M p −→ M p+1 is defined by
+p
+
+(d (φ))i0 ...ip+1 =
+
+p+1
+X
+
+(−1)j φi0 ...îj ...ip+1
+
+j=0
+
+One checks immediately that ker(d0 ) = I1 ∩ . . . ∩ In , and that the sequence (A.4) is
+in fact a complex. Notice that if Ii = R for all i, then M(R, . . . , R) is the (reduced)
+cochain complex of an (n − 1)-simplex, and so is exact.
+The Mayer-Vietoris quotient complex, M(R/I1 , . . . , R/In ) is the cochain
+complex defined in a completely analogous manner:
+0 −→ R/(I1 ∩ . . . ∩ In ) −→ N 0 −→ N 1 −→ . . . −→ N n−1 −→ 0,
+
+25
+
+(A.5)
+
+where
+M
+
+N p :=
+
+R/(Ii0 + . . . + Iip )
+
+1≤i0 <...<ip ≤n
+
+and the differential (dN )p : N p −→ N p+1 is defined by the natural quotient maps
+p+1
+X
+(−1)j φi0 ...îj ...ip+1
+((d ) (φ))i0 ...ip+1 =
+N p
+
+j=0
+
+Again, one checks that (A.5) is a complex, and that ker(dN )0 = R/(I1 ∩. . .∩In ). There
+is an exact sequence of complexes
+0 −→ M(I1 , . . . , In ) −→ M(R, . . . , R) −→ M(R/I1 , . . . , R/In ) −→ 0,
+and coupled with the exactness of the middle complex, the complex M(I1 , . . . , In ) is
+exact precisely when M(R/I1 , . . . , R/In ) is exact.
+Finally, given closed subvarieties (or subschemes) D := D1 ∪ . . . ∪ Dn of a variety
+(or scheme) X, we define the Mayer-Vietoris sheaf sequence M(D1 , . . . , Dn ) in
+parallel to the above, taking
+M
+M(D1 , . . . , Dn )p :=
+ODi0 ∩Di1 ∩...∩Dip .
+1≤i0 <i1 <...<ip ≤n
+
+Define maps dp : M(D1 , . . . Dn )p −→ M(D1 , . . . , Dn )p+1 in the same manner as for
+quotients of ideals above. The resulting complex M(D1 , . . . , Dn ) has the form
+
+0 −→ OD −→
+
+n
+M
+i=1
+
+A.1
+
+ODi −→
+
+M
+
+ODi ∩Dj −→ . . . −→ OD1 ∩D2 ∩...∩Dn −→ 0 .
+
+(A.6)
+
+i<j
+
+Distributive lattices of ideals and Mayer-Vietoris complexes of ideals
+
+The relationship between distributive lattices of ideals and the exactness of MayerVietoris ideal sequences was explained in [25]. In this section, we summarize their
+results, and then show that several sets of ideals of interest form distributive lattices,
+so that their Mayer-Vietoris sequences are exact. This is the key technical fact that
+will allow us to show in §A.2 that certain Mayer-Vietoris complexes of sheaves are
+exact.
+Fix a (commutative) ring R and ideals J1 , . . . , Jr of R. This set of ideals generates
+a lattice of ideals: the join of two ideals is their sum, and the meet of two ideals is their
+intersection. The smallest set of ideals that contains J1 , . . . , Jr and is closed under
+these two operations is the lattice of ideals generated by J1 , . . . , Jr .
+This lattice of ideals is called distributive if for every three ideals L1 , L2 , L3 in the
+
+26
+
+lattice, one has
+L1 ∩ (L2 + L3 ) = (L1 ∩ L2 ) + (L1 ∩ L3 ).
+Equivalently, the lattice is distributive if and only if for every three ideals L1 , L2 , L3 in
+the lattice, one has
+L1 + (L2 ∩ L3 ) = (L1 + L2 ) ∩ (L1 + L3 ).
+The importance of this notion is the following useful characterization due to
+Maszczyk.
+Theorem 15 (Maszczyk [25]) For a set of ideals J1 , . . . , Jn of a ring R, the following are equivalent:
+(a) The lattice of ideals generated by J1 , . . . , Jn is distributive.
+(b) M(J1 , . . . , Jn ) is exact, and hence so is M(R/J1 , . . . , R/Jn ).
+The following is a typical distributive lattice of ideals:
+Example 16 Let S = C[x1 , . . . , xn ] be a polynomial ring over a field F. Then the
+lattice of ideals generated by {(x1 ), . . . , (xn )} is the set of square-free monomial ideals
+of S. This is a distributive lattice of ideals.
+A square-free monomial ideal M ⊂ F[x1 , . . . , xn ] has a unique description as an
+irredundant intersection of monomial prime ideals
+\
+hxi | i ∈ αi,
+M=
+α∈Λ
+
+where the intersection is over a uniquely defined set of subsets of [1..n]. The ideals in
+the intersection are the minimal primes of M .
+A key example is a generalization of this to the case where F = {f1 , . . . , fn } ⊂ R
+is a regular sequence. We will only consider the case where R is a local ring, or a
+graded ring, and in these cases any permutation of the fi remains a regular sequence.
+Given F = {f1 , . . . , fn } ⊂ R, define a map φ : Z[x1 , . . . , xn ] −→ R, where
+φ(xi ) = fi . In this section, we call an ideal I ⊂ R an F -square-free ideal if there is a
+square-free monomial ideal M such that I is generated by φ(M ), i.e., I is generated by
+square-free products of the fi . We will say that I is an F -square-free monomial ideal
+if it is F -square-free, and I can be written as the intersection
+\
+I=
+hfi | i ∈ αi,
+α∈Λ
+
+where
+M=
+
+\
+
+hxi | i ∈ αi.
+
+α∈Λ
+
+27
+
+Theorem 17 Let F = {f1 , . . . , fn } be a regular sequence in the maximal ideal of a
+local ring R.
+(a) The lattice of ideals generated by (f1 ), . . . , (fn ) is exactly the set of F -squarefree ideals.
+(b) This lattice of ideals is distributive.
+This follows from the following more precise lemma, which we prove by induction
+on n.
+Lemma 18 Let F = {f1 , . . . , fn } be a regular sequence. Let F 0 := {f1 , . . . , fn−1 }.
+The following statements hold.
+(a) If J is an F 0 -square-free ideal, then (J : fn ) = J.
+(b) If Ii , Ji are F 0 -square-free ideals, then L1 = I1 fn + I2 and L2 = J1 fn + J2 obey
+L1 ∩ L2 = (I1 ∩ J1 + I1 ∩ J2 + I2 ∩ J1 )fn + I2 ∩ J2 .
+(c) If I and J are F 0 -square-free ideals, then
+((fn ) + I) ∩ ((fn ) + J) = ((fn ) + (I ∩ J)).
+(d) If I and J are F 0 -square-free ideals, then
+(Ifn + J) : fn = I + J.
+(e) Every F -square-free ideal is an F -square-free monomial ideal.
+(f ) If L1 and L2 are F -square-free ideals, then L1 ∩ L2 is also F -square-free.
+(g) If L1 , L2 , L3 are F -square-free ideals, then
+L1 ∩ (L2 + L3 ) = L1 ∩ L2 + L1 ∩ L3 .
+Proof. We prove this by induction. The case n = 2 is immediate. Suppose the
+statements are true for a number of elements of F less than n.
+(a) By part (e) in the induction hypothesis,
+\
+J=
+hfi | i ∈ αi,
+α∈Λ
+
+where all the fi that appear have i < n. Then J : fn is the intersection of
+hfi | i ∈ αi : fn = hfi | i ∈ αi,
+whose intersection is again J.
+
+28
+
+(b) The right hand side is clearly contained in the left hand side, so let γ =
+α1 fn + α2 = β1 fn + β2 ∈ L1 ∩ L2 . One shows that γ is contained in the right hand
+side (where α1 ∈ I1 , α2 ∈ I2 , β1 ∈ J1 , β2 ∈ J2 ). Thus, (α1 − β1 )fn = β2 − α2 ∈ I2 + J2 .
+Therefore, by part (a), since I2 +J2 is F 0 -square-free, α1 −β1 ∈ I2 +J2 . Therefore, there
+exists δ1 ∈ I2 , δ2 ∈ J2 such that α1 − β1 = δ1 − δ2 . Now plug this back into the formula
+for γ to get δ1 fn + α2 = δ2 fn + β2 ∈ I2 ∩ J2 . Since this is already in the right hand side,
+we can subtract it from γ, obtaining an element γ 0 = (α1 −δ1 )fn = (β1 −δ2 )fn that is in
+the right hand side precisely when γ is. Since fn is a nonzero divisor, α1 − δ1 = β1 − δ2 ,
+so γ 0 ∈ ((I1 + I2 ) ∩ (J1 + J2 ))fn . Combining this with the induction hypothesis of
+part(g), we have that (I1 + I2 ) ∩ (J1 + J2 ) = I1 ∩ J1 + I1 ∩ J2 + I2 ∩ J1 + I2 ∩ J2 , and
+therefore γ 0 , and hence γ, is contained in the right hand side.
+(c) This follows immediately from (b), by taking I1 = J1 = R.
+(d) This follows immediately from (b): (Ifn + J) ∩ (fn ) = (I + J)fn , and so
+(Ifn + J) : fn = I + J.
+(e) For any ideal I, and f ∈ R, such that I : f 2 = I : f , we always have
+I = (I : f ) ∩ ((f ) + I). Let L = Ifn + J be an F -square-free ideal. If I = 0, then
+the inductive hypothesis gives that L = J is F 0 -square-free monomial, and is therefore
+F -square-free. If instead, fn ∈ L, then the induction hypothesis gives a decomposition
+for J, and part (c) gives the required decomposition for L. Otherwise, by part (d) we
+have L = (I + J) ∩ ((fn ) + J). Both of these have decompositions, by (e) (for n − 1)
+and (c), and putting them together gives a decomposition for L.
+(f) This follows immediately from (b) and the inductive hypothesis for (f).
+(g) This follows immediately from part (b). 
+Proof of Theorem 17. The set of F -square-free ideals is plainly closed under addition
+of ideals. By Lemma 18(b), the lattice of ideals generated by (f1 ), . . . , (fn ) contains
+the set of F -square-free ideals. Also by Lemma 18(f), the set of F -square-free ideals is
+closed under intersection, and so the lattice of ideals generated by (f1 ), . . . , (fn ) is the
+set of F -square-free ideals. Finally, by Lemma 18(g), the lattice is distributive. 
+A.2
+
+Mayer-Vietoris sequences corresponding to divisors and curves
+
+Recall that D ⊂ X is called a prime divisor on X if it is irreducible and codimension
+one in X.
+Proposition 19 If X is a simplicial toric variety, and D1 , . . . , Dr are prime torusinvariant Weil divisors on X, then the Mayer-Vietoris sheaf sequence M(D1 , . . . , Dr )
+is an exact sequence of OX -modules.
+Proof. Let S = C[x1 , . . . , xN ] be the Cox ring of X, where Di corresponds to the ring
+variable xi , for 1 ≤ i ≤ r. Consider the Mayer-Vietoris ideal sequence M(x1 , . . . , xr ).
+This is exact, as the xi generate a distributive lattice, and so M(S/x1 , . . . , S/xr ) is also
+29
+
+exact. Sheafification of this exact sequence of graded S-modules remains exact, but
+this sheafification is precisely M(D1 , . . . , Dr ). 
+Proposition 20 If X is a smooth variety, and D1 , . . . , Dr are effective divisors, such
+that the intersection of each set of n of these is either empty, or has codimension n
+in X, then the Mayer-Vietoris sheaf sequence M(D1 , . . . , Dr ) is an exact sequence of
+OX -modules.
+Proof. We prove exactness locally. Let p ∈ X be a point. Suppose that the set of Di
+that pass through p is {D1 , . . . , Dn }. Localizing the Mayer-Vietoris sheaf complex at p
+results in the complex M(R/f1 , . . . , R/fn ), where R = OX,p , and the Cartier divisor Di
+is defined locally in this ring by fi . Note that, by hypothesis, the elements f1 , . . . , fn
+form a regular sequence in the maximal ideal of R. Therefore, Theorem 17 shows
+that M(f1 , . . . , fn ) is exact. This implies that M(R/f1 , . . . , R/fn ) is also exact, which
+implies that the original complex is exact at each p ∈ X, proving the proposition. 
+Notice that this proof can be generalized to the case when X is equidimensional,
+not necessarily smooth, and the Di are Cartier divisors with the given intersection
+properties.
+There also exists a corresponding exact sequence in the case of curves simply using the
+corresponding normalization without necessitating the above technology.
+Lemma 21 Suppose X is a smooth, projective variety and assume that C1 , . . . , Cr
+are smooth, irreducible curves on X, and that the corresponding closed subscheme
+C := C1 ∪ . . . ∪ Cr is a nodal, reducible curve with components Ci . Then the MayerVietoris sequence M(C1 , . . . , Cr ) is an exact sequence of OX -modules.
+Proof. By hypothesis, the normalization f : C̃ → C is the scheme corresponding to
+the disjoint union of the smooth, irreducible components Ci . Thus, the normalization
+induces the following short exact sequence
+M
+M
+O Ci  f ∗
+OCi /OC ,
+(A.7)
+OC ,−
+→ f∗
+i
+
+i
+
+where the quotient sheaf is a torsion sheaf with support precisely on the nodes of C.
+By considering the sequence locally at the nodes, we thus obtain the following exact
+sequence of OC -modules
+M
+M
+OC ,−
+→ f∗
+OCi  g∗
+Opj ,
+(A.8)
+i
+
+j
+
+where g is the natural closed immersion and pj correspond to the nodes of C. Higher
+direct images of closed immersions vanish and hence we obtain an exact sequence of
+OX -modules yielding exactness of M(C1 , ..., Cr ). 
+30
+
+A.3
+
+Background on spectral sequences
+
+We will now highlight the essential aspects of hypercohomology spectral sequences
+needed to follow the computation of h• (OD ). We begin by describing the basic usage
+of the two spectral sequences corresponding to a double complex. Instead of going into
+detail about filtrations, we assume that the entries of the second and subsequent pages
+of the spectral sequence are finite-dimensional vector spaces. We are describing “first
+quadrant” spectral sequences, as that is what we need for hypercohomology.
+We start with a bounded double complex of vector spaces, C = {C p,q , dh , dv },
+i.e. a collection of vector spaces C p,q , where C p,q = 0 outside of the box 0 ≤ p ≤ M ,
+p,q
+0 ≤ q ≤ M , for some M , horizontal differentials dp,q
+−→ C p+1,q , and vertical
+h : C
+differentials dp,q
+: C p,q −→ C p,q+1 satisfying d2h = d2v = 0, and the compatibility
+v
+condition that they anticommute: dh dv = −dv dh . More generally, we could allow C p,q
+to be modules, or objects in some Abelian category, and the maps would then be
+morphisms in this category.
+There are two spectral sequences corresponding to C, 0 Erp,q and 00 Erp,q . We will
+describe the first, from which the second is easily obtained. A spectral sequence is a set
+of pages Erp,q , for r = 0, 1, 2, . . .. Each page is a two-dimensional array of vector spaces
+Erp,q , for 0 ≤ p, q ≤ M , together with a map dr . The zeroth page, E0 , starts with C p,q
+p,q
+p,q
+−→ C p,q+1 .
+in the (p, q) spot, and the map is the vertical differential dp,q
+0 := dv : C
+The differential dr at each step satisfies the equation d2r = 0, and maps
+p,q
+p+r,q−r+1
+dp,q
+.
+r : Er −→ Er
+
+The first page is obtained from the zeroth page by setting
+p,q−1
+E1p,q := ker dp,q
+).
+0 / Im(d0
+
+The differential d1 is simply the horizontal map
+p,q
+p+1,q
+dp,q
+1 : E1 −→ E1
+
+induced by the horizontal differential on C. In general, given the r-th page of the
+spectral sequence, the (r + 1)-st page is the array
+p,q
+p−r,q+r−1
+Er+1
+:= ker dp,q
+).
+r / Im(dr
+
+By iterating this procedure, the spectral sequence eventually converges when all terms
+on the page stabilize. For a first quadrant spectral sequence, the spectral sequence
+converges to the cohomology of the total complex
+E2p,q =⇒ H p+q (Tot(C))
+
+31
+
+where the total complex is a complex with the n-th term defined by
+M
+Tot(C)n =
+C p,q
+p+q=n
+
+with the natural differential defined by d = dv + dh .
+A.4
+
+The hypercohomology spectral sequence
+
+We now explain the utility of the spectral sequence discussed above in computing sheaf
+cohomology. Let us fix a smooth complex projective variety X and closed subvarieties
+D1 , . . . , Dn . We assume that the intersection of each set of k of the Di is either empty,
+or has codimension k in X, so that by Proposition 20 the corresponding Mayer-Vietoris
+sheaf sequence M(D1 , . . . , Dn ) is an exact sequence.
+Let {OD } denote a complex localized in degree 0 with the term OD and let
+Ln
+{ i=1 ODi −→ . . . −→ OD1 ∩...∩Dn } denote the corresponding complex beginning in
+degree 0. These complexes are quasi-isomorphic and hence, as objects in the bounded
+derived category Db (X), they are isomorphic. We have the natural global sections
+functor Γ : Qcoh(X) → Vec(C), and by deriving on the right and restricting to the full
+subcategory of bounded complexes of quasicoherent sheaves with coherent cohomology, we obtain the induced derived functor RΓ : Db (X) → Db (Vec(C)). For a given
+complex of coherent sheaves F • , we then compute the hypercohomology groups, or
+higher derived functors, by taking cohomology, namely H i (X, F • ) = H i RΓ(F • ).
+In order to compute the hypercohomology groups of a complex F • , we take a
+quasi-isomorphic complex of injective objects given by f : F • → I • and compute the
+cohomology H i (Γ(I • )). Such a complex is often constructed as the total complex
+of the Cartan-Eilenberg resolution J •,• of F • where existence is proved by applying
+the horseshoe lemma. In particular, the hypercohomology H(F • ) is independent of the
+resolution. However, in practice, injective resolutions are usually hard to find explicitly,
+and so one often resorts to taking acyclic resolutions.
+We wish to compute
+i
+
+i
+
+
+
+H (D, OD ) = H X,
+
+n
+M
+
+ODi −→ . . . −→ OD1 ∩...∩Dn
+
+
+
+(A.9)
+
+i=1
+
+In the general situation, given a scheme (X, OX ), and given a bounded-below complex
+F • of OX -modules, we have the following computational tool:
+Lemma 22 There exists a spectral sequence with
+
+
+E2p,q = H p H q (X, F • )
+converging to Hp+q (X, F • ).
+
+32
+
+B
+
+Stratification of Toric Hypersurfaces and Hodge Numbers
+of Strata
+
+In this appendix we will review a number of results about the stratification of toric
+varieties and the associated stratification of hypersurfaces. In particular, we will review
+how the algorithm of [26] can be used to conveniently read off the Hodge numbers of
+toric strata. Although all of these techniques are in principle well-known, a succinct
+exposition, especially in the physics literature, is lacking. We refer the reader to [27–
+29] for an introduction to toric geometry. The original reference for how to compute
+Hodge numbers of toric strata for hypersurfaces is [26]; see [16, 20, 21] for a number
+of applications close to physics.
+B.1
+
+Toric varieties and stratification
+
+By definition, a toric variety V is characterized as containing an open dense algebraic
+torus, (C∗ )n , the action of which (on itself) extends to the whole variety. One can
+think of an n-dimensional toric variety as a (partial) compactification of (C∗ )n in
+which various lower-dimensional algebraic tori are added. These can be thought of as
+‘limits’ of the original (C∗ )n , so that the action of (C∗ )n on itself extends naturally to
+the whole variety.
+This structure can be summarized by a combinatorial object called a fan. A fan Σ
+is a collection of strongly convex rational polyhedral cones such that the face of every
+cone counts as a cone in the fan and two cones only intersect along a face of each.
+Here, strong convexity demands that no subspace (except the origin) of the ambient
+vector space is contained in any cone. One can think of each cone as being spanned
+by a finite number of rays with primitive generators vi that are elements of a lattice
+N . Finally, we (mostly) make the further assumption that every cone is simplicial, i.e.
+any d-dimensional cone is spanned by d rays. In this case the associated toric variety
+has at most orbifold singularities and is factorial.
+Let us label the (generators of the) rays of Σ by vi , with the index i running from
+1 to r. The toric variety PΣ associated with the fan Σ can then be described in analogy
+to complex projective space by associating a homogeneous coordinate zi to each ray of
+the fan and forming the quotient
+Cr − SR
+PΣ =
+.
+G
+
+(B.1)
+
+This data is encoded in the fan as follows. First, the exceptional set or Stanley Reisner
+ideal, SR corresponds to all collections {vi |i ∈ I} for which the cones vi do not share
+a common higher-dimensional cone. Wheneve this is the case, the set SR contains the
+subspace of Cr in which the associated collection of coordinates {zi |i ∈ I} vanishes
+
+33
+
+simultaneously. The Abelian group G is given as the kernel of the homomorphism
+Y he ,v i
+zi → tk =
+zj k j
+(B.2)
+j
+
+where the ek form a basis of the lattice M . Note that this implies that whenever there
+is a linear relation
+X
+ai v i = 0 ,
+(B.3)
+i
+
+there is an associated one-parameter subgroup C∗ ∈ G which acts as
+(z1 , · · · , zr ) ∼ (λa1 z1 , · · · , λar zr )
+
+(B.4)
+
+for λ ∈ C∗ . In most cases of interest, G can be completely described through relations
+like this. In general, however, G may contain discrete factors. Note that the above
+discussion implies that the (complex) dimension of V equals the (real) dimension of N .
+In the following, we also use the notation PΣ to denote the toric variety determined by
+the fan Σ.
+For all zi 6= 0, the coordinates tk defined in (B.2) parameterize the open dense
+∗ n
+(C ) giving the toric variety its name. The strata that are added to turn (C∗ )n into a
+nontrivial toric variety are encoded in the fan as follows. We first associate the unique
+zero-dimensional cone σ [0] , i.e. the origin, of Σ with (C∗ )n . Each d-dimensional cone
+[d]
+σi is naturally associated with the homogeneous coordinates zi corresponding to its
+generating rays. Choosing the basis ek in (B.2) from lattice vectors contained in the
+dual cone
+hσ̌, σi ≥ 0 ,
+(B.5)
+which sits in σ̌ ∈ M ⊗ R, where M is the dual lattice to N , we may take a limit of
+(B.2) where we set the zi = 0 for all vi generating σ. As a d-dimensional cone σ [d] has
+d generators, this lands us on an n − d-dimensional algebraic torus Tσ[d] ≃ (C∗ )n−d and
+the definition of a fan ensures that all of these strata are consistently sewn together.
+Denoting the set of d-dimensional cones by
+[d]
+
+Σ(d) = {σk } ,
+
+(B.6)
+
+we can hence stratify any toric variety according to the data of our fan as
+a a
+a a
+PΣ =
+Tσ[d] =
+( ∗ )n−d .
+d
+
+C
+
+k
+
+d
+
+[d]
+σk ∈Σ(d)
+
+(B.7)
+
+[d]
+σk ∈Σ(d)
+
+In terms of the homogenous coordinates zi , the stratum of each cone σ is described by
+
+34
+
+Figure 7: The fan of P2 contains a zero-dimensional cone, three rays (one-dimensional
+cones) and three two-dimensional cones.
+
+setting
+{zi = 0 ∀vi ∈ σ}
+
+and
+
+{zi 6= 0 ∀vi ∈
+/ σ} .
+
+(B.8)
+
+Let us discuss some examples. The fan corresponding to P1 lives in R and is
+composed of three cones: the origin, a ray generated by 1 and a ray generated by −1.
+We recover the standard presentation from (B.1) as
+P1 =
+
+(z1 , z2 ) − {(0, 0)}
+.
+(z1 , z2 ) ∼ (λz1 , λz2 )
+
+(B.9)
+
+The open dense C∗ can be described by the coordinate z1 /z2 , or equivalently by z2 /z1 ,
+and the strata corresponding to the two one-dimensional cones are simply given by
+z1 = 0 and z2 = 0, respectively. We hence recover the description of P as the Riemann
+sphere, i.e. adding the point at infinity to C.
+The fan corresponding to P2 is shown in figure 7. Again, (B.1) gives the standard
+presentation as
+(z1 , z2 , z3 ) − {(0, 0, 0)}
+P2 =
+.
+(B.10)
+(z1 , z2 , z3 ) ∼ (λz1 , λz2 , λz3 )
+From the fan, we can directly read off the stratification data (B.7), which becomes
+a
+a
+P2 = (C∗ )2
+C∗
+pt.
+(B.11)
+i=1..3
+
+35
+
+k=1..3
+
+In the bulk of this paper we are not interested in the geometry of toric varieties
+per se, but rather in the geometry of algebraic subvarieties. In the simplest setting,
+such an algebraic subvariety Z is given as the vanishing locus of a section of a line
+bundle L on V . For such an algebraic subvariety Z, one easily obtains a stratification
+of Z from that of V if all toric strata meet Z transversely. In this case we can define
+an n − d − 1-dimensional stratum
+Zσ[d] = Z ∩ Tσ[d]
+
+(B.12)
+
+for every d-dimensional cone σ [d] ∈ Σ. The stratification of the hypersurface Z is then
+simply
+a a
+Z=
+Zσ[d] .
+(B.13)
+d σ [d] ∈Σ(d)
+k
+
+k
+
+Let us illustrate this in the simple example of hypersurface of degree k in P2 , i.e.
+we consider the vanishing locus of a homogeneous polynomial Pk (z1 , z2 , z3 ) of degree k
+in the homogeneous coordinates of P2 . Call the resulting curve Ck . By adjunction one
+finds that such a hypersurface is a Riemann surface of genus
+g(k) =
+
+(k − 1)(k − 2)
+.
+2
+
+(B.14)
+
+Let us now see how Ck is stratified using (B.13). First consider the lowest dimensional
+strata of P2 , which correspond to the highest-dimensional cones. Each of the three
+two-dimensional cones of the fan of P2 corresponds to a point on P2 that is defined by
+setting two of the three homogeneous coordinates to zero. For a sufficiently generic
+polynomial Pk , such points will never lie on Z, so that these strata do not contribute
+to Z (indeed they are supposed to be 2 − 2 − 1 = −1-dimensional). For each of the
+three one-dimensional cones in the fan of P2 , there is a stratum C∗ obtained by setting
+one of the three homogeneous coordinates to zero while forbidding the remaining two
+from vanishing. Intersecting this with Pk = 0 we find that Zσ[1] consists of k points for
+every one-dimensional cone σ [1] . Finally, the complex one-dimensional stratum Zσ[0] is
+a Riemann surface of genus g(k) with 3 · k points excised. Below, we will show how to
+reproduce these numbers combinatorially by using the Newton polytope of Pk .
+B.2
+
+Toric varieties and divisors from polytopes
+
+In order to describe how to determine the geometry of strata Zσ[d] combinatorially, we
+need to present the situation of interest from a slightly different perspective. Note first
+that the data defining the topology of Z consists of the toric variety V (or, equivalently,
+the fan Σ) and a line bundle L on V . We can write the divisor class D of L in terms
+
+36
+
+of the toric divisors Di corresponding to rays of Σ as
+X
+D = c1 (L) =
+ai Di .
+
+(B.15)
+
+i
+
+The group of holomorphic sections of L is then given by a polytope ∆, known as the
+Newton polytope, defined by
+PD = {m ∈ M | hm, vi i ≥ −ai ∀ vi } .
+More explicitly, we may use the monomials
+Y hm,v i+a
+p(m) =
+zi i i
+
+(B.16)
+
+(B.17)
+
+i
+
+as a basis for the group of sections. This provides a convenient way to find the zeroth
+cohomology group (which is in fact the only non-vanishing one) of a divisor D (line
+bundle L), as this counts global holomorphic sections of L:
+h0 (PΣ , OPΣ (D)) = |PD ∩ M | .
+
+(B.18)
+
+Interestingly, ∆ determines both the line bundle L and (a blowdown of) the toric
+variety V . To any polytope ∆ in the M -lattice, we can associate its normal fan Σn (∆),
+which then gives rise to a toric variety PΣn (∆) along with a divisor D. This works as
+follows. To every face Θ[k] of the polytope ∆, we associate a cone
+[
+σ̌n (Θ[k] ) =
+r · (p∆ − pΘ[k] )
+(B.19)
+r≥0
+[k]
+
+where p∆ is any point lying inside ∆ and pΘ is any point lying inside Θ[k] . The dual
+cones σn (Θ[k] ) (defined as in (B.5)) form a complete fan that is called the normal
+fan Σn (∆) of ∆. Here, k-dimensional faces Θ[k] of ∆ are associated with d = n − kdimensional cones σn (Θ[k] ). In particular, the cones of Σ(∆) of highest dimension are
+associated with the vertices of ∆.
+On the toric variety PΣn (∆) , the polytope ∆ then determines a line bundle (Cartier
+divisor) via a strongly convex support function ψ∆ . For each cone of maximal dimension of Σn (∆), Ψ∆ can be described by using its dual vertex mi and setting
+Ψ∆ |σn (mi ) (p) = hmi , pi
+
+(B.20)
+
+for each point p in σn (mi ). This also determines Ψ∆ for all cones of lower dimension.
+
+37
+
+The divisor
+D∆ =
+
+X
+
+ai Di
+
+(B.21)
+
+νi ∈Σn (1)
+
+can then be determined from
+Ψ∆ |σn (mi ) (νi ) = −ai ∀νi ∈ σn (mi ) .
+
+(B.22)
+
+With the numbers ai we can recover a basis for the sections of the line bundle L via
+(B.17).
+The above relations can be used to associate a cone-wise linear support function
+ΨD to any divisor D. If the line bundle associated to D is ample, ΨD is strongly convex
+(i.e. it is convex and different for each cone of maximal dimension). A toric variety is
+projective iff its fan is the normal fan of a lattice polytope [30].
+Let us come back to the example of P2 and a hypersurface Ck determined by
+Pk = 0. We may write
+[Pk ] = kD3 .
+(B.23)
+in terms of toric divisors, so that a1 = a2 = 0 and a3 = k. As shown in figure 7, the
+one-dimensional cones of Σ are generated by the vectors v1 = (1, 0), v2 = (0, 1), v3 =
+(−1, −1). The Newton polytope ∆k corresponding to Pk = 0 has vertices
+(k, 0), (0, k), (0, 0)
+
+(B.24)
+
+and its integral points correspond to all monomials of homogeneity degree k by using
+(B.17). In particular
+h(k,0),(1,0)i h(k,0),(0,1)i h(k,0),(−1,−1)i+k
+z2
+z3
+= z1k ,
+
+p((k, 0)) = z1
+
+B.3
+
+p((0, k)) = z2k ,
+
+p((0, 0)) = z3k
+(B.25)
+
+Resolution of singularities
+
+As there is a one-to-one correspondence between faces of ∆ and cones of Σn (∆), we
+may write the stratification (B.13) in terms of faces of ∆ instead of cones of Σn (∆):
+aa
+Z=
+ZΘ[k] .
+(B.26)
+i
+
+k Θ[k]
+i
+
+As faces of dimension k correspond to cones of dimension d = n − k, the dimension
+of these strata is n − d − 1 = k − 1. Note that ∆ counts as a face of itself, which
+corresponds to the zero-dimensional cone of Σn (∆). We will discuss in Appendix B.4
+how to determine the topology of the strata ZΘ[k] appearing above from the Newton
+i
+polytope.
+
+38
+
+What we have ignored so far, however, is that the normal fan Σn (∆) in most
+cases (contrary to our simple example) does not give rise to a smooth toric variety. In
+fact, the fan Σn (∆) does not even need to be simplicial.7 We are hence interested in
+a refinement Σ of the fan Σn (∆) in order to resolve the hypersurface Z. Fortunately,
+this process results in only minor modifications of the stratification (B.26) above.
+In a slight abuse of notation, we will use the same letter Z also for the resolved
+hypersurface. Under a refinement π : Σ → Σ(∆), the stratification associated with
+faces of ∆ becomes:
+a
+aa
+Z = Z∆
+ZΘ[n−1]
+EΘ[n−k] × ZΘ[n−k] .
+(B.27)
+i
+
+i
+
+k≥2
+
+l
+
+l
+
+l
+
+Here EΘ[n−k] is the exceptional set of the refinement of the cone in Σ(∆) associated
+with the face Θ[n−k] ,
+n−k−1
+a
+(C∗ )i .
+(B.28)
+EΘ[n−k] =
+i=0
+
+For every l-dimensional cone in π −1 (σ), where σ ∈ Σ(∆) is the cone in the normal fan
+associated with the face Θ[n−k] , there is a corresponding stratum (C∗ )k−l in EΘ[n−k] .
+B.4
+
+Computing Hodge-Deligne numbers of strata
+
+In order to compute the Hodge numbers of toric hypersurfaces and, more generally,
+toric strata in such hypersurfaces, we need to introduce a further piece of machinery. The strata appearing in the stratification (B.27) naturally carry a mixed Hodge
+structure. In very simple terms, this means that the Hodge-Deligne numbers
+hp,q (H k (X, C))
+
+(B.29)
+
+can be nonzero even when p + q 6= k, see e.g. [31, 32] for a proper introduction.
+These data can be packed into the numbers (which we will also call Hodge-Deligne
+numbers in the following)
+X
+ep,q (X) =
+(−1)k hp,q (H k (X, C)) ,
+(B.30)
+k
+
+which are convenient for a number of reasons. First of all, in case these is a pure
+Hodge structure, they agree (up to a sign) with the usual Hodge numbers. Secondly,
+they behave in the same way as the topological Euler characteristic under unions and
+7
+
+A fan is simplicial if all of its d-dimensional cones are generated by d rays. Fans that are not
+simplicial give rise to toric varieties with singularities that are more general than orbifold singularities.
+In particular, not every Weil divisor is Q-Cartier for such varieties.
+
+39
+
+products of spaces
+ep,q (X1 q X2 ) = ep,q (X1 ) + ep,q (X2 )
+X
+ep,q (X1 × X2 ) =
+ep1 ,q1 (X1 ) · ep2 ,q2 (X2 ) .
+
+(B.31)
+(B.32)
+
+p1 +p2 =p
+q1 +q2 =q
+
+Hence knowing the numbers ep,q (ZΘ[k] ) (and of (C∗ )n ) is sufficient to compute the
+Hodge numbers of a toric hypersurface. This information has been supplied (in the
+form of an algorithm) in the work of [26]. Before reviewing their algorithm, let us first
+discuss toric varieties themselves to illustrate the method. We have that
+ 
+p,q
+∗ n
+n+p n
+e ((C ) ) = δp,q (−1)
+.
+(B.33)
+p
+For a smooth toric variety V , we hence see that hp,0 = 0 for p > 0. A direct consequence
+of this formula combined with the stratification of a toric variety read off from its fan is
+the standard formula [30] for the nontrivial Hodge numbers of a smooth n-dimensional
+toric variety. Letting |Σ(l)| denote the number of l-dimensional cones in Σ we can
+write
+ 
+n
+X
+p+k k
+p,p
+(−1)
+h (PΣ ) =
+|Σ(n − k)| .
+(B.34)
+p
+k=0
+For the smooth hypersurface strata ZΘ[k] , the following relations, shown in [26],
+allow to compute the Hodge-Deligne numbers. First we have that for p > 0
+X
+ep,0 (ZΘ[k] ) = (−1)k−1
+`∗ (Θ[p+1] )
+(B.35)
+Θ[p+1] ≤Θ[k]
+
+where `∗ (Θ[p+1] ) counts the number of lattice points in the relative interior of Θ[p+1]
+and the sum runs over all faces Θ[p+1] of dimension p + 1 contained in the face Θ[k] .
+Note that this sum only has one term for p + 1 = k which corresponds to the face Θ[k]
+itself.
+The remaining Hodge-Deligne numbers satisfy the ‘sum rule’
+
+
+X
+k
+k−1
+p,q
+p
+(−1)
+e (ZΘ[k] ) = (−1)
++ ϕk−p (Θ[k] ) ,
+(B.36)
+p
++
+1
+q
+where the function ϕn (Θ[k] ) is defined by
+[k]
+
+ϕn (Θ ) :=
+
+n
+X
+
+n+j
+
+(−1)
+
+j=1
+
+40
+
+
+
+
+k+1 ∗
+` (jΘ) .
+n−j
+
+(B.37)
+
+Here jΘ denotes the polytope that is found by scaling the face Θ by j.
+For a face of dimension k ≥ 4 there is the simple formula
+
+
+X
+[k]
+ϕ1 (Θ[k−1] ) .
+ek−2,1 (ZΘ ) = (−1)k−1 ϕ2 (Θ[k] ) −
+
+(B.38)
+
+Θ[k−1] ≤Θ[k]
+
+Finally, for higher Hodge numbers, p + q ≥ n, one has
+
+
+n
+p,q
+n+p+1
+.
+e (ZΘ[n] ) = δp,q (−1)
+p+1
+
+(B.39)
+
+By subsequent application of these formulae, one can derive combinatorial formulae for the Hodge-Deligne numbers of strata ZΘ[k] for arbitrarily high k. It is convenient
+to use `n (Θ) to denote the number of points on the n-skeleton of Θ. Let us derive the
+Hodge-Deligne numbers ep,q of strata ZΘ[k] for k ≤ 3. First,
+
+e0,0 (ZΘ[k] ) = (−1)k−1 `1 (Θ[k] ) − 1 ,
+
+(B.40)
+
+so that e0,0 (ZΘ[1] ) = `∗ (Θ[1] ) + 1, i.e. the stratum ZΘ[1] consists of `∗ (Θ[1] ) + 1 points.
+Hence
+0
+0
+ep,q (ZΘ[1] ) = ∗ [1]
+(B.41)
+` (Θ ) + 1 0
+For ZΘ[2] , we immediately find e1,1 (ZΘ[2] ) = 1. Furthermore, e1,0 (ZΘ[2] ) = −`∗ (Θ[2] ),
+and we can write
+−`∗ (Θ[2] )
+1
+(B.42)
+ep,q (ZΘ[2] ) =
+1
+[2]
+∗
+1 − ` (Θ ) −` (Θ[2] )
+Similarly, we find for ZΘ[3] that
+`∗ (Θ[3] )
+`2 (Θ[3] ) − `1 (Θ[3] )
+`1 (Θ[3] ) − 1
+
+0
+1
+[3]
+2
+[3]
+1
+[3]
+−3 + ` (2Θ ) − 4` (Θ ) − ` (Θ ) + ` (Θ )
+0
+2
+[3]
+1
+[3]
+∗
+` (Θ ) − ` (Θ )
+` (Θ[3] )
+(B.43)
+∗
+
+∗
+
+[3]
+
+and for ZΘ[4]
+e0,0 (ZΘ[4] ) = 1 − `1 (Θ[4] )
+e1,0 (ZΘ[4] ) = −`2 (Θ[4] ) + `1 (Θ[4] )
+e2,0 (ZΘ[4] ) = −`3 (Θ[4] ) + `2 (Θ[4] )
+2,1
+
+3
+
+[4]
+
+2
+
+[4]
+
+(B.44)
+[4]
+
+e (ZΘ[4] ) = ` (Θ ) − ` (Θ ) − ϕ2 (Θ )
+e2,2 (ZΘ[4] ) = −4 .
+Let us return to the example of a degree k hypersurface in P2 . The stratification
+of P2 has already been discussed in §B.1, see (B.11), and its Newton polytope ∆k is
+
+41
+
+given in (B.24). The open dense torus (C∗ )2 in P2 gives rise to an open dense subset
+of Ck , i.e. a Riemann surface with a number of points excised. Its Hodge-Deligne
+numbers are given by
+−`∗ (∆k )
+1
+e (Z∆k ) =
+1
+∗
+1 − ` (∆k ) −` (∆k )
+p,q
+
+−(k − 1)(k − 2)/2
+1
+=
+1 − 3k
+−(k − 1)(k − 2)/2
+
+(B.45)
+
+The stratum associated with each of the three 1-faces Θ[1] of ∆k consists of
+1 + `∗ (Θ[1] ) = k
+
+(B.46)
+
+points. We hence recover the results derived in §B.1 for this example.
+B.5
+
+Calabi-Yau hypersurfaces and reflexive polytopes
+
+Let us now come back to our prime interest, which is in Calabi-Yau manifolds. We
+assume that the dimension of the vector space N ⊗ R containing the fan Σ is n, so that
+we get an n-dimensional toric variety PΣ in which we want to embedd a Calabi-Yau
+hypersurface of dimension n − 1.
+In order for a hypersurface to be Calabi-Yau, its defining polynomial must be a
+section of the anticanonical bundle −KPΣ . The corresponding divisor is hence given
+by
+X
+D−K = c1 (PΣ ) =
+Di .
+(B.47)
+νi ∈Σ(1)
+
+In the notation of (B.2), we hence have ai = 1 for all i and we can identify sections of
+−KPΣ with the set of lattice points on the polytope
+∆ ≡ {m ∈ M |hm, νi ≥ −1 ∀ν ∈ Σ(1)} ⊂ M ⊗ R.
+
+(B.48)
+
+A general section of −KPΣ , the zero locus of which defines a Calabi-Yau hypersurface,
+is then given by
+X
+X Y
+hm,ν i+1
+αm zi i
+αm p(m) =
+(B.49)
+m
+
+m∈∆ νi ∈Σ(1)
+
+for complex constants αm .
+In general, the vertices of the polytope ∆ are not lattice points of M and we are
+not guaranteed that a generic section of −KPΣ defines a smooth (or even irreducible)
+Calabi-Yau hypersurface. If all of the vertices of ∆ are contained in M (in which case
+we will call ∆ a lattice polytope), it follows that the vertices νi are all sitting on a
+
+42
+
+lattice polytope ∆◦ , defined by
+h∆, ∆◦ i ≥ −1 .
+
+(B.50)
+
+∆◦ is called the polar dual of ∆, and ∆ and ∆◦ are called a reflexive pair [16] if they are
+both lattice polytopes. Any lattice polytope whose polar dual is also a lattice polytope
+is called reflexive. A necessary condition for reflexivity is that the origin is the unique
+interior point of the polytope in question.
+Repeating the construction of §B.2, Calabi-Yau hypersurfaces in toric varieties
+are naturally constructed from reflexive pairs of lattice polytopes ∆, ∆◦ . Starting from
+a lattice polytope ∆, we may construct its normal fan Σn (∆). In the case of a reflexive
+pair, this is equal to the fan over the faces of ∆◦ . Of course, such a fan does not in
+general define a smooth toric variety. In fact, the cones need not even be simplicial.
+However, there is a natural maximal projective crepant partial (MPCP) desingularization that can be found as follows. Using (B.49), it follows that any refinement of the
+fan Σn (∆) that only introduces rays generated by lattice points ν on ∆◦ is crepant,
+i.e. preserves the Calabi-Yau property. We may hence find a MPCP desingularization
+by a fan refinement Σ → Σn (∆) for which all lattice points νi on ∆◦ are employed and
+for which PΣ is a projective toric variety. This is equivalent to finding a fine regular star
+triangulation T of ∆. Here, fine means that all lattice points of ∆◦ are used, and star
+means that every simplex contains the origin as a vertex.8 Projectivity of a toric variety is equivalent to its fan being the normal fan of a lattice polytope. While the toric
+variety PΣn (∆) is projective by construction, this is not necessarily true for a refinement
+Σ → Σn (∆). Triangulations T for which the associated fan Σ(T ) is the normal fan of a
+polytope are called regular (or projective, coherent) in the literature, see [33] for more
+details. Finally, a fine triangulation is in general not sufficient to completely resolve9
+all singularities of PΣn (∆) meeting a generic Calabi-Yau hypersurface of dimension ≥ 4
+[16]. The reason for this is that having a fine triangulation of a 2-face of a reflexive
+polytope implies that the corresponding cones do not lead to any singularities. The
+first dimension in which singularities can persist even for fine triangulations of a reflexive polytope is n = 5, i.e. Calabi-Yau fourfolds. For Calabi-Yau threefolds we are
+considering four-dimensional polytopes. Here, simplices in 3-faces can lead to pointlike
+singularities of the ambient toric variety even for fine triangulations, but these do not
+meet a generic Calabi-Yau hypersurface. In contrast, the four-dimensional cones associated with three-simplices for five-dimensional polytopes lead to singularities along
+curves which may meet a generic Calabi-Yau fourfold hypersurface.
+The simplices of the triangulations are hence the cones of the fan Σ, cut off at the surface of ∆◦ .
+Note that one may start from any triangulation T of ∆◦ , restrict it to a triangulation T∂∆◦ of the
+faces of ∆◦ and then simply construct the cones over T∂∆◦ .
+9
+Of course, we can always find non-crepant resolutions by introducing rays generated by lattice
+points outside of ∆◦ .
+8
+
+43
+
+For a pair of n-dimensional reflexive polytopes, there is a one-to-one correspondence between the faces Θ[k] of ∆ and the faces Θ◦[n−k−1] of ∆◦ defined by
+hΘ[k] , Θ◦[n−k−1] i = −1 .
+
+(B.51)
+[k]
+
+Under the resolution induced by the refinement Σ → Σn (∆), the stratum ZΘ of a
+Calabi-Yau hypersurface, which corresponds to a (k − 1)-dimensional subvariety of Z
+before resolution, is changed according to the new simplices introduced in the dual
+face Θ◦[n−k−1] . A simplex of dimension l (a cone of dimension l + 1) corresponds to a
+subvariety of Z of dimension n−l −2. Hence a simplex of dimension l that is contained
+in the interior of a face Θ◦[n−k−1] corresponds to a subvariety of the form
+ZΘ[k] × (C∗ )n−l−k−1 .
+
+(B.52)
+
+Note that vertices Θ[0] of ∆, which are dual to the faces Θ◦[n−1] of maximal dimension,
+correspond to −1-dimensional varieties, i.e. they do not contribute in the stratification
+of Z. This persists after the resolution Σ → Σn (∆). A simple intersection argument
+shows that none of the divisors corresponding to points ν interior to a face of maximal
+dimension (and hence none of the other strata corresponding to simplices interior to a
+face of maximal dimension) intersect a smooth Calabi-Yau hypersurface. For any face
+of maximal dimension (also called a facet) Θ◦[n−1] we can find a normal vector n (this
+is the dual vertex Θ[0] ) such that hn, Θ◦[n−1] i = −1. This means that there is a linear
+relation of the form
+X
+X
+Di +
+aj D j = 0 ,
+(B.53)
+νi ∈Θ◦[n−1]
+
+νj ∈Θ
+/ ◦[n−1]
+
+for some integers aj . Let us now assume we have refined Σ such that there is a point
+νp interior to the facet Θ◦[n−1] . The associated divisor Dp can only have a nonzero
+intersection with divisors Dk for which νk also lies in Θ◦[n−1] , as all others necessarily
+lie in different cones of the fan Σ. This means that the above relation implies
+X
+Dp ·
+Di = 0 ,
+(B.54)
+νi ∈Θ◦[n−1]
+
+where we sum over all toric divisors coming from points on Θ◦[n−1] . The Calabi-Yau
+P
+hypersurface is given as the zero locus of a section of −KPnΣ = j Dj , where we sum
+over all toric divisors. We now find
+X
+X
+Dp ·
+Dj = Dp ·
+Di = 0 ,
+(B.55)
+j
+
+νi ∈Θ◦[n−1]
+
+by using the same argument again. Hence Dp does not meet a generic Calabi-Yau
+hypersurface. Correspondingly, a refinement of Σ introducing νp does not have any
+
+44
+
+influence on Z. As the strata corresponding to simplices of dimension ≥ 1 interior to
+Θ◦[n−1] can be thought of as (an open subset of) intersections of divisors, at least one of
+which corresponds to an interior point of Θ◦[n−1] , none of the simplices interior to a face
+of maximal dimension gives rise to any subvariety of PΣ meeting Z. Correspondingly,
+such strata do not appear in the stratification of Z. The fact that all simplices contained
+in faces of maximal dimension of ∆◦ do not contribute to Calabi-Yau hypersurfaces
+means that we can ignore such faces when constructing a triangulation of ∆◦ .
+Using the methods explained above, one can derive combinatorial formulas for
+the Hodge numbers of toric Calabi-Yau hypersurfaces [16] that do not depend on the
+specific triangulation chosen. For a Calabi-Yau hypersurface of dimension n − 1 which
+is embedded in a toric variety of dimension n we have to consider a pair of reflexive
+polytopes of dimension n and stratification gives
+X
+X
+◦
+`∗ (Θ◦[n−2] )`∗ (Θ[1] )
+h1,1 (Z) = `(∆◦ ) − (n + 1) −
+`∗ (Θ [n−1] ) +
+Θ◦[n−1]
+
+(Θ◦[n−2] ,Θ[1] )
+
+X
+
+X
+
+(B.56)
+hn−2,1 (Z) = `(∆) − (n + 1) −
+
+`∗ (Θ[n−1] ) +
+
+(Θ[n−2] ,Θ◦[1] )
+
+Θ[n−1]
+
+hm,1 (Z) =
+
+X
+
+`∗ (Θ[n−2] )`∗ (Θ◦[1] ) (B.57)
+
+`∗ (Θ◦[n−m−1] )`∗ (Θ[m] ) for n − 2 > m > 1.
+
+(B.58)
+
+(Θ◦[n−m−1] ,Θ[m] )
+
+Note that these numbers only make sense for a smooth Calabi-Yau hypersurface, which
+is only guaranteed without further investigation for Calabi-Yau hypersurfaces of dimension ≤ 3.
+Although the above formulas for h1,1 (Z) and hn−2,1 (Z) are derived using the
+stratification technique of [26], they have a straightforward explanation. In particular,
+the formula for hn−2,1 (Z) counts the number of complex structure deformations by
+counting the number of monomial deformations appearing in the defining equation and
+subtracting the dimension of the automorphism group of PΣ . Finally, the last term
+in (B.57) corrects for the fact that not all deformations are realized as polynomial
+deformations. Similarly, the formula for h1,1 (Z) counts the number of inequivalent
+divisors of PΣ that meet Z, with a correction term taking into account that some
+divisors of PΣ become reducible on Z.
+As is apparent from the above formulae, exchanging the roles of ∆ and ∆◦ exchanges h1,1 (Z) ↔ h2,1 (Z). This is how mirror symmetry is realized for toric CalabiYau hypersurfaces.
+B.6
+
+Topology of subvarieties of Calabi-Yau threefolds
+
+In this section we describe the topology of subvarieties of Calabi-Yau hypersurfaces in
+toric varieties that are obtained by restricting toric subvarieties of the ambient space.
+
+45
+
+For ease of notation we restrict to the case n = 4, i.e. Calabi-Yau threefolds, but a
+similar analysis may be carried out in higher dimensions. As we have already explained,
+we only need to consider simplices on the 2-skeleton of ∆◦ , as strata of PΣ associated
+with simplices interior to 3-faces of ∆◦ do not meet a smooth Calabi-Yau hypersurface.
+Each l-simplex of a triangulation T of ∆◦ corresponds to a l+1-dimensional cone in the
+fan Σ and hence to an open stratum (C∗ )4−(l+1) in PΣ . Depending on the location of the
+simplex on ∆◦ , the defining equation of the Calabi-Yau hypersurface will only constrain
+some of the C∗ factors, while others will lie entirely in the Calabi-Yau hypersurface.
+The reason for this is in the resolution process Σ → Σn (∆). If we work with the
+singular varieties determined by Σn (∆), every k-dimensional face Θ◦[k] of ∆◦ gives rise
+to a stratum ZΘ[4−k−1] of dimension 2 − k. This stratum is given as a hypersurface in
+(C∗ )3−k . The resolution process Σ → Σn (∆), described in Appendix B.3, yields
+ZΘ[4−k−1] → ZΘ[4−k−1] × EΘ[4−k−1] .
+
+(B.59)
+
+The factor EΘ[4−k−1] is determined by the simplices contained in the relative interior
+of the face Θ◦[k] . Every l-simplex contained in the relative interior of a k-dimensional
+face Θ◦[k] contributes a (C∗ )k−l to EΘ[4−k−1] , and hence it contributes a stratum
+ZΘ[4−k−1] × (C∗ )k−l
+
+(B.60)
+
+to Z. Note that the factor ZΘ[3−k] is common to all of the strata originating from
+simplices contained in a chosen face. For a Calabi-Yau threefold, this correspondence
+is such that ZΘ is a two-dimensional variety for vertices, a curve for strata interior to
+2-faces and a collection of points for strata interior to two-dimensional faces.
+The closed subvarieties of PΣ , and hence of Z, associated with a simplex t are
+found by collecting all lower-dimensional simplices u attached to t (i.e. t ⊂ ∂u) and
+taking the disjoint union of the associated strata. As the Hodge-Deligne numbers ep,q
+are additive, this provides an efficient way to find the Hodge numbers of the associated
+subvariety. Again, we may neglect all simplices that are contained in the relative
+interior of faces of maximal dimension (three in this case) as these do not contribute
+any strata to a Calabi-Yau hypersurface. In the following, we will explicitly write down
+the resulting stratifications of various subvarieties and compute their Hodge numbers.
+At this point, we will adopt a different notation than in the rest of this appendix.
+As in the main text of the paper, we focus on threefolds, and so only need to distinguish
+vertices, edges, 2-faces, and 3-faces (facets) of ∆◦ , which we denote by v, e, f and c,
+respectively. These are dual to 3-faces, 2-faces, edges and vertices on the M -lattice
+polytope ∆, which are consequently denoted by v ◦ , e◦ , f ◦ and c◦ . We hope this does
+not confuse the reader.
+
+46
+
+B.6.1
+
+Vertices
+
+Let us consider a divisor Di for which the associated lattice point νi = v is a vertex. The
+vertex has a dual face v ◦ on ∆ that contributes an open two-dimensional stratum Zv◦ .
+Furthermore, there will be 1-simplices contained in edges e (dual to faces e◦ ) ending on
+v contributing Ze◦ as well as 1-simplices on 2-faces f (dual to 1-faces f ◦ ) contributing
+Zf ◦ × C∗ . Finally there are 2-simplices on faces f (dual to 1-faces f ◦ ) contributing
+Zf ◦ . Hence such divisors contain the irreducible hypersurface Zv◦ as an open dense set
+that is compactified by the other strata. Note that Zf ◦ is just a collection of `∗ (f ◦ ) + 1
+points.
+Collecting all of these strata we find the stratification of Di to be
+X
+X 
+Di = Zv◦ qe≥v Ze◦ × (pt) qf ≥v Zf◦ ×
+C∗ q
+pt .
+(B.61)
+With the stratification (B.61) at hand, we can start computing the Hodge numbers. For h1,0 (Di ), only the first two strata contribute and we find
+h1,0 (Di ) = −e1,0 (Di )
+!
+= − e1,0 (Zv◦ ) +
+
+X
+
+e1,0 (Ze◦ )
+
+(B.62)
+
+e⊃v
+
+!
+=−
+
+X
+
+X
+
+`∗ (e◦ ) −
+
+e⊃v
+
+`∗ (e◦ )
+
+=0
+
+e⊃v
+
+For h2,0 (Di ), only the first stratum in (B.61) contributes and we find
+h2,0 (Di ) = e2,0 (Zv◦ ) = `∗ (Zv◦ ) .
+
+(B.63)
+
+Finally, we can compute h1,1 (Di ). Here, we find a contribution from Zv◦ , computed in (B.43), as well as a contribution
+X
+
+e1,1 (Ze◦ ) =
+
+e⊃v
+
+X
+
+1
+
+(B.64)
+
+e⊃v
+
+from any edge e emanating from the vertex v. Furthermore, 1-simplices interior to any
+2-face f (dual to f ◦ ) connected to the vertex v contribute
+X
+
+e0,0 (Zf ◦ ) ×
+
+f ⊃e
+
+=
+
+X
+
+X
+
+e1,1 (C∗ )
+
+t1
+∗
+
+◦
+
+(` (f ) + 1)
+
+X
+t1 ⊃νi
+
+f ⊃e
+
+47
+
+(B.65)
+1
+
+Summing it all up, the result is
+h1,1 (Di ) = − 3 + `∗ (2v ◦ ) − 4`∗ (v ◦ ) − `2 (v ◦ ) + `1 (v ◦ )
+X
+X
+X
++
+1+
+(`∗ (f ◦ ) + 1)
+1
+B.6.2
+
+t1 ⊃νi
+
+f ⊃v
+
+e⊃v
+
+(B.66)
+
+Simplices interior to 1-faces of ∆◦
+
+Let us first consider divisors originating from points νi interior to edges e of ∆◦ dual to
+2-faces e◦ of ∆. The 0-simplex corresponding to νi is of the form Ze◦ × C∗ , and the two
+1-simplices on the edge e containing νi correspond to Ze◦ . One-simplices containing νi
+that are interior to 2-faces f (dual to f ◦ ) contribute `∗ (f ◦ ) + 1 points times C∗ and
+2-simplices contribute `∗ (f ◦ ) + 1 points.
+The open and dense stratum of such divisors (which originates from the simplex
+νi ) is simply the product of a curve of genus `∗ (e◦ ) (with `1 (e◦ ) points excised) times
+a C∗ , which gets compactified by the remaining strata. We may think of these as (the
+open dense subsets of) the intersection of Di with ‘neighboring’ divisors. The two
+1-simplices along the edge e partially compactify Ze◦ × C∗ to Ze◦ × P1 . The remaining
+C∗ ’s and points sit over the `1 (e◦ ) points excised in the open curve Ze◦ . We may hence
+think of such divisors as follows: they are flat fibrations of a P1 over a curve of genus
+`∗ (e◦ ). Over `1 (e◦ ) points, the fiber P1 degenerates into a chain of P1 ’s, as determined
+by number of 1-simplices (and 2-simplices) attached to νi lying on neighboring 2-faces
+f ⊃ v. To see the details of how this works first note that
+X
+`∗ (f ◦ ) + 1 .
+(B.67)
+`1 (e◦ ) =
+f ◦ ⊂e◦
+
+Over each of the `∗ (f ◦ ) + 1 points that are excised due to the face f ◦ ⊂ e◦ , we find the
+strata corresponding to the one- (and two-) simplices interior to the dual face f ⊃ e.
+Hence over `∗ (f ◦ ) + 1 points, where f ◦ , f are dual faces, the generic fiber P1 of Di
+degenerates into a number of P’s equal to the number of 1-simplices which attached to
+νi and interior to f . A cartoon of this is shown in figure 8.
+From this analysis of the fibration structure, we expect that
+X
+X
+h1,1 (Di ) = 2 +
+(`∗ (f ◦ ) + 1) · (−1 +
+1) ,
+(B.68)
+t1 ⊃νi
+
+f ⊃e
+
+which will be confirmed by a direct computation using the stratification below.
+As explained above, the stratification of Di is
+X
+X 
+Di = Ze◦ × (C∗ + 2pts) qf ⊃e Zf ◦
+C∗ +
+pt .
+(B.69)
+Here, the C∗ multiplying Ze◦ is due to νi (k = 2, l = 1), whereas the 2 points correspond
+48
+
+reducible fibre consisting of
+
+1
+t1⊃νi 1 touching P ’s
+
+P
+
+generic P1 fibre
+
+1 + `∗(f ◦) points
+
+genus `∗(e◦) curve
+Figure 8: The fibration structure of a divisor Di of Z associated with a lattice point
+νi interior to an edge e of a four-dimensional polytope. The base is a genus g = `∗ (e◦ )
+curve and the generic fiber is a P1 . For each neighboring 2-face f ⊃ e, there are
+1 + `∗ (f ◦ ) points over which the fiber degenerates into as many P1 s as there are 1simplices t1 on f that contain νi .
+
+to the two 1-simplices on e containing νi (k = 2, l = 2). Each C∗ multiplying Zf ◦
+corresponds to a 1-simplex containing νi that is interior to the face f and each pt
+corresponds to a 2-simplex containing νi that is interior to f .
+Again, h0,0 (Di ) = 1 as Di is irreducible. The computation for h1,0 now becomes
+h1,0 (Di ) = −e1,0 (Ze◦ · (C∗ q 2pts))
+= `∗ (e◦ ) · (e0,0 (C∗ ) + 2e0,0 (pt))
+
+(B.70)
+
+= `∗ (e◦ ) .
+We have h2,0 (Di ) = e2,0 (Di ) = 0 as no stratum contributes. Already for the highest
+stratum Ze◦ , we have to count interior points to 3-dimensional faces of e◦ , of which
+there are none. These Hodge numbers fit with the fibration structure discussed above.
+
+49
+
+Finally, let us compute h1,1 (Di ). Here we need
+
+h1,1 (Di ) = e1,1 (Ze◦ ) · e0,0 (C∗ ) + 2e0,0 (pt) + e0,0 (Ze◦ ) · e1,1 (C∗ )
+X
+X
++
+e0,0 (Zf ◦ ) ·
+1
+f ◦ ⊂e◦
+
+t1 ⊃νi
+
+= 1 · (−1 + 2) + (1 − `1 (e◦ )) · 1 +
+
+X
+
+(1 + `∗ (f ◦ )) ·
+
+f ◦ ⊂e◦
+
+t1 ⊃νi
+
+!
+=2−
+
+X
+
+`∗ (f ◦ ) + 1
+
+f ◦ ⊂e◦
+
++
+
+X
+
+X
+
+(1 + `∗ (f ◦ )) ·
+
+f ◦ ⊂e◦
+
+X
+
+1
+(B.71)
+
+1
+
+t1 ⊃νi
+
+!
+=2+
+
+X
+
+(1 + `∗ (f ◦ )) ·
+
+−1 +
+
+f ◦ ⊂e◦
+
+X
+
+1
+
+,
+
+t1 ⊃νi
+
+as predicted from the analysis of the fibration of Di carried out above.
+Similarly, one may analyze curves C that correspond to 1-simplices t1 interior to
+a 1-face e. Here, the stratification is
+X
+Zf◦ × (pt) .
+(B.72)
+C = Ze◦ +
+f ◦ ⊂e◦
+
+The stratum Ze◦ is a curve of genus `∗ (e◦ ) with a number of points excised. The second
+term is due to the unique 2-simplex attached to t1 on every face f ⊃ e, which consists
+of `∗ (f ) + 1 points for each two-dimensional face containing e. It supplies the points
+that compactify Ze◦ to C. It follows immediately that the genus of C is
+h1,0 (C) = `∗ (e◦ ) .
+
+(B.73)
+
+This fits with the fact that the union of all strata corresponding to simplices in the
+interior of e sits over the curve C, so that two neighboring divisors Di and Dj intersect
+in the common base of both their fibrations.
+B.6.3
+
+Simplices interior to 2-faces of ∆◦
+
+Again, let us first consider 0-simplices νi interior to a 2-face f of ∆◦ . The open dense
+subset of Di originating from νi is given by
+Zf ◦ × (C∗ )2 ,
+
+50
+
+(B.74)
+
+while 1-simplices (2-simplices) containing νi compactify Di this by contributing Zf ◦ ×C∗
+and Zf ◦ × (pts). All in all, the stratification of Di is
+!
+Di = Z f ◦ ×
+
+X
+
+(C∗ )2 +
+
+X
+
+C∗ +
+
+t1 ⊃νi
+
+pt
+
+.
+
+(B.75)
+
+t2 ⊃νi
+
+where t1 and t2 are simplices interior to f . As Zf ◦ is just a collection of `∗ (f ◦ )+1 points,
+the divisors considered here are, in general, reducible with each irreducible component
+being a toric variety Pstar(νi ) determined by the stratification above. Starting from the
+triangulation of a 2-face, we may construct the star fan w.r.t. νi to find the fan of the
+toric variety Pstar(νi ) , see figure 9.
+11
+00
+11
+00
+
+1
+0
+1
+0
+
+11
+00
+11
+00
+
+1
+0
+1
+0
+
+11
+00
+11
+00
+11
+00
+
+1
+0
+1
+0
+1
+0
+
+νi
+
+11
+00
+11
+00
+
+11
+00
+11
+00
+11
+00
+
+Figure 9: On the left hand side, the neighborhood of a lattice point νi inside a 2-face
+f with a triangulation. We have colored the simplices containing νi in red. These
+contribute to the star fan star(νi ) shown on the right hand side.
+
+From this, it immediately follows that
+h1,1 (Pstar(νi ) ) = −2 +
+
+X
+
+1.
+
+(B.76)
+
+t1⊂νi
+
+The same result is easily recovered from the stratification (B.75):
+!
+h1,1 (Di ) = e0,0 (Zf ◦ ) ×
+
+X
+
+e1,1 ((C∗ )2 )) +
+
+t1 ⊃νi
+∗
+
+◦
+
+= (` (f ) + 1) · (−2 +
+
+X
+
+e1,1 (C∗ )
+(B.77)
+
+1) .
+
+t1⊂νi
+
+Similarly, the closed subvariety associated with each 1-simplex interior to f is
+` (f ) + 1 times a P1 and the closed subvariety associated with each 2-simplex consists
+of `∗ (f ◦ ) + 1 points. This implies that any two (three) divisors associated with points
+∗
+
+◦
+
+51
+
+interior to f with a nonzero intersection will intersect in a collection of `∗ (f ◦ ) + 1
+disjoint Ps ’s (points).
+B.6.4
+
+An example
+
+Let us consider a (slightly) nontrivial example to see the above machinery at work.
+Consider a reflexive polytope ∆◦ with vertices
+v0 = [−1, −3, −9, −14]
+v1 = [0, −2, −6, −9]
+v2 = [0, 0, 0, 1]
+
+(B.78)
+
+v3 = [0, 0, 1, 0]
+v4 = [0, 1, 0, 0]
+v5 = [1, 0, 0, 0]
+
+The 3-faces of ∆◦ as well as the vertices of ∆◦ spanning them, their numbers of
+interior points and the dual vertices on ∆ are
+c0 =< v0 , v1 , v2 , v3 >
+
+`∗ (c0 ) = 0
+
+↔
+
+c◦0 = [0, 8, −1, −1]
+
+c1 =< v0 , v1 , v2 , v4 >
+
+`∗ (c1 ) = 0
+
+↔
+
+c◦1 = [0, −1, 2, −1]
+
+c2 =< v0 , v2 , v3 , v4 >
+
+`∗ (c2 ) = 0
+
+↔
+
+c◦2 = [27, −1, −1, −1]
+
+c3 =< v1 , v2 , v4 , v5 >
+
+`∗ (c3 ) = 0
+
+↔
+
+c◦3 = [−1, −1, 2, −1]
+
+c4 =< v0 , v1 , v3 , v4 , v5 >
+
+`∗ (c4 ) = 3
+
+↔
+
+c◦4 = [−1, −1, −1, 1]
+
+c5 =< v2 , v3 , v4 , v5 >
+
+`∗ (c5 ) = 0
+
+↔
+
+c◦5 = [−1, −1, −1, −1]
+
+c6 =< v1 , v2 , v3 , v5 >
+
+`∗ (c6 ) = 0
+
+↔
+
+c◦6 = [−1, 8, −1, −1]
+
+(B.79)
+
+The 3-faces of ∆ dual to the vertices of ∆◦ are
+v0
+
+↔
+
+v0◦ =< c◦4 , c◦1 , c◦2 , c◦0 >
+
+`∗ (v0◦ ) = 1
+
+v1
+
+↔
+
+v1◦ =< c◦4 , c◦3 , c◦0 , c◦1 , c◦6 >
+
+`∗ (v1◦ ) = 0
+
+v2
+
+↔
+
+v2◦ =< c◦5 , c◦2 , c◦0 , c◦3 , c◦1 , c◦6 >
+
+`∗ (v2◦ ) = 54
+
+v3
+
+↔
+
+v3◦ =< c◦5 , c◦2 , c◦4 , c◦0 , c◦6 >
+
+`∗ (v3◦ ) = 22
+
+v4
+
+↔
+
+v4◦ =< c◦5 , c◦2 , c◦4 , c◦1 , c◦3 >
+
+`∗ (v4◦ ) = 4
+
+v5
+
+↔
+
+v5◦ =< c◦5 , c◦6 , c◦4 , c◦3 >
+
+`∗ (v5◦ ) = 1
+
+52
+
+(B.80)
+
+The edges of ∆◦ and their dual 2-faces on ∆ are
+e0 =< v0 , v1 >
+
+`∗ (e0 ) = 0
+
+↔
+
+e◦0
+
+=< c◦4 , c◦1 , c◦0 >
+
+e1 =< v0 , v2 >
+
+∗
+
+` (e1 ) = 0
+
+↔
+
+e2 =< v1 , v2 >
+
+`∗ (e2 ) = 1
+
+↔
+
+e3 =< v0 , v3 >
+
+`∗ (e3 ) = 0
+
+↔
+
+e4 =< v1 , v3 >
+
+∗
+
+` (e4 ) = 0
+
+e5 =< v2 , v3 >
+
+∗
+
+` (e5 ) = 0
+
+↔
+
+e6 =< v0 , v4 >
+
+`∗ (e6 ) = 0
+
+↔
+
+e7 =< v1 , v4 >
+
+∗
+
+` (e7 ) = 2
+
+e8 =< v2 , v4 >
+
+∗
+
+` (e8 ) = 0
+
+↔
+
+e9 =< v3 , v4 >
+
+`∗ (e9 ) = 0
+
+↔
+
+e10 =< v4 , v5 >
+
+`∗ (e10 ) = 0
+
+↔
+
+e11 =< v1 , v5 >
+
+∗
+
+` (e11 ) = 0
+
+e12 =< v2 , v5 >
+
+∗
+
+` (e12 ) = 0
+
+↔
+
+e13 =< v3 , v5 >
+
+`∗ (e13 ) = 0
+
+↔
+
+e◦1
+e◦2
+e◦3
+e◦4
+e◦5
+e◦6
+e◦7
+e◦8
+e◦9
+e◦10
+e◦11
+e◦12
+e◦13
+
+=< c◦1 , c◦2 , c◦0 >
+=< c◦3 , c◦0 , 1, c◦6 >
+=< c◦4 , c◦0 , c◦2 >
+=< c◦4 , c◦6 , c◦0 >
+=< c◦5 , c◦2 , c◦0 , c◦6 >
+=< c◦4 , c◦1 , c◦2 >
+=< c◦4 , c◦3 , c◦1 >
+=< c◦5 , c◦2 , c◦1 , c◦3 >
+=< c◦5 , c◦2 , c◦4 >
+=< c◦5 , c◦3 , c◦4 >
+=< c◦4 , c◦3 , c◦6 >
+=< c◦5 , c◦6 , c◦3 >
+=< c◦5 , c◦6 , c◦4 >
+
+↔
+
+f0◦
+
+=< c◦1 , c◦0 >
+
+`∗ (f0 )
+
+=2
+
+f1◦
+f2◦
+f3◦
+f4◦
+f5◦
+f6◦
+f7◦
+f8◦
+f9◦
+◦
+f10
+◦
+f11
+◦
+f12
+◦
+f13
+◦
+f14
+
+=< c◦4 , c◦0 >
+=< c◦6 , c◦0 >
+=< c◦0 , c◦2 >
+=< c◦4 , c◦1 >
+=< c◦1 , c◦2 >
+=< c◦3 , c◦1 >
+=< c◦4 , c◦2 >
+=< c◦5 , c◦2 >
+=< c◦4 , c◦3 >
+=< c◦5 , c◦3 >
+=< c◦3 , c◦6 >
+=< c◦5 , c◦4 >
+=< c◦4 , c◦6 >
+=< c◦5 , c◦6 >
+
+∗
+
+` (f1 )
+
+=0
+
+`∗ (f2 )
+
+=0
+
+∗
+
+` (f3 )
+
+=8
+
+∗
+
+` (f4 )
+
+=0
+
+`∗ (f5 )
+
+=2
+
+`∗ (f6 )
+
+=0
+
+∗
+
+= 1 (B.82)
+
+↔
+
+↔
+
+↔
+
+`∗ (e0 )
+
+=0
+
+∗
+
+` (e1 )
+
+=7
+
+`∗ (e2 )
+
+=0
+
+`∗ (e3 )
+
+=4
+
+∗
+
+=0
+
+∗
+
+` (e5 )
+
+= 108
+
+`∗ (e6 )
+
+=1
+
+∗
+
+=0
+
+∗
+
+` (e8 )
+
+= 27
+
+`∗ (e9 )
+
+= 13
+
+`∗ (e10 )
+
+=1
+
+∗
+
+` (e11 )
+
+=0
+
+∗
+
+=7
+
+` (e4 )
+
+` (e7 )
+
+` (e12 )
+`∗ (e13 )
+
+=4
+(B.81)
+◦
+and finally the 2-faces on ∆ and their dual edges on ∆ together with their numbers
+of interior points are
+f0 =< v0 , v1 , v2 >
+
+`∗ (f0 ) = 0
+
+f1 =< v0 , v1 , v3 >
+
+∗
+
+` (f1 ) = 0
+
+↔
+
+f2 =< v1 , v2 , v3 >
+
+`∗ (f2 ) = 0
+
+↔
+
+f3 =< v0 , v2 , v3 >
+
+∗
+
+` (f3 ) = 0
+
+f4 =< v0 , v1 , v4 >
+
+∗
+
+` (f4 ) = 0
+
+↔
+
+f5 =< v0 , v2 , v4 >
+
+`∗ (f5 ) = 0
+
+↔
+
+f6 =< v1 , v2 , v4 >
+
+`∗ (f6 ) = 1
+
+↔
+
+f7 =< v0 , v3 , v4 >
+
+∗
+
+` (f7 ) = 0
+
+f8 =< v2 , v3 , v4 >
+
+∗
+
+` (f8 ) = 0
+
+↔
+
+f9 =< v1 , v4 , v5 >
+
+`∗ (f9 ) = 0
+
+↔
+
+f10 =< v2 , v4 , v5 >
+
+∗
+
+` (f10 ) = 0
+
+f11 =< v1 , v2 , v5 >
+
+∗
+
+` (f11 ) = 0
+
+↔
+
+f12 =< v3 , v4 , v5 >
+
+`∗ (f12 ) = 0
+
+↔
+
+f13 =< v1 , v3 , v5 >
+
+`∗ (f13 ) = 0
+
+↔
+
+f14 =< v2 , v3 , v5 >
+
+∗
+
+` (f14 ) = 0
+
+↔
+
+↔
+
+↔
+
+↔
+
+53
+
+` (f7 )
+∗
+
+` (f8 )
+
+= 27
+
+`∗ (f9 )
+
+=0
+
+∗
+
+` (f10 )
+
+=2
+
+∗
+
+` (f11 )
+
+=2
+
+`∗ (f12 )
+
+=1
+
+`∗ (f13 )
+
+=0
+
+∗
+
+=8
+
+` (f14 )
+
+The Hodge numbers of the corresponding mirror pair of Calabi-Yau threefolds Z
+and Z̃ can be quickly found with these numbers by evaluating (B.56) and (B.58)
+h1,1 (Z) = h2,1 (Z̃) = 6
+
+(B.83)
+
+h1,1 (Z̃) = h2,1 (Z) = 228
+
+There is a single 2-face f6 that requires triangulation. This face, with its integral
+points and its bounding edges, as well as its triangulations, is shown in figure 10.
+Let us discuss the topology of the divisors Di that correspond to the lattice points
+ν7
+
+ν7
+
+11
+00
+11
+00
+11
+00
+
+ν5
+11
+00
+11
+00
+11
+00
+
+11
+00
+11
+00
+11
+00
+
+ν1
+
+11
+00
+11
+00
+11
+00
+
+ν2
+
+11
+00
+11
+00
+11
+00
+
+ν6
+
+ν5
+
+11
+00
+11
+00
+11
+00
+
+11
+00
+11
+00
+11
+00
+
+11
+00
+11
+00
+11
+00
+
+11
+00
+11
+00
+11
+00
+
+ν3
+
+11
+00
+11
+00
+11
+00
+
+ν4
+
+11
+00
+11
+00
+11
+00
+
+ν1
+
+ν2
+
+ν6
+11
+00
+11
+00
+11
+00
+
+11
+00
+11
+00
+11
+00
+
+ν7
+
+11
+00
+11
+00
+11
+00
+
+11
+00
+11
+00
+11
+00
+
+ν1
+
+11
+00
+11
+00
+11
+00
+
+ν2
+
+11
+00
+11
+00
+11
+00
+
+ν6
+
+ν5
+
+11
+00
+11
+00
+11
+00
+
+11
+00
+11
+00
+11
+00
+
+11
+00
+11
+00
+11
+00
+
+11
+00
+11
+00
+11
+00
+
+ν3
+
+ν4
+
+ν7
+
+11
+00
+11
+00
+11
+00
+
+ν5
+
+11
+00
+11
+00
+11
+00
+
+ν3
+
+11
+00
+11
+00
+11
+00
+
+ν4
+
+11
+00
+11
+00
+11
+00
+
+ν1
+
+ν2
+
+ν6
+11
+00
+11
+00
+11
+00
+
+11
+00
+11
+00
+11
+00
+
+ν3
+
+11
+00
+11
+00
+11
+00
+
+ν4
+
+ν7
+11
+00
+11
+00
+11
+00
+
+ν5
+
+ν6
+
+11
+00
+11
+00
+11
+00
+
+11
+00
+11
+00
+11
+00
+
+ν1
+
+11
+00
+11
+00
+11
+00
+
+11
+00
+11
+00
+11
+00
+
+11
+00
+11
+00
+11
+00
+
+ν2
+
+ν3
+
+11
+00
+11
+00
+11
+00
+
+ν4
+
+Figure 10: The only nontrivial 2-face f6 of ∆◦ along with its five possible triangulations.
+
+54
+
+νi , i = 1 · · · 7 sitting on this face. They are
+ν1 = [0, −2, −6, −9] = v1
+ν2 = [0, −2, −4, −6]
+ν3 = [0, 0, −2, −3]
+ν4 = [0, 1, 0, 0]
+
+= v4
+
+(B.84)
+
+ν5 = [0, −1, −3, −4]
+ν6 = [0, 0, −1, −1]
+ν7 = [0, 0, 0, 1]
+
+= v2
+
+As remarked above, some of the Hodge numbers will depend on the triangulation. Let
+us choose the triangulation shown in the upper left of figure 10. The divisors D1 , D4
+and D7 correspond to vertices, so that we conclude h1,0 vanishes for all three and
+h2,0 (D1 ) = `∗ (v1◦ ) = 0
+h2,0 (D4 ) = `∗ (v4◦ ) = 4
+
+(B.85)
+
+h2,0 (D7 ) = `∗ (v2◦ ) = 54
+no matter which triangulation is chosen. Let us now compute the Hodge numbers h1,1
+for the triangulation in the upper left of Figure 10, for which we have to evaluate
+h1,1 (Di ) = − 3 + `∗ (2v ◦ ) − 4`∗ (v ◦ ) − `2 (v ◦ ) + `1 (v ◦ )
+X
+X
+X
+1
++
+1+
+(`∗ (f ◦ ) + 1)
+e⊃v
+
+(B.86)
+
+t1 ⊃νi
+
+f ⊃v
+
+Note that there are no other 1-faces except e2 and e7 , both of which are on f6 , with
+interior points and all 2-faces of ∆◦ are simplicial. Hence there can be no other 1simplices except the ones in f6 , shown in Figure 10, which contain ν1 , ν4 or ν7 and are
+interior to a 2-face. Furthermore, `∗ (f6◦ ) = 0. The number of edges ei containing each
+of the three vertices in questions is found from (B.81).
+#e ⊃ v1 = 5
+#e ⊃ v4 = 5
+
+(B.87)
+
+#e ⊃ v2 = 5
+We finally find that
+h1,1 (D1 ) = 1 + 5 + 0 = 6
+h1,1 (D4 ) = 77 + 5 + 1 = 83
+1,1
+
+h (D7 ) = 398 + 5 + 1 = 404
+
+55
+
+(B.88)
+
+Only the last number depends on the triangulation chosen.
+Let us now investigate the points νi interior to 1-faces ei . Here h2,0 (Di ) = 0 for
+all cases. We start with v5 which is contained in e2 . We hence learn from (B.81) that
+h1,0 (D5 ) = 0. For h1,1 , we have to evaluate
+!
+X
+X
+2+
+(1 + `∗ (f ◦ )) · −1 +
+1
+(B.89)
+f ◦ ⊂e◦
+
+t1 ⊃νi
+
+In the triangulation we are considering, there are three 1-simplices contained in f6
+which each contribute 1 (as `∗ (f ◦ ) = 0) to h1,1 . For each 2-face apart form f6 , there
+can only be a single 1-simplex containing ν5 , so that we conclude
+h1,1 (D5 ) = 4 .
+
+(B.90)
+
+As described in general above, this means we should think of D5 as a fibration of a P1
+over another P1 for which the fiber degenerates into a union of three P1 s over a single
+point in the base.
+The other two points ν2 and ν3 interior to edges are contained in the same edge,
+e7 , so that
+h1,0 (D2 ) = h1,0 (D2 ) = `∗ (e◦7 ) = 0 .
+(B.91)
+For the triangulation chosen, ν2 only connects to a single vertex inside f6 , whereas ν3
+connects to two, hence
+h1,1 (D2 ) = 2
+
+h1,1 (D3 ) = 3 .
+
+(B.92)
+
+Finally, there is ν6 . As it is interior to a 2-face, it is n = `∗ (f6 ) + 1 = 1 copies of
+a toric variety. This toric variety can be directly read off from the star fan to be the
+Hirzebruch surface F1 for the triangulation chosen. Hence
+h1,0 (D6 ) = h2,0 (D6 ) = 0
+
+h1,1 (D6 ) = 2 .
+
+(B.93)
+
+A similar discussion can now easily be made for other triangulations. We can e.g.
+consider a flop taking us from the triangulation on the upper left to the one on the
+upper right. This will decrease the h1,1 of D3 and D6 by one, whereas the h1,1 of D5
+and D4 are increased by one.
+B.7
+
+Hodge numbers hi,0 of toric divisors of Calabi-Yau n-folds
+
+For Calabi-Yau manifolds of higher dimension than 3, the same technique as used above
+can be used to find topological data of toric divisors restricted to a Calabi-Yau hypersurface. Whereas Hodge numbers such as h1,1 (Di ) will depend on the triangulation,
+one can derive a remarkably simple formula for the Hodge numbers hi,0 . For a smooth
+
+56
+
+Calabi-Yau n−1-fold associated with a pair of n-dimensional reflexive polytopes ∆◦ , ∆
+and a lattice point ν in the relative interior of a face Θ◦[n−d] of dimension n − d, the
+b is such that
+associated divisor D
+b = δi,d−2 `∗ (Θ[d−1] ) ,
+hi,0 (D)
+
+(B.94)
+
+where d > 2. Here Θ[d−1] is the face of ∆ dual to the face Θ◦[n−d] containing νD .
+b = 1 holds for d > 2, as all such divisors are connected. Formula
+Furthermore, h0,0 (D)
+(B.94), which we will prove in the following, is the central result of this section. Note
+that (B.94) reduces to the corresponding relations derived above for Calabi-Yau threefolds (where n = 4). In the threefold case, divisors associated with vertices (d = 4)
+only have a non-vanishing h2,0 and divisors associated with points interior to edges
+(d = 3) only have a non-vanishing h1,0 .
+Let us assume that we are given a pair of reflexive polytopes ∆◦ , ∆ and a triangulation giving rise to a smooth projective toric variety10 PΣ . Let D be the toric divisor
+associated with a lattice point νD contained in the relative interior of a face Θ◦[n−d] of
+b = D ∩ Z.
+dimension n − d. We are interested in the Hodge numbers of a divisor D
+Any toric divisor D is composed of the strata associated with all cones that contain
+the ray over νD . As before, these descend to a subset of the strata of Z and we can
+b
+sum their Hodge-Deligne numbers ep,q to find the Hodge numbers of D.
+We first note that the cases d = 1 and d = 2 are trivial. In the first case, d = 1, D
+does not give rise to any divisor on Z, while in the second case, d = 2, the face Θ◦[n−2]
+is dual to a face of dimension n − (n − 2) − 1 = 1, denoted by Θ[1] , and it enjoys a
+stratification of the form
+
+
+b = ZΘ[1] × strata of the form(C∗ )i
+D
+
+(B.95)
+
+so that such divisors have h0,0 = `∗ (Θ[1] ) + 1 disconnected components which are all
+smooth toric varieties. Hence the only nontrivial Hodge numbers of such divisors are
+b
+hi,i (D).
+We hence assume d > 2 in the following. Let us start by writing down the
+stratification of an arbitrary divisor of Z descending from a toric divisor. It is given
+by
+X
+
+b = qk,Θ◦[n−d+k] ⊃ν ZΘ[d−1−k] ×
+D
+pt. + · · · + (C∗ )n−d+k .
+(B.96)
+D
+As usual, (Θ◦[n−d+k] , Θ[d−1−k] ) are a pair of dual faces. For a divisor inside a face
+Θ◦[n−d] , only strata on neighboring faces containing Θ◦[n−d] contribute. On ∆, this
+can be expressed by saying that only faces Θ[d−1−k] of Θ[d−1] contribute. For each
+such face, the toric strata (C∗ )l in each term originate from various simplices of the
+10
+
+More generally, it is enough to for the singularities of PΣ to miss a generic Calabi-Yau hypersurface,
+i.e. the only cones of Σ of lattice volume ≥ 1 are sitting inside faces of maximal dimension of ∆◦ .
+
+57
+
+triangulation on the faces Θ◦[n−d+k] dual to Θ[d−1−k] that contain the point νD . In
+particular, a (C∗ )n−d+k originates from the point νD itself, a (C∗ )n−d+k−1 originates
+from every 1-simplex in the interior of Θ◦[n−d+k] containing νD , and so on. Finally, the
+highest-dimensional simplices, which are n − d + k-dimensional, give rise to points in
+the above expression.
+Our main tool in deriving (B.94) will be (B.35). Only the strata ZΘ[d−1−k] can
+potentially contribute to hi,0 , as ei,0 ((C∗ )k ) = 0 for i > 0. Hence we will only need
+to evaluate ei,0 (Θ[d−1−k] ) and e0,0 of the sum over simplices on the right-hand side of
+(B.96).
+b =0
+The first conclusion that can be drawn directly from (B.35) is that hi,0 (D)
+whenever i > d − 2. In this case, none of the strata ZΘ[d−1−k] can contribute, as we
+would need to count points in faces of dimension i + 1 in the face ZΘ[d−1−k] , but even
+for k = 0, there are no such faces. The geometric reason for this is that any divisor
+associated with a point νD inside a face of dimension n − d should be thought of as an
+exceptional divisor originating from the resolution discussed in §B.3. Correspondingly,
+each such divisor is a fibration of a toric variety of dimension n − d (which degenerates
+over various subloci) over an irreducible manifold of dimension d−2. Hence the highest
+possible i for which hi,0 is nonzero is d − 2, as already established.
+Indeed, we do get a nonzero contribution whenever i = d − 2. In this case, only
+the stratum ZΘ[d−1] (i.e. k = 0) contributes and we find
+X
+
+ei,0 = (−1)d−2 `∗ (Θ[d−1] ) × e0,0
+(C∗ )l strata
+(B.97)
+The sum on the right hand side runs over all of the simplices on Θ◦[n−d] that contain νD ,
+including νD itself, and the sign alternates according to the dimension of the simplex
+in question as e0,0 ((C∗ )l ) = (−1)l .
+If we neglect νD , the remaining simplices are arranged such that they form an
+n − d − 1-dimensional polyhedron. It can be found by intersecting the various simplices
+with an n − d − 1-sphere on Θ◦[n−d] centered at νD . Here, 1-simplices in the alternating
+sum, which contribute (−1)n−d−1 above, correspond to vertices of the polyhedon. As
+this polyhedron is topologically a sphere we can write
+X
+
+e0,0
+(C∗ )l strata = (−1)n−d−1 χ(S n−d−1 ) + (−1)n−d = 1
+(B.98)
+b is a smooth compact manifold we can
+where νD contributes the second term. As D
+b = (−1)i ei,0 (D),
+b so that we have shown the case i = d − 2 of (B.94).
+use h0,i (D)
+We now proceed to show that h0,i = 0 for all 0 < i < d − 2. Depending on i,
+a number of strata ZΘ[k] from (B.96) contribute. Starting again from (B.96), we can
+
+58
+
+write
+b =
+ei,0 (D)
+
+X
+
+ei,0 (ZΘ[d−1−k] ) × e0,0
+
+k,Θ◦[n−d+k] ⊇ν
+
+X 
+
+pt. + · · · + (C∗ )n−d+k
+
+
+
+.
+
+(B.99)
+
+D
+
+For every term in the above sum over k, we have to find the alternating sum of all
+of the simplices containing νD on the face Θ◦[n−d+k] dual to Θ[d−1−k] to evaluate the
+various e0,0 . For k = 0, we have already found that this sum simply gives 1 by relating
+it to the Euler characteristic of a sphere. For higher values of k, we can essentially use
+a similar argument. In this case, the point νD sits on the codimension-k hyperplane of
+Rn−d+k defined by the face Θ◦[n−d] . Furthermore, the face Θ◦[n−d+k] will be bounded
+by other hyperplanes of dimension greater than or equal to n − d, so that the set of all
+simplices on Θ◦[n−d+k] connecting to νD will correspond to a triangulation of an open
+subset of a sphere of dimension n − d + k − 1. This has Euler characteristic 1 in even
+and −1 in odd dimensions. To fix the sign, note that points on this sphere correspond
+again to 1-simplices, which in turn have a factor of (−1)n−d+k−1 in the sum. As such
+points contribute 1 in the computation of the Euler characteristic, the contribution of
+the sum over simplices to e0,0 is always equal to 1.
+Using (B.35), we are hence led to
+X
+b =
+ei,0 (D)
+ei,0 (ZΘ[d−1−k] )
+k,Θ◦[n−d+k] ⊃νD
+
+=
+
+X
+
+X
+
+(−1)d−1−k
+
+k,Θ◦[n−d+k] ⊇νD
+
+`∗ (Θ[i+1] ) .
+
+(B.100)
+
+Θ[i+1] ⊆Θ[d−1−k]
+
+Note that each face containing νD appears multiple times and with alternating signs
+in the above expression. In particular, a single face Θ[i+1] can appear multiple times
+in a single term in the sum over k. Let us consider a single such face Θ[i+1] and find
+how often it appears with which signs. First, note that we may equally well phrase
+the problem in terms of faces of ∆◦ . Given the face Θ◦[n−d] containing νD and the face
+Θ◦[n−i−2] dual to Θ[i+1] , the factor multiplying `∗ (Θ[i+1] ) for a fixed face of dimension
+[i − 1] in the above sum is then simply
+X
+(−1)d−1−k .
+(B.101)
+k,Θ◦[n−d] ⊆Θ◦[n−d+k] ⊆Θ◦[n−i−2]
+
+The contribution proportional to `∗ (Θ[i+1] ), the dual face of which is Θ◦[n−i−2] , is hence
+given by counting all n − d + k-dimensional faces containing Θ◦[n−d] and contained in
+Θ◦[n−i−2] . To compute this quantity, we again interpret this as an Euler characteristic
+of a topological space as follows. Consider a sphere of dimension n−i−2−(n−d)−1 =
+d−i−3 centered at νD and orthogonal to the face Θ◦[n−d] . All the faces contributing to
+the sum above, except Θ◦[n−d] itself, will give rise to a decomposition of one closed half
+
+59
+
+of this sphere, which has Euler characteristic +1 in any dimension. The contribution
+of the highest-dimensional stratum on this half-sphere has k = d − i − 2, so that it
+contributes (−1)i−3 to the alternating sum in (B.101). As its dimension is d − i − 3,
+it contributes (−1)d−i−3 to the Euler characteristic, so that the sum in (B.101), still
+neglecting the face Θ◦[n−d] , is (−1)d . The face Θ◦[n−d] contributes (−1)d−1 , so that these
+two terms always cancel and the sum (B.101) vanishes for any pair of faces Θ◦[n−d] and
+Θ◦[n−i−2] . Hence the sum (B.100) vanishes except when d = i − 2, when only one term
+in (B.101) contributes. This completes the proof of (B.94).
+
+60
+
+C
+
+Computation of h2 for a Divisor on a 2-Face
+
+In this appendix we give an alternative computation of h2 (OD ) in a special case (defined
+below). We will compute h2 (OD ) directly in terms of a counting of lattice points in ∆,
+arriving at a result that coincides with Theorem 3 in this subcase. This computation
+provides an alternative perspective to that of the spectral sequence in §3.1.
+C.1
+
+Preliminaries
+
+We begin by assembling some elementary results about divisors and Calabi-Yau hypersurfaces in toric varieties. Let V be a four-dimensional simplicial toric variety, with X a
+b denote a divisor in V . We write D = D
+b ∩ X.
+Calabi-Yau hypersurface in V , and let D
+Proposition 23 Serre duality gives
+b = h4−i (OV (D
+b − X))
+hi (OV (−D))
+
+(C.1)
+
+hi (OX (−D)) = h3−i (OX (D))
+
+(C.2)
+
+on V , and
+on X.
+b is effective. We then have h0 (OV (−D))
+b = 0, and so h4 (OV (D
+b−
+Let us now assume D
+Pb
+b i are effective, we have h0 (OV (D
+b−
+X)) = 0. Using also that X =
+Di , where the D
+b = 0. In addition because D is effective we have
+X)) = 0, and so h4 (OV (−D))
+h0 (OX (−D)) = 0 and so h3 (OX (D)) = 0.
+Because V is a toric fourfold, we have the relation
+h• (V, OV ) = (1, 0, 0, 0, 0) .
+
+(C.3)
+
+Using Serre duality (as in [27]) in the long exact sequence in cohomology induced by
+the Koszul sequence
+0 → OV (−X) → OV → OX → 0 ,
+(C.4)
+one immediately finds that the Hodge numbers h• (X, OX ) obey
+h• (X, OX ) = (1, 0, 0, 1) .
+
+(C.5)
+
+Similarly, we can establish:
+Proposition 24 For a space S, define h̃i (S) := hi (S) for i > 0, and h̃0 (S) := h0 (S) −
+1. Then the following relations hold, for 0 ≤ i ≤ 3:
+b O b ) = hi+1 (OV (−D))
+b = h3−i (OV (D
+b − X)) .
+h̃i (D,
+D
+
+61
+
+(C.6)
+
+b ⊂ V , which reads
+We consider the Koszul sequence for D
+b → OV → O b → 0 .
+0 → OV (−D)
+D
+
+(C.7)
+
+This induces the long exact sequence in cohomology
+0
+
+b
+H 0 (OV (−D))
+
+H 0 (OV )
+
+H 0 (ODb )
+
+b
+H 1 (OV (−D))
+
+H 1 (OV )
+
+H 1 (ODb )
+
+b
+H 2 (OV (−D))
+
+H 2 (OV )
+
+H 2 (ODb )
+
+b
+H 3 (OV (−D))
+
+H 3 (OV )
+
+H 3 (ODb )
+
+b
+H 4 (OV (−D))
+
+H 4 (OV )
+
+0
+
+Applying (C.3) leads to the first equality in (C.6). The second equality then follows
+from (C.1). 
+b 6= X we have
+Corollary 25 If D
+b − X)) = 0 ,
+b O b ) = h0 (OV (D
+h3 (D,
+D
+
+(C.8)
+
+b O b ) = h0 (OV (D
+b − X)) = 1 .
+h3 (D,
+D
+
+(C.9)
+
+b = X we have
+while if D
+
+In close parallel to Proposition 24, we can show the following:
+Proposition 26 The following relations hold, for 0 ≤ i ≤ 2:
+h̃i (D, OD ) = h̃2−i (X, OX (D)) .
+
+(C.10)
+
+We consider the Koszul sequence for D ⊂ X, which reads
+0 → OX (−D) → OX → OD → 0 .
+
+(C.11)
+
+Applying (C.5) and (C.2) to the long exact sequence in cohomology induced by (C.11)
+yields (C.10). 
+In particular, we have
+Corollary 27
+h2 (D, OD ) = h0 (X, OX (D)) − 1 .
+
+62
+
+(C.12)
+
+C.2
+
+Relating h2 to toric data
+
+We now state the condition that defines the special case treated in this appendix.
+b be a square-free divisor in V corresponding to a collection of
+Definition 28 Let D
+b face-limited if the uI are all contained in a
+lattice points {uI } ⊂ ∆◦ . We call D
+b ∩ X with D
+b
+single 2-face f of ∆◦ . We call a divisor D in X face-limited if D := D
+face-limited.
+Notice that RD contains all the layers of the ravioli complex R over f . Thus, D
+corresponds not just to RD ⊂ R, but also to a subcomplex TD ⊂ T .
+We now examine the simplicial complex TD associated to D.
+b be a face-limited divisor in V , let D = D
+b ∩ X, and let TD be the
+Lemma 29 Let D
+associated simplicial complex. Then
+b O b ) = hi (TD ) .
+hi (D,
+D
+
+(C.13)
+
+This follows from the spectral sequence associated to the generalized Mayer-Vietoris
+sequence on V given in Proposition 19 of Appendix A. 
+b be a face-limited divisor in V , and let D = D
+b ∩ X be the correCorollary 30 Let D
+sponding face-limited divisor in X. Then
+b O b) = 0 .
+h2 (D,
+D
+
+(C.14)
+
+This follows from (C.13), because h2 (TD ) = 0 for a divisor on a single 2-face. 
+We can now relate sections on X to sections on V :
+b be a face-limited divisor in V , and let D = D
+b ∩ X be the correLemma 31 Let D
+0
+0
+b
+sponding face-limited divisor in X. Then h (X, OX (D)) = h (V, OV (D)).
+b which reads
+We tensor the Koszul sequence from V to X with O(D),
+b − X) → OV (D)
+b → OX (D) → 0 .
+0 → OV (D
+b on V is written as D
+b = P ai D
+b i , where the D
+b i are
+A general square-free divisor D
+Pb
+b i are effective, we have
+the toric divisors and ai ∈ {0, 1}. Because X = Di and the D
+b − X)) = 0. Therefore, to show that h0 (X, OX (D)) = h0 (V, OV (D)),
+b
+that h0 (OV (D
+b − X)) = 0. By Serre duality, equation (C.1), we can
+we need to show that h1 (OV (D
+3
+b = 0. Consider the Koszul sequence from V to D,
+b
+equivalently show that h (OV (−D))
+b → OV → O b → 0 .
+0 → OV (−D)
+D
+
+63
+
+(C.15)
+
+Using (C.3) in the long exact sequence induced by (C.15), we find that
+b O b ) = 0 ⇒ h3 (OV (−D))
+b = 0.
+h2 (D,
+D
+
+(C.16)
+
+The lemma follows upon using (C.14). 
+We have thus proved:
+b be a face-limited divisor in V , and let D = D
+b ∩ X be the correCorollary 32 Let D
+sponding face-limited divisor in X. Then
+b − 1.
+h2 (D, OD ) = h0 (V, OV (D))
+
+(C.17)
+
+Computation of h2 for a face-limited divisor
+
+C.3
+
+We are now equipped to calculate h2 (D, OD ) for an arbitrary face-limited divisor
+P
+D = ai Di . We first establish how to compute h0 (V, OV (D)).
+i
+
+b i be the
+Proposition 33 Let V be a toric variety corresponding to a fan Σ, let D
+P
+b
+b :=
+toric divisors on V , and for ai ∈ Z, define D
+i ai Di . Define the polyhedra
+b = |P b ∩ M |.
+PDb = {m ∈ MR |hm, ui i ≥ −ai for all ui ∈ Σ(1)}. Then h0 (V, OV (D))
+D
+The proof is given in Proposition 4.3.2 of [27].
+b be a face-limited divisor in V , let D = D
+b ∩ X be the corresponding
+Lemma 34 Let D
+face-limited divisor in X, and let v be the vertices, e the complete edges, and f the
+complete faces included in TD .11 Then
+X
+X
+X
+b =1+
+g(f ) .
+(C.18)
+g(e) +
+g(v) +
+h0 (V, OV (D))
+e
+
+v
+
+f
+
+b are counted by lattice points m such that hm, ui i ≥ −ai ,
+Proof. Sections of OV (D)
+0
+b can be computed by counting suitable lattice points. We consider
+and so h (V, OV (D))
+Pb
+b
+a divisor D =
+Di specified by a set of points ui ∈ f , i ∈ 1, . . . , N , where f is a
+i
+
+2-face. We label the points not in the set {ui } as ua . First, note that for any effective
+b is by assumption also
+divisor the origin m = ~0 corresponds to a global section. As D
+b are counted by lattice points m such that
+square-free, the additional sections of OV (D)
+hm, ui i ≥ −1, and hm, ua i ≥ 0. We will count these sections by including points in
+the set {ui } one by one, and checking how the number of sections changes. In other
+j+1
+j
+b = PD
+b i , where j ≤ N − 1, and let D
+b0 = P D
+bi = D
+b +D
+b j+1 .
+words, let D
+i=1
+
+i=1
+
+11
+
+Because TD is by assumption contained in a single 2-face f , the last sum in (C.18) will only have
+one term, but we find it useful to write (C.18) in a form that anticipates our result for a completely
+general square-free divisor.
+
+64
+
+b j+1 corresponds to a lattice point uj+1 . Then h0 (V, OV (D
+b 0 )) equals
+The divisor D
+the number of lattice points m such that
+hm, ui i ≥ −1,
+
+(C.19)
+
+hm, uj+1 i ≥ −1,
+
+(C.20)
+
+hm, ua i ≥ 0 .
+
+(C.21)
+
+b equals the number of lattice points m such that
+On the other hand, h0 (V, OV (D))
+hm, ui i ≥ −1 ,
+
+(C.22)
+
+hm, ua i ≥ 0 .
+
+(C.23)
+
+b 0 )) − h0 (V, OV (D))
+b is the number of lattice points m such that
+Thus, h0 (V, OV (D
+hm, ui i ≥ −1,
+
+(C.24)
+
+hm, uj+1 i = −1,
+
+(C.25)
+
+hm, ua i ≥ 0 .
+
+(C.26)
+
+The points m obeying (C.25) are by definition the lattice points in the face u◦j+1 of
+∆, dual to the point uj+1 . We need to count points in u◦j+1 that also satisfy (C.24)
+and (C.26). There are three types of ui : vertices, points interior to edges, and points
+interior to f . We will include them in the set {ui } in that particular order. First
+consider the case where uj+1 is a vertex of f . Then we need to solve
+hm, uj+1 i = −1
+
+(C.27)
+
+hm, ua i ≥ 0 .
+
+(C.28)
+
+Equation (C.25) defines the facet u◦j+1 ∈ ∆(3). However, any point on the boundary
+of u◦j+1 has a dual in ∆◦ , defined by hm , ·i = −1, that violates (C.28). The only points
+that do not violate (C.28) are those in the interior of u◦j+1 , as they are dual only to
+b 0 )) = 1 + g(uj+1 ).
+uj+1 itself, and therefore h0 (V, OV (D
+Next let uj+1 correspond to a point internal to an edge e ∈ ∆◦ (1). The condition
+(C.28) is violated unless the entire edge, including the vertices bounding it, is included,
+since hm, uj+1 i = −1 implies that hm, uα i = −1 for any uα ⊂ e. Therefore, a divisor
+D corresponding to a complete edge e with vertices ua and ub has
+b = 1 + g(vu ) + g(vu ) + g(e) .
+h0 (V, OV (D))
+
+(C.29)
+
+In a similar manner we find that including points uα internal to f in the set {ui } can
+only contribute to h2 if every point in the face f is included in {ui }. 
+
+65
+
+From Corollary 32 and Lemma 34 we deduce:
+Corollary 35 Let D be a face-limited square-free divisor in X. Then
+X
+X
+X
+h2 (D, OD ) =
+g(v ◦ ) +
+g(e◦ ) +
+g(f ◦ ) .
+v
+
+e
+
+(C.30)
+
+f
+
+References
+[1] S. Kachru, R. Kallosh, A. D. Linde and S. P. Trivedi, De Sitter vacua in string theory,
+Phys. Rev. D68 (2003) 046005, [hep-th/0301240].
+[2] V. Balasubramanian, P. Berglund, J. P. Conlon and F. Quevedo, Systematics of
+moduli stabilisation in Calabi-Yau flux compactifications, JHEP 03 (2005) 007,
+[hep-th/0502058].
+[3] J. P. Conlon, F. Quevedo and K. Suruliz, Large-volume flux compactifications: Moduli
+spectrum and D3/D7 soft supersymmetry breaking, JHEP 08 (2005) 007,
+[hep-th/0505076].
+[4] E. Witten, Nonperturbative superpotentials in string theory, Nucl.Phys. B474 (1996)
+343–360, [hep-th/9604030].
+[5] D. Eisenbud, M. Mustaţǎ and M. Stillman, Cohomology on toric varieties and local
+cohomology with monomial supports, J. Symbolic Comput. 29 (2000) 583–600.
+[6] D. R. Grayson and M. E. Stillman, “Macaulay2, a software system for research in
+algebraic geometry.” Available at
+https://faculty.math.illinois.edu/Macaulay2/.
+[7] G. G. Smith, NormalToricVarieties: a Macaulay2 Package for Computing with Toric
+Varieties, distributed with Macaulay2 .
+[8] R. Blumenhagen, B. Jurke, T. Rahn and H. Roschy, Cohomology of Line Bundles: A
+Computational Algorithm, J.Math.Phys. 51 (2010) 103525, [1003.5217].
+[9] R. Blumenhagen, B. Jurke, T. Rahn and H. Roschy, Cohomology of Line Bundles:
+Applications, J.Math.Phys. 53 (2012) 012302, [1010.3717].
+[10] M. Kreuzer and H. Skarke, Calabi-Yau Data,
+http: // hep. itp. tuwien. ac. at/ ~ kreuzer/ CY/ .
+[11] M. Stillman et al., StringTorics: a Macaulay2 Package for Computing with Toric
+Varieties in String Theory, to appear .
+[12] R. Donagi and M. Wijnholt, MSW Instantons, JHEP 06 (2013) 050, [1005.5391].
+[13] R. Donagi, S. Katz and M. Wijnholt, Weak Coupling, Degeneration and Log
+Calabi-Yau Spaces, 1212.0553.
+[14] A. Clingher, R. Donagi and M. Wijnholt, The Sen Limit, Adv. Theor. Math. Phys. 18
+(2014) 613–658, [1212.4505].
+
+66
+
+[15] A. Braun et al., The Hodge Numbers of Divisors of Calabi-Yau Fourfold
+Hypersurfaces, work in progress .
+[16] V. V. Batyrev, Dual Polyhedra and Mirror Symmetry for Calabi-Yau Hypersurfaces in
+Toric Varieties, J. Alg. Geom (1996) 493–535, [alg-geom/9310003].
+[17] M. Kreuzer and H. Skarke, On the classification of reflexive polyhedra, Commun.
+Math. Phys. 185 (1997) 495–508, [hep-th/9512204].
+[18] M. Kreuzer and H. Skarke, Classification of reflexive polyhedra in three-dimensions,
+Adv. Theor. Math. Phys. 2 (1998) 847–864, [hep-th/9805190].
+[19] M. Kreuzer and H. Skarke, Complete Classification of Reflexive Polyhedra in Four
+Dimensions, Adv.Theor.Math.Phys. 4 (2002) 1209–1230, [hep-th/0002240].
+[20] A. Klemm, B. Lian, S. S. Roan and S.-T. Yau, Calabi-Yau fourfolds for M theory and
+F theory compactifications, Nucl. Phys. B518 (1998) 515–574, [hep-th/9701023].
+[21] A. P. Braun, Tops as building blocks for G2 manifolds, JHEP 10 (2017) 083,
+[1602.03521].
+[22] S. Greiner and T. W. Grimm, Three-form periods on Calabi-Yau fourfolds: Toric
+hypersurfaces and F-theory applications, JHEP 05 (2017) 151, [1702.03217].
+[23] A. Hatcher, Algebraic topology. Cambridge University Press, Cambridge, 2002.
+[24] M. Bianchi, A. Collinucci and L. Martucci, Magnetized E3-brane instantons in
+F-theory, JHEP 12 (2011) 045, [1107.3732].
+[25] T. Maszczyk, Distributive lattices and cohomology, ArXiv e-prints (Nov., 2008) ,
+[0811.3997].
+[26] V. I. Danilov and A. G. Khovanskii, Newton Polyhedra and an Algorithm for
+Computing Hodge–Deligne Numbers, Math. USSR. Izv. 29 (1987) 279–298.
+[27] D. Cox, J. Little and H. Schenck, Toric Varieties. Graduate studies in mathematics.
+American Mathematical Soc., 2011.
+[28] V. I. Danilov, The Geometry of Toric Varieties, Russ.Math.Surv. 33:2 (1978) 97.
+[29] M. Kreuzer, Toric geometry and Calabi-Yau compactifications, Ukr. J. Phys. 55 (2010)
+613–625, [hep-th/0612307].
+[30] W. Fulton, Introduction to toric varieties. Princeton University Press, Princeton, 1993.
+[31] C. Voisin and L. Schneps, Hodge Theory and Complex Algebraic Geometry I:. No. v. 1
+in Cambridge Studies in Advanced Mathematics. Cambridge University Press, 2002.
+[32] C. Voisin and L. Schneps, Hodge Theory and Complex Algebraic Geometry II:. No. v.
+2 in Cambridge Studies in Advanced Mathematics. Cambridge University Press, 2003.
+[33] J. De Loera, J. Rambau and F. Santos, Triangulations. Springer, Heidelberg
+Dordrecht London New York, 2010.
+
+67
+
+

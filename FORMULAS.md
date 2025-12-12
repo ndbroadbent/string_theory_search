@@ -17,18 +17,22 @@ This requires computing:
 
 ## Part 1: Geometry (CYTools can compute these)
 
-### 1.1 Calabi-Yau Volume
+### 1.1 Classical Calabi-Yau Volume
 ```
-V = (1/6) κᵢⱼₖ tⁱ tʲ tᵏ
+V_classical = (1/6) κᵢⱼₖ tⁱ tʲ tᵏ
 ```
 Where:
 - κᵢⱼₖ = triple intersection numbers of divisors
 - tⁱ = Kähler moduli (2-cycle volumes)
 
-### 1.2 Divisor Volumes
+**WARNING:** This is the CLASSICAL volume. The physical volume includes instanton corrections (see Part 1A below).
+
+### 1.2 Classical Divisor Volumes
 ```
 τᵢ = (1/2) κᵢⱼₖ tʲ tᵏ
 ```
+
+**WARNING:** This is the CLASSICAL divisor volume. See Part 1A for corrections.
 
 ### 1.3 Hodge Numbers
 - h¹¹ = number of Kähler moduli
@@ -38,6 +42,104 @@ Where:
 ### 1.4 Frame Conversions
 ```
 V_Einstein = V_string / g_s^(3/2)
+```
+
+---
+
+## Part 1A: Worldsheet Instanton Corrections (CRITICAL!)
+
+**These corrections are ESSENTIAL for reproducing McAllister's results.**
+
+The classical formulas (1.1, 1.2) give V ≈ 17900 for polytope 4-214-647.
+The instanton-corrected formulas give V ≈ 4711 (the correct answer).
+**This is a 3.8× difference - not a small correction!**
+
+### 1A.1 Corrected CY Volume (McAllister eq. 4.11)
+```
+V[0] = (1/6) κᵢⱼₖ tⁱ tʲ tᵏ                    [Classical term]
+       - ζ(3)χ(X) / (4(2π)³)                  [BBHL α' correction - CRITICAL!]
+       + (instanton sum with GV invariants)   [Usually tiny, ~0.001]
+```
+
+**VERIFIED for polytope 4-214-647:**
+```
+V_classical (with corrected t):  4712.338
+BBHL correction:                 -0.509  (= ζ(3)×420 / (4(2π)³))
+Instanton sum:                   ~0.001
+─────────────────────────────────────────
+V[0] (computed):                 4711.831
+V[0] (cy_vol.dat):               4711.830  ✓ EXACT MATCH
+```
+
+Where:
+- κᵢⱼₖ = intersection numbers
+- tⁱ = Kähler moduli (2-cycle volumes) - **USE corrected_kahler_param.dat!**
+- χ(X) = Euler characteristic = 2(h¹¹ - h²¹)
+- ζ(3) = 1.202056903... (Riemann zeta function)
+- N_q = genus-zero Gopakumar-Vafa invariants
+- q = curve class in Mori cone M(X)
+
+### 1A.1a BBHL Correction (α' correction at string tree level)
+```
+BBHL = ζ(3)χ(X) / (4(2π)³)
+```
+
+For polytope 4-214-647 with h¹¹=214, h²¹=4:
+- χ = 2(214 - 4) = 420
+- BBHL = 1.202 × 420 / 992.2 = **0.508832**
+
+**This correction is NOT optional!** Without it, V is wrong by ~0.5 (0.01% error).
+
+### 1A.2 Corrected Divisor Volumes (McAllister eq. 4.12)
+```
+Tᵢ = (1/2) κᵢⱼₖ tʲ tᵏ
+     - χ(Dᵢ)/24
+     + (1/(2π)²) Σ_q qᵢ N_q Li₂((-1)^{γ·q} e^{-2πq·t})
+```
+
+### 1A.3 The Iterative Solution Problem
+
+Given KKLT target divisor volumes τᵢ = (cᵢ/2π) ln(W₀⁻¹), we need to solve:
+```
+Tᵢ(t) = τᵢ   (implicit equation for t)
+```
+
+This requires **iterative solution** because Tᵢ depends nonlinearly on t through both the classical term and the instanton sum.
+
+### 1A.4 McAllister's Data Files
+
+For polytope 4-214-647:
+
+| File | Contains | V_classical result |
+|------|----------|-------------------|
+| `kahler_param.dat` | UNCORRECTED t (no instantons) | 17901 ❌ |
+| `corrected_kahler_param.dat` | CORRECTED t (with instantons) | 4712.34 ✓ |
+
+After applying BBHL correction to corrected result: **4711.83 ✓ EXACT**
+
+Other data files:
+- `heights.dat` = triangulation heights (MUST use for correct triangulation)
+- `small_curves_gv.dat`, `dual_curves_gv.dat` = Gopakumar-Vafa invariants N_q
+- `small_curves.dat`, `dual_curves.dat` = curve classes q
+
+### 1A.5 Complete V_string Computation Recipe
+
+```python
+# 1. Load corrected Kähler moduli (NOT kahler_param.dat!)
+t = load("corrected_kahler_param.dat")
+
+# 2. Use correct triangulation
+tri = poly.triangulate(heights=load("heights.dat"))
+
+# 3. Compute classical volume
+V_classical = (1/6) * einsum('ijk,i,j,k', kappa, t, t, t)
+
+# 4. Apply BBHL correction
+chi = 2 * (h11 - h21)
+BBHL = zeta(3) * chi / (4 * (2*pi)**3)
+V_string = V_classical - BBHL
+
+# Result: V_string ≈ 4711.83 ✓
 ```
 
 ---

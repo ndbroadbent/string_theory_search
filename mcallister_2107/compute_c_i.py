@@ -268,8 +268,14 @@ def get_mcallister_c_i_stats() -> dict:
 # =============================================================================
 
 
+def load_mcallister_points():
+    """Load McAllister's dual polytope points (the ONLY input needed)."""
+    lines = (MCALLISTER_DIR / "dual_points.dat").read_text().strip().split('\n')
+    return np.array([[int(x) for x in line.split(',')] for line in lines])
+
+
 def main():
-    """Test c_i computation."""
+    """Test c_i computation on McAllister's dual polytope."""
     import sys
 
     sys.path.insert(0, str(Path(__file__).parent.parent / "vendor/cytools_latest/src"))
@@ -277,6 +283,7 @@ def main():
 
     print("=" * 70)
     print("DUAL COXETER NUMBERS (c_i) for KKLT")
+    print("McAllister 4-214-647 dual polytope (h11=4)")
     print("=" * 70)
 
     # Test 1: Dual Coxeter numbers reference
@@ -286,38 +293,27 @@ def main():
         c2 = get_dual_coxeter(alg)
         print(f"  {alg}: c2 = {c2}")
 
-    # Test 2: Compute c_i for h11=4 polytope
-    print("\n[2] Computing c_i for h11=4 polytope:")
-    vertices = np.array(
-        [
-            [-1, -1, -1, -1],
-            [-1, -1, -1, 0],
-            [-1, -1, 0, -1],
-            [-1, -1, 0, 0],
-            [-1, 0, -1, -1],
-            [-1, 0, 0, 1],
-            [0, -1, -1, -1],
-            [1, 1, 1, 1],
-        ]
-    )
+    # Test 2: Compute c_i for McAllister's dual polytope
+    print("\n[2] Computing c_i for McAllister dual polytope:")
+    points = load_mcallister_points()
+    print(f"  Loaded {points.shape[0]} points")
 
-    poly = Polytope(vertices)
-    tri = poly.triangulate()
+    poly = Polytope(points)
+    tri = poly.triangulate()  # CYTools computes triangulation
+    cy = tri.get_cy()
+
+    print(f"  h11 = {cy.h11()}, h21 = {cy.h21()}")
+    print(f"  Divisor basis: {list(cy.divisor_basis())}")
 
     # Without involution (all rigid get c_i = 1)
     result = compute_c_i_values(poly, tri)
     print(f"  Total divisors: {result['n_total']}")
     print(f"  Rigid divisors: {result['n_rigid']}")
     print(f"  c_i values: {result['c_values']}")
+    print(f"  Rigid indices: {result['rigid_indices']}")
 
-    # With example involution (negate x1)
-    print("\n  With involution negating x1:")
-    result_with_invol = compute_c_i_values(poly, tri, involution_negated={1})
-    print(f"  O7-planes: {result_with_invol['n_o7']}")
-    print(f"  c_i values: {result_with_invol['c_values']}")
-
-    # Test 3: McAllister ground truth
-    print("\n[3] McAllister 4-214-647 ground truth:")
+    # Test 3: McAllister ground truth (for primal polytope h11=214)
+    print("\n[3] McAllister ground truth (primal h11=214):")
     try:
         stats = get_mcallister_c_i_stats()
         print(f"  Total in KKLT basis: {stats['n_total']}")

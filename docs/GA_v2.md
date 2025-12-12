@@ -7,26 +7,87 @@ This document describes the redesigned genetic algorithm architecture based on i
 We have validated data from McAllister et al. (arXiv:2107.09064) for polytope 4-214-647:
 
 ```python
-# Polytope (dual, h11=4)
-dual_points = "resources/small_cc_2107.09064_source/anc/paper_data/4-214-647/dual_points.dat"
+# Polytope - PRIMAL has h11=214 (the one McAllister actually uses)
+primal_points = "resources/small_cc_2107.09064_source/anc/paper_data/4-214-647/points.dat"
+# 294 points, h11=214, h21=4
 
-# Triangulation (15 simplices - FRST)
+# Polytope - DUAL has h11=4 (mirror of primal)
+dual_points = "resources/small_cc_2107.09064_source/anc/paper_data/4-214-647/dual_points.dat"
+# 12 points, h11=4, h21=214
+
+# Triangulation of dual (15 simplices - FRST)
 simplices = "resources/small_cc_2107.09064_source/anc/paper_data/4-214-647/dual_simplices.dat"
 
-# Fluxes
+# Fluxes (for h11=4 dual)
 K = [-3, -5, 8, 6]
 M = [10, 11, -11, -5]
 
-# Divisor basis (must set explicitly in CYTools)
-basis = [3, 4, 5, 8]
+# Dual Coxeter numbers (214 values for primal, from target_volumes.dat)
+# c_i = 1 for D3-instantons (165 divisors)
+# c_i = 6 for O7-planes with so(8) (49 divisors)
 
 # Results
 g_s = 0.00911134
 W_0 = 2.30012e-90
+V_string = 4711.83
 V_0 = -5.5e-203
 ```
 
-**Critical:** CYTools latest defaults to a different basis `[5, 6, 7, 8]`. You must call `cy.set_divisor_basis([3, 4, 5, 8])` to match McAllister's K, M vectors.
+### Dual vs Primal Polytopes
+
+**Key insight:** McAllister uses the PRIMAL polytope (h11=214) for Kähler moduli stabilization, but the flux superpotential W₀ is computed on the DUAL (h11=4).
+
+- **Primal (h11=214):** 294 lattice points, 214 Kähler moduli, 4 complex structure moduli
+- **Dual (h11=4):** 12 lattice points, 4 Kähler moduli, 214 complex structure moduli
+- **Mirror symmetry:** The physics is equivalent; they're computing on both sides
+
+For our GA, we can work with either:
+- Working with h11=4 dual is computationally cheaper (smaller matrices)
+- Working with h11=214 primal gives access to the full divisor structure
+
+---
+
+## Orientifold Involution: The Missing Genome Parameter
+
+**Key discovery:** The orientifold involution determines which divisors host O7-planes (c_i = 6) vs D3-instantons (c_i = 1). This is a **model choice** that must be part of the GA genome.
+
+### What We Can Compute From First Principles
+
+1. **Divisor rigidity** - Computable combinatorially from the polytope (no cohomCalg needed)
+   - See `mcallister_2107/compute_rigidity_combinatorial.py`
+   - Validated 214/214 match with McAllister's data
+
+2. **Which rigid divisors are O7-planes** - Requires the orientifold involution choice
+
+### The Involution
+
+From McAllister eq. (2.18), the involution negates a subset of homogeneous coordinates:
+```
+I : x_{I_α} → -x_{I_α},  α = 1, ..., k
+```
+
+Each negated coordinate creates an O7-plane on the divisor {x_i = 0}.
+
+For 4-214-647: 49 coordinates are negated → 49 O7-planes with c_i = 6.
+
+### Constraints on Valid Involutions
+
+1. **h¹'¹₋(X) = h²'¹₊(X) = 0** - No geometric moduli projected out
+2. **Tadpole cancellation** - D3-brane charge must balance
+
+### GA Genome Update
+
+```python
+genome = {
+    "polytope_id": int,           # Which polytope
+    "triangulation_id": int,      # Which triangulation
+    "K": [int] * h11,             # Flux vector K
+    "M": [int] * h11,             # Flux vector M
+    "orientifold_mask": [bool],   # NEW: Which coordinates to negate
+}
+```
+
+See [docs/ORIENTIFOLD_INVOLUTION.md](ORIENTIFOLD_INVOLUTION.md) for full details.
 
 ---
 
