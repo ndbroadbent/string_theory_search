@@ -4,10 +4,15 @@ Compute Gopakumar-Vafa invariants for a Calabi-Yau threefold.
 
 GV invariants N_q count BPS states and appear in:
 1. Worldsheet instanton corrections to the prepotential
-2. The KKLT target tau formula (eq 5.13)
+2. The KKLT target τ formula (eq 5.13)
 
-Uses CYTools latest's compute_gvs() (2021 version lacks this method).
-min_points=10000 required to match McAllister's 5177 curves for 4-214-647.
+Uses CYTools' compute_gvs() which computes genus-zero GV invariants
+via mirror symmetry.
+
+Validation: Tests against all 5 McAllister examples (arXiv:2107.09064).
+Strategy for validation:
+- Use CYTools 2021 for geometry (polytope, triangulation, basis)
+- Use CYTools latest for GV computation (compute_gvs was added later)
 
 Reference: arXiv:2107.09064 section 5.3
 """
@@ -19,6 +24,7 @@ from pathlib import Path
 import numpy as np
 
 # Paths
+CYTOOLS_2021 = Path(__file__).parent.parent.parent / "vendor/cytools_mcallister_2107"
 CYTOOLS_LATEST = Path(__file__).parent.parent.parent / "vendor/cytools_latest/src"
 DATA_BASE = Path(__file__).parent.parent.parent / "resources/small_cc_2107.09064_source/anc/paper_data"
 
@@ -29,26 +35,6 @@ MCALLISTER_EXAMPLES = [
     ("5-81-3213", 5, 81),
     ("7-51-13590", 7, 51),
 ]
-
-
-def compute_gv_invariants(cy, min_points: int = 10000) -> dict:
-    """
-    Compute genus-zero Gopakumar-Vafa invariants.
-
-    Args:
-        cy: CYTools CalabiYau object (from latest CYTools)
-        min_points: Lattice points to sample (10000 matches McAllister for h11=4)
-
-    Returns:
-        Dictionary mapping curve class tuples (in basis coords) to GV invariants
-    """
-    gv_obj = cy.compute_gvs(min_points=min_points)
-    gv_invariants = {}
-    for q, N_q in gv_obj.dok.items():
-        if N_q != 0:
-            # Use Decimal for exact integer conversion from float
-            gv_invariants[tuple(q)] = int(Decimal(str(N_q)).to_integral_value())
-    return gv_invariants
 
 
 def load_dual_points(example_name: str) -> np.ndarray:
@@ -83,14 +69,15 @@ def load_mcallister_gv(example_name: str) -> dict:
     return {c: g for c, g in zip(curves, gv_values)}
 
 
-def build_cy_latest(example_name: str):
-    """Build CY using CYTools latest with McAllister's triangulation."""
-    # Clear any existing cytools and use latest
+def build_cy_2021(example_name: str):
+    """Build CY using CYTools 2021 with McAllister's triangulation."""
+    # Clear any existing cytools
     mods = [k for k in list(sys.modules.keys()) if 'cytools' in k]
     for m in mods:
         del sys.modules[m]
 
-    sys.path.insert(0, str(CYTOOLS_LATEST))
+    # Use CYTools 2021
+    sys.path.insert(0, str(CYTOOLS_2021))
     from cytools import Polytope
 
     dual_pts = load_dual_points(example_name)
@@ -100,11 +87,73 @@ def build_cy_latest(example_name: str):
     tri = poly.triangulate(simplices=simplices, check_input_simplices=False)
     cy = tri.get_cy()
 
-    # Clean up path
-    if str(CYTOOLS_LATEST) in sys.path:
-        sys.path.remove(str(CYTOOLS_LATEST))
+    basis = list(cy.divisor_basis())
 
-    return cy, dual_pts
+    # Clean up
+    sys.path.remove(str(CYTOOLS_2021))
+
+    return cy, basis, dual_pts, simplices
+
+
+def compute_gv_with_latest(dual_pts: np.ndarray, simplices: list, min_points: int = 10000) -> dict:
+    """Compute GV invariants using CYTools latest."""
+    # Clear any existing cytools
+    mods = [k for k in list(sys.modules.keys()) if 'cytools' in k]
+    for m in mods:
+        del sys.modules[m]
+
+    # Use CYTools latest
+    sys.path.insert(0, str(CYTOOLS_LATEST))
+    from cytools import Polytope
+
+    poly = Polytope(dual_pts)
+    tri = poly.triangulate(simplices=simplices, check_input_simplices=False)
+    cy = tri.get_cy()
+
+    # Get curve basis matrix for coordinate conversion
+    curve_basis_mat = cy.curve_basis(include_origin=True, as_matrix=True)
+
+    # Compute GV
+    gv_obj = cy.compute_gvs(min_points=min_points)
+
+    # Convert to dict with ambient coordinates
+    # Use Decimal for exact integer conversion from floating point
+    gv_ambient = {}
+    for q_basis, N_q in gv_obj.dok.items():
+        if N_q != 0:
+            q_ambient = tuple(int(x) for x in np.array(q_basis) @ curve_basis_mat)
+            gv_ambient[q_ambient] = int(Decimal(str(N_q)).to_integral_value())
+
+    # Also return basis coords for later use
+    gv_basis = {}
+    for q_basis, N_q in gv_obj.dok.items():
+        if N_q != 0:
+            gv_basis[tuple(q_basis)] = int(Decimal(str(N_q)).to_integral_value())
+
+    # Clean up
+    sys.path.remove(str(CYTOOLS_LATEST))
+
+    return gv_ambient, gv_basis, curve_basis_mat
+
+
+def compute_gv_invariants(cy, min_points: int = 10000) -> dict:
+    """
+    Compute genus-zero Gopakumar-Vafa invariants.
+
+    Args:
+        cy: CYTools CalabiYau object (from latest CYTools)
+        min_points: Lattice points to sample (10000 matches McAllister for h11=4)
+
+    Returns:
+        Dictionary mapping curve class tuples (in basis coords) to GV invariants
+    """
+    gv_obj = cy.compute_gvs(min_points=min_points)
+    gv_invariants = {}
+    for q, N_q in gv_obj.dok.items():
+        if N_q != 0:
+            # Use Decimal for exact integer conversion from float
+            gv_invariants[tuple(q)] = int(Decimal(str(N_q)).to_integral_value())
+    return gv_invariants
 
 
 def test_example(example_name: str, expected_h11: int, expected_h21: int,
@@ -115,33 +164,26 @@ def test_example(example_name: str, expected_h11: int, expected_h21: int,
         print(f"GV TEST - {example_name} (h11={expected_h11}, min_points={min_points})")
         print("=" * 70)
 
-    cy, dual_pts = build_cy_latest(example_name)
+    # Build CY with 2021 to verify geometry
+    cy_2021, basis_2021, dual_pts, simplices = build_cy_2021(example_name)
 
     if verbose:
-        print(f"CY: h11={cy.h11()}, h21={cy.h21()}")
+        print(f"CYTools 2021: h11={cy_2021.h11()}, h21={cy_2021.h21()}")
+        print(f"Basis (2021): {basis_2021}")
 
-    h11_match = cy.h11() == expected_h11
-    h21_match = cy.h21() == expected_h21
+    h11_match = cy_2021.h11() == expected_h11
+    h21_match = cy_2021.h21() == expected_h21
 
     if not h11_match or not h21_match:
-        return {"success": False, "error": f"Hodge mismatch: h11={cy.h11()}, h21={cy.h21()}"}
+        return {"success": False, "error": f"Hodge mismatch: h11={cy_2021.h11()}, h21={cy_2021.h21()}"}
 
     # Load McAllister's GV data
     mcallister_gv = load_mcallister_gv(example_name)
     if verbose:
         print(f"McAllister GV data: {len(mcallister_gv)} curves")
 
-    # Get curve basis matrix for coordinate conversion
-    curve_basis_mat = cy.curve_basis(include_origin=True, as_matrix=True)
-
-    # Compute GV with CYTools latest
-    gv_basis = compute_gv_invariants(cy, min_points=min_points)
-
-    # Convert to ambient coords
-    gv_ambient = {}
-    for q_basis, N_q in gv_basis.items():
-        q_ambient = tuple(int(x) for x in np.array(q_basis) @ curve_basis_mat)
-        gv_ambient[q_ambient] = N_q
+    # Compute GV with latest (same geometry, different code)
+    gv_ambient, gv_basis, curve_basis_mat = compute_gv_with_latest(dual_pts, simplices, min_points=min_points)
 
     if verbose:
         print(f"Computed GV: {len(gv_ambient)} curves")
@@ -174,6 +216,7 @@ def test_example(example_name: str, expected_h11: int, expected_h21: int,
         "example_name": example_name,
         "h11": expected_h11,
         "h21": expected_h21,
+        "basis_2021": basis_2021,
         "n_gv_mcallister": len(mcallister_gv),
         "n_gv_computed": len(gv_ambient),
         "matches": matches,
@@ -195,8 +238,8 @@ def main():
     print("=" * 70)
     print("TESTING ALL 5 MCALLISTER EXAMPLES - GV Invariants")
     print("=" * 70)
-    print("\nSettings: min_points=10000, Decimal for exact integer conversion")
-    print("Validation: Every computed GV must EXACTLY match McAllister's value\n")
+    print("\nStrategy: CYTools 2021 for geometry, latest for compute_gvs()")
+    print("Settings: min_points=10000, Decimal for exact integer conversion\n")
 
     results = []
     for name, h11, h21 in MCALLISTER_EXAMPLES:
