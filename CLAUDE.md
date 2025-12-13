@@ -19,6 +19,42 @@ Genetic algorithm searching through Calabi-Yau compactifications to find configu
 - numpy<2 required (cytools/ortools need numpy 1.x)
 - PALP: `../palp_source` (C programs, compile with `make`)
 - Polytopes: `polytopes_three_gen.jsonl` (3.4GB, 12.2M three-gen candidates)
+- **CRITICAL: Multiprocessing & CYTools**: CYTools uses multiprocessing (e.g., `compute_gvs()`).
+
+  **TWO REQUIREMENTS:**
+  1. Scripts MUST be written to actual `.py` files - **NEVER use heredoc/stdin** (`python << 'EOF'`)
+  2. Scripts MUST have `if __name__ == "__main__":` guard
+
+  ```python
+  # WRONG - will fail with "No such file or directory: '<stdin>'"
+  uv run python << 'EOF'
+  cy.compute_gvs()  # Uses multiprocessing - FAILS
+  EOF
+
+  # CORRECT - write to file first
+  # 1. Write script to mcallister_2107/test_script.py
+  # 2. Run: uv run python mcallister_2107/test_script.py
+  ```
+
+  The `if __name__ == "__main__":` guard:
+  ```python
+  def main():
+      # your code here
+
+  if __name__ == "__main__":
+      main()
+  ```
+
+  Why: macOS uses "spawn" for multiprocessing, which re-imports the script file.
+  With stdin/heredoc, Python can't find `<stdin>` to re-import, causing FileNotFoundError.
+
+- **NEVER delete debugging/testing scripts**: Scripts like `debug_*.py`, `test_*.py`, `benchmark_*.py` are critical learning resources. They:
+  1. Show up in `rg` searches when looking for how to do something
+  2. Document working examples of API usage
+  3. Preserve institutional knowledge about edge cases and gotchas
+  4. Can be re-run to verify behavior after changes
+
+  Even "temporary" scripts should be kept - add a docstring explaining what they test/debug.
 
 ## External Tools (../xxx_source/)
 

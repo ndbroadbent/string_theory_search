@@ -257,11 +257,13 @@ def main():
     print("TESTING ALL 5 MCALLISTER EXAMPLES - GV Invariants")
     print("=" * 70)
     print("\nStrategy: CYTools 2021 for geometry, latest for compute_gvs()")
-    print("Settings: min_points=10000, Decimal for exact integer conversion\n")
+    print("Settings: min_points=20000 (needed for 5-113-4627), Decimal for exact conversion\n")
 
     results = []
     for name, h11, h21 in MCALLISTER_EXAMPLES:
-        result = test_example(name, h11, h21, min_points=10000, verbose=True)
+        # 5-113-4627 needs min_points=20000 to find all curves (see CURVE_DISCREPANCY.md)
+        # Other examples work fine with 10000 but 20000 doesn't hurt
+        result = test_example(name, h11, h21, min_points=20000, verbose=True)
         results.append(result)
         print()
 
