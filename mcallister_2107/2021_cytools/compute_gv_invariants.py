@@ -95,14 +95,35 @@ def build_cy_2021(example_name: str):
     return cy, basis, dual_pts, simplices
 
 
+def get_curve_basis_mat(dual_pts: np.ndarray, simplices: list) -> np.ndarray:
+    """Get curve basis matrix from CYTools latest."""
+    mods = [k for k in list(sys.modules.keys()) if 'cytools' in k]
+    for m in mods:
+        del sys.modules[m]
+
+    sys.path.insert(0, str(CYTOOLS_LATEST))
+    from cytools import Polytope
+
+    poly = Polytope(dual_pts)
+    tri = poly.triangulate(simplices=simplices, check_input_simplices=False)
+    cy = tri.get_cy()
+    curve_basis_mat = cy.curve_basis(include_origin=True, as_matrix=True)
+
+    sys.path.remove(str(CYTOOLS_LATEST))
+    return curve_basis_mat
+
+
 def compute_gv_with_latest(dual_pts: np.ndarray, simplices: list, min_points: int = 10000) -> dict:
     """Compute GV invariants using CYTools latest."""
+    # Get curve_basis_mat from latest CYTools
+    curve_basis_mat = get_curve_basis_mat(dual_pts, simplices)
+
     # Clear any existing cytools
     mods = [k for k in list(sys.modules.keys()) if 'cytools' in k]
     for m in mods:
         del sys.modules[m]
 
-    # Use CYTools latest
+    # Use CYTools latest for GV computation only
     sys.path.insert(0, str(CYTOOLS_LATEST))
     from cytools import Polytope
 
@@ -110,13 +131,10 @@ def compute_gv_with_latest(dual_pts: np.ndarray, simplices: list, min_points: in
     tri = poly.triangulate(simplices=simplices, check_input_simplices=False)
     cy = tri.get_cy()
 
-    # Get curve basis matrix for coordinate conversion
-    curve_basis_mat = cy.curve_basis(include_origin=True, as_matrix=True)
-
     # Compute GV
     gv_obj = cy.compute_gvs(min_points=min_points)
 
-    # Convert to dict with ambient coordinates
+    # Convert to dict with ambient coordinates using 2021's curve_basis_mat
     # Use Decimal for exact integer conversion from floating point
     gv_ambient = {}
     for q_basis, N_q in gv_obj.dok.items():
