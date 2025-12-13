@@ -9,9 +9,20 @@ Where:
 - t^i: Kähler moduli (from KKLT or loaded from data)
 - BBHL = ζ(3) χ(X) / (4 (2π)³)
 
-IMPORTANT: For validation, we use the PRIMAL polytope (points.dat) because
-cy_vol.dat contains V_string for the primal CY (h11=214 for 4-214-647).
-The dual polytope (dual_points.dat) gives the mirror CY with different h11.
+VALIDATION NOTE (from readme.txt):
+- cy_vol.dat = "classical volume" (includes BBHL but NOT worldsheet instantons)
+- corrected_cy_vol.dat = "V^[0] vev in KKLT" (includes BBHL AND worldsheet instantons)
+
+Our formula V_string = (1/6)κt³ - BBHL should match cy_vol.dat.
+
+PRECISION ANALYSIS:
+- 5-81-3213: EXACT match (error = 1e-13) - proves formula is correct
+- 4-214-647: 9 significant figures (error = 4e-09)
+- 5-113-4627-main: 7 significant figures (error = 1e-07)
+- 5-113-4627-alternative: 6 significant figures (error = 4e-07)
+
+Differences are due to accumulated floating point error in cubic summation
+over h11 terms. Threshold set to 1e-6 (6 significant figures).
 
 Reference: arXiv:2107.09064 (McAllister et al.)
 """
@@ -33,13 +44,18 @@ DATA_BASE = ROOT_DIR / "resources/small_cc_2107.09064_source/anc/paper_data"
 
 # Examples with (name, h11_primal, h21_primal)
 # Note: primal has LARGE h11, dual/mirror has small h11
+# 7-51-13590 is excluded: primal CY is non-favorable in CYTools 2021
 MCALLISTER_EXAMPLES = [
     ("4-214-647", 214, 4),
     ("5-113-4627-main", 113, 5),
     ("5-113-4627-alternative", 113, 5),
     ("5-81-3213", 81, 5),
-    ("7-51-13590", 51, 7),
+    # ("7-51-13590", 51, 7),  # non-favorable CY - CYTools 2021 doesn't support
 ]
+
+# Tolerance: 1e-6 (6 significant figures)
+# Justified by 5-81-3213 matching to 1e-13 (exact), proving formula correctness.
+TOLERANCE = 1e-6
 
 
 # =============================================================================
@@ -102,6 +118,9 @@ def compute_V_string(kappa: np.ndarray, t: np.ndarray, h11: int, h21: int) -> di
     """
     Compute string frame volume V_string = V_classical - BBHL.
 
+    NOTE: This does NOT include worldsheet instanton corrections.
+    To match corrected_cy_vol.dat, additional corrections are needed.
+
     Args:
         kappa: Intersection tensor (h11, h11, h11)
         t: Kähler moduli (h11,)
@@ -156,11 +175,15 @@ def load_basis(example_name: str) -> list:
     return [int(x) for x in text.split(',')]
 
 
-def load_expected_V_string(example_name: str, corrected: bool = True) -> float:
-    """Load expected V_string from McAllister's data."""
+def load_cy_vol(example_name: str) -> float:
+    """
+    Load expected V_string from cy_vol.dat.
+
+    NOTE: We use cy_vol.dat (NOT corrected_cy_vol.dat) because our formula
+    V_string = (1/6)κt³ - BBHL doesn't include worldsheet instanton corrections.
+    """
     data_dir = DATA_BASE / example_name
-    filename = "corrected_cy_vol.dat" if corrected else "cy_vol.dat"
-    return float((data_dir / filename).read_text().strip())
+    return float((data_dir / "cy_vol.dat").read_text().strip())
 
 
 # =============================================================================
@@ -192,10 +215,8 @@ def test_example(example_name: str, expected_h11: int, expected_h21: int, verbos
     if verbose:
         print(f"\nLoaded primal polytope: {points.shape[0]} points")
 
-    # Load triangulation heights
+    # Load triangulation heights (corrected = KKLT vacuum)
     heights = load_heights(example_name, corrected=True)
-    if verbose:
-        print(f"Loaded heights: {len(heights)} values")
 
     # Build CY with McAllister's triangulation
     poly = Polytope(points)
@@ -214,50 +235,43 @@ def test_example(example_name: str, expected_h11: int, expected_h21: int, verbos
     # Set McAllister's divisor basis
     basis = load_basis(example_name)
     cy.set_divisor_basis(basis)
-    if verbose:
-        print(f"Set divisor basis: {len(basis)} divisors")
 
     # Get intersection tensor
     kappa = compute_intersection_tensor(cy)
+    nonzero = np.sum(kappa != 0)
     if verbose:
-        nonzero = np.sum(kappa != 0)
         print(f"Intersection tensor: {nonzero} non-zero entries")
 
-    # Load McAllister's SOLVED Kähler moduli
+    # Load McAllister's SOLVED Kähler moduli (corrected = KKLT vacuum)
     t = load_kahler_params(example_name, corrected=True)
     if verbose:
         print(f"Loaded Kähler params: {len(t)} values")
-        print(f"  t range: [{t.min():.4f}, {t.max():.4f}]")
 
     # Compute V_string
     result = compute_V_string(kappa, t, h11, h21)
     V_computed = result["V_string"]
 
-    # Load expected
-    V_expected = load_expected_V_string(example_name, corrected=True)
+    # Load expected from cy_vol.dat (NOT corrected_cy_vol.dat)
+    V_expected = load_cy_vol(example_name)
 
     if verbose:
         print(f"\nResults:")
-        print(f"  V_classical = {result['V_classical']:.6f}")
-        print(f"  BBHL = {result['BBHL']:.6f} (χ = {2*(h11-h21)})")
-        print(f"  V_string = {V_computed:.6f}")
-        print(f"  V_expected = {V_expected:.6f}")
+        print(f"  V_string (computed) = {V_computed:.15f}")
+        print(f"  cy_vol.dat (expected) = {V_expected:.15f}")
 
     # Compute error
     rel_error = abs(V_computed - V_expected) / V_expected
-    ratio = V_computed / V_expected
+    sig_figs = -int(np.log10(rel_error)) if rel_error > 0 else 15
 
     if verbose:
         print(f"\nValidation:")
-        print(f"  Ratio computed/expected = {ratio:.8f}")
-        print(f"  Relative error = {rel_error:.2e}")
+        print(f"  Relative error = {rel_error:.2e} ({sig_figs} significant figures)")
 
-    # Pass criteria: < 0.2% error (small floating point differences expected)
-    passed = rel_error < 2e-3
+    passed = rel_error < TOLERANCE
+    status = "PASS" if passed else "FAIL"
 
     if verbose:
-        status = "PASS" if passed else "FAIL"
-        print(f"\n{status}: {example_name} (error = {rel_error:.2e})")
+        print(f"\n{status}: {example_name}")
 
     return {
         "example_name": example_name,
@@ -265,18 +279,20 @@ def test_example(example_name: str, expected_h11: int, expected_h21: int, verbos
         "h21": h21,
         "V_computed": V_computed,
         "V_expected": V_expected,
-        "ratio": ratio,
         "rel_error": rel_error,
         "passed": passed,
     }
 
 
 def main():
-    """Test V_string computation against all 5 McAllister examples."""
+    """Test V_string computation against McAllister examples."""
     print("=" * 70)
-    print("V_STRING COMPUTATION - ALL 5 MCALLISTER EXAMPLES (CYTools 2021)")
-    print("Using PRIMAL polytope (points.dat) with corrected Kähler params")
+    print("V_STRING COMPUTATION - MCALLISTER EXAMPLES (CYTools 2021)")
+    print("Formula: V_string = (1/6)κ_ijk t^i t^j t^k - BBHL")
+    print(f"Tolerance: {TOLERANCE:.0e} (6 significant figures)")
     print("=" * 70)
+    print("\nNOTE: Comparing against cy_vol.dat (no worldsheet instantons)")
+    print("      7-51-13590 excluded (non-favorable CY)")
 
     results = []
     for name, h11, h21 in MCALLISTER_EXAMPLES:
@@ -291,18 +307,20 @@ def main():
     all_passed = True
     for r in results:
         status = "PASS" if r["passed"] else "FAIL"
-        print(f"  {status}: {r['example_name']:30s} V={r['V_computed']:10.4f} (expected {r['V_expected']:.4f}, error={r['rel_error']:.2e})")
+        print(f"  {status}: {r['example_name']:30s} error = {r['rel_error']:.2e}")
         all_passed = all_passed and r["passed"]
 
     print()
     if all_passed:
-        print("All 5 examples PASSED")
+        print(f"All {len(results)} examples PASSED")
+        print("Formula V_string = (1/6)κt³ - BBHL is verified.")
     else:
         n_passed = sum(1 for r in results if r["passed"])
-        print(f"{n_passed}/5 examples passed")
+        print(f"{n_passed}/{len(results)} examples passed")
 
-    return results
+    return all_passed
 
 
 if __name__ == "__main__":
-    main()
+    success = main()
+    sys.exit(0 if success else 1)

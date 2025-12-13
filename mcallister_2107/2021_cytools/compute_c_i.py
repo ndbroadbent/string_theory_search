@@ -1,328 +1,253 @@
 #!/usr/bin/env python3
 """
-Compute dual Coxeter numbers c_i for KKLT moduli stabilization.
+Load and validate dual Coxeter numbers c_i for KKLT moduli stabilization.
+
+CRITICAL: c_i values are MODEL CHOICES, NOT computed quantities!
+
+From REPRODUCTION_OUTLINE.md:
+  "The orientifold involution (which divisors are O7 vs D3) is a MODEL CHOICE,
+   not computed from geometry!"
+
+The c_i values determine the source of non-perturbative effects:
+- c_i = 1: D3-brane instanton on rigid divisor
+- c_i = 6: Gaugino condensation on O7-plane with SO(8) gauge group
+- c_i = 2: Sp(2) gaugino condensation (rare, seen in 7-51-13590)
 
 The KKLT superpotential is:
-    W = W_0 + sum_i A_i exp(-2*pi*T_i / c_i)
+    W = W_0 + Σ_i A_i exp(-2π T_i / c_i)
 
-Where c_i depends on the source of the non-perturbative effect:
-- c_i = 1 for D3-brane instantons on rigid divisors
-- c_i = 6 for gaugino condensation on O7-planes with SO(8) gauge group
-
-This computes from first principles using cohomCalg for divisor cohomology.
+McAllister's data provides c_i values in target_volumes.dat.
 
 Reference: arXiv:2107.09064 (McAllister et al.)
 """
 
-import re
+import sys
 from pathlib import Path
-from typing import Optional
 
 import numpy as np
 
-# Import divisor cohomology computation
-from compute_divisor_cohomology import (
-    compute_all_divisor_cohomology,
-    get_rigid_divisor_indices,
-)
+# Paths
+SCRIPT_DIR = Path(__file__).parent
+ROOT_DIR = SCRIPT_DIR.parent.parent
+DATA_BASE = ROOT_DIR / "resources/small_cc_2107.09064_source/anc/paper_data"
 
-# McAllister data path
-MCALLISTER_DIR = (
-    Path(__file__).parent.parent
-    / "resources/small_cc_2107.09064_source/anc/paper_data/4-214-647"
-)
+# McAllister examples (name, h11_primal, h21_primal)
+MCALLISTER_EXAMPLES = [
+    ("4-214-647", 214, 4),
+    ("5-113-4627-main", 113, 5),
+    ("5-113-4627-alternative", 113, 5),
+    ("5-81-3213", 81, 5),
+    ("7-51-13590", 51, 7),
+]
 
 
 # =============================================================================
-# DUAL COXETER NUMBERS
+# DUAL COXETER NUMBER REFERENCE
 # =============================================================================
-
 
 DUAL_COXETER_NUMBERS = {
-    # ADE Lie algebras (as functions of rank n)
-    "su": lambda n: n,  # SU(N): c2 = N
-    "so": lambda n: n - 2,  # SO(N): c2 = N - 2
-    "sp": lambda n: n + 1,  # Sp(N): c2 = N + 1
+    # Common in string compactifications
+    "so(8)": 6,   # O7-plane with 4 D7s
+    "sp(2)": 2,   # Rare case in 7-51-13590
+    "su(n)": lambda n: n,
+    "so(n)": lambda n: n - 2,
+    "sp(n)": lambda n: n + 1,
     # Exceptional algebras
     "e6": 12,
     "e7": 18,
     "e8": 30,
     "f4": 9,
     "g2": 4,
-    # Common in string theory
-    "so(8)": 6,  # Most common in McAllister - O7-planes with 4 D7s
-    "su(5)": 5,  # GUT group
 }
 
 
-def get_dual_coxeter(gauge_algebra: str) -> int:
+# =============================================================================
+# DATA LOADING (MODEL INPUTS)
+# =============================================================================
+
+
+def load_c_i(example_name: str) -> np.ndarray:
     """
-    Get dual Coxeter number for a gauge algebra.
+    Load c_i values from target_volumes.dat.
+
+    THESE ARE MODEL INPUTS, NOT COMPUTED VALUES.
 
     Args:
-        gauge_algebra: String like "so(8)", "su(5)", "e8", etc.
+        example_name: Name of the McAllister example
 
     Returns:
-        Dual Coxeter number c2
+        Array of c_i values (typically 1 or 6, occasionally 2)
     """
-    s = gauge_algebra.lower().strip()
+    data_dir = DATA_BASE / example_name
+    target_path = data_dir / "target_volumes.dat"
 
-    # Check for exact match
-    if s in DUAL_COXETER_NUMBERS:
-        val = DUAL_COXETER_NUMBERS[s]
-        return val if isinstance(val, int) else val(0)
-
-    # Check for parametric match (su(n), so(n), sp(n))
-    match = re.match(r"(su|so|sp)\((\d+)\)", s)
-    if match:
-        family = match.group(1)
-        n = int(match.group(2))
-        func = DUAL_COXETER_NUMBERS[family]
-        return func(n)
-
-    raise ValueError(f"Unknown gauge algebra: {gauge_algebra}")
-
-
-# =============================================================================
-# ORIENTIFOLD INVOLUTIONS
-# =============================================================================
-
-
-def parse_coordinate_involution(invol_str: str, n_coords: int) -> dict[int, int]:
-    """
-    Parse an orientifold involution defined by coordinate negation.
-
-    Format: "x1, x3, x5" means negate coordinates 1, 3, 5 (1-indexed)
-
-    The involution acts as x_i -> -x_i for listed coordinates.
-    Fixed divisors are those where the involution acts trivially.
-
-    Returns:
-        Dict mapping coordinate index to its image (or itself if fixed)
-    """
-    mapping = {}
-
-    # Initialize identity
-    for i in range(1, n_coords + 1):
-        mapping[i] = i
-
-    if not invol_str.strip():
-        return mapping
-
-    # Parse negated coordinates
-    negated = set()
-    for part in invol_str.split(","):
-        part = part.strip()
-        if part.startswith("x"):
-            idx = int(part[1:])
-            negated.add(idx)
-
-    # For negated coordinates, the corresponding divisor {x_i = 0} is FIXED
-    # (since negating x_i doesn't change the locus x_i = 0)
-    # This is where O7-planes live
-
-    return mapping, negated
-
-
-def identify_o7_divisors(
-    involution_negated: set[int],
-    rigid_divisor_indices: list[int],
-    n_coords: int,
-) -> list[int]:
-    """
-    Identify which rigid divisors host O7-planes.
-
-    For an involution that negates coordinates {x_i1, x_i2, ...},
-    the O7-planes wrap the fixed divisors {x_ij = 0}.
-
-    Only RIGID fixed divisors contribute to the superpotential.
-
-    Args:
-        involution_negated: Set of coordinate indices that are negated
-        rigid_divisor_indices: Indices of rigid divisors (from cohomology)
-        n_coords: Total number of coordinates
-
-    Returns:
-        List of divisor indices that are O7-planes
-    """
-    o7_divisors = []
-
-    for div_idx in rigid_divisor_indices:
-        # div_idx is 1-indexed (coordinate index)
-        if div_idx in involution_negated:
-            o7_divisors.append(div_idx)
-
-    return o7_divisors
-
-
-def compute_c_i_values(
-    poly,
-    tri,
-    involution_negated: Optional[set[int]] = None,
-) -> dict:
-    """
-    Compute c_i values for all divisors that contribute to the superpotential.
-
-    Args:
-        poly: CYTools Polytope object
-        tri: CYTools Triangulation object
-        involution_negated: Set of coordinate indices negated by orientifold
-                           If None, all rigid divisors get c_i = 1
-
-    Returns:
-        Dict with:
-            - c_values: list of c_i for each divisor (0 if doesn't contribute)
-            - rigid_indices: indices of rigid divisors
-            - o7_indices: indices of O7-plane divisors
-            - n_total: total number of divisors
-    """
-    # Get all divisor cohomology
-    all_cohom = compute_all_divisor_cohomology(poly, tri)
-    n_divisors = len(all_cohom)
-
-    # Identify rigid divisors
-    rigid_indices = []
-    for i, result in enumerate(all_cohom):
-        if result["rigid"]:
-            rigid_indices.append(i + 1)  # 1-indexed
-
-    # Identify O7-planes if involution is given
-    o7_indices = []
-    if involution_negated:
-        o7_indices = identify_o7_divisors(
-            involution_negated, rigid_indices, n_divisors
-        )
-
-    # Assign c_i values
-    c_values = []
-    for i in range(n_divisors):
-        div_idx = i + 1  # 1-indexed
-        if div_idx in rigid_indices:
-            if div_idx in o7_indices:
-                c_values.append(6)  # O7-plane with SO(8)
-            else:
-                c_values.append(1)  # D3-brane instanton
-        else:
-            c_values.append(0)  # Doesn't contribute
-
-    return {
-        "c_values": c_values,
-        "rigid_indices": rigid_indices,
-        "o7_indices": o7_indices,
-        "n_total": n_divisors,
-        "n_rigid": len(rigid_indices),
-        "n_o7": len(o7_indices),
-    }
-
-
-# =============================================================================
-# MCALLISTER DATA LOADING
-# =============================================================================
-
-
-def load_mcallister_c_i() -> tuple[np.ndarray, np.ndarray]:
-    """
-    Load c_i values from McAllister's 4-214-647 data.
-
-    These are ground-truth values for validation.
-
-    Returns:
-        (c_values, basis_indices) where:
-        - c_values: array of 214 dual Coxeter numbers (1 or 6)
-        - basis_indices: 1-indexed divisor indices in KKLT basis
-    """
-    target_path = MCALLISTER_DIR / "target_volumes.dat"
     if not target_path.exists():
-        raise FileNotFoundError(f"McAllister data not found: {target_path}")
+        raise FileNotFoundError(f"target_volumes.dat not found: {target_path}")
 
-    with open(target_path) as f:
-        content = f.read().strip()
-        c_values = np.array([int(x) for x in content.split(",")])
-
-    basis_path = MCALLISTER_DIR / "kklt_basis.dat"
-    if basis_path.exists():
-        with open(basis_path) as f:
-            content = f.read().strip()
-            basis_indices = np.array([int(x) for x in content.split(",")])
-    else:
-        basis_indices = np.arange(1, len(c_values) + 1)
-
-    return c_values, basis_indices
+    text = target_path.read_text().strip()
+    return np.array([int(x) for x in text.split(",")])
 
 
-def get_mcallister_c_i_stats() -> dict:
-    """Get statistics about McAllister's c_i values."""
-    c_values, basis_indices = load_mcallister_c_i()
+def load_kklt_basis(example_name: str) -> np.ndarray:
+    """
+    Load KKLT basis indices from kklt_basis.dat.
 
-    return {
+    The KKLT basis contains only divisors that contribute to the superpotential
+    (i.e., rigid divisors that can host D3-instantons or O7-planes).
+
+    Returns:
+        Array of 1-indexed divisor indices
+    """
+    data_dir = DATA_BASE / example_name
+    basis_path = data_dir / "kklt_basis.dat"
+
+    if not basis_path.exists():
+        # Some examples may not have kklt_basis.dat
+        return None
+
+    text = basis_path.read_text().strip()
+    return np.array([int(x) for x in text.split(",")])
+
+
+def get_c_i_statistics(c_values: np.ndarray) -> dict:
+    """
+    Get statistics about c_i values.
+
+    Returns:
+        Dict with counts of each c_i value
+    """
+    unique, counts = np.unique(c_values, return_counts=True)
+
+    stats = {
         "n_total": len(c_values),
-        "n_o7": int(np.sum(c_values == 6)),
-        "n_d3": int(np.sum(c_values == 1)),
-        "c_values": c_values,
-        "basis_indices": basis_indices,
+        "n_d3": int(np.sum(c_values == 1)),        # D3-instantons
+        "n_o7": int(np.sum(c_values == 6)),        # O7-planes with SO(8)
+        "n_sp2": int(np.sum(c_values == 2)),       # Sp(2) gaugino condensation
+        "unique_values": list(unique),
+        "value_counts": dict(zip(map(int, unique), map(int, counts))),
     }
 
+    # Validate: all values should be 1, 2, or 6
+    unexpected = set(unique) - {1, 2, 6}
+    if unexpected:
+        stats["unexpected_values"] = list(unexpected)
+
+    return stats
+
 
 # =============================================================================
-# MAIN
+# VALIDATION TESTS
 # =============================================================================
 
 
-def load_mcallister_points():
-    """Load McAllister's dual polytope points (the ONLY input needed)."""
-    lines = (MCALLISTER_DIR / "dual_points.dat").read_text().strip().split('\n')
-    return np.array([[int(x) for x in line.split(',')] for line in lines])
+def test_example(example_name: str, expected_h11: int, verbose: bool = True) -> dict:
+    """
+    Test c_i loading for one McAllister example.
+
+    Validates:
+    1. target_volumes.dat exists and is readable
+    2. Length matches expected h11 (KKLT basis divisors)
+    3. All values are valid (1, 2, or 6)
+
+    Returns:
+        Dict with test results
+    """
+    if verbose:
+        print("=" * 70)
+        print(f"TEST - {example_name} (primal h11={expected_h11})")
+        print("=" * 70)
+
+    # Load c_i values
+    try:
+        c_values = load_c_i(example_name)
+    except FileNotFoundError as e:
+        if verbose:
+            print(f"FAIL: {e}")
+        return {"example_name": example_name, "passed": False, "error": str(e)}
+
+    # Get statistics
+    stats = get_c_i_statistics(c_values)
+
+    if verbose:
+        print(f"\n  Total divisors in KKLT basis: {stats['n_total']}")
+        print(f"  D3-instantons (c_i=1): {stats['n_d3']}")
+        print(f"  O7-planes with SO(8) (c_i=6): {stats['n_o7']}")
+        if stats['n_sp2'] > 0:
+            print(f"  Sp(2) gaugino (c_i=2): {stats['n_sp2']}")
+        print(f"  Value counts: {stats['value_counts']}")
+
+    # Validation checks
+    passed = True
+    errors = []
+
+    # Check for unexpected values
+    if "unexpected_values" in stats:
+        passed = False
+        errors.append(f"Unexpected c_i values: {stats['unexpected_values']}")
+
+    # Check that we have at least some non-zero values
+    if stats["n_total"] == 0:
+        passed = False
+        errors.append("No c_i values found")
+
+    # Note: We can't check length == h11 because KKLT basis excludes non-rigid divisors
+    # The number of KKLT divisors is less than h11
+
+    if verbose:
+        print(f"\n  First 10 c_i values: {list(c_values[:10])}")
+        if errors:
+            print(f"\n  ERRORS: {errors}")
+        status = "PASS" if passed else "FAIL"
+        print(f"\n{status}: {example_name}")
+
+    return {
+        "example_name": example_name,
+        "passed": passed,
+        "n_divisors": stats["n_total"],
+        "n_d3": stats["n_d3"],
+        "n_o7": stats["n_o7"],
+        "errors": errors if errors else None,
+    }
 
 
 def main():
-    """Test c_i computation on McAllister's dual polytope."""
-    import sys
-
-    sys.path.insert(0, str(Path(__file__).parent.parent / "vendor/cytools_latest/src"))
-    from cytools import Polytope
-
+    """Test c_i loading against all 5 McAllister examples."""
     print("=" * 70)
-    print("DUAL COXETER NUMBERS (c_i) for KKLT")
-    print("McAllister 4-214-647 dual polytope (h11=4)")
+    print("DUAL COXETER NUMBERS (c_i) - MODEL INPUT VALIDATION")
+    print("c_i = 1 (D3-instanton), 6 (O7/SO(8)), 2 (Sp(2))")
     print("=" * 70)
+    print("\nNOTE: c_i values are MODEL CHOICES from target_volumes.dat")
+    print("      They are NOT computed from geometry!")
 
-    # Test 1: Dual Coxeter numbers reference
-    print("\n[1] Dual Coxeter numbers reference:")
-    algebras = ["so(8)", "su(5)", "e6", "e7", "e8", "so(10)", "sp(2)"]
-    for alg in algebras:
-        c2 = get_dual_coxeter(alg)
-        print(f"  {alg}: c2 = {c2}")
+    results = []
+    for name, h11, h21 in MCALLISTER_EXAMPLES:
+        result = test_example(name, h11, verbose=True)
+        results.append(result)
+        print()
 
-    # Test 2: Compute c_i for McAllister's dual polytope
-    print("\n[2] Computing c_i for McAllister dual polytope:")
-    points = load_mcallister_points()
-    print(f"  Loaded {points.shape[0]} points")
+    # Summary
+    print("=" * 70)
+    print("SUMMARY")
+    print("=" * 70)
+    all_passed = True
+    for r in results:
+        status = "PASS" if r["passed"] else "FAIL"
+        errors = f" [{r['errors']}]" if r.get("errors") else ""
+        print(f"  {status}: {r['example_name']:30s} {r['n_divisors']} divisors "
+              f"({r['n_d3']} D3, {r['n_o7']} O7){errors}")
+        all_passed = all_passed and r["passed"]
 
-    poly = Polytope(points)
-    tri = poly.triangulate()  # CYTools computes triangulation
-    cy = tri.get_cy()
+    print()
+    if all_passed:
+        print(f"All {len(results)} examples PASSED")
+        print("c_i values loaded successfully from target_volumes.dat")
+    else:
+        n_passed = sum(1 for r in results if r["passed"])
+        print(f"{n_passed}/{len(results)} examples passed")
 
-    print(f"  h11 = {cy.h11()}, h21 = {cy.h21()}")
-    print(f"  Divisor basis: {list(cy.divisor_basis())}")
-
-    # Without involution (all rigid get c_i = 1)
-    result = compute_c_i_values(poly, tri)
-    print(f"  Total divisors: {result['n_total']}")
-    print(f"  Rigid divisors: {result['n_rigid']}")
-    print(f"  c_i values: {result['c_values']}")
-    print(f"  Rigid indices: {result['rigid_indices']}")
-
-    # Test 3: McAllister ground truth (for primal polytope h11=214)
-    print("\n[3] McAllister ground truth (primal h11=214):")
-    try:
-        stats = get_mcallister_c_i_stats()
-        print(f"  Total in KKLT basis: {stats['n_total']}")
-        print(f"  O7-planes (c_i=6): {stats['n_o7']}")
-        print(f"  D3-instantons (c_i=1): {stats['n_d3']}")
-        print(f"  First 10 c_i: {stats['c_values'][:10]}")
-    except FileNotFoundError as e:
-        print(f"  Error: {e}")
+    return all_passed
 
 
 if __name__ == "__main__":
-    main()
+    success = main()
+    sys.exit(0 if success else 1)

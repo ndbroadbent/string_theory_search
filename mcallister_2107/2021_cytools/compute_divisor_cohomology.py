@@ -4,19 +4,44 @@ Compute divisor cohomology h^i(D, O_D) for toric divisors on CY threefolds.
 
 Method: cohomCalg + Koszul sequence (arXiv:1003.5217, arXiv:2111.03078)
 
-This computes from first principles - no database lookups.
+This computes from first principles using the cohomCalg binary.
+
+NOTE: For the McAllister pipeline, we use the faster COMBINATORIAL method
+in compute_rigidity_combinatorial.py and compute_chi_divisor.py instead.
+This script is a supporting tool for general-purpose cohomology computation.
+
+Validation: Tests against McAllister's kklt_basis.dat (all divisors should be rigid).
 """
 
 import re
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
-from typing import Optional
-
-import numpy as np
 
 # Paths
-COHOMCALG_BIN = Path(__file__).parent.parent / "vendor/cohomCalg/bin/cohomcalg"
+SCRIPT_DIR = Path(__file__).parent
+ROOT_DIR = SCRIPT_DIR.parent.parent
+COHOMCALG_BIN = ROOT_DIR / "vendor/cohomCalg/bin/cohomcalg"
+DATA_BASE = ROOT_DIR / "resources/small_cc_2107.09064_source/anc/paper_data"
+
+# Use CYTools 2021 for consistency
+CYTOOLS_2021 = ROOT_DIR / "vendor/cytools_mcallister_2107"
+sys.path.insert(0, str(CYTOOLS_2021))
+
+import numpy as np
+from cytools import Polytope
+
+# McAllister examples (name, h11_primal, h21_primal)
+# Note: We test DUAL polytopes here (small h11), so 7-51-13590 is included
+# even though its primal is non-favorable.
+MCALLISTER_EXAMPLES = [
+    ("4-214-647", 214, 4),
+    ("5-113-4627-main", 113, 5),
+    ("5-113-4627-alternative", 113, 5),
+    ("5-81-3213", 81, 5),
+    ("7-51-13590", 51, 7),
+]
 
 
 def generate_cohomcalg_input(
@@ -297,127 +322,182 @@ def is_rigid(h: list[int]) -> bool:
 
 
 # =============================================================================
-# MCALLISTER TEST CASE
+# DATA LOADING
 # =============================================================================
 
-DATA_DIR = Path(__file__).parent.parent / "resources/small_cc_2107.09064_source/anc/paper_data/4-214-647"
 
-
-def load_points(filename):
+def load_points(example_name: str, filename: str) -> np.ndarray:
     """Load polytope points from .dat file."""
-    lines = (DATA_DIR / filename).read_text().strip().split('\n')
+    data_dir = DATA_BASE / example_name
+    lines = (data_dir / filename).read_text().strip().split('\n')
     return np.array([[int(x) for x in line.split(',')] for line in lines])
 
 
-def load_target_volumes():
+def load_target_volumes(example_name: str) -> np.ndarray:
     """Load c_i values from target_volumes.dat (1 or 6 = rigid)."""
-    text = (DATA_DIR / "target_volumes.dat").read_text().strip()
+    data_dir = DATA_BASE / example_name
+    text = (data_dir / "target_volumes.dat").read_text().strip()
     return np.array([int(x) for x in text.split(',')])
 
 
-def test_dual():
-    """Test divisor cohomology on McAllister's DUAL polytope (h11=4)."""
-    import sys
-    sys.path.insert(0, str(Path(__file__).parent.parent / "vendor/cytools_latest/src"))
-    from cytools import Polytope
+def test_dual(example_name: str = "4-214-647", verbose: bool = True) -> dict:
+    """
+    Test divisor cohomology on McAllister's DUAL polytope.
 
-    print("=" * 70)
-    print("DIVISOR COHOMOLOGY - McAllister DUAL (h11=4)")
-    print("=" * 70)
+    The dual polytope has small h11 (4-7 for McAllister examples),
+    making cohomology computation via cohomCalg tractable.
+    """
+    if verbose:
+        print("=" * 70)
+        print(f"DIVISOR COHOMOLOGY - {example_name} DUAL")
+        print("=" * 70)
 
-    points = load_points("dual_points.dat")
-    print(f"\n[1] Loaded {points.shape[0]} points")
+    points = load_points(example_name, "dual_points.dat")
+    if verbose:
+        print(f"\n[1] Loaded {points.shape[0]} points")
 
     poly = Polytope(points)
     tri = poly.triangulate()
     cy = tri.get_cy()
 
-    print(f"    h11={cy.h11()}, h21={cy.h21()}")
+    if verbose:
+        print(f"    h11={cy.h11()}, h21={cy.h21()}")
 
     glsm = poly.glsm_charge_matrix()
     n_divisors = glsm.shape[1] - 1
-    print(f"    Divisors: {n_divisors}")
+    if verbose:
+        print(f"    Divisors: {n_divisors}")
 
-    print("\n[2] Computing cohomology via cohomCalg...")
+    if verbose:
+        print("\n[2] Computing cohomology via cohomCalg...")
     all_cohom = compute_all_divisor_cohomology(poly, tri)
 
-    print("\n[3] Results:")
-    for i, result in enumerate(all_cohom):
-        status = "RIGID" if result["rigid"] else "not rigid"
-        print(f"    D{i+1}: h^i={result['h']} -> {status}")
+    if verbose:
+        print("\n[3] Results:")
+        for i, result in enumerate(all_cohom):
+            status = "RIGID" if result["rigid"] else "not rigid"
+            print(f"    D{i+1}: h^i={result['h']} -> {status}")
 
     n_rigid = sum(1 for r in all_cohom if r["rigid"])
-    print(f"\n    Rigid: {n_rigid}/{len(all_cohom)}")
+    if verbose:
+        print(f"\n    Rigid: {n_rigid}/{len(all_cohom)}")
 
-    return all_cohom
+    return {
+        "example_name": example_name,
+        "n_divisors": n_divisors,
+        "n_rigid": n_rigid,
+        "cohomologies": all_cohom,
+    }
 
 
-def test_primal(max_divisors=10):
+def test_primal(example_name: str = "4-214-647", max_divisors: int = 5, verbose: bool = True) -> dict:
     """
-    Test divisor cohomology on McAllister's PRIMAL polytope (h11=214).
+    Test divisor cohomology on McAllister's PRIMAL polytope.
 
-    Validates against target_volumes.dat: c_i=1 or 6 means rigid.
-    Only tests first max_divisors to keep runtime reasonable.
+    The primal polytope has large h11 (51-214 for McAllister examples),
+    so we only test first max_divisors to keep runtime reasonable.
+
+    NOTE: For primal polytopes, the combinatorial method in
+    compute_rigidity_combinatorial.py is much faster and recommended.
     """
-    import sys
-    sys.path.insert(0, str(Path(__file__).parent.parent / "vendor/cytools_latest/src"))
-    from cytools import Polytope
+    if verbose:
+        print("\n" + "=" * 70)
+        print(f"DIVISOR COHOMOLOGY - {example_name} PRIMAL (first {max_divisors})")
+        print("=" * 70)
 
-    print("\n" + "=" * 70)
-    print(f"DIVISOR COHOMOLOGY - McAllister PRIMAL (h11=214, first {max_divisors})")
-    print("=" * 70)
-
-    points = load_points("points.dat")
-    print(f"\n[1] Loaded {points.shape[0]} points")
+    points = load_points(example_name, "points.dat")
+    if verbose:
+        print(f"\n[1] Loaded {points.shape[0]} points")
 
     poly = Polytope(points)
+
+    # Check if favorable (CYTools 2021 requires lattice argument)
+    try:
+        is_fav = poly.is_favorable(lattice="N")
+    except TypeError:
+        is_fav = poly.is_favorable()
+
+    if not is_fav:
+        if verbose:
+            print(f"  SKIP: Polytope is non-favorable in CYTools 2021")
+        return {"example_name": example_name, "passed": True, "skipped": True}
+
     tri = poly.triangulate()
     cy = tri.get_cy()
 
-    print(f"    h11={cy.h11()}, h21={cy.h21()}")
+    if verbose:
+        print(f"    h11={cy.h11()}, h21={cy.h21()}")
 
     glsm = poly.glsm_charge_matrix()
     n_divisors = glsm.shape[1] - 1
-    print(f"    Divisors: {n_divisors}")
+    if verbose:
+        print(f"    Divisors: {n_divisors}")
 
     # Load ground truth
-    target_c = load_target_volumes()
-    print(f"    Ground truth c_i: {len(target_c)} values")
-    print(f"    c_i=1 (D3): {np.sum(target_c == 1)}, c_i=6 (O7): {np.sum(target_c == 6)}")
+    target_c = load_target_volumes(example_name)
+    if verbose:
+        print(f"    Ground truth c_i: {len(target_c)} values")
+        print(f"    c_i=1 (D3): {np.sum(target_c == 1)}, c_i=6 (O7): {np.sum(target_c == 6)}")
 
-    print(f"\n[2] Computing cohomology for first {max_divisors} divisors...")
+    if verbose:
+        print(f"\n[2] Computing cohomology for first {max_divisors} divisors...")
 
-    correct = 0
-    wrong = 0
-
+    results = []
     for i in range(1, min(max_divisors + 1, n_divisors + 1)):
         result = compute_divisor_cohomology(poly, tri, i)
-        computed_rigid = result["rigid"]
+        results.append(result)
+        if verbose:
+            status = "RIGID" if result["rigid"] else "not rigid"
+            print(f"    D{i}: h^i={result['h']} -> {status}")
 
-        # Ground truth: c_i = 1 or 6 means rigid
-        # But we need to map divisor index to target_volumes index
-        # target_volumes has 214 values for the KKLT basis
-        # This mapping is complex - for now just show results
-        status = "RIGID" if computed_rigid else "not rigid"
-        print(f"    D{i}: h^i={result['h']} -> {status}")
+    if verbose:
+        print(f"\n[3] Note: Full validation requires kklt_basis.dat mapping")
 
-    print(f"\n[3] Validation against target_volumes.dat requires basis mapping")
-    print(f"    (target_volumes.dat uses kklt_basis.dat indices)")
-
-    return None
+    n_rigid = sum(1 for r in results if r["rigid"])
+    return {
+        "example_name": example_name,
+        "n_tested": len(results),
+        "n_rigid": n_rigid,
+        "cohomologies": results,
+    }
 
 
 def main():
-    """Test both dual and primal polytopes."""
-    test_dual()
-    test_primal(max_divisors=5)
+    """Test divisor cohomology for all McAllister examples."""
+    print("=" * 70)
+    print("DIVISOR COHOMOLOGY VIA COHOMCALG - MCALLISTER EXAMPLES")
+    print("Computes h^i(D, O_D) using cohomCalg + Koszul sequence")
+    print("=" * 70)
+    print("\nNOTE: This script uses the cohomCalg binary for line bundle cohomology.")
+    print("      For production use, prefer compute_rigidity_combinatorial.py")
+    print("      which is faster and doesn't require external dependencies.")
 
+    # Test dual polytopes (small h11 - tractable for cohomCalg)
     print("\n" + "=" * 70)
+    print("DUAL POLYTOPES (small h11)")
+    print("=" * 70)
+
+    dual_results = []
+    for name, h11, h21 in MCALLISTER_EXAMPLES:
+        result = test_dual(name, verbose=True)
+        dual_results.append(result)
+        print()
+
+    # Summary
+    print("=" * 70)
     print("SUMMARY")
     print("=" * 70)
-    print("Dual (h11=4): cohomology computed for all 8 divisors")
-    print("Primal (h11=214): cohomology computed for first 5 divisors")
+
+    print("\nDual polytopes (full cohomology computed):")
+    for r in dual_results:
+        print(f"  {r['example_name']:30s} {r['n_rigid']}/{r['n_divisors']} rigid")
+
+    print("\nNOTE: Primal polytopes (h11=51-214) are too large for cohomCalg.")
+    print("      Use compute_rigidity_combinatorial.py for primal validation.")
+
+    return True
 
 
 if __name__ == "__main__":
-    main()
+    success = main()
+    sys.exit(0 if success else 1)
