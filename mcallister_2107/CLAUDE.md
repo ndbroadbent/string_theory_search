@@ -261,10 +261,11 @@ Once this works, we can trust the GA to search ~400M polytopes for configuration
 ## What NOT to Do
 
 1. **Don't CHEAT** - never read McAllister's `.dat` files in compute functions (see top of this file)
-2. **Don't put `compute_*.py` in root** - they go in `2021_cytools/` or `latest_cytools/`
-3. **Don't use 2025 CYTools for anything except `compute_gvs()`**
-4. **Don't transform K, M between bases** - just use 2021 basis directly
-5. **Don't delete test/debug scripts** - they're documentation
-6. **Don't use max_deg** - always use min_points for GV
-7. **Don't use float64 for W₀** - it's 10⁻⁹⁰, needs mpmath
-8. **Don't use hardcoded constants from the paper** - compute them from scratch
+2. **Don't REIMPLEMENT** - import from sibling `compute_*.py` scripts, don't duplicate code
+3. **Don't put `compute_*.py` in root** - they go in `2021_cytools/` or `latest_cytools/`
+4. **Don't use 2025 CYTools for anything except `compute_gvs()`**
+5. **Don't transform K, M between bases** - just use 2021 basis directly
+6. **Don't delete test/debug scripts** - they're documentation
+7. **Don't use max_deg** - always use min_points for GV
+8. **Don't use float64 for W₀** - it's 10⁻⁹⁰, needs mpmath
+9. **Don't use hardcoded constants from the paper** - compute them from scratch

@@ -1,0 +1,4041 @@
+Nuclear Physics B359 (1991) 21-74
+North-Holland
+
+A PAIR OF CALABI-YAU MANIFOLDS AS AN EXACTLY SOLUBLE
+SUPERCONFORMAL THEORY*
+Philip C A N D E L A S l, Xenia C. D E LA OSSA l-**, Paul S. G R E E N 2 and Linda P A R K E S t
+
+ITheory Group, Department of Physics, The Unicersity of Texas, Austin, IX 78746, USA
+2Depanmo~t of Mathematics, University of Maryland, College Park, MD 20742, USA
+Received 31 October 1990
+(Revised 1 February 1991)
+
+We compute the prepotentials and the geometry of the moduli spaces for a Calabi-Yau
+manifold and its mirror. In this way we obtain all the sigma model corrections to the Yukawa
+couplings and moduli space metric for the original manifold. The moduli space is found to be
+subject to the action of a modular group which, among other operations, exchanges large and
+small values of the radius, though the action on the radius is not as simple as R ~ 1 / R . It is a - ~
+shown that the quantum corrections to the coupling decompose into a sum over instanton
+contributions and moreover that this sum converges. In particular there are no "'sub-instanton'"
+corrections. This sum over instantons points to a deep connection between the modular group
+and the rational curves of the Calabi-Yau manifold. The burden of the present work is that a
+mirror pair of Calabi-Yau manifolds is an exactly soluble superconformai theory, at least as far
+as the massless sector is concerned. Mirror pairs are also more general than exactly soluble
+models that have hitherto been discussed since we solve the theory for all points of the moduli
+space.
+
+1. Introduction
+The discovery of mirror symmetry [1-3] among pairs of Calabi-Yau manifolds
+goes a long way towards resolving a long standing puzzle. A Calabi-Yau manifold .,~/possesses a certain number of parameters. These are parameters associated with the structure of ¢~' as a complex manifold and parameters corresponding
+to the deformations of the K/ihler metric of f / . These parameters, which are
+related to the cohomology of/~', give rise to families and antifamilies of particles
+in the effective low-ener~ theory that results from compactification of the string.
+The parameters corresponding to deformations of the complex structure are
+related to the cohomology group H 21 of (2, 1)-forms while the parameters corre* Supported in part by the Robert A. Welch Foundation and NSF grants PHY-880637 and PHY8605978.
+** Present address: Escuela de Fisica, Universidad de Costa Rica, San Pedro de Monies de Oca,
+Costa Rica.
+0550-3213/91/$03.50 © 1991 - Elsevier Science Publishers B.V. (North-Holland)
+
+22
+
+P. Candelas et al. / Calabi-Yau manifolds
+
+sponding to deformations of the K~ihler form correspond to the group H ~j of
+(1, 1)-forms. The Yukawa couplings of the low-energy theory correspond to certain
+cubic forms on the cohomology ring [4]. There are no couplings between the two
+different sorts of parameters, so the Yukawa couplings come in two types. The
+puzzle has been that the two types of couplings are very different both at a
+mathematical level and with regard to renormalization. The couplings corresponding to the complex structure parameters vary with the parameters and are not
+renormalized either in loops or by instantons. By contrast the couplings corresponding to the K~ihler class are topological numbers that are integers in an
+appropriate basis and which a r e renormalized by instantons [5-7]. In this sense
+one might describe analysis based on a Calabi-Yau manifold as being "half exact".
+However, since both .d" and its mirror 71/', for which the roles of the two types of
+parameters are exchanged, correspond to the same superconformal theory, one
+can combine the calculations and obtain exact results. One can compute both types
+of Yukawa couplings by calculating the couplings for the complex structure
+parameters of ¢/e' and then computing the remaining couplings, complete with their
+sigma model corrections, by computing the couplings corresponding to the complex
+structure parameters of 7r. The suggestion that Calabi-Yau manifolds should
+arise in mirror pairs was made by Dixon and Gepner [8] and by Lerche et al. [9].
+The latter paper also uncovered the chiral ring structure of the superconformal
+theories. It is the identification of the chiral ring of the superconformal theory with
+the cohomology ring of (2, 1)-forms [10] on the Calabi-Yau manifold that enables
+us to perform exact calculations by means of geometrical methods.
+Of course if the Yukawa couplings were all we could compute then the results
+would not be very significant since we need also to be able to compute the metric
+on the parameter space, which appears in the kinetic terms of the sigma model, in
+order to correctly normalize the fields. Fortunately an extension of the nonrenorrealization theorem that ensures that the superpotential does not receive sigma
+model corrections enables us to compute also the k:,r,~t,:c terms. The observation
+that the existence of mirror manifolds permits the calculation of both types of
+couplings has been made independently by Greene and Plesser [2], and also in the
+interesting article by Aspinwall eta!. [3], who consider a mirror pair of manifolds
+with A"= +40 that has several parameters and show that, in an appropriately
+defined large complex structure limit, the Yukawa couplings for the complex
+structure parameters of the mirror manifold coincide with the topological couplings of the original manifold. One of the new elements of the present work is
+that we are able to solve, in the context of a particular example, for the Yukawa
+couplings and the metric on the parameter space for all values of the complex
+structure.
+This article is devoted to a discussion of these issues in the context of the
+solution of the conformal field theory of a particular example of a mirror pair of
+Calabi-Yau manifolds. We take for the manifold f l the quintic threefold P4(5),
+
+P. Candelas et al. / Calabi-Yau manifolds
+
+23
+
+which has b~ = l, b2m- 101 and Euler number - 2 0 0 . The mirror ~" of th~
+manifold is known in virtue of a construction due to Greene and Plesser [2]. The
+mirror ~ f has b~m = 101, b e ~ - 1 and Euler number + 200. What we do here is
+calculate the prepotential for the complex structure parameter of ~ By mirror
+symmetry this yields the fully corrected prepotential for the original manifold ~r.
+Although we concentrate on a specific and simple case we befieve that many
+features of our results are of general validity.
+Since the present work is somewhat beset by detail we list here the salient results:
+(i) The metric and the Yukawa couplings are computed complete with all sigma
+model corrections for all points in the parameter space. There is a particular value
+of the parameter for which the appropriate conformai field theory is the Gepner
+model 3 5 and for this value we find agreement with the known coupling for this
+model.
+(ii) It is found that a modular group, F, acts on the parameter space. Among
+other operations F exchanges large and small values of the radius. This is of
+interest because it is relevant to the conjectured existence of a minimum fundamental length in string theory. The existence of a modular group has been noted
+previously for the case of orbifolds [11], and some consequences of modular
+invariance and the possibility that Calabi-Yau manifolds would also be subject to
+a modular group has been examined in a number of papers [12]. The modular
+group F however is not the group SL(2, 7/), as had previously been anticipated in
+the literature, and the operation is not as simple as R - , 1/R.
+(iii) The exact Yukawa coupling admits a decomposition into a sum over
+instantons. The sum converges to the exact value so there are no "sub-instanton"
+contributions to the coupling or prepotential. Moreover the decomposition of the
+coupling into a sum over instanton contributions seems to indicate a deep connection between the automorphic functions of the modular group and the rational
+curves (instantons) of .#/. As an illustration of this we seem to be able to read off
+from our resu!ts the numbers of rational curves of each degree. This is quite likely
+of mathematical interest.
+(iv) We abstract from the particular pair of Calabi-Yau manifolds studied here
+an expression for the fully corrected Yukawa coupling, which we conjecture to be
+of general validity. The fundamental object from which the corrected coupling derives is not so much the "bare" manifold but rather a "quantum manifold" consisting of the bare manifold together with its rational curves. In physics-speak this
+is just the statement that the quantum manifold is the bare manifold together with
+all world-sheet instantens. However this statement is rendered more precise and
+seems to be in line with recent developments in mathematics (for a review see [13]).
+The layout of this paper is as follows: in sect. 2 we review the construction of the
+mirror 7// and discuss the rudiments of the geometry of its space of complex
+structures. A feature that is important for the three-dimensional case is the
+existence of finite points in the parameter space corresponding to singular
+
+24
+
+P. Candelas et al. / Calabi-Yau manifolds
+
+Calabi-Yau manifolds. We describe here also the large complex structure limit
+of .g/. The detailed structure of the metric and Yukawa couplings derive from a
+discussion of the homology of ~ and a computation of the holomorphic three-form
+from which the prepotential is constructed. This is done in sect. 3 and the metric
+and couplings are derived from the prepotential in sect. 4. We turn in sect. 5 to
+a comparison of the metric and couplings with the " b a r e " quantities appropriate
+to / f . For the couplings we identify the quantum corrections with the contributions of instantons. For the metric, in addition to the exponentially small terms,
+there is also a loop correction similar to the "four-loop term" found in another
+context by Grisaru et al. [14]. We also extend the standard nonrenormalization
+theorem to show that the four-loop term is the only loop term to affect the
+prepotential. In sect. 6 we present a speculative proposal for a mechanism to
+achieve a small breaking of supersymmetry at low energies. We have included this
+proposal here even though it is logically separate from the issue of mirror
+symmetry because the mechanism is based on a non-K~ihler resolution of a
+conifold, and the conifold that arises in the study of the mirror manifold of P4(5) is
+of precisely the type to which such a non-K~ihler resolution is appropriate. Finally
+two appendices deal with a more detailed description of the homology of 7//" and
+with further properties of the periods of the holomorphic three-form.
+
+2. The mirror of P4(5)
+Let M = P4(5) be the family of manifolds that can be represented as quintic
+hypersurfaces in P4. There are 101 parameters associated with the complex
+structure of these manifolds, which in this case can all be thought of as the
+coefficients of the quintic polynomial (see e.g. ref. [10], and references to the
+original literature cited therein). There is also one parameter associated with
+the choice of K~ihler class which in this case can be thought of as the radius of the
+P4. To construct the mirror manifold [2] we start with a one-parameter subfamily
+M~ of quintic hypersurfaces given by the polynomials
+5
+
+5
+
+p = ~_, XSk -- 5#/ 1--I X k .
+k=l
+
+(2.1)
+
+k=l
+
+These hypersurfaces are invariant under the symmetry group* generated by
+g0- (1,0,0,0,4),
+g ~ - (0, 1 , 0 , 0 , 4 ) ,
+g2 = (0,0, 1 , 0 , 4 ) ,
+g3 = (0,0,0, 1,4),
+* We owe this choice of generators to B.R. G r e e n e .
+
+(2.2)
+
+P Candelas et al. / Calabi-Yau manifolds
+
+where the ith entry is the power of the fifth root of unity multiplying the ith
+coordinate. For example, gl represents the 7/5 action
+
+( XI,X2,X3, X4,X5) .---->(Xl,OlX2,X3, X4,014Xs)
+where a = e 2 ~ ' i / 5 . In virtue of the fact that the product of all the g's multiplies the
+homogeneous coordinates by a common phase, only three of these are independent so we can choose to work with g~, g2 and g3, say. Note also that the quintic
+polynomial (2.1) is in fact the most general quintic invariant under these identifications. A family W of mirror manifolds is then obtained by taking the quotient of
+each Calabi-Yau manifold .~/~, in M~ by the group 2r3 generated by g~, g2 and g3The procedure for dividing out by the 7/5% involves cutting out the curves and
+points of the manifold which are left invariant by the symmetries. After making the
+2e3 identifications, the curves and points are replaced by their smooth equivalents.
+The action of the 7/3 has the 10 fixed curves
+Cij k
+
+x5i -l- x 5 ~t_ X k5 = 0 ,
+
+•
+
+i, j, k distinct.
+
+Each of these curves is a P2(5) and is invariant under a Z 5 subgroup. These fixed
+curves meet in the 10 fixed points
+Pij"
+
+i, j distinct
+
+x5 + x5 --- O,
+
+(there are in fact only ten of these points owing to the identifications (2.2)), each
+being left invariant by a 7/5 × 7/5 subgroup. Each fixed curve contains 3 fixed
+points, and 3 fixed curves meet in each of the fixed points. We will take care of the
+curves and the points separately, so we need to know the Euler number of the
+curves less the points. This is simply
+
+x(P
+
+(5) ) - 15
+
+-
+
+-
+
+25.
+
+Also, we need to know how the 7/5% act on the curves. One leaves the curve
+invariant and the other two identify it with itself. Thus we calculate the Euler
+number of the mirror manifold to be
+-
+
+X=
+
+2 0 0 - 10 x 5 - 10 x ( - 2 5 )
+
+5 ×5 ×5
+
+( - 25) x 5
+
++ 10 ×
+
+25
+
+5 x 25
+
++ 10 × ~
+
+5
+
+= +200.
+
+A curious fact is that the Euler number of P4(5) minus the fifty points and ten
+curves is zero*.
+* P.S. Aspinwall informs us that this is a general feature of constructing a mirror manifold by starting
+with a manifold . ~ and dividing by a symmetry group. The noncompact manifcld that remains after
+removing the fixed points and fixed curves has Euler number zero.
+
+P. Candelas et al. / Calabi-Yau manifolds
+
+26
+
+One naturally wonders if there are other ways of presenting this manifold. There
+are in fact two ways of constructing the manifold as a hypersurface in weighted
+Pa'S. If we set
+(X1,X9
+
+_,
+
+Xa'X4'X5)
+
+= (Yl
+
+y~/5, y4/5y~
+3
+
+,.
+
+,,4/5,,1/5 ~,4/5,,!/5 y4/5~
+
+5/5, y3
+
+.r4
+
+,.r4
+
+.rE
+
+,
+
+5
+
+J,
+
+the transformation being well defined in virtue of the identifications (2.2) (indeed
+the transformation was chosen so as to incorporate the identifications in a natural
+way), then the defining equation becomes
+5
+
+P
+
+__
+
+5y
+
+4
+
+4
+
+Yl 3 + yay5 + yay4 + Y4Y2 + Y5
+
+-
+
+-
+
+50 I I Yk,
+k=l
+
+and on reflection we see that the manifold is p4(41"48' 51' 52' 64)(256). Similarly, one can
+also show* that the mirror manifold is also p4t51'6°'64"65"8°)(320) (thereby showing
+that the two weighted hypersurfaces are biholomorphic). In this case the coordinate transformation takes the form
+( X I , X 2 , X 3 ' X4,~g5) __ (WIWI4/5 ' ",2, , 4 / 5 , 'v5
+, , 1 / 5 ' W 3 ' t4,4/51,,1/5
+"'4
+"2
+'W4/5)'
+
+and the polynomial is
+5
+
+p = w w4 + w n w 5 + w 5 + wnw
+
++ w4 -
+
+1-I
+k=l
+
+These weighted projective spaces appear in the tables of ref. [16] and have Euler
+number +200 and bll = 101. We find it most convenient to work with the original
+form (2.1) of the polynomial p, though we have to bear in mind that this form
+refers to a covering space of 7/:. To get to 7/: itself we must make the identifications (2.2).
+One of our aims is to describe the space of O's, that is the space W of complex
+structures of ~',~. The first thing to note is that 0 and aO correspond to the same
+complex structure since the replacement 0 ~ a 0 is equivalent to the coordinate
+transformation
+(XI , X 2 , X3,X4,X5)
+
+"~ ( o l - l x 1 , X 2 , X 3 , X 4 , X 5 )",
+
+(2.3)
+
+in other words, we learn that the true coordinate is 0 5.
+To describe the geometry of W, it is important to note that there are special
+values of 0 for which 7/:, is singular. This occurs when the quintic (2.1) fails to be
+* F o r a m o r e g e n e r a l discussion o f t h e s e t e c h n i q u e s see ref. [15].
+
+P. Candelas et al. / Calabi-Yau manifolds
+
+27
+
+transverse. That is the case when the five equations
+
+Op
+~=0,
+
+k= 1,...,5
+
+(2.4)
+
+ax k
+
+are simultaneously satisfied. These equations imply that
+5
+.
+
+.
+
+I-Ix ,
+
+.
+
+(2.5)
+
+k=l
+
+whence
+5
+
+H
+k=l
+
+5
+5
+H
+x,<.
+k=l
+
+If ~b is finite then none of the x i may be zero for if one were zero then by eq. (2.5)
+all would be zero, which is not allowed. It follows that (2.4) can only be satisfied if
+~5 = 1. If we take ~, = 1 say, then returning to (2.5), we see that
+Xk = olnk '
+
+Ellk
+
+= O.
+
+These points are all identified under the identifications (2.2) so that 7/" at ~ = 1
+has only one singular point which we may as well take to be the point (1, 1, 1, 1, 1).
+The singularity is a node, that is a point for which p and d p both vanish but the
+matrix of second derivatives is nonsingular. For these values of ~,, the corresponding 7//" is a conifold [17]. This type of singular C a l a b i - Y a u manifold has been
+described in some detail in refs. [17, 18]. For our present purpose it suffices to
+recall that a neighborhood of the node is locally a cone with base s Z x S 3. For
+values of ~ near ~b = 1, say, the situation is as in fig. 1. There is an S 3 which
+shrinks to zero as ~b ~ 1.
+
+~.--~.lA2
+
+= S3
+
+$2
+Fig. 1. The singular point of the conifold has a neighborhood that is a cone with base S 2 x S 3. For
+- 1 small but nonzero the node is replaced by a sphere of radius O((g, - 1)1/2).
+
+~,8
+
+P. Candelas et al. / Calabi-Yau manifolds
+
+Fig. 2. A heuristic sketch, drawn as a tetrahedron, of the large complex structure limit of ~'~. Before
+identification under the 7/~, the space consists of 5 IPa's meeting in 10 F2's meeting in 10 P~'s meeting in
+5 points.
+
+The value qs = o0 corresponds to the singular quintic
+~,,XP~: X I X 2 X 3 X 4 X 5 -- 0 ,
+
+which, before identification under the 7/3, consists of 5 F3's meeting in 10 ~2'S
+meeting in l0 Pi's meeting in 5 points. A lower-dimensional heuristic sketch is
+given in fig. 2. We shall see later that 7f~ is the large complex structure limit of
+7E~, and is the mirror of the large-radius limit of ~g/.
+2.1. RUDIMENTS OF THE HOMOLOGY
+
+The structure of the moduli space of a Calabi-Yau manifold reflects the
+homology of the manifold. Recall that the complex structure of the manifold can
+be described by giving the periods of the holomorphic three-form over a canonical
+homology basis [17,19,20]. More precisely, we can proceed, for the case under
+consideration for which bzt(Tf) = 1 and b 3 ( T f ) = 4 , as follows. We choose a
+symplectic basis (AI,A2, BI, B2 ) for H3(~'//', 7/) such that
+A" n B b = 6" b ,
+
+A" n A b = 0,
+
+B,, n B b = 0.
+
+Let (ao, f i b ) be the cohomology basis dual to that above so that
+
+f
+
+A 'Ozb = r~ah ,
+
+fB fl b = 8 " b ,
+u
+
+(2.6)
+
+P. Candelas et al. / Calabi-Yau manifolds
+
+29
+
+with other integrals vanishing. Then it follows that
+f~,fll a A fib = t~ab '
+
+Ola A Olb = 0"
+
+f~7/[Ja A ~ b "- 0 .
+
+Important in the following is the holomorphic three-form O. Being a three-form,
+may be expanded in terms of the basis
+O = zaa.
+
+-
+
+,~b)
+
+The coefficients (z a,
+are the periods of O, so called because they are given by
+the integrals of O over the homology basis,
+
+za=~2,
+
+~b=fBg.
+
+(2.7)
+
+We have more periods than parameters. For the present case we have b 3 = 4
+periods but we know there is only 1 ( = b2~) parameter for the complex structure.
+We therefore choose to regard the ~'b as being functions of the z a, ~'b = ~'b(Z~)This leaves us with the z ~ as independent periods. We still have one parameter
+too many but this turns out to fit in quite well. The scale of O is not defined. In
+reality/2 is a section of a line bundle over the moduli space [21]. There is a gauge
+invariance associated with D due to the fact that O is undefined up to multiplication by an arbitrary holomorphic function of the parameter
+
+a(,)
+
+(2.8)
+
+and we can regard the two z a as projective coordinates for ,O. The , ~ and ~2 are
+then homogeneous of degree one as functions of the z~,
+o (
+
+z ) =
+
+a ( z ) ,
+
+(
+
+z ) =
+
+(z ) ,
+
+and it can be shown [17, 20] that the $'b are the gradients of a prepotential $'(z)
+that is homogeneous of degree two,
+0~
+=
+
+$'a = ~za
+
+,
+
+For the situation at hand for which the manifold can be represented by a single
+polynomial, there is a well-known representation for the holomorphic three-form
+[4, 10]. We make the specific gauge choice
+/2 = 5~
+
+x 5 dx~ A d x 2 A dx 3
+Op //OX 4
+
+(2.9)
+
+30
+
+P. Candelas et al. / Calabi-Yau manifolds
+
+We shall have more to say about the gauge invariance in the following. For the
+present however, (2.9) is a convenient choice because the replacement ~ -o aft, can
+be undone by the coordinate transformation (2.3). Thus
+
+=a(,).
+As a choice of basis we take A z to be the S 3 that shrinks to zero as g, -o 1. The
+cycle B z is then a three-cycle that intersects this S 3 in a point. The "tip" of B 2, the
+rest of which lies outside the neighborhood, is indicated by the shading in fig. 1.
+The other basis cycles _AI and B. do not intersect the S 3 and can be taken to lie
+outside the neighborhood. We are concerned about the monodromy of the basis
+about ~ = 1, say. Under transport about g, = 1, the S 3, being unambiguously
+defined for each value of 6, will return to the same cycle. The cycle B 2 on the
+other hand is really only defined as being the dual of the A 2, so nothing prevents
+B z from aquiring a multiple of A 2. Thus
+A2~
+
+A2 ,
+
+B 2 --~ B 2 +
+
+n A2 ,
+
+for some integer n. The remaining cycles A I and B I are remote from the node and
+so are unaffected by this process. The monodromy of the basis induces a monodromy for the periods (2.7),
+1
+
+0
+
+0
+
+"~'2
+
+0
+
+1
+
+0
+
+n
+
+if2
+
+Z I
+
+0
+0
+
+0
+0
+
+1
+0
+
+0
+1
+
+z~
+z2
+
+Z2
+
+(2.10)
+
+We shall see later that the periods, as functions of 0, satisfy a linear differential
+equation which has a singularity at g, = 1. The relation (2.10) can be understood to
+describe the monodromy of the solutions of the differential equation about the
+singular point. Such monodromy is familiar, expressing the fact that some of the
+solutions of a differential equation in the neighborhood of a singularity contain
+logarithms and hence are multivalued.
+
+2.2. T H E M O D U L A R G R O U P
+
+It is convenient to adopt a matrix notation and to define a period vector
+
+]-/--
+
+~2
+Z!
+Z2
+
+(2.11)
+
+P. Candelas et aL / Calabi-Yau manifolds
+
+31
+
+We have just argued that under transport around @ = 1 the period vector undergoes a transformation H - - . T H . The matrix T is symplectic, since the transformation must preserve the intersection numbers (2.6), and it is also integral, since the
+homology basis is integral. We have observed also that @ and a~b correspond to
+the same manifold. It follows that
+
+n(a~,) =AH(~,),
+with A an integral symplectic matrix such that A 5 = 1. We will obtain the precise
+form of A in sect. 3 but for the present it suffices to remark that it is not the
+identity, neither is T, since we will also find that the integer in (2.10) has the value
+unity. The two matrices A and T generate a modular group F that acts on the
+period vectors, and also on the universal covering space of W, which may be
+identified with the upper half-plane in such a way that F acts by hyperbolic
+isometrics. We shall denote the operations of replacing @ by a@ and of analytic
+continuation about O = 1 by o~" and g . These operations are represented by the
+matrices A and T. However, care is required when composing the operations since
+the matrices compose "backwards". For example
+
+g(~'n) = g ( A n )
+
+=A(9-//) =ATII.
+
+Transport about @ = a* corresponds to the operation ~e'k3-~'-k and hence to the
+matrix
+T, = .4 - k T A k ,
+
+(2.12)
+
+and the matrix T~ corresponding to transport about @ = o0 follows from the
+observation that a sum of loops around the fifth roots of unity and around infinity
+is contractible. Hence
+T ~ ' = T4T3T2T, T = ( A T ) 5 .
+
+(2.13)
+
+Thus there are no new generators corresponding to these operations. ~,5 is a
+modular invariant of F but we can pass to a modular parameter 3' = 3'(~b) such
+that the action of F on 3' is represented by 2 × 2 matrices acting on the upper half
+3'-plane. Since s¢ 5 = 1 we represent it as
+
+A= _
+
+cos ( 2 7 r j / 5 )
+
+sin ( 2 7 r j / 5 ) I
+
+- sin ( 2 7 r j / 5 )
+
+cos ( 2 7 r j / 5 ) ] '
+
+where the minus sign is of no consequence in virtue of the projectivity of the
+representation, and j is an integer, 1 -<<j~< 4. Since j k is never the identity for
+any k :# 0, 3- acts on the upper half-plane as a "deck transformation" of infinite
+order. Some composition of 3- with powers of ~ may therefore be represented by
+
+32
+
+P. Candelas et al. / C a l a b i - Y a u manifolds
+i:i:]~ii~:i.]:ii!~i.:
+
+!:ii:i~iii~i:ii!ii~?
+
+ili]!i~iii]iiiiii~]~!
+................
++:~+:+:.:,::
+
+Fig. 3. The fundamental regions for the group generated by ,~.e' and ,~- consist of a pair of triangles.
+The circles intersect the real axis where y = tan (rrr/10), r = - 4 . . . . . 4. If we take the shaded region to
+be the fundamental region, the points ~ = (0, l, ~, a) map to y = (i, tan (27r/5), ~, - t a n (2rr/5), respectively.
+
+a matrix of the form
+
+0
+
+1 "
+
+The magnitude of the translation is fixed by the fact that a fundamental region for
+the normal subgroup of F generated by 3- is a ten-sided polygon whose sides are
+permuted by ~ . This amounts to considering the images under ~v', o~/2, o~3 and
+S~ 4 of the imaginary axis and then demanding compatibility with ~ . Fundamental
+domains of F are illustrated in fig. 3.
+The explicit form of 3'(qJ) may be found by seeking a map that maps the entire
+~bS-plane into a pair of triangles. This is a standard procedure in the theory of
+aut,omorphic functions involving triangle functions [22]. If the fundamental region
+for 3' is taken to be the shaded region in fig. 3 then the relation is
+Z 1 - a-Z2
+
+y =i
+
+Zl + a 2 Z 2
+ze
+
+~
+
+3
+
+E r(,,+~)r(,+~)
+,,=o
+(n!)2tO 5"
+= _~.it a n ( 2 r / 5 ) / l o g ( ~ 5 )
+
+i-n-+
+
+[2qr(n+l
+~c
+
+y,
+,,=0
+
+.~) q r ( n + ~ ) ]
+) - 7r(n + 2 _
+3
+
+~
+
+3
+
+(n!)2~/tS''
+
+(2.14)
+where the second equality is valid for I6l > 1, ~ denotes the digamma function,
+
+P. Candelas et al. / Calabi-Yau manifolds
+
+33
+
+and Z t and Z 2 a r e defined in terms of Gauss' series,
+
+ZI = r2(})2F,(5,5,
+/-,(4)
+2 2.4.5, 5) ,
+
+Fz(
+)2F,(5,5,5,
+r(6)
+'
+
+We may now complete the specification of the matrices A and T. Recall that z¢
+maps 0 to a 0 and ~ transports ff about ~ = 1. It is straightforward to compute
+the effect of these operations on y in virtue of (2.14) and the standard analytic
+continuation formulae for the hypergeometric function*. If we require that the
+action of A is to rotate fundamental regions by 2r r / 5 about the fixed point y = i,
+then it turns out that j = 3 and we find
+77"
+cos~A
+
+7"/"
+-sin~-
+
+"/r
+sin~-
+
+A T = ( 10
+
+-2tan(27r/5)).l
+
+cos~-
+
+These relations define the representation. It is easy to check also that
+A3TA_3 = (
+
+1
+-2tan(2zr/5)
+
+0)
+1 '
+
+from which we see that the various monodromy matrices are conjugates of the
+matrix on the right.
+The upper half-plane may be mapped to the interior of the unit circle by the
+transformation
+~=a3( I+iy )
+Z2
+1 iy
+Z!
+the fundamental regions of F are then as illustrated in fig. 4. In this representation
+the action of ~¢ is simply that of multiplication by a.
+We defer further discussion of F to sect. 5, save to observe that F which might
+be termed the quantum modular group is not SL(2, Z), which had previously been
+suggested as the modular group, based on its action on the "bare" moduli space of
+
+P4(5).
+In order to find the explicit form of the metric we need to evaluate explicitly the
+periods of ~2. it is to this that we now turn.
+* If we set
+
+r2(a)
+
+f(a; ~') = -~2a~2F.(a,a;2a:;),
+then the essential relation is
+:Tf(a;~.)=f(e;~)-itanrra{f(a;~)-~'-2"f(1
+
+- a;~')}.
+
+34
+
+P. Candelas et al. / Calabi-Yau manifolds
+
+~3~-~
+
+Fig. 4. Fundamental regions of I" in the unit disk.
+
+3. The periods
+We begin by specifying more carefully the A 2 and B 2 of our symplectic basis. A 2
+is the S 3 that degenerates to zero at the conifold point qJ = 1 and B 2 is a certain
+torus associated with the degeneration of the manifold as q / - , ~.
+A 2= {xl, lx 5 = 1 ,
+x ireal, i=1,2,3,
+X4 given by the branch of p ( x ) = 0 that is an $3 as q~ ~ 1}.
+
+(3.1)
+
+Consider first the case that ~b - 1 is real, positive and small. Then by writing
+Yl
+
+Xl
+
+Y2 +
+
+Y4
+5~
+
+x2=l+
+
+x3=l+
+
+x4=l+
+
+'
+
+Yl
+
+Y2
+
+¢i-6
+
+s
+
+Yl
+1--~+
+
+Y3
+
+Y4
+
+5
+
+5~'
+
+Yi
+
+Y3
+
+Y4
+
+lfi-6
+
+5
+
+5v '
+
+-I
+
+Y4
+
+5V3-6 '
+
+and keeping lowest-order terms, we see that
+4
+
+E Y2 = 5(q/- l),
+k--I
+
+(3.2)
+
+P. Candelas et at / Calabi-Yau manifolds
+
+35
+
+which is manifestly a n 5 3. The qualification in the definition of m2 concerning the
+branch is necessary, owing to the fact that the surface p(x)= 0 for x~ real has
+disconnected components, as is easily seen by observing that the line
+(Xl,--Xl,O
+
+, -1,1)
+
+is remote from the point (1, 1, 1, 1, 1) and yet identically satisfies p(x) = O.
+On integrating the t h r e e - f o r m / 2 over A 2 we find
+
+z2(¢') = fAf l
+~.2
+
+5 3 / 2 ( 4 ' - 1) + . . . .
+
+(3.3)
+
+The leading term may be obtained by integrating the zeroth-order locus (3.2), and
+the higher terms may be calculated systematically by means of an iteration scheme.
+Shortly we shall give an exact expression for z2(4') in terms of hypergeometric
+functions.
+For B 2 we take the cycle
+B 2 = {xklx5 = 1, Ixil = I x 2 [ - I x 3 l - 3 ,
+X4 given by the solution to p ( x ) = 0 that tends to zero as 4' ---, ~}.
+
+(3.4)
+
+To understand the condition on the branch of the solution, set x4 = (4'XIX2X3)I/4~
+and write the equation p = 0 in the form
+
+5
+
+(1
+=
+
+5(4'x x2x3
+
+)5/4
+
++ --,
+5
+
+(3.5)
+
+from which it is clear that to leading order as 4' --> 0% there is a solution for ~: given
+by the first term on the right-hand side of eq. (3.5). Thus there is a branch for x 4
+with x4 = O ( 4 ' - ! ) a s 4' ~ 0~ for fixed x I, x2, x3. On the other hand, by rearranging
+the equation p = 0 into the form
+
+s~4=5 -
+
+( l + x t 5+ x ~ + x 3 5)
+( 4'XlX2X3)5/4~
+
+we see that there are four branches for x 4 that are O(4, !/4) as 4'--> oc for fixed
+(x~,x2, x3). At this stage it is far from clear that, as defined, B 2 meets A 2 in a
+single point. Showing that it does, requires a more detailed discussion of the
+
+P. Candelas et at / Calabi-Yau manifolds
+
+36
+
+homology than we wish to give here, so we defer the demonstration of this fact to
+appendix A. We turn instead to a computation of the periods.
+We have
+
+def( .Q
+
+-- fB
+--
+
+d x i dx2 dx3
+(3.6)
+
+2 X I X 2 X 3 __ d / _ l X 4 .
+
+A comment regarding the orientations of the cycles A 2 and B 2 is necessary here.
+The cycles do not possess an intrinsically defined orientation so a choice must be
+made. We have already implicitly fixed the orientation of A 2 by eq. (3.3). This in
+turn fixes the orientation of B 2 since we require that A 2 n B 2 = + 1. The choice
+made in the second of eqs. (3.6) is consistent with this. As ~, --->~ we see that the
+term involving ~, can be neglected and hence
+~'2 ~ ( 2 " n ' i / 5 ) 3 ,
+
+the factor of 5 -3 arising from the 7/3 identifications. For ~ large the integrand can
+be expanded in powers of (~:4/~). sr can itself be computed as a power series in
+0-~ in virtue of an iteration based on eq. (3.5). The result is of the form
+
+Ea,,f
+=0
+
+d x , dx z dx 3 (1 + xl5 + xz5 + X5)
+4n3
+
+(
+
+t!
+
+XIX2X31[
+
+I
+
+We evaluate the integrals by residues. The only term in the quantity
+(1 + xl5 + xz5 + X5)
+4n3
+that contributes is the term x~
+.5,.~25,.~35,, which appears with coefficient ( 4 n ) ! / ( n ! ) 4.
+Thus
+
+27ri ) ~
+~'2=
+
+(4n)!
+
+---5-- n=0Y'a,,
+~ (n'.)41/j5n
+
+The surprise is that when the a , are calculated and substituted into this expression, we find
+( 27ri ) 3 n ~ °
+(5n)!
+~'2 = ---if-- _- ( n ! ) 5 ( 5 0 ) 5 . ,
+and the series on the right converges for 101 >/1.
+
+(3.7)
+
+P. Candelas et al. / Calabi-Yau manifolds
+
+37
+
+The function that appears on the right-hand side of eq. (3.7),
+~ro(0) deal E
+
+(5n)!
+
+[0[ > 1,
+
+0 ~ arg 0 < 2~-/5,
+
+(3.8)
+
+n=O
+
+satisfies a linear differential equation of generalized hypergeometric type and it is
+useful to take advantage of this fact in order to write down a complete set of
+periods. The restriction on arg 0 anticipates that analytic continuation of too(0)
+will lead to branch cuts. The fact that periods of the type we are discussing satisfy
+linear differential equations with regular singular points is a very general property
+[23]. For the case at hand it is straightforward to check that
+
+3) d 3
+
+d
+
+2(4z-
+
+dz 4
+
+z(1-z)
+
+dz 3
+
+( 7 2 z - 35) d 2
+5z2(1-z)
+
+5) d
+
+(24z-
+
+dz 2
+
+24
+
+5-~--1 - - z ) d-z
+
+)
+
+625z3-(i-z)
+
+m°=0'
+
+(3.9)
+
+where z - 0-5. It is compelling to assume that all four periods satisfy this same
+equation, a fact that we shall assume for the present but verify shortly. Either
+directly from the equation or from the associated Riemann symbol
+0
+0
+
+o0
+~i
+
+1
+0
+
+0
+
+25
+
+1
+
+0
+
+3
+
+5
+
+2
+
+0
+
+4=
+
+1
+
+0 -5
+
+(3.10)
+
+we observe that the equation is of generalized hypergeometric type. Recall that the
+generalized hypergeometric equation of fourth order is
+{ 0 ( 0 + c I - 1 ) ( 0 + c 2 - 1 ) ( 0 + c 3 - 1)
+-z(O
+
+where 0 - z d / d z
+
++a,)(O
+
++ a2)(O + a3)(O + g4)}W = O,
+
+and the associated Riemann symbol is
+0
+0
+
+oo
+a!
+
+1
+0
+
+1 - c!
+
+g2
+
+1
+
+1
+
+c2
+
+a3
+
+2
+
+c3
+
+a4
+
+~_~Cj-~.,a k
+
+z
+
+P. Candelas et at / Calabi-Yau manifolds
+
+38
+
+The solutions of the differential equation (3.9) can be written in terms of the
+generalized hypergeometric function [22,24]
+
+r(c~)r(c2)r(c3)
+
+)F3(a,,a2,a3, a4; Ci,C2,C3 " ~ ) -- r( a,)r( a2)r( a3)F( a4)
+x }2 g ( a , + n ) r ( a 2 + n ) r ( a 3 + n ) r ( a 4 + n ) ~"
+F(Cl + n)F(c2
+
+n=O
+
++ n)r(c3
+
++ n)
+
+n!
+
+In fact we have
+,tiTO( ~r ) - - 4 F3 (,5 ' 2
+5' 3
+5 ' 4.1
+5 ' ' 1 ' 1 '" 1 / 0 5 )
+
+(3.11)
+
+as is easily verified with the aid of the multiplication formula for the r-function in
+the form
+
+r ( z ) r ( z + 1/5)r( z + 2/5) r( z + 3/5)r( z + 4/5)
+
+=
+
+(27r)251/2-S~F(5z).
+(3.12)
+
+A standard maneuver for finding the other solutions to the differential equation
+in terms of the hypergeometric function amounts here to changing variables from
+1 / 0 5 to 0 5 and to extracting a factor of 0 ~, with k = 1, 2, 3, or 4, from the
+Riemann symbol. Thus a set of four linearly independent solutions are
+
+0k~
+
+0
+
+~:
+
+1
+
+1/5-k/5
+
+k/5
+
+o
+
+2/5-k/5
+
+k/5
+k/5
+k/5
+
+1
+2
+1
+
+3/5-k/5
+4/5-k/5
+
+k kkk
+=0k4F3
+
+5' 5' 5' 5;
+
+05
+
+rk+l
+5
+
+k+2
+'
+
+5
+
+k+3
+'
+
+5
+
+k+4'
+
+5
+
+;0 5
+
+(3.13)
+
+where the overbrace signifies that the parameter that is unity is to be omitted. This
+basis is useful for some purposes, however we find it more convenient to base our
+development on the functions m0(ak0). At first sight one might be tempted to
+conclude from eq. (3.11) that m0(0) is a function of 0 5 but this is not the case
+owing to the fact that there are branch cuts implicit in the definition of ~rt)(0). In
+
+P Candelas et ai. / Calabi-Yau manifolds
+
+--C
+
+39
+
+1
+
+Fig. 5. The contour of integration for eq. (3.14) showing the poles of F ( - s ) and of F(5s + 1).
+
+order to clarify this and to find explicit expressions for too(atO), we wish to
+analytically continue m0(~) to a neighborhood of the origin. This is accomplished
+by introducing an integral representation of Barne's type. If 0 < arg ~ < 2~-/5, we
+have
+
+1 fc
+r ( - s ) r ( s s + 1) ei=~(5qs)_5,
+~r°(~b) = 27ri- ds
+F4(s + 1)
+
+(3.14)
+
+with the contour as in fig. 5. The integrand has poles on the positive real axis for
+s = 0, 1, 2,... due to the presence of the factor F ( - s ) . If in addition Itbl > 1, the
+contour can be closed to the right and (3.11) is recovered as a sum over residues. If
+on the other hand I~bl < 1, the contour can be closed to the left enclosing the poles
+of F(5s + 1). Thus we find
+
+=
+
+E F(m)F4(1-m/5)
+,,,=,
+
+I01 < 1.
+
+(3.15)
+
+We shall show presently that ~r0(~) contains logarithms when ~,5 = 1, so we
+must specify cuts associated with these terms. It is convenient to take ~ro(~,) to be
+analytic in the neighborhood of the origin, so we take the cuts to run radially
+outward from the points qt = a k, k = 0 , . . . , 4 . It is clear from the form of the
+differential operator that the functions
+def
+
+'i~j( {~t ) --" 1[~0( I~JlD " ),
+
+j=O,...,4
+
+(3.16)
+
+all satisfy the differential equation. It is clear also from the series (3.15) that a.-'.y
+four of these functions are linearly independent, the five nrs(~,) being subject to
+
+P. Candelas et al. / Calabi-Yau manifolds
+
+40
+
+the single relation
+4
+
+E ~rj(~)=0.
+
+(3.17)
+
+j=0
+
+We wish next to examine further the monodromy of this basis about the point
+= 1. We have argued that the basis (if a, zb) transforms according to the rule
+(2.10) under transport about the point ~ = 1. It follows that the ~rj have the
+transformation rule
+
+--if-
+
+m j ( ~b) ~
+
+--if--
+
+~rj ( ~,") + c j z 2 ( ~b) ,
+
+(3.18)
+
+where the cj are a set of numerical coefficients. This transformation rule is
+equivalent to the assertion that the ~rj have the structure
+2rri)3
+cj
+--~
+mj(d/) = 2.rr----fz2(d/)log(O - 1) + f j ( 0 ) ,
+
+(3.19)
+
+with Z2(I~/) and fj(O) analytic for I ~ - 11 < 1. The period Z2(~/) corresponds to
+one of the indices which is unity in (3.10). The differential equation, as is easily
+verified, admits two solutions that are given by power series about ~ = 1. These
+are z2(~) and another series corresponding to the index 2. The other solutions
+contain logarithms owing to the fact that the index 1 is repeated. One might have
+anticipated a more complicated structure than (3.19), with the term multiplying the
+logarithm being a more general linear combination of the two solutions that have
+power series expansions. This however would not be consistent with (2.10).
+Checking that the transformation rule is indeed as in (3.19) amounts to checking
+the coefficient of (~ - 1)2 log(~b - 1) in wj(ff). This will be subsumed in the
+following computation of the coefficients cj.
+Suppose z2(O) has the expansion
+47/-2
+
+z2(~lJ)= 53•2 {(~b- I) + b(~b- 1)2 + ...}
+
+(3.20)
+
+about ~b = 1. Then from eq. (3.19) ~ve have
+
+2~'i) 3 d 2
+
+(T
+
+-~17J'j(i]i)--
+
+27ri(1
+
+53/2Cj O - 1 + 2 b l o g ( ~ b - 1) + ...
+
+)
+,
+
+(3.21)
+
+where the terms indicated by the ellipsis have finite limits as ~b ~ 1. Thus we can
+calculate cj and b by differentiating the series (3.!5) and computing its leading
+
+P. Candelas et al. / Calabt-Yau manifolds
+
+41
+
+behaviour as ~ ~ 1. It is convenient to set
+
+m=5N+k,
+
+k = 0,...:4,
+
+N = 0, 1 , 2 , . . .
+
+for the variable of summation in eq. (3.15). Then in virtue of Stirling's formula
+r ( z) =
+
+(
+
+2CYff
+
+'
+
+e -z l + l- z + O ( z - 2
+
+>)
+
+,
+
+we find that as ~ ~ 1
+
+d2.
+
+5,/24
+
+d~b2
+
+4"n'2 k=0
+
+:(
+
+05N)
+5N
+
+By comparing this expression with eq. (3.21), we find b cj = (1,1, - 4 , 6 , - 4 )
+
+"
+
+1 / 2 and
+
+for j = (0, 1 , 2 , 3 , 4 ) .
+
+The next step is to express z2($) in terms of the basis mj($). The result is
+z2(,) =-
+
+-~
+
+(w,(~,)-Wo(,)).
+
+(3.22)
+
+To see this suppose x is real and x > 1. If e is an infinitesimal, then from eq.
+(3.19)
+(2rri) 3
+-~
+(~rl(x + i e ) - ~ r l ( x - i e ) ) =
+
+-zE(x).
+
+However
+
+ml( x - ie ) = too( a( x - ie ) )
+-- too( x + i e ) ,
+the last equality following from (3.8) which is valid for 0 ~< arg $ < 2~-/5. Thus eq.
+(3.22) holds for ~b's just above the cut that extends from 1 to ~ (see fig. 6), and
+hence by analytic continuation for all ~.
+We now know z 2 and if2 in terms of the basis nrj, and we wish to find similar
+expressions for z ~ and ff~. It turns out, rather surprisingly, that we do not have to
+explicitly describe A 1 and B~ if we proceed somewhat indirectly. We choose a
+specific basis of linearly independent ~rj and form a vector
+
+(.2)
+
+def
+
+T
+
+,070 1~4
+
+42
+
+P. Candelas et al. / Calabi-Yarc manifolds
+
+Fig. 6. The cut $-plane. The fundamental region is indicated by the heavier shading. The series for the
+wj(~) given by eqs. (3.16) and (3.15) converge for I $ I < 1.
+
+What we are seeking is a relation of the form
+
+as in eq. (2.11) and with m a numerical matrix which in virtue of eqs. (3.22)
+with
+and (3.7) is of the form
+ab
+
+cd
+
+m=
+
+The periods z1 and g1 are not as yet uniquely defined, since given any choice
+there is the freedom to make a second choice differing from the first by an
+Sp(2; Z) = SL(2; Z) transformation
+(3.24)
+e can use this freedom to set f = 0 in m. We know also that the periods t’ and
+.Fr are free of logarithms at $ = 1, which is the condition that the sums, weighted
+by the coefficients ci, of the corresponding rows of m must vanish. Consider now
+
+P. Candelas et aL / Calabi-Yau manifolds
+
+43
+
+how the basis m changes under O --, aO,
+m(aqJ) = am(O),
+
+with
+-1
+
+-1
+0
+1
+0
+
+1
+0
+0
+
+a --
+
+-1
+0
+0
+1
+
+-1
+0
+0
+0
+
+It is this simple form for a that motivated the choice of basis m. In terms of the
+symplectic basis we have
+
+Fl(aO) = A H ( q t ) ,
+
+A =mam-'.
+
+The matrix A must be integral and symplectic. This turns out to be a stringent
+condition with a solution for m that is unique up to the Sp(2; 7/) transformations
+(3.24),
+
+3
+
+m=
+
+i
+
+21 8 )
+
+--.~
+
+5
+
+-3-
+
+0
+-1
+0
+
+0
+0
+1
+
+-1
+8
+-1
+
+0
+3
+0
+
+5
+0
+11
+8
+
+3
+-1
+5
+-4
+
+,
+
+(3.25)
+
+and we find
+-9
+0
+-20
+- 15
+
+A =
+
+-3
+1
+-5
+5
+
+TABLE 1
+The matrices associated with the transformation @ --, t~@ and m o n o d r o m y about ~b = 1 and
+= ~. The matrices associated with m o n o d r o m y about tO = a k are a - k t a k and A - ~ T A k
+~r
+
+-1
+
+monodromy
+about @ = 1
+
+monodromy
+about @ =
+
+t=
+
+t~ =
+
+H
+
+-1
+
+-1
+
+1
+
+0
+
+0
+
+0
+0
+
+1
+0
+
+0
+1
+
+1
+
+4
+
+4
+
+0
+0
+0
+
+0
+-1
+4
+
+1
+2
+-4
+
+-34
+10
+0
+-15
+
+-55
+16
+0
+- 25
+
+-9
+0
+-20
+
+-3
+1
+-5
+
+5
+0
+11
+
+3
+-1
+5
+
+- 15
+
+5
+
+8
+
+-4
+
+T=
+
+1
+0
+0
+0
+
+0
+1
+0
+0
+
+0
+0
+1
+0
+
+T~ =
+
+51
+0
+100
+-75
+
+-1~
+
+-310
+90
+1
+- 155
+
+A =
+
+-1
+211
+
+90
+1
+175
+- 125
+
+0
+1
+0
+1
+-25
+0
+-49
+35
+
+0
+0
+0
+!
+
+44
+
+P. Candelas et al. / Calabi-Yau manifolds
+
+Given m we can return now to the monodromy of the bases about ~ -- 1,
+w ~ t~r,
+
+H ~
+
+TH,
+
+where the matrices t and T may be found from (3.18) and (3.25). Given the
+transformations T and A, it is a simple matter to compute the monodromy of the
+bases about the other singularities in virtue of eqs. (2.12) and (2.13). We record
+these results in table 1. Referring to the table we see that the integer n in our
+previous expression for the monodromy matrix (2.10) is in fact unity.
+
+4. The prepotential, metric and Yukawa coupling
+Given the periods (~a, Zb) it is now straightforward to construct the prepotential
+and the metric. The prepotential can be defined by
+
+Recall that the holomorphic three-form ~ has the variational property
+092
+f ~ ¢ ~ ^ o# = 0 ,
+and that this property requires the ~'a to be the derivatives of the prepotential,
+O~
+~ = Oz ~ ,
+
+a = 1,2.
+
+As a consistency check we can verify that this relation is satisfied. To this end note
+that, in virtue of the fact that the prepotential is homogeneous of degree two as a
+function of the z ~,
+
+~ ( z ' , z2) = ( z Z ) Z ~
+
+(zl)
+-~,1
+
+A short calculation now reveals that
+os¢
+Oza ='Yo -
+
+z
+
+W[
+
+where Eab is the permutation symbol and
+
+dv
+du
+W [ u , v ] = u - ~ - V dd/
+
+z 2]
+
+.
+
+P. Candelas et al. / Calabi-Yau manifolds
+
+45
+
+Thus for consistency the identity W[ z c, g'c] = 0 must be satisfied. We have checked
+that it is indeed satisfied by the somewhat brutish method of expanding the
+periods as power series in ~ by means of eqs. (3.15) and (3.25) and checking that
+W[ z c, g'c] vanishes order by order. Actually, the vanishing of W[ z ~, g'~] is a very
+natural condition as can be appreciated by noting that
+
+f~a(¢) ^ a(~,')= zC(~,)~c(¢, ,) - z~(¢,)~(¢).
+
+(4.1)
+
+By differentiating this expression with respect to if' and setting i f ' = if, we find
+that
+0~
+
+W[z~,~'A = f a ^
+
+,~,t, '
+
+and hence must vanish.
+The K~ihler potential K is given by the relations
+e - r = i(£,affa - zany)
+=
+
+-rt*zrt
+
+= -imttr~r,
+
+with
+
+Z=
+
+(0 010){013
+0
+-1
+0
+
+0
+0
+-1
+
+0
+0
+0
+
+1
+0 '
+0
+
+1
+
+tr=-~
+
+-1
+3
+1
+
+0
+-3
+-3
+
+(4.2)
+
+1
+
+3
+0
+-1
+
+3
+1
+
+"
+
+0
+
+The metric on the moduli space follows from (4.2). A three-dimensional plot of
+g , $ against ~k is presented in fig. 7. The cusp at ~, = 1 (there is of course only one
+cusp owing to the identification ~, = a ~ ) corresponds to the value of ~b for which
+7/" is a conifold. The metric is mildly singular at the conifold. It can be shown that
+g , $ is asymptotically proportional to logl~b-11, so the conifold is at a finite
+distance from the smooth manifolds in agreement with general results [17]. hi
+order to compare the metric g~,$ with the corresponding metric for the moduli
+space of P4(5), it is of interest to compute the asymptotic form of the metric as
+~b -o o0. In appendix B series expansions, valid for I~1 > 1, are derived for the mj,
+3
+
+oo
+
+(5n)!
+
+~rj(O) = E l°gr(5O) E bjr,,
+r=0
+n=0
+( n ! ) 5 ( 5 ~ ) 5" '
+
+101 > 1
+
+"
+
+In order to compute the leading terms of the metric we retain only the terms with
+
+P. Candelas et al. / Calabi-Yau manifolds
+
+46
+
+Fig. 7. A plot of the metric g , $ against ~ for 0 in the fundamental region 0 ~ arg ~b < 2rr/5. The
+cusps correspond to the conifold at to = 1. As (0---, ~ the metric tends asymptotically to a metric of
+constant negative curvature.
+
+n = 0 and define vectors of coefficients similar to m ,
+
+brief (2,)3T
+
+b i r[)
+
+b4,-o
+so t h a t
+3
+
+w ( O ) ~, ~ b , . l o g r ( 5 0 ) Most of the terms
+def
+
+o-~ =
+
+_
+
+.~~. ., ~, , - , r , ,
+
+s
+
+Janish, the only n o n z e r o products being
+4~ 3
+
+or3° = tr°3 =
+
+75 '
+
+tr2~ = °h2
+
+4~ 3
+25
+
+128
+
+crop = ~ , ~ r t ~ ' ( 3 ) ,
+
+P. Candelas et al. / Calabi-Yau manifolds
+
+47
+
+0.5
+
+O.a
+
+0
+
+oi
+0.
+
+I
+
+0.5
+
+I
+
+I
+
+1
+
+1.5
+
+....
+
+2
+
+,
+
+_
+
+2.5
+
+,
+
+3
+
+Fig. 8, A plot of the metric g,~$ against 14,1 for arg 4, = k~r/20, k = (0,1, 2, 3, 4). Note the cusp at
+4, = 1 where the metric has a logarithmic singularity..
+
+5"
+
+2"
+
+I
+
+"
+
+-I
+
+{ ......
+
+1 .5
+I ........
+
+2
+
+-2
+
+Fig. 9. A plot of the Ricci scalar against logml4,1 for a r g 4 ' = k r : / 2 0 , k = ( 0 , 1 , 2 , 3 , 4 ) . The plot
+illustrates that the curvature scalar tends to the value - .~ as 4, -'-' ~ but does so logarithmical'y.
+
+48
+
+P. Candelas et aL / Calabi-Yau manifolds
+
+where sr is the Riemann st-function. Thus
+
+e-~~
+
+5-l°g 31501 + - ~ ' ( 3 ) } ,
+--g- {~°
+
+and so we find the leading terms of the metric to be
+g~,~- 410121og21501
+
+1-
+
+251og31501 + . . . .
+
+(4.3)
+
+The leading term corresponds to a metric of uniform negative curvature. In fact,
+on setting
+5
+t~
+log(50),
+27ri
+we find that
+3 Idtl 2
+-
+
+~
+
+ds 2
+
+2 (t2) 2 '
+where we have written t 2 for Im t, so the large complex structure limit of the
+geometry coincides, as we shall see in the following section, with the large-radius
+limit of the moduli space for P4(5). The subleading term in eq. (4.3) corresponds to
+a loop correction to the metric which we shall discuss further in sect. 5. Note
+finally that the singular manifold corresponding to 0 = ~ is infinitely distant from
+the smooth manifolds.
+
+4.1. THE YUKAWA COUPLING
+In order to make contact with the Yukawa coupling we introduce a set of
+"wronskians",
+
+w~-~~ ~o-~o ~
+
+~°.
+
+Then, from eq. (4.1), we find a relation between the Yukawa coupling and W3,
+
+(4.4)
+
+=W 3 .
+
+Now the form of W3 follows straightforwardly from the differential equation (3.9)
+that governs the periods. Let us rewrite the equation in the form
+
+((d)4
+
+3
+
+(d)
+
++ E ck(~,) ~
+k=0
+
+k}
+
+u=0.
+
+From this relation it is immediate that
+
+3
+
+w4+ E Gw~=0.
+k=0
+
+(4.5)
+
+P. Candelas et al. / Calabi-Yau manifolds
+
+49
+
+Note now that
+
+Wo= W, = w
+
+=o.
+
+The vanishing of W0 is trivial. W2 is the derivative of W~ and we have verified that
+W~ vanishes. Note also the elementary identity
+
+w,- 2w; +
+Putting these results together we find
+1
+
+w3' + C3W3 = O,
+and hence
+K~,~,~=W3=
+
+( 2~ri ) 3 511/2
+--~
+1_~, 5 ,
+
+(4.6)
+
+the constant being determined by the computation of the specific form of W3 as
+--->0. We could also have arrived at this same result by using the methods of
+ref. [10].
+Some comments are in order here concerning the gauge dependence of the
+Yukawa couplings (for a full account in the spirit of the present work see refs.
+[20,21]). It was noted previously that the holomorphic three-form is in reality
+undefined up to multiplication by a holomorphic function of ~,
+
+o--,fo,
+and we refer to such a replacement as a gauge transformation. A gauge transformation induces a transformation of the period vector, 1I -~ f F l , and from eq. (4.4)
+it follows that the coupling is gauge dependent,
+
+KeO0 --')f 2 Keeo,
+so is the K~ihler potential which transforms according to the rule
+e-K ~ Ill 2 e - r .
+The gauge choice is arbitrary and a physical quantity such as a decay rate cannot
+depend on the gauge. It must therefore be the case that the coupling enters into
+physical quantities only through the invariant combination
+Yinvde=fg -3/2 e K I~1,
+
+the factor of g-3/2 being included to remove the coordinate dependence of IKI
+(since the effect of a gauge transformation on the K~ihler potential is K ~
+K - log f - log f the metric is gauge invariant).
+
+P. Candela.~ei aL / Calabi-Yau manifolds
+
+50
+
+Roughly speaking the mechanism that causes K to be replaced by the invariant
+coupling is the following. The low-energy lagrangian contains terms of the form
+g e -h',~DA" + ½gta&t 2 + ( xA'A'~b + conjugate).
+With a suitable choice of covariant derivative D, this is invariant under
+/¢ ...~
+
+e -K ---} lfi'- e -~ ,
+
+f 2/¢,
+
+if also
+
+x~f-Ix,
+and 4) is invariant. We can normalize the kinetic terms by defining
+
+=gi/,_ e - K / 2 x e i ~ / 2
+
+~ = gl/2~b '
+
+where/7 = arg K. Then the low-energy terms become
+~D,f + ½1a~l-' + g - 3 / 2 e r IKI ( , ~ , ~ + conjugate).
+We summarize the limiting forms of the metric, curvature and invariant Yukawa
+couplings in table 2. The reader will recognize the value obtained for the invariant
+coupling at ~ = 0 [7] as being the value corresponding to the G e p n e r model 35 [25].
+This agreement is an important check on the mirror hypothesis. T h e ~ = ~ row of
+table 2 gives the " b a r e " value of y~.~ as being 2/V~-. In ref. [7] this value is
+incorrectly stated to be 1 / ~ - .
+Finally we note that for a one-dimensional manifold that is special K~ihler, the
+Ricci scalar is related to the invariant coupling by
+R + 4 = 9 j,,2
+•,,,
+
+IlrlV
+
+(4 7)
+
+~
+
+TABLE 2
+T h e a s y m p t o t i c / l i m i t i n g f o r m s of the metric, the scalar c u r v a t u r e a n d t h e invariant Y u k a w a
+coupling for ~ = 0, 1, ~. In the m i d d l e row a is a positive c o n s t a n t a n d r = I~ - 1 I.
+dr
+
+g~,¢
+
+0
+
+25 rS(~)rS(~)
+rs( ~)rs( ~ )
+
+1
+
+g-3/2 erlKi
+
+R
+
+4
+
+,
+
+I
+
+3
+
+2
+
+rl~
+
+~ [-5
+
+(~)
+
+r'5( ~)r~(.
+
+T5/2(~
+"'"
+
+I
+
+T15/2(3
+
+~)
+
+r " / ' ( ~ ) _r5/21,5,
+~-~
+
+(-~) - 4
+4
+
+5)
+
+"
+
+1
+
+1
+
+2a2r2[ - iog r]3
+
+2ar[ - log r]3/2
+
+3
+
+4
+
+2
+
+4l~bl 2 log 2 I~1
+
+3
+
+- a 2 log r
+
+P. Candelas et at. / Cdabi-Yau manifdds
+
+5t
+
+Fig. 10. A plot of the Ricci scalar R against 6 for 6 in the fundamental region. The curvature tends to
+infinity at 6 = 1. As 6 --' ~: the curvature tends asymptotically to the constant value - ~. In virtue of eq.
+(4.7) this figure has essentially the same form as a plot of the invariant Yukawa coupling.
+
+and we present a three-dimensional plot of the Ricci scalar in fig. 10. A plot of Yin,,
+has the same form. The " b a r e " value of Yinv is 2/~-. The quantum corrections
+cause Yinv to differ from this constant value and the correction becomes infinite at
+the conifold.
+
+5. P4(5), the mirror map and quantum corrections
+Recall [20] that prior to receiving quantum corrections, the prepotentiai is given
+in terms of b t~ + 1 homogeneous coordinates w j by the expression
+1 ifABcWAWBw C
+=
+
+3!
+
+w0
+
+A = 1,...,bll,
+
+where the
+KABC = f ~ A A e B A e C
+
+52
+
+P. C a n d e l a s et al. /
+
+Calabi-Yau manifolds
+
+are the intersection numbers of a basis for H 2(./l, 7/). For the present case b~= = 1 ,
+and denoting the generator of H2(P4(5), 7/) by e we have
+
+f//
+
+' . A e A e = 5.
+
+(5.1)
+
+Thus, using coordinates (w ~, w 2) rather than (w °, w~), we write
+
+5 (w')
+6 w2
+
+9-=
+
+=-
+
+(w2)2t3
+
+,
+
+(5.2)
+
+defwi
+
+the latter form being written in terms of an affine coordinate t
+/ w 2. It is
+simplest to set w 2= 1, after differentiation, then the K~ihler potential is given by
+
+K=-log
+
+=
+
+- log(
+
+i ~ - -m= __ W j
+O~ j
+aw j
+20
+
+(5.3)
+
+From this we find that the metric and Ricci tensor on the parameter space are
+given by
+3
+4"t2
+- 2 {),
+
+gti
+
+'
+
+Rt i
+
+32_gt t_"
+
+We summarize these results in table 3, which should be compared with the ~b = oo
+row of table 2.
+We have seen that the large complex structure limit of the invariant Yukawa
+coupling and the geometry of 7//agree with the bare values of the corresponding
+quantities for te'. We wish to examine the quantum corrections to the bare
+quantities by comparing corresponding quantities on 7 / / a n d J¢'.
+A detailed comparison requires the explicit form of the mirror map t ~ ~b(t)
+between the two parameter spaces. In order to do this it turns out that we need to
+understand the quadratic terms in the prepotential and these in turn involve the
+
+TABLE 3
+The metric, the scalar curvature and the invariant Yukawa coupling as functions of t
+
+all t
+
+gti
+
+g-3/2 eh'[K ]
+
+3
+
+2
+
+4t~
+
+P. Candelas et aL / Calabi-Yau manifolds
+
+53
+
+loop corrections, so we shall first discuss the loop corrections. Perhaps surprisingly
+we shall see that there is a single loop correction to the bare prepotential.
+5.1. THE LOOP T E R M
+
+We have of course a nonrenormalization theorem [5], to the effect that there are
+no sigma model loop corrections to the superpotential or equivalently, to the
+couplings O39-/OwaOwbOw ¢. The prepotential is homogeneous of degree two, so it is
+determined by its third derivative up to a quadratic term of the form
+A ~ = ½wT.2"W ,
+
+with .2" a symmetric constant matrix. We can decompose .2" into its real and
+imaginary parts,
+.2" = ~ + i,~,'.
+The real and imaginary parts affect the prepotential differently. From eq. (5.3),
+which may be written in the form
+e - r = 2w*(Im l:)w,
+with I: the matrix of second derivatives of 9-, we see that the real part of _2"
+contributes neither to the Yukawa couplings nor to the metric of the moduli space.
+Such a term is of no consequence and could be discarded. Alternatively, we can
+absorb it into the bare part, 9-o, of the prepotential by extending the range of the
+indices on the intersection numbers K,48c to include the value zero, so that
+
+3-° =
+
+1 KABcWAWBwC
+l ~ . a . b
+3!
+W 0
+-1- -~ ~g"a b W 14'
+
+--
+
+1 KabcWaWbw c
+3!
+w°
+a,b=O,
+
+1,...,bll.
+
+The imaginary part of .2" does affect the metric and since the contribution of y to
+the prepotential,
+def
+.,"~--Ioop = i w ' • w ,
+
+contains powers of the radius (recall that for the case of P4(5), t = w ~/W 2 and the
+imaginary part of t is the square of the radius), it is precisely the loop correction
+to . ~ .
+We shall now argue that W]ooo contains a four-loop correction and that this is
+the only loop correction to the prepotential*. In fact ~]oop is closely related to the
+* The discussion presented here grew out of animated conversations with A. Strominger.
+
+54
+
+P Candelas et al. / Calabi-¥au man(folds
+
+four-loop term found by Grisaru et al. [14] in their investigation of the/]-function
+for type-(2,2) supers vmmetric it-models. The loop corrections arise because there
+are loop corrections to the sigma model. When the heavy modes are integrated out
+of the sigma model, part of the loop term survives into the low-energy theory.
+When we refer to a four-loop term, we mean a four-loop contribution to the sigma
+model. This corresponds to a third-order correction to the prepotential.
+The particular case of P4(5) corresponds to b~a = 1 but it is simpler and more
+general to leave b~ arbitrary for the present. The large-radius limit is the limit
+w ° ~ 0 for fixed w "4 (this is the limit t ~ ~ for P4(5)) and the loop counting is that
+1 / w ° corresponds to one loop and each additional power of w ° corresponds to an
+additional loop. Thus the term iwT~/w contains, in principle, two-loop, three-loop
+and four-loop terms. These terms must be constructed from local polynomials in
+the curvature of ~v. These terms have to be universal, that is independent of any
+structure, such as complex structure or the dimension of the space, that is
+particular to ~#/. Furthermore, the loop contributions must vanish for hyper-Kiihler
+manifolds. These conditions, which are clearly very restrictive, were investigated in
+relation to the counterterms that can arise for the g-functions for type-(2,2)
+supersymmetric tr-models [26]. It is known that there are no curvature polynomials
+with the requisite properties that could correspond to two or three loops and that
+there is a single such quantity at four loops,
+de.~fl~ k l D tnn D
+ij
+.,)1~ k l D m n D i j
+S - ,,ij
+"'kl
+"ran
+--'~''ij''k
+! ''ran ,
+
+where R#k ~ is the curvature tensor of .//. A further remarkable property of S for
+Calabi-Yau manifolds in six dimensions is that S is proportional to the Euler
+integrand. It can be shown that
+
+Sgi/2 d6x = 12(2,n-)3c3,
+where c 3 is the third Chern class.
+Consider now the possible structure of the components ~ b - The component
+Y0o can be of the form
+
+fftoo=a f d 6 x g l / 2 s = 12(2,rr)3ax,
+with a a numerical coefficient. The other components of y all vanish. The terms
+YABWAW B and ~,'oAw°w A are respectively one- and two-loop terms for which, as
+already mentioned, suitable curvature polynomials do not exist.
+We therefore know the form of .~]oop up to a numerical coefficient independent
+of .J~'. One way to fix the coefficient would be to actually evaluate a four-loop
+graph. It is simpler however to compare with the corrected prepotential for [P4(5)
+
+P. Candelas et ai. / Calabi-Yau manifdds
+
+55
+
+which we do in eq. (5.10) below. In this way we find that
+i~'(3)
+.~"l~p = 2(2~.)3 X.
+
+(5.4}
+
+For the case of P4(5) it is this contribution to the prepotential which produces
+the subleading term in the metric in eq. (4.3) and is responsible for the fact that,
+for large $, the Ricci scalar of the moduli space differs from its limiting value by
+inverse powers of log $ as is evident from fig. 9.
+5.2. T H E M I R R O R M A P
+
+We find the relation between the coordinates $ and t by relating the period
+vector H to the corresponding vector H for P4(5). The idea is that we expect the
+prepotential ~' calculated in sect. 4 to be the fully corrected form of the bare
+prepotential .9-o given by (5.2). The complication is that the form of the prepotential depends on the choice of symplectic basis. So we must first find the relation
+between the symplectic bases for ~ and M'. We do this by relating H and H for
+large radius and large complex structure.
+The leading behaviour of H is derived from the leading behaviour of the
+prepotential ~-, which we take to be
+def
+
+"-~ert "-- "-~"-0+ °~'--loop--
+
+5 (WI) 3
+6 w2 + ½a(wl)2+bwiw2
+
++ ½c(w2)2"
+
+The first term is as in eq. (5.2) and we have allowed for quadratic terms in line
+with our discussion above. From 9-pert we obtain the leading behaviour of the
+period vector,
+
+'99-pert
+
+- - v5t 2 + a t + b
+
+OW i
+_/
+def
+pert -"
+
+O~'-pert
+
+=W 2
+
+aw 2
+
+(5.5)
+
+5 3
+~t
++bt +c
+
+Wi
+W2
+
+We have the elementary fact that Hp~, is cubic in t. On the other hand we have,
+as If/~ ~,
+
+//
+
+~22
+
+, , t3
+
+(°)
+
+t2
+
+0
+
+0
+-5/6
+
++
+
+25i
+
++t
+
+00
+-25/12
+
++
+
+_25/6/+-~-5-~'(3)
+
+(!)
+,
+
+(5.6)
+
+56
+
+P. Candelas et al. / Calabi-Yau manifolds
+
+27ri)3,
+
+where
+
+~'2 ~,
+
+--if-
+
+with asymptotic equality meaning equality up to terms that are de(0-51og3(50)).
+We have also taken
+5
+2 "n'i log(5~b )
+
+t ~,
+
+as before and we again mean equality up to terms that involve ~-5 multiplied by
+logarithms. Because of the relation between t and ~ the neglected terms are
+C ( t k eE~rit), and with a slight abuse of language we shall refer to such terms as
+being exponentially small in the large-radius (Im t - ~ ~) limit. We allow for a
+symplectic transformation N and set
+
+//pert ~ N H .
+
+(5.7)
+
+Since both (5.5) and (5.6) are cubics we can solve for N,
+
+N =
+
+-l+2a'
+2b'
+2
+0
+
+b'
+c'
+0
+1
+
+-a'
+-b'
+-1
+0
+
+0~
+-1
+0 '
+0
+
+J
+
+where
+a=
+
+~! + a ' ,
+
+b =25
+~ + b' ,
+
+25i
+c=-~sr(3)+c'.
+77"
+
+If we take a', b', c' e 7/then N e Sp(4; 7/) for all a', b', c'. The fact that //pert and H
+are related by a symplectic matrix is a consequence of mirror symmetry. The fact
+that they may be related by an integral symplectic matrix is the observation already
+made by Aspinwall and Liitken [27] that the mirror symmetry identifies the two
+lattices
+A = H3(Tf,~),
+
+3
+V -- ~ ) H 2 i ( l f ,
+i=o
+
+7/).
+
+We shall here take a', b', c' to vanish, other choices corresponding merely to a
+further Sp(4, Z) transformation. So the final form for N is
+
+N=
+
+-1
+0
+2
+0
+
+0
+0
+0
+-1
+
+0
+0
+-1
+0
+
+0)
+1
+0 "
+0
+
+P.Candelasetal. / Calabi-Yaumanifolds
+
+57
+
+With sufficient prescience we could of course have chosen a basis f o r / 1 so that N
+would have turned out to be the identity.
+With N in hand we may write down the quantum version o f / / , with the gauge
+choice W 2 -- ~ 2 ,
+H = Nil,
+
+w2 = ~ 2 .
+
+The gauge-invariant form of this relation is
+W2
+
+n=
+
+mr.
+
+(5.8)
+
+Our aim here is to compare the quantum prepotential ~- that derives f r o m / - / w i t h
+that derived from 9-0. We set
+
+/-/__
+
+~'2
+WI
+W2
+
+and referring back to eqs. (3.23) and (3.25), recalling that the latter expression for
+H is in the gauge ~'2 = (2rri/5)a~r0, we find the following expression for t:
+wI
+t-"
+
+w2
+
+2( 1D" 1 - - " ~ 0 )
+"-"
+
+5 ( 1og(55)
+27ri
+
++
+
+ID'2 - - 1D'4
+
+5m'o
+l ~ ( 5 m ) ,
++5m)-~(1
+m 0 ( * ) , =1 ( m ! ) 5 ( 5 ' ) 5'" [gr(1
+
++m)]}
+
+m
+
+(5.9)
+This equation gives the mirror map. We have introduced the coordinate t partly to
+make contact with previous work but primarily because 2krcit is the value of the
+action evaluated on a rational curve of degree k (that is on an instanton of degree
+k). The coordinate t transforms in a complicated way under the generators d and
+g of modular transformations, although under ( g a g ) - ~ we have the simple rule
+( 3-s¢ ) -I"
+
+t- ,t + l.
+
+We also have
+~ " = ½wag-a = (wE) 2( 5
+- ~3t ~ - -
+
+t 2+2 ~5t2- 5 i27r---~sr(3)+exponentially small ) ,
+(5.1o)
+
+P. Candelas et al. / Calabi-Yau manifolds
+
+58
+
+where the last expression follows on inverting eq. (5.9) to give ~ - - ~ ( t ) . Note the
+structure of ,~-. First there are terms that are cubic, quadratic and linear in t that
+have real coefficients. These correspond to the bare prepotential ~--0- Then there
+is the term independent of t, which we identify as the loop term and which fixes
+the coefficient in eq. (5.4). Lastly there are exponentially small terms which may be
+thought of as instanton corrections.
+5.3. T H E S U M O V E R
+
+INSTANTONS
+
+We wish to examine these exponentially small terms. The idea is to examine the
+difference between ff and ~-0- However, as mentioned above, one must also allow
+for the effect of the symplectic transformation N. It is simpler to consider first the
+instanton contribution to the Yukawa coupling, which is of interest in its own right,
+the corresponding contributions to ~ can then be obtained by integration. We
+have
+
+Kttt= -~2
+
+K~,,~, - ~
+
+,
+
+(5.11)
+
+where K , ~ is given by eq. (4.6) and the prefactor expresses the gauge freedom. If
+we choose w 2= 1 and recall that K ~ was derived in the gauge ~'2 = (27ri/5)3z~r0,
+we find
+Ktt t "- 5 -]- 2 8 7 5
+
+e 2=/t + 4876875 e 4'ril +
+
+...
+
+,
+
+w 2 =
+
+1.
+
+(5.12)
+
+To understand the structure of this sum consider the contribution of a rational
+curve ~ of degree k to the coupling. A rational curve of degree k is a P~
+embedded by equations of degree k. Equivalently it is characterized by the fact
+that
+
+where e is the generator of H 2(P4(5), 7/). The contribution of _~ to the coupling is
+
+[7]
+
+exp(2rritfzf)(fsf
+
+= k 3 e 2~rikt
+
+It is necessary to consider also multiple covers of the rational curves. For example,
+at degree 2 there are embeddings P~ ~ P4(5) given by
+
+(i): (u, U) + (//2, U 2,//U, 0, 0),
+(ii): ( u , v ) ~ ( u 2 , v2,0,O,O).
+These are given as embeddings P~ ~ P4, but for suitable quintics the curves lie in
+the quintic hypersurface. The image in case (i) is a rational curve of degree 2 while
+
+59
+
+P. Candelas et al. / Calabi-Yau manifolds
+
+case (ii) is a double cover of the line ( u , v , O , O , O ) which is a rational curve of
+degree 1. Note that the two cases are intrinsically different, we cannot by means of
+a coordinate transformation transform case (ii) to case (i). More generally, an
+m-fold multiple cover of a rational curve of degree k is an embedding Pt ~ P4(5)
+such that the homogeneous coordinates of the P4 are polynomials of degree k in
+quantities (U, V) that are themselves polynomials of degree m in the homogeneous
+coordinates of the P~. One difference between the multiple covers and the single
+covers is that it appears that the single covers have no parameters (it is proved in
+ref. [28] that the single covers have no parameters for k < 7) while m-fold covers
+with m > 1 do have parameters. Since the quantities U and I / a r e polynomials of
+degree m in the coordinates (u, v) of the Pl they each contain m + 1 parameters.
+Taking into account the three degrees of freedom in a reparametrization
+( u, v ) -o ( au + b y , cu + d r ) ,
+
+a d - bc = 1,
+
+of the P l and the freedom to multiply U and I / b y a common scale, we find
+2 ( m + 1) - 3 -
+
+1 =2(m-
+
+1)
+
+parameters.
+We shall assume that an m-fold cover contributes an amount k 3 e 2~im~' to the
+coupling. Since
+
+•
+
+j=mk,
+
+l
+
+this amounts to the assumption that m-fold covers have an associated prefactor
+1 / m 3 (otherwise the contribution would be ( i n k ) 3 e2rrimkt). We believe that this
+prefactor derives from the zero modes associated with the parameters that the
+m-fold covers enjoy, but we have not performed the computation. The reason for
+assuming this specific form for the prefactor will become apparent as we proceed.
+With this understanding we find that the contribution to the coupling of a rational
+curve S a of degree k together with all its multiple covers is
+k 3 e 27rikt
+k 3 ~
+
+e 2~rikmt __
+
+1 -- e 2~rikt "
+Itl =
+
+1
+
+Let n k be the number of rational curves of degree k, then we have the following
+expression for the coupling as a sum over instantons:
+
+Ktt t
+
+=
+
+5 +
+
+ilk k 3 e 2~rikt
+E
+e2"ri' + (23//2 + h i ) e4rit + "
+27rikt = 5 + n I
+...
+k-'-=l 1 - e
+
+(5.13)
+
+It is gratifying that we find that n~ = 2875 which is indeed the number of lines
+[29]* (rational curves of degree one) and n 2 = 609250 which is known to be the
+*This number is misleadingly given as 375 in ref. [6]. This is due to the fact that the calculation is
+performed for a special class of quintics and no account taken of multiplicity. If the counting is
+done for a generic quintic then the result is 2875.
+
+P. Candelas et at / Calabi-Yau manifolds
+
+60
+
+TABLE 4
+The numbers of rational curves of degree k for 1 ~<k ~< 10
+
+k
+
+nk
+
+1
+2
+3
+4
+5
+6
+7
+8
+9
+I0
+
+2875
+609250
+3172 06375
+24 2467530000
+22930 58888 87625
+248 24974 21180 22000
+2 95091 05057 08456 59250
+3756 3216093747 66035 50000
+50 38405 10416 98524 36451 06250
+70428 81649 78454 68611 34882 49750
+
+number of conics [28] (rational curves of degree two). Clemens has shown [30] that
+n~ ~: 0 for infinitely many k and has conjectured that n k ~: 0 for all k, but it seems
+that the direct calculation of these numbers becomes difficult beyond k = 2 (see
+also ref. [28]). It is however straightforward to develop the series (5.12) to more
+terms and to find the n~ by comparison with (5.13). We present the first few n k in
+table 4. These numbers provide compelling evidence that our assumption about
+the form of the prefactor is in fact correct. The evidence is not so much that we
+obtain in this way the correct values for n~ and n 2, but rather that the coefficients
+in eq. (5.12) have remarkable divisibility properties. For example asserting that the
+second coefficient 4,876,875 is of the form 23n2 + n I requires that the result of
+subtracting n~ from the coefficient yields an integer that is divisible by 2 3.
+Similarly, the result of subtracting n~ from the third coefficient must yield an
+integer divisible by 3 3. These conditions become increasingly intricate for large k.
+It is therefore remarkable that the n k calculated in this way turn out to be
+integers.
+The values for the nk shown in the table are particular to P4(5), however we can
+abstract from eq. (5.13) a form for the mirror map which we conjecture to be of
+general validity,
+e2rri.2,'[w]
+
+7~v = ~e'w+ .2'~t¢~] 1 - e 2~'i-2'[w1 . ~ 3
+
+(5.14)
+
+where we regard the complex structure of 7 f as being parametrized by the
+complex K~ihler form w = B + / J of ~#, and
+
+P. Candelas et at / Calabi-Yau manifolds
+
+61
+
+Eq. (5.14) embodies the moral of the present work. There is a "bare manifold" .ng
+and a "quantum manifold" 7// and the quantum manifold is the bare manifold
+together with its rational curves.
+5.4. T H E N U M B E R O F R A T I O N A L C U R V E S O F L A R G E D E G R E E
+
+It is immediately apparent from table 4 that the nk grow very rapidly with k. It
+is of interest to observe that the distribution of the n k for large k is governed by
+the conifold at ~ = 1. Consider again the series (5.12) which gives the Yukawa
+coupling as a power series in e 2tit. The radius of convergence of the series is
+determined by the singularity of the Yukawa coupling and the coupling is singular
+only when q~5 = 1, so we conclude that the series (5.12) converges for
+lm t > Im t ( 1 ) .
+From this it follows that n , cannot grow faster than e - 2 ~ i k t t l ~ for large k.
+However, we can do better and find the asymptotic form of nk from the singularity
+of the coupling.
+First we need to know the behaviour of t ( ~ ) as ~b ~ 1. From eq. (5.9) we find
+
+t(~) -t(1) ~
+
+53/2 it2(1)
+~ ( ¢ 4rr 2 too(1)
+
+1)log(~k- 1).
+
+Together with eq. (5.11) this enables us to find the leading behaviour of the
+singularity of the coupling as 6 ~ 1,
+(27r) 3 ~h](1)
+1
+K t t t ~ 53/2 t3(1) ( q J - 1 ) [ - l o g ( ~ b - 1 ) ]
+
+3.
+
+(5.15)
+
+On the other hand the severity of the singularity at ~ ---, 1 must be dictated by the
+asymptotic behaviour of the n k for large k. If we set
+n k ~ B k p-3 logo. k e 2:rkt2(l~
+
+then we h a v e
+0t~
+
+Ktt t ~
+
+B ~ k ° log °. k e-2"n'ktt2tdtJ-t2(l))
+def
+
+~ B f o d k k ° logo. k e -k* ,
+
+~B
+
+r(1 +p)
+x,+p
+
+(-iogx)o..
+
+x = 2 ~ ' ( t 2 ( ¢ ) - t2(1)),
+
+(5.16)
+
+fi2
+
+P. C a n d e l a s et al. /
+
+Calabi-Ya. ,nanifolds
+
+1.2'
+0
+
+I
+
+r~ ) . . . . . . . . . . .
+
+0 o 8
+
+..
+
+0.6
+
+•
+
+t
+
+(])
+
+&
+
+."
+0.4
+
+7"k
+
+I
+
+•
+
+•
+
+I
+
+•
+
+Q
+
+I
+
+o
+
+@
+
+•
+
+a
+
+•
+
+•
+
+o
+
+•
+
+o
+
+o
+
+o
+
+•
+
+•
+
+•
+
+•
+
+•
+
+•
+
+•
+
+•
+
+•
+
+o
+
+•
+
+•
+
+•
+
+•
+
+•
+
+•
+
+tp
+
+I
+
+o
+
+o
+
+0.2
+
+i
+
+~
+
+Q
+
+o
+
+u
+
+I
+II
+
+Q
+
+I
+
+o
+
+D
+
+O
+
+I
+
+O
+
+5
+
+I0
+
+15
+
+20
+
+4
+
+25
+
+Fig. 11. A plot of the series of ratios {r~°)}, for 2 ~< k ~< 25, together with its first three Richardson
+transforms. The third transform converges rapidly to unity.
+
+By comparing (5.16) with (5.15) we see that p = 0, or = - 2 and we find also a value
+for B. Thus we have
+
+TIk
+
+~(2+rmo(1))2
+
+e 2~kt2tl)
+
+t2(1)
+
+k 3 log 2 k '
+
+t2(1) = 1.208128077077918638192... ,
+
+~ o ( 1 ) = 1.070725868430155800571...
+
+,
+
+(5.17)
+
+the next-order terms being smaller by inverse powers of log k. Note that, as
+anticipated, the asymptotic form just refers to quantities evaluated at ~ = 1.
+As a check we have plotted the values of
+i tO)
+
+-~: = -n-k,
+
+(5.18)
+
+b' k
+
+where v k is the expression on the right-hand side of (5.17) in fig. 11 for k in the
+range 2 ~< k ~< 25. The series {r~.°)} converges very slowly owing to the fact that the
+subleading terms in the asymptotic expansion fall off as inverse powers of log k. To
+speed the convergence we apply a variant of a Richardson transformation [31] to
+the series, the aim being to eliminate the effect of the subleading terms. We set
+
+r~ m) =
+
+r(m-k+!l) l o g ( k + 1) - rtk' ' - i) log k
+log((k + 1)/k)
+
+and we record the values of the series {r].'')} in fig. 11 for 1 ~< m ~< 3. We see that
+the third transform converges rapidly to unity.
+
+P. Candelas et al. / Calabi-Yau manifolds
+
+63
+
+5.5. SOME F U R T H E R REMARKS ON T H E MODULAR G R O U P
+
+We saw previously that the modular group F acts most simply on a modular
+parameter y. A puzzling fact is that 3' does not appear to be the quantity that is of
+most direct physical interest. For example, the coordinate that arises naturally in
+the instanton sum is the coordinate t which is related to the complex K~ihler form
+by the relation B + / J = te. The coordinate t is, as we have seen, proportional to
+the value of the instanton action and has a direct significance since Im t = R 2,
+where R, in this context, is the radius of the Calabi-Yau manifold. The puzzle is
+that t and y do not appear to be related in a simple way, though of course both
+are functions of tO. It is perhaps worth recalling here the relations
+
+t=
+
+~ r(.+,)r(,,+'-)r(,,+3)r(,,+.
+[
+~
+]
+'
+~
+~) 4'/'(n + t) - ~ q,(, + r/5)
+
+5/
+
+q,+
+2rri log
+
+,,=o
+
+(n!)4~ 5''
+
+r=i
+
+5 E r(,,+~)r(,,+~)r(,,+~) (,,+~)
+I
+
+";
+
+,,=,)
+
+5 /
+
+2 tan(2~r/5) --2=
+
+2~i
+
+,,=0
+
+4
+
+(n!)% ~"
+
+(nV)2~
+5''-
+
+Iog~k+
+
+~
+
+21F(n + 1 ) - r=2
+] '~ ~ ( n + r / 5 )
+
+5 E r ( . + ~)r(,, + ~)
+n=0
+
+i i ~
+
+/~
+
+]/
+
+( n ! ) 2 t bS"
+
+1 ¸I
+
+Fig. 12. The images of the lines arg~ = const, in the t-plane. The shaded region is the image of the
+fundamental region and the other four regions are the images of the shaded region under the action of
+~ , .~,2 ~¢3 and ,~¢4. Although it is not clear at this scale, the tangents to the boundaries coincide at the
+branch points, so the deficit angles are zero as are the angles at the tips of the images. The image of the
+i
+2 1.
+p o i n t ~ O = 0 i s t = - ~ + 5 -4i sin3(2rr/5) and the four cusps touch the real axis at t = 0, 3, .~,
+
+to sho~ ~ that t h e ~ functions definitely come from the same stable but are in fact
+different.
+l'he translbrmation laws lbr t under the action of r fol|ows from the first of
+equations (5.9k We obserx~ed previously that t --, t - I under the action of JZ~¢.
+The transtbrmatkm of t under the action of g , say, is considerably more
+complicated. |n fig. !2 we ha,.c plotted the images of the lines arg ff = consz. The
+shaded regkm is the image of the lhndamental region and the other four regions
+are the images of the fundamental region under r.~:, .~*~, ::~''~and .~,4. Since the tips
+of the h t t e r tour regions come down to touch the real axis we see that large R,
+that is large l m t . is mapped m small R under the action of .~'~:. The precise
+relatkm however is not as simple as R ~ l / R .
+
+6. A mechanism for supe~ymmetry breaking
+The purpose of this section is to present a speculative mechanism which breaks
+super~mmetB, for the low-chert, theoB,. The proposal is logically independent of
+the mirror symmetB~ that is the focus of the present article; however we include it
+here ~ c a u s e it arises naturally as part of the discussion of the conifold at ~ = 1.
+In refs. [17, 18] it has been observed that the nodes of a conifold can be resolved
+in different ways. One is by s m ~ t h i n g whereby the node is replaced by an S ~ as in
+fig. 1. Another way is to replace the node by an S 2 as indicated by fig. 13.
+The construction that achieves this is entirely local in nature. However, in
+replacing the node by an S ~" we interfere with the cohomolo~' group H-" and it
+
+S3
+
+' " +:':5::::::':"
+
+M
+Fig. 13. Local neighborhoods of a node in a conifold, its small resolution in .~. and its deformation in
+.~. The conifold is singular while both . ~ and ..4' are smooth.
+
+Candelas et at. / Calabi-Yau manifdds
+
+65
+
+need no longer be the case that there remain any positive (I, 1 ) - f o ~ . If t ~ is so
+then the resulting manifold ~ ' is a Moishezon manifold but it is not ~ e r .
+case at hand is of just this type and this follows from the fact that the conifold has
+just one node. Let W be the resolving S-" = P~ then the essential point is that ~ is
+a boundary (we are indebted to T. Hfibsch for explaining this ~ i n t to ~ ) . We
+see this by considering the sequence of operations depicted in fig. 13. In passing
+from . ~ to .~r a puncture is made in B 2 and the punctur= is b|~vn up into W. T h ~
+B 2 now has a boundary 8 B 2 = ~ . L e t a l s o J = ig~,~ d x ~' A d x ~ ~ t ~ putative
+K~hler form, then we have
+v
+
+LJ= L ! :
+The first integral is the area of W which is strictly positive. Thus d J cannot vanish
+identically and hence .4# cannot be Kiihler.
+It was observed in reL [32] that such a compactification of string theory has
+certain attractive features. The holonomy group of M~" is presumably ~ 6 ) so
+embedding the spin connection in the gauge group breaks E s x E s to E s x O(I0)
+and we can have broken supersymmetry while retaining vanishing c o s m o | o g i ~
+constant. This proposal is cast in the geometrical language of Kaluza-[]ein theory.
+because it is geometrical in nature and we do not yet know how to formulate these
+ideas in terms of conformal field theory. It does however show a way of resolving
+what was regarded as a difficult problem in the days of Kaluza-Klein theory which
+was how to introduce a length scale, different from the compactification scale,
+which could correspond to low-energy supersymmetry breaking. Here we have a
+second length scale arising as the radius of the resolving P t. In some appropriate
+sense supersymmetry is only slightly broken if this parameter is small, though we
+have no argument as to why the scale of the resolving Pt should be vastly different
+from the compactification scale.
+It is a pleasure to acknowledge instructive discussions with Paul AspinwalI, WiIIy
+Fischler, Brian Greene, Vadim Kaplunovsky. Sheldon Katz, Andy LBtkem
+Fernando Quevedo, Graham Ross and Andy Strominger. We are indebted also to
+Vadim Kaplunovsky and Karen Uhlenbeck for making computer resources available.
+
+Appendix A
+A S E C O N D L O O K AT T H E H O M O L O G Y O F ~
+
+The function of this appendix is to make a more detailed study of the homolo~¢
+of 7/p and to close the gap left in sect. 3 by showing that the cycles A 2 and B z do
+
+66
+
+P. Cat,debts et aL / C,~labi-Y~m mal~ifohls
+
+indeed intersect in a point. We also make some further observations concerning
+the monodromy of the cycles and find cycles Q / c o r r e s p o n d i n g to the periods nrj.
+We begin by defining three-chains Vj, j - - 0 . . . . ,4,
+Vi(tO) = { x k l x 5 -- 1, x i , x 2 , x 3 real and positive, the branch of
+x 4 chosen such that arg x 4 ~ ~" + 2 7 r j / 5 as ~ ~ 0}.
+The five Vj are chains rather than cycles, however a little thought shows that in
+virtue of the identities (2.2) they have a common boundary, that is aVj is
+independent of j. So the difference of any two Vj is a cycle. We find x4 by solving
+the quintic which we write in the form
+dcf
+
+X45 _
+
+5
+
+A = 1 +x~+x 2+x~.
+
+5 t o x ~ x ,,.x ~.x 4 + A = 0 ,
+
+Setting also
+XIX2X 3
+
+x 4 = gt/srl,
+
+t~ =
+
+A4/5
+
+,
+
+we have
+r/5 - 5tOur/+ 1 = 0.
+
+(A.1)
+
+This equation has of course five roots for given ( x ~ , x 2 , x 3 ) . For tO sufficiently
+small these can be found by rewriting (A.1) in the form
+r//= -ozJ(1 - 5tOur/j) i/5 ,
+
+(A.2)
+
+and iterating the equation. It is easy to show that u is bounded, in fact, u varies in
+the range
+0 <~ U <~ 4 - 4 / 5 ,
+
+(A.3)
+
+so for to sufficiently small the root r/i is unambiguously defined by the iteration. It
+is clear that for small tO the Vj have no points in common apart from their
+boundaries.
+We wish next to enquire how the Vj vary with to. In order to accomplish this we
+first consider the behaviour of the roots of eq. (A.1). It is evident that (A.1) cannot
+have a purely imaginary solution for r/ if tO is real since then the first two terms
+would be purely imaginary and the third term real. Next we observe that (A.1) has
+
+P. Candelas et aL / Calabi-Yau manijfolds
+
+67
+
+a double root if in addition 1/satisfies the equation
+1/4 __ ~///.
+
+It follows that (A.1) has a double root if and only if
+( ~ u ) 5 = 4 -4 ,
+
+(A.4)
+
+1/5 = I
+
+(A.5)
+
+and that a double root satisfies
+
+One immediately sees that (A.1) cannot have a triple root or two double roots for
+any value of 4'. As a consequence of (A.3) and (A.4) 7/will have a double root for
+some value of (xj,x2, x 3) if and only if ~5 is real and 14,1 1> 1. It follows that we
+can unambiguously extend the definition of the Vj to the dJ-plane cut as in fig. 3.
+Consider now the behaviour of the roots as ~, runs from 0 to ~ through real values.
+For ~ = 0 the five roots are, as we have already seen, 1/j = - a j. Since there are no
+purely imaginary roots for any real ~, it follows that three of the roots have
+negative real part and two have positive real part. Moreover, since there cannot be
+a double root that is real and negative, in virtue of (A.5), the three roots with
+negative real part will always consist of a real root and a conjugate pair of complex
+roots.
+On the other hand the two roots with positive real part will consist of a
+conjugate pair for
+4-4/5
+U
+
+and will be distinct and real for
+4-4/5
+
+~>~,
+U
+
+with a double root precisely when
+4-4/5
+ll
+
+The situation for large ~ was discussed in sect. 3. One of the roots approaches 0,
+while the other four recede to infinity along trajectories that are asymptotic to the
+four semi-axes. The two roots with positive real part therefore approach 0 and ~:,
+respectively, while the three roots with negative real part all become infinite. A
+
+68
+
+P. Camtelas et al. / Calabi-Yau manifolds
+
+t r/s
+rio
+
+\
+rll
+Fig. A.1. The trajectories of the roots of eq. (A.I) as to increases through real values. The roots r/2 and
+rt3 become real and move as shown if tO has an infinitesimal positive imaginary part.
+
+plot of the trajectories is presented in fig. A.1. These considerations will shortly
+allow us to compute A 2 tq B 2.
+We now look at the chains Vj()) for tO > 1 which we define as the limit of Vj(to)
+with Im to positive. It follows from the foregoing that V o, V~, V4 and V 2 t) V 3 are
+disjoint and that V 2 intersects V 3. Let X be the subset of V 2 u V 3 for which
+4-4/5
+
+<u.
+
+(A.6)
+
+to
+
+X consists of two three-chains, corresponding to the two positive solutions of (A. 1)
+that have positive real part, with their boundaries identified because there is a
+double root precisely when equality holds in (A.6). A little reflection should
+convince the reader that the two three-chains are topologically three-balls and that
+the boundaries of these three-balls are identified with opposite orientation so that
+X is an S 3. In fact X is the cycle A 2 of sect. 3.
+We are now in a position to compute A 2 c3 B 2. The definition (3.1) of A z
+restricts all coordinates to be real and positive. The definition (3.4) of B 2 requires
+that Ix il = Ix zl = Ix31 = 6, s o in fact
+X 1 " - X 2 : X 3 - - ¢~.
+
+Because ,~ in the definition of B e is chosen to exclude multiple values of x 4 and in
+fact forces strict inequality in (A.6), there are exactly two points which satisfy all
+these restrictions, corresponding to the two positive real roots for r/. However, as
+we have already seen, exactly one of these is on the branch for which x4 ~ 0 as
+to ~ ~. Consequently, the intersection of A 2 and B 2 consists of a single point.
+
+69
+
+P. Candelas et al. / Calabi-Yau manifolds
+
+7
+
+Fig. A.2. Two choices for the cycle ~,~.One composed of straight lines, the other smooth.
+
+The last point we shall address in this part of the discussion is the monodromy
+of the cycles
+def
+
+% =
+
+with respect to a loop circling the point ~, = 1. From the discussion above, it
+follows that as we go around such a loop, the chains V~ remain unchanged except
+for j - 2, 3, and that the chains V 2 and V3 exchange the balls corresponding to eq.
+(A.6). This can be expressed as adding X to V 2 and substracting X from V 3 (there
+is an orientation of X implicit in this choice). The monodromy of the cycles can
+now be readily computed. We leave this as an exercise for the diligent reader.
+CYCLES CORRESPONDING TO THE PERIODS ~j
+
+As a final topic in this appendix we wish to find cycles Qj corresponding to the
+periods ~rj. The Qj together with the relation (3.23) serve to define the cycles A ~
+and B~, which have hitherto been defined only implicitly. Of course we know that
+the period corresponding to BE(~) is proportional to ~r0(~,), so cycles corresponding to the ~rj are proportional to BE(~J~), with the continuation performed along
+paths that go from ~, to aJ~ without crossing the cuts. We shall here give an
+alternative definition of the Qj and relate these cycles to the Vj discussed above.
+Let Yi, i = 1, 2, 3, be the one-cycles consisting of the union of the two half-lines
+arg xi -- 2 ~ ' / 5 and arg x~ = 0. The reason for choosing the cycle as we have is that
+u is bounded on the cycle. For other cycles, such as taking the x i to be real, this is
+no longer true so that the term ~u in eq. (A.2) is not necessarily small for small #.
+We define the cycle Qk by taking (Xi, XE, X3) E Yl X ~/2 X •3 and x4 to be given by
+the (k + 3)rd branch of the quintic.
+Solving eq. (A.2) by iteration we find
+~(kO) = --O~k ,
+
+-d'(z +
+7/(2)-- - - ~ k ( 1 + ~k,~u - - ( t g k ~ t u ) 2 ) ,
+
+etc.
+
+P.
+
+70
+
+Camh'laset aL / Calabi-YaumanifoMs
+
+The important point is that
+(A.7)
+Let qk(6) be the period evaluated on Qk,
+
+dxldx2dx3
+q~( ~ )
+
+×~._×,3 a ~ / ' ( n ~ + 3 - ~ x , x , x ~
+
+=
+
+a-~/~
+
+"
+
+(A.8)
+
+In virtue of eq. (A.7) we see that
+
+q~ ( ~ ) = q , , ( ~ ~ ),
+so it is sufficient to study qo. The factor (7/4
+as a power series in ~b,
+
+~
+
+( Sa3OXlX2X3 )
+
+--'0/3 E Cn+!
+n = II
+
+j4/5
+
+-I
+
+(n~-~Ox,x,_x,a -~/-~)
+
+~bXlX2X3A-4/5)-I can be expanded
+
+-
+
+Substituting this expression into eq. (A.8) we have
+
+q,,(~) : ~! ~ c,,,/,,,~ 3m ( 5~)'"
+
+(A.9)
+
+m= !
+
+with
+
+_-/
+
+'n-i
+
+dx I dx 2 dx3(XlX2X3)
+
+j4m/5
+
+"YI X "Y2 X "Y3
+
+The integrals I m can be evaluated in closed form. First observe that
+
+dxlxl
+f~,~ A4/5
+m -
+
+.
+
+I
+
+m -
+
+.~ d x I a i
+= (1 --O/re)ill
+
+I
+
+/I~4/5
+
+so we have
+I,,, = ( 1 - a ' " ) fo
+
+~ d x dx~ dx3(x x,x 3
+
+A4,,,/5
+
+(A.10)
+
+On introducing new variables y; = x~/2 and then going over to polar coordinates,
+we find that the integral factorizes into three integrals that are easily evaluated in
+terms of B-functions. The result is
+
+I,? =(-1)'"+l(2"n'i)
+3--~
+
+F(m/5)
+a- F(4m/5)F3(l_m/5),
+!?1
+
+( A . I 1)
+
+P. Candelas et aL / Calabi-Yau manifolds
+
+71
+
+where in writing this last relation we have used the fact that
+Substituting eq. (A.11) into eq. (A.9) we find
+'i)3 !
+
+q,,(qJ) =
+
+~
+
+--~ ~,,,E=,1 - 1 )
+
+m + !
+
+F(,,1/5)
+
+2m
+
+c,,,~
+
+r(4,,,/s)r3( l - m/5)
+
+~1/2
+
+__ _ _ a 3 .
+
+(5~,)".
+
+When the coefficients c,,, are calculated we find
+
+c,, = ( - 1 )
+
+r(4m/5)
+
+'''+'
+
+r(m) r( 1 - m/5) '
+
+yielding
+a 2,,,r ( m / 5 ) ( 5 ~ )
+
+q"(~') =
+
+-T-
+
+'n
+
+,, =1 F ( m ) F 4 ( l - m / 5 )
+
+We recognize that, in virtue of eq. (3.15), the right-hand side of this relation is
+proportional to m 0. In fact
+3
+
+q0(~)=
+
+--
+
+(27ri)
+T
+
+nr0(~b).
+
+Finally, we observe from eq. (A.10) that the Q-cycles arc related to the V-chains
+by
+3
+
+Qi=(1
+
+- ~o,/) g j + 3 ,
+
+with o~, as previously, the operation that replaces ~ by a~b. Thus we have
+Qj = Vj_2 - 3V/_, + 3Vj - Vj+,.
+
+Appendix B
+FURTHER PROPERTIES OF THE PERIODS
+
+We record here some further results pertaining to the periods nri(~b). Recall that
+nrj(~b) = mo(cd0), so for 10l < 1 we have, from eq. (3.15),
+
+,~ 2'"r( , n / 5 ) ( 5 , ~ , )
+
+,~j(~,) = - ~ F_., r ( m ) r ~ ( 1 - r e ~ s )
+m = 1
+
+ill
+
+'
+
+I~,l < 1.
+
+(B.I)
+
+Our main purpose here is to obtain explicit expressions for the nrj(t0) valid
+
+72
+
+P. Candelas et ai. / Calabi-Yau manifolds
+
+throughout the fundamental region. It is simplest to begin by discussing the basis
+(3.13). It is perhaps notationally simpler to regard the hypergeometric function
+that appears on the right-hand side of eq. (3.13) as a 5F4 which has a 5 = c 4 = 1. We
+choose the basis
+
+~ k ( O ) = r s ( k / 5 ) (5~b)ksF4
+r(k)
+
+k
+
+k
+
+k
+
+k
+
+5'5'5'5'
+
+1.
+
+k+l
+.
+
+'
+
+5
+
+.
+
+k+2
+.
+
+'
+
+k+3
+.
+.
+
+5
+
+'
+
+5
+
+k+4
+'
+
+5
+
+q~5
+'
+
+J
+
+_ ]5n+k
+
+rs( n + k/5)(~,,
+=
+
+E
+
+,
+
+F(5n + k )
+
+,,=0
+
+I~ol < 1,
+
+the last equality following in virtue of the multiplication formula (3.12). To
+analytically continue these functions we write them as integrals,
+
+drk ( qt )
+
+ds
+FS(s + k / 5 ) ( 5 d / ) 5s+k
+f
+- J c ( e 2=is- 1)
+F(5s + k )
+
+0 ~< arg ~O~< 2 r r / 5 .
+
+For I~1 > 1 the contour can be closed to the left. Note that there are no poles
+when s = - N , N = 0 , 1 , . . . , for then 5s + k = k - 5 N
+and the factor 1/F(5s + k)
+renders the integrand finite. There are however fourth-order poles when
+s = -N-k/5.
+These are not of fifth order, again because of the F(5s + k) in the
+denominator. Extracting the residues involves the expansion of ~b5s about
+s = - N - k / 5 . This produces the log ~b, log 2 ~b and log 3 ~b terms. The ~ry are given
+in terms of the firk by the relation
+1
+
+"~O'j(I]/) "--
+
+4
+
+8077.4 k~=lozJk(a k - 1)4z~k(~t).
+
+The upshot is that the ~rj have series expansions of the form
+3
+
+~
+
+(Sn)!
+
+"t~'j(~b) = E I o g r ( 5 ~ ) Y'~ bjr,,
+,---0
+,=0
+(n!)5(56) 5"'
+
+I~1 > 1
+
+'
+
+with the coefficients bjr n given by somewhat lengthy expressions. Defining
+
+5
+¢(z)
+
+k=l
+
+= ~,(1 +z)
+
+- ~,(1 + 5z),
+
+73
+
+P. Candelas et al. / Calabi-Yau manifolds
+
+we have
+1
+bjoni --
+
+6(2zri)3 {6(2rti)3(Sio - 1) + 6(2~ri)212~-i + 5qJ(m)]Sj,
++ 3 ( 2 ~ i ) [2(2"rri) 2 + 5(2,rri)tO(m) - 5 ~ ' ( m ) + 25~2(m)]Si2
++5[~"(m) + 5(2~i)2~(m) - 15~(m)~'(m)
+
+bjlm --
+
++ 25~3(m)]Si3),
+
+5
+(2(2,n.i)2S~ ' + (2"n'i)[2-tri + lOq~(m)] Sj2
+2(2.a.i)3
++ 3[(27ri)2 + 15qb2(m) - 3@'(m)]Sj3),
+25
+2(2rri)3 {2~'iSj 2 + 5 ~ ( m ) S j 3 } ,
+
+bj2nl
+
+125
+bj3m --
+
+6(217-/) 3Sj3"
+
+Finally we record the series expansion of z 2 about ~ = 1,
+4772
+
+Z~(I//)
+: 53/2
+'
+
+E
+
+am(1 -- ~b5) 'n+' ,
+
+I I//5 - 1 1 < 1 ,
+
+m = 0
+
+where the coefficients satisfy the recurrence relation
+0 = 625m2(m 2 - 1)a m -- 1 2 5 m ( m - 1 ) ( 2 0 m 2 - 4 0 m + 23)a,,,_ i
++ 125(m - 1)(30m 3 - 150m 2 + 261m -- 157)a,._ 2
+- ( 2 5 0 0 m 4 - 22500m 3 + 76625m 2 - 116875m + 67226)am_ 3
++ 625(m - 3) 4a m - 4
+with the initial values
+ao--
+
+1
+-- .~,
+
+al
+
+=
+
+3
+5o-
+
+References
+[1] P. Candelas, M. Lynker and R. Schimmrigk, Nucl, Phys. B341 (1990) 383
+[2] B.R. Greene and M.R. Plesser, (2,2) and (2,0) superconformal orbifolds, Harvard University
+report HUTP-89/B241; Duality in Calabi-Yau moduli space, Harvard University report HUTP89/A043
+
+74
+
+P. Candehts et al. / Calabi-Yau man(folds
+
+[3] P. Aspinwali, A. Liitken and G.G. Ross, Phys. Lett. B241 (1990) 373
+[4] A. Strominger and E. Witten, Commun. Math. Phys. 101 (1985) 341
+[5] E. Witten, Nucl. Phys. B268 (1986) 79:
+E. Martinec, Phys. Lett. BI71 (1986) 189;
+M. Dine and N. Seiberg, Phys. Rev. Lett. 57 (1986) 2625
+[6] M. Dine, N. Seiberg, X.G. Wen and E. Witten, Nucl. Phys. B278 (1986) 769; B289 (1987) 319
+[7] J. Distler and B.R. Greene, Nucl. Phys. B309 (1988) 295
+[8] L. Dixon and D. Gepner, unpublished
+[9] W. Lerche, C. Vafa and N.P. Warner, Nucl. Phys. B324 (1989) 427
+[10] P. Candelas, Nucl. Phys. B298 (1988)458
+[11] A. Giveon, E. Rabinovici and G. Veneziano, Nucl. Phys. B322 (1989) 167;
+V. P. Nair, A. Shapere, A Strominger and F. Wilczek, Nucl. Phys. B287 (1987) 402;
+A. Shapere and F. Wilczek, Nucl. Phys. B320 (1989) 669
+[12] S. Ferrara, D. Liist, A Shapere and S. Theisen, Phys. Lett. B225 (1989) 363,
+S. Ferrara, D. Liist and S. Theisen, Phys. Lett. B233 (1989) 147;
+W. Lerche, D. Liist and N. P. Warner, Phys. Lett. B231 (1989) 417;
+S. Ferrara, D. Liist and S. Theisen, Phys. Lett. B242 (1990) 39,
+B. de Wit and A. Van Proeyen, Symmetries of dual-quaternionic manifolds, University of Utrecht
+report THU-90/18, CERN report CERN-TH.5865/90
+[13] J. Koilar, Bull. Am. Math. Soc. 17 (1987)211
+[14] M.T. Grisaru, A. van de Ven and D. Zanon, Phys. Lett. B173 (1986) 423: Nucl. Phys. B277 (1986)
+388, 409
+[15] M. Lynker and R. Schimmrigk, Landau-Ginzburg theories as orbifolds, University of Texas report
+UTTG-22-90; Santa Barbara Institute for Theoretical Physics report NSF-ITP-90-88
+[16] P. Candelas, P.S. Green, M. Lynker and R. Schimmrigk, Calabi-Yau manifolds in weighted ~4,
+University of Texas report, in preparation
+[17] P. Candelas, P. Green and T. Hiibsch, Nucl. Phys. B330 (199[)) 49
+[18] P. Candelas and X.C. de la Ossa, Nucl. Phys. B342 (1990) 246
+[19] R. Bryant and P. Griffiths, Progress in mathematics 36 (Birkhfiuser, Boston, 1983) p. 77
+[20] P. Candelas and X.C. de la Ossa, Moduli space of Calabi-Yau manifolds, University of Texas
+report UTTG-07-90
+[21] A. Strominger, Special geometry, University of California at Santa Barbara report, UCSBTH-89-61
+[22] A. Erd~lyi, F. Oberhettinger, W. Magnus and F.G. Tricomi, Higher transcendental functions
+(McGraw-Hill, New York, 1953)
+[23] V.I. Arnold, S.M. Gusein-Zade and A.N. Varchenko, Singularities of differentiable maps, Vol. If,
+Monographs in Mathematics 83 (Birkhfiuser, Basel, 1988)
+[24] L.J. Slater, Generalized hypergeometric functions (Cambridge Univ. Press, Cambridge, 1966)
+[25] D. Gepner, Phys. Lett. B!99 (1987) 380
+[26] C.N. Pope, M.F. Sohnius and K.S. Stelle, Nucl. Phys. B283 (1987) 192;
+M.D. Freeman and C.N. Pope, Phys. Lett. B174 (1986) 48;
+P. Candelas, M.D. Freeman, C.N. Pope, M.F. Sohnius and K.S. Stelle, Phys. Lett. B177 (1986) 341"
+M.D. Freeman, C.N. Pope, M.F. Sohnius and K.S. Stelle, Phys. Lett. B178 (1986) 199
+[27] P. Aspic.wall and A. Liitken, Geometry of mirror manifolds, Oxford University report (April 1990);
+Quantum algebraic geometry of superstring compactifications, Oxford University report (September 1990)
+[28] S. Katz, Compositio Math. 60 (1986) 151
+[29] J. Harris, Duke Math. J. 46 (1979) 685
+[30] H. Clemens, Some results on AbeI-Jacobi mappings in topics in transcendental algebraic geometry
+(Princeton Univ. Press, Princeton, 1984)
+[31] C.M. Bender and S.A. Orzag, Advanced mathematics for scientists and engineers (McGraw-Hill,
+New York, 1978)
+[321 P. Candelas, G. Horowitz, A. Strominger and E. Witten, Nucl. Phys. B258 (1985) 46
+
+

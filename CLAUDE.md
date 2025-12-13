@@ -151,11 +151,50 @@ When you find a relevant arXiv paper or other academic PDF during research:
 3. Example: `curl -L "https://arxiv.org/pdf/2111.03078.pdf" -o resources/orientifold_cy_divisor_involutions_2111.03078.pdf`
 4. **No exceptions** - papers referenced in code/docs should be locally available
 5. Add paper description to this file or relevant docs
-6. **ALWAYS convert to .txt** for searchability:
+
+### CRITICAL: Prefer LaTeX Source Over pdftotext
+
+**NEVER use `pdftotext` for physics papers with formulas!** The conversion destroys critical mathematical formatting:
+- Parentheses grouping is lost (e.g., `(4/3 * x)^{-1}` becomes ambiguous)
+- Subscripts/superscripts merge incorrectly
+- Multi-line equations get jumbled
+- This has caused REAL formula misinterpretation bugs (see `mcallister_2107/EK0_FORMULA_DISCREPANCY_RESOLUTION.md`)
+
+**Always prefer `.tex` source files:**
+
+1. **For arXiv papers**: Download the source tarball and extract the `.tex` file:
    ```bash
-   pdftotext resources/paper_name.pdf resources/paper_name.txt
+   # Download source
+   curl -L "https://arxiv.org/src/2107.09064" -o resources/arxiv_2107.09064_source.tar.gz
+   # Extract and find .tex file
+   tar -tzf resources/arxiv_2107.09064_source.tar.gz | grep '\.tex$'
+   # Copy main .tex to resources/
+   tar -xzf resources/arxiv_2107.09064_source.tar.gz -C /tmp && cp /tmp/main.tex resources/paper_name_arxiv_id.tex
    ```
-   This enables `rg` (ripgrep) searching across all papers
+
+2. **File naming**: `resources/<descriptive_name>_<arxiv_id>.tex`
+
+3. **Only use `.txt` (via pdftotext) as last resort** when:
+   - No LaTeX source is available (e.g., PDG review, journal-only papers)
+   - The paper has no formulas (pure text/tables)
+
+4. **Searching papers**: Use `rg` on `.tex` files - they're fully searchable:
+   ```bash
+   rg -i "vacuum energy" resources/*.tex
+   rg -i -B5 -A10 "cosmological constant" resources/small_cc_2107.09064.tex
+   ```
+
+**Current `.tex` sources:** (26 papers converted)
+All arXiv papers have been converted to `.tex` for accurate formula reading. Major papers include:
+- `resources/small_cc_2107.09064.tex` - McAllister AdS vacua (our primary reference)
+- `resources/demirtas_small_W0_1912.10047.tex` - Demirtas W₀ computations
+- `resources/mcallister_moduli_stabilization_review_2310.20559.tex` - McAllister review
+- `resources/systematic_kahler_stabilization_2005.11329.tex` - KKLT stabilization
+- Plus 22 other physics/math papers with LaTeX source
+
+**Remaining `.txt` files** (no `.tex` source available):
+- `candelas_COGP_mirror_symmetry_1991.txt` - 1991 paper, predates arXiv electronic submission
+- `rpp2024-rev-cosmological-parameters.txt` - PDG review, not on arXiv
 
 ### First-time setup:
 ```bash
@@ -495,15 +534,15 @@ Physics values (invariant under transformation):
 - V₀ = -5.5 × 10⁻²⁰³ Mpl⁴
 
 ### Searching the McAllister Paper
-All papers in `resources/` have been converted to `.txt` for searching. Use `rg`:
+The primary paper source is `.tex` (LaTeX) for accurate formula reading. Use `rg`:
 ```bash
-# Search for specific terms
-rg -i -B5 -A10 "vacuum energy" resources/small_cc_2107.09064.txt
-rg -i -B5 -A10 "cosmological constant" resources/small_cc_2107.09064.txt
-rg -i -B3 -A10 "e\^K|eK" resources/small_cc_2107.09064.txt
+# Search for specific terms in LaTeX source (PREFERRED)
+rg -i -B5 -A10 "vacuum energy" resources/small_cc_2107.09064.tex
+rg -i -B5 -A10 "cosmological constant" resources/small_cc_2107.09064.tex
+rg -i -B3 -A10 "e\^K|eK" resources/small_cc_2107.09064.tex
 
-# Search across all papers
-rg -i "vacuum energy" resources/*.txt
+# Search across all papers (.tex preferred, .txt for papers without LaTeX source)
+rg -i "vacuum energy" resources/*.tex resources/*.txt
 ```
 
 ## Critical Physics Formulas
