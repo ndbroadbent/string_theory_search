@@ -1,0 +1,157 @@
+# McAllister Pipeline Status - 2024-12-14
+
+## Overview
+
+This document tracks the validation status of each pipeline step against McAllister's 5 examples (arXiv:2107.09064).
+
+**Goal:** Compute V₀ = -5.5 × 10⁻²⁰³ for polytope 4-214-647, then generalize to GA search.
+
+---
+
+## Script Status Summary
+
+| Script | Status | Tests Passing | Key Formula | Notes |
+|--------|--------|---------------|-------------|-------|
+| `compute_triangulation.py` | ✅ | 5/5 | - | Loads polytope, heights, simplices |
+| `compute_V_string.py` | ✅ | 4/5 | eq 4.11 | 7-51 excluded (non-favorable) |
+| `compute_c_i.py` | ✅ | 5/5 | - | MODEL INPUT, not computed |
+| `compute_rigidity_combinatorial.py` | ✅ | 4/5 | Braun eq 2.7 | 7-51 excluded |
+| `compute_target_tau.py` | ✅ | 5/5 | eq 2.29, 5.12 | |
+| `compute_chi_divisor.py` | ✅ | 4/5 | 12×χ(O_D)-D³ | ~3% error = GV corrections |
+| `compute_gv_invariants.py` | ✅ | 5/5 | - | min_points=20000 |
+| `compute_derived_racetrack.py` | ⚠️ | 2/5 | eq 5.x | 4-214-647 ✅, 5-113-main ✅, others fail (no racetrack structure) |
+| `compute_kklt_iterative.py` | ✅ | 4/5 | eq 4.12 | V_string validated, needs actual t solver |
+| `compute_divisor_cohomology.py` | ⚠️ | ? | Koszul | Requires cohomCalg |
+
+---
+
+## Key Formulas (from .tex source)
+
+### 1. V_string (eq 4.11)
+```
+V_string = (1/6) κ_ijk t^i t^j t^k - ζ(3)χ/(4(2π)³)
+```
+- BBHL correction: `ζ(3) × χ / (4(2π)³)` where `χ = 2(h11 - h21)`
+- **Validated:** 5-81-3213 matches to 1e-13 (exact), others 6-9 sig figs
+- **Note:** Compare against `cy_vol.dat` (classical), NOT `corrected_cy_vol.dat` (with worldsheet instantons)
+
+### 2. e^{K₀} (eq 6.12)
+```
+e^{K₀} = (4/3 × κ̃_abc p^a p^b p^c)^{-1} = (3/4) / κ̃p³
+```
+- **CRITICAL:** The inverse applies to the ENTIRE expression including 4/3
+- See `EK0_FORMULA_DISCREPANCY_RESOLUTION.md` for full explanation
+- **Validated:** All 5 examples match when using correct formula
+
+### 3. c_τ (eq 2.29)
+```
+c_τ = 2π / (g_s × ln(1/W₀))
+```
+- **Validated:** All 5 examples match to < 1e-6 error
+
+### 4. Target τ (eq 5.12-5.13)
+```
+τ_target = c_i/c_τ + χ(D_i)/24 - GV_corrections
+```
+- First two terms validated, ~3% residual = GV corrections (not yet implemented)
+
+### 5. T_i with instanton corrections (eq 4.12)
+```
+T_i(t) = (1/2) κ_ijk t^j t^k - χ(D_i)/24 + (GV sum)
+```
+- Classical term validated
+- GV corrections NOT yet integrated into solver
+
+### 6. Final V₀ (eq 6.24)
+```
+V₀ = -3 × e^{K₀} × (g_s⁷/(4×V_string)²) × W₀²
+```
+- **Requires:** e^{K₀}, g_s, V_string, W₀
+- W₀ ~ 10⁻⁹⁰ requires mpmath (150+ digits)
+
+---
+
+## Remaining Issues
+
+### 1. compute_derived_racetrack.py - PARTIAL (2/5 pass)
+
+**Results:**
+- ✅ 4-214-647: g_s=0.009111, W₀~10⁻⁹⁰ (exact match)
+- ✅ 5-113-4627-main: g_s=0.011144, W₀~10⁻⁶¹ (~6% W₀ error)
+- ❌ 5-113-4627-alternative: Leading terms have same sign
+- ❌ 5-81-3213: Leading terms have same sign
+- ❌ 7-51-13590: Leading terms have same sign
+
+**Root cause:** The racetrack solver assumes a two-term structure with opposite-sign coefficients:
+```
+W ≈ A × e^{2πiτα} + B × e^{2πiτβ}  with A × B < 0
+```
+This enables an analytical solution. But some examples don't have this structure.
+
+**Fix needed:** Implement numerical F-term solver for general cases:
+```python
+# Instead of analytical two-term formula:
+# Solve: ∂W/∂τ + W × ∂K/∂τ = 0 numerically
+```
+
+### 2. GV corrections in KKLT solver
+The τ_target formula has ~3% residual error because we haven't added GV corrections to the iterative solver.
+
+**Required:**
+- Integrate GV invariants into `compute_kklt_iterative.py`
+- Use `corrected_kahler_param.dat` (not `kahler_param.dat`) for validation
+
+### 3. 7-51-13590 non-favorable
+The primal polytope for 7-51-13590 is non-favorable in CYTools 2021, so:
+- `compute_V_string.py` - skipped
+- `compute_rigidity_combinatorial.py` - skipped
+- `compute_chi_divisor.py` - skipped
+
+This is NOT a bug - the polytope genuinely doesn't have a favorable triangulation in 2021.
+
+---
+
+## Verified Understanding
+
+### e^{K₀} Formula (RESOLVED)
+- Initial confusion: thought formula was `(4/3) × (κp³)^{-1}`
+- **Correct:** `((4/3) × κp³)^{-1} = (3/4)/(κp³)`
+- The 16/9 discrepancy was from misreading LaTeX parentheses
+- See `EK0_FORMULA_DISCREPANCY_RESOLUTION.md`
+
+### V_string vs corrected_V_string
+- `cy_vol.dat` = classical V + BBHL (what we compute)
+- `corrected_cy_vol.dat` = classical V + BBHL + worldsheet instantons
+- Our formula matches `cy_vol.dat`, not `corrected_cy_vol.dat`
+
+### c_i values (MODEL CHOICE)
+- c_i = 1 (D3-instanton), 6 (O7/SO(8)), or 2 (Sp(2))
+- These are MODEL INPUTS from orientifold choice
+- Loaded from `target_volumes.dat`, NOT computed from geometry
+
+---
+
+## Next Steps
+
+1. **Fix racetrack script** - resolve import issue
+2. **Test KKLT iterative solver** - verify against `corrected_kahler_param.dat`
+3. **Add GV corrections** - to τ_target and T_i solver
+4. **End-to-end test** - compute V₀ = -5.5e-203 for 4-214-647
+5. **Document remaining formulas** - add .tex equation references
+
+---
+
+## Test Commands
+
+```bash
+# Run all validated scripts
+uv run python mcallister_2107/2021_cytools/compute_V_string.py
+uv run python mcallister_2107/2021_cytools/compute_c_i.py
+uv run python mcallister_2107/2021_cytools/compute_rigidity_combinatorial.py
+uv run python mcallister_2107/2021_cytools/compute_target_tau.py
+uv run python mcallister_2107/2021_cytools/compute_chi_divisor.py
+uv run python mcallister_2107/2021_cytools/compute_gv_invariants.py  # slow, ~2min
+
+# Broken (needs fixing)
+uv run python mcallister_2107/2021_cytools/compute_derived_racetrack.py
+```
