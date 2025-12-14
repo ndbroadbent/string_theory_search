@@ -48,9 +48,9 @@ For 3 examples, the two leading superpotential terms have **same-sign** coeffici
 | `compute_target_tau.py` | ✅ 5/5 | |
 | `compute_chi_divisor.py` | ✅ 4/5 | ~3% = GV corrections |
 | `compute_gv_invariants.py` | ✅ 5/5 | |
-| `compute_kklt_iterative.py` | ✅ 4/5 | V_string validated |
+| `compute_kklt_iterative.py` | ⚠️ 4/5 | Needs t solver + GV corrections |
 | `compute_derived_racetrack.py` | ✅ 5/5 | **FIXED 2024-12-14** |
-| `compute_divisor_cohomology.py` | ⚠️ | Requires cohomCalg |
+| `compute_divisor_cohomology.py` | ✅ 5/5 | Dual polytopes (primal too large for cohomCalg) |
 
 ---
 

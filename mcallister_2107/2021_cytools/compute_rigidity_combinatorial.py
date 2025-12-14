@@ -12,9 +12,11 @@ For CY threefold hypersurfaces, rigidity is determined combinatorially:
 
 Uses CYTools' PolytopeFace.dual_face().interior_points() method.
 
+NOTE: This computation works for ALL polytopes including non-favorable ones.
+The rigidity check depends only on polytope faces and their duals, not on
+whether a CY can be constructed.
+
 Validation: Tests against all 5 McAllister examples.
-- 4-214-647: 214 divisors, validates against kklt_basis.dat (214 rigid)
-- 7-51-13590: primal is non-favorable in CYTools 2021 (skipped)
 """
 
 import sys
@@ -34,12 +36,13 @@ sys.path.insert(0, str(CYTOOLS_2021))
 from cytools import Polytope
 
 # McAllister examples (name, h11_primal, h21_primal)
+# Note: 7-51-13590 is non-favorable for CY construction, but rigidity works fine
 MCALLISTER_EXAMPLES = [
     ("4-214-647", 214, 4),
     ("5-113-4627-main", 113, 5),
     ("5-113-4627-alternative", 113, 5),
     ("5-81-3213", 81, 5),
-    # ("7-51-13590", 51, 7),  # primal is non-favorable in CYTools 2021
+    ("7-51-13590", 51, 7),  # non-favorable for CY but rigidity computation still works
 ]
 
 
@@ -248,17 +251,8 @@ def test_example(example_name: str, expected_h11: int, verbose: bool = True) -> 
 
     poly = Polytope(points)
 
-    # Check if favorable (CYTools 2021 requires lattice argument)
-    try:
-        is_fav = poly.is_favorable(lattice="N")  # N-lattice (dual)
-    except TypeError:
-        # Older CYTools versions don't need argument
-        is_fav = poly.is_favorable()
-
-    if not is_fav:
-        if verbose:
-            print(f"  SKIP: Polytope is non-favorable in CYTools 2021")
-        return {"example_name": example_name, "passed": True, "skipped": True}
+    # Rigidity computation works for all polytopes (favorable or not)
+    # It only depends on polytope faces and duals, not CY construction
 
     # Compute rigidity
     results = compute_rigidity(poly)
@@ -347,7 +341,7 @@ def main():
     print("Divisor D is rigid iff h^i(O_D) = (1, 0, 0)")
     print("=" * 70)
     print("\nNOTE: Uses dual_face().interior_points() to determine rigidity")
-    print("      7-51-13590 excluded (primal non-favorable in CYTools 2021)")
+    print("      Works for ALL polytopes (favorable or not)")
 
     results = []
     for name, h11, h21 in MCALLISTER_EXAMPLES:

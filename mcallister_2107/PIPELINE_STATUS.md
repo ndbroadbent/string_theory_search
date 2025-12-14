@@ -20,8 +20,8 @@ This document tracks the validation status of each pipeline step against McAllis
 | `compute_chi_divisor.py` | ✅ | 4/5 | 12×χ(O_D)-D³ | ~3% error = GV corrections |
 | `compute_gv_invariants.py` | ✅ | 5/5 | - | min_points=20000 |
 | `compute_derived_racetrack.py` | ✅ | 5/5 | eq 2.22-2.26 | **FIXED 2024-12-14**: same-sign coefficient case |
-| `compute_kklt_iterative.py` | ✅ | 4/5 | eq 4.12 | V_string validated, needs actual t solver |
-| `compute_divisor_cohomology.py` | ⚠️ | ? | Koszul | Requires cohomCalg |
+| `compute_kklt_iterative.py` | ✅ | 4/5 | eq 4.12 | V_string validated; solver exists but main() only validates |
+| `compute_divisor_cohomology.py` | ✅ | 5/5 | Koszul | Dual polytopes only (primal too large) |
 
 ---
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Compute string frame CY volume V_string using CYTools 2021.
+Compute string frame CY volume V_string.
 
 V_string = (1/6) κ_ijk t^i t^j t^k - BBHL_correction
 
@@ -20,6 +20,7 @@ PRECISION ANALYSIS:
 - 4-214-647: 9 significant figures (error = 4e-09)
 - 5-113-4627-main: 7 significant figures (error = 1e-07)
 - 5-113-4627-alternative: 6 significant figures (error = 4e-07)
+- 7-51-13590: Uses latest CYTools with experimental features (non-favorable)
 
 Differences are due to accumulated floating point error in cubic summation
 over h11 terms. Threshold set to 1e-6 (6 significant figures).
@@ -30,10 +31,12 @@ Reference: arXiv:2107.09064 (McAllister et al.)
 import sys
 from pathlib import Path
 
-# Use CYTools 2021 ONLY
 SCRIPT_DIR = Path(__file__).parent
 ROOT_DIR = SCRIPT_DIR.parent.parent
 CYTOOLS_2021 = ROOT_DIR / "vendor/cytools_mcallister_2107"
+CYTOOLS_LATEST = ROOT_DIR / "vendor/cytools_latest/src"
+
+# Default to CYTools 2021, switch to latest for non-favorable cases
 sys.path.insert(0, str(CYTOOLS_2021))
 
 import numpy as np
@@ -42,15 +45,15 @@ from cytools import Polytope
 
 DATA_BASE = ROOT_DIR / "resources/small_cc_2107.09064_source/anc/paper_data"
 
-# Examples with (name, h11_primal, h21_primal)
+# Examples with (name, h11_primal, h21_primal, is_favorable)
 # Note: primal has LARGE h11, dual/mirror has small h11
-# 7-51-13590 is excluded: primal CY is non-favorable in CYTools 2021
+# 7-51-13590 is non-favorable in CYTools 2021 - requires latest with experimental features
 MCALLISTER_EXAMPLES = [
-    ("4-214-647", 214, 4),
-    ("5-113-4627-main", 113, 5),
-    ("5-113-4627-alternative", 113, 5),
-    ("5-81-3213", 81, 5),
-    # ("7-51-13590", 51, 7),  # non-favorable CY - CYTools 2021 doesn't support
+    ("4-214-647", 214, 4, True),
+    ("5-113-4627-main", 113, 5, True),
+    ("5-113-4627-alternative", 113, 5, True),
+    ("5-81-3213", 81, 5, True),
+    ("7-51-13590", 51, 7, False),  # non-favorable: use latest CYTools
 ]
 
 # Tolerance: 1e-6 (6 significant figures)
@@ -73,11 +76,12 @@ def compute_intersection_tensor(cy) -> np.ndarray:
         cy: CYTools CalabiYau object
 
     Returns:
-        (h11, h11, h11) symmetric tensor
+        (basis_size, basis_size, basis_size) symmetric tensor
     """
-    h11 = cy.h11()
+    # Use basis size, not h11 (they differ for non-favorable cases)
+    basis_size = len(cy.divisor_basis())
     kappa_sparse = cy.intersection_numbers(in_basis=True)
-    kappa = np.zeros((h11, h11, h11))
+    kappa = np.zeros((basis_size, basis_size, basis_size))
 
     # Handle both dict (latest) and array (2021) formats
     if hasattr(kappa_sparse, 'items'):
@@ -191,7 +195,59 @@ def load_cy_vol(example_name: str) -> float:
 # =============================================================================
 
 
-def test_example(example_name: str, expected_h11: int, expected_h21: int, verbose: bool = True) -> dict:
+def get_cy_for_example(example_name: str, is_favorable: bool, verbose: bool = True):
+    """
+    Get CY object for an example, handling favorable/non-favorable cases.
+
+    For favorable cases: uses CYTools 2021
+    For non-favorable cases: uses latest CYTools with experimental features
+
+    Returns:
+        (cy, h11, h21) tuple
+    """
+    points = load_primal_points(example_name)
+    heights = load_heights(example_name, corrected=True)
+
+    if is_favorable:
+        # Use CYTools 2021 (already imported)
+        poly = Polytope(points)
+        tri = poly.triangulate(heights=heights)
+        cy = tri.get_cy()
+    else:
+        # Use latest CYTools with experimental features for non-favorable
+        # Need to reload the module
+        import importlib
+
+        # Clear cytools modules
+        mods_to_remove = [k for k in list(sys.modules.keys()) if 'cytools' in k]
+        for mod in mods_to_remove:
+            del sys.modules[mod]
+
+        # Insert latest CYTools path at front
+        if str(CYTOOLS_LATEST) in sys.path:
+            sys.path.remove(str(CYTOOLS_LATEST))
+        sys.path.insert(0, str(CYTOOLS_LATEST))
+
+        from cytools import Polytope as PolytopeLatest
+        from cytools import config
+        config.enable_experimental_features()
+
+        poly = PolytopeLatest(points)
+        tri = poly.triangulate(heights=heights)
+        cy = tri.get_cy()
+
+        # Restore CYTools 2021 for other examples
+        mods_to_remove = [k for k in list(sys.modules.keys()) if 'cytools' in k]
+        for mod in mods_to_remove:
+            del sys.modules[mod]
+        sys.path.remove(str(CYTOOLS_LATEST))
+        sys.path.insert(0, str(CYTOOLS_2021))
+
+    return cy, cy.h11(), cy.h21()
+
+
+def test_example(example_name: str, expected_h11: int, expected_h21: int,
+                 is_favorable: bool = True, verbose: bool = True) -> dict:
     """
     Test V_string computation against one McAllister example.
 
@@ -200,6 +256,7 @@ def test_example(example_name: str, expected_h11: int, expected_h21: int, verbos
     Args:
         example_name: Name of the example (e.g., "4-214-647")
         expected_h11, expected_h21: Expected Hodge numbers (for primal)
+        is_favorable: Whether polytope is N-favorable (use 2021) or not (use latest)
         verbose: Print progress
 
     Returns:
@@ -207,7 +264,8 @@ def test_example(example_name: str, expected_h11: int, expected_h21: int, verbos
     """
     if verbose:
         print("=" * 70)
-        print(f"TEST - {example_name} (primal h11={expected_h11})")
+        cytools_ver = "CYTools 2021" if is_favorable else "CYTools latest (experimental)"
+        print(f"TEST - {example_name} (primal h11={expected_h11}) [{cytools_ver}]")
         print("=" * 70)
 
     # Load PRIMAL polytope points
@@ -215,14 +273,8 @@ def test_example(example_name: str, expected_h11: int, expected_h21: int, verbos
     if verbose:
         print(f"\nLoaded primal polytope: {points.shape[0]} points")
 
-    # Load triangulation heights (corrected = KKLT vacuum)
-    heights = load_heights(example_name, corrected=True)
-
-    # Build CY with McAllister's triangulation
-    poly = Polytope(points)
-    tri = poly.triangulate(heights=heights)
-    cy = tri.get_cy()
-    h11, h21 = cy.h11(), cy.h21()
+    # Get CY (handles favorable vs non-favorable)
+    cy, h11, h21 = get_cy_for_example(example_name, is_favorable, verbose)
 
     if verbose:
         print(f"CY: h11={h11}, h21={h21}")
@@ -287,16 +339,16 @@ def test_example(example_name: str, expected_h11: int, expected_h21: int, verbos
 def main():
     """Test V_string computation against McAllister examples."""
     print("=" * 70)
-    print("V_STRING COMPUTATION - MCALLISTER EXAMPLES (CYTools 2021)")
+    print("V_STRING COMPUTATION - MCALLISTER EXAMPLES")
     print("Formula: V_string = (1/6)κ_ijk t^i t^j t^k - BBHL")
     print(f"Tolerance: {TOLERANCE:.0e} (6 significant figures)")
     print("=" * 70)
     print("\nNOTE: Comparing against cy_vol.dat (no worldsheet instantons)")
-    print("      7-51-13590 excluded (non-favorable CY)")
+    print("      7-51-13590 uses latest CYTools (non-favorable in 2021)")
 
     results = []
-    for name, h11, h21 in MCALLISTER_EXAMPLES:
-        result = test_example(name, h11, h21, verbose=True)
+    for name, h11, h21, is_favorable in MCALLISTER_EXAMPLES:
+        result = test_example(name, h11, h21, is_favorable=is_favorable, verbose=True)
         results.append(result)
         print()
 
