@@ -215,7 +215,7 @@ def compute_racetrack_terms(
 
 def compute_W_at_Im_tau(terms: list, Im_tau: float) -> mpf:
     """
-    Compute |W(τ)| at given Im(τ).
+    Compute |W(τ)| at given Im(τ), assuming Re(τ) = 0.
 
     W = -ζ Σ_q (M·q) N_q Li₂(e^{2πiτ(q·p)})
 
@@ -226,6 +226,34 @@ def compute_W_at_Im_tau(terms: list, Im_tau: float) -> mpf:
 
     for exp_coeff, coeff in terms:
         arg = mp_exp(-2 * mp_pi * Im_tau_mp * mpf(str(exp_coeff)))
+        W_sum += mpf(str(float(coeff))) * polylog(2, arg)
+
+    return abs(-ZETA * W_sum)
+
+
+def compute_W_at_complex_tau(terms: list, Re_tau: float, Im_tau: float) -> mpf:
+    """
+    Compute |W(τ)| at given complex τ = Re_tau + i*Im_tau.
+
+    W = -ζ Σ_q (M·q) N_q Li₂(e^{2πiτ(q·p)})
+
+    For τ = x + iy:
+        e^{2πiτ α} = e^{2πi(x+iy)α} = e^{-2παy} × e^{2πiαx}
+
+    The argument to Li₂ is complex when Re(τ) ≠ 0.
+    """
+    from mpmath import mpc, exp as mp_exp_c
+
+    W_sum = mpc(0)
+    Re_tau_mp = mpf(str(Re_tau))
+    Im_tau_mp = mpf(str(Im_tau))
+
+    for alpha, coeff in terms:
+        alpha_mp = mpf(str(alpha))
+        # e^{2πiτα} = e^{-2παy} × e^{2πiαx}
+        magnitude = mp_exp(-2 * mp_pi * Im_tau_mp * alpha_mp)
+        phase = 2 * mp_pi * alpha_mp * Re_tau_mp
+        arg = magnitude * mp_exp_c(mpc(0, phase))
         W_sum += mpf(str(float(coeff))) * polylog(2, arg)
 
     return abs(-ZETA * W_sum)
@@ -265,14 +293,24 @@ def solve_racetrack(terms: list, verbose: bool = True) -> dict:
     """
     Solve racetrack for g_s and W₀ using F-term stabilization.
 
-    The F-term condition for the dilaton is:
-        Dτ W = ∂W/∂τ + W × ∂K/∂τ = 0
+    From McAllister eq. 2.22, the flux superpotential is:
+        W = -ζ Σ (M·q) N_q Li₂(e^{2πiτ(q·p)})
 
-    For the dilaton, this simplifies to finding the point where W and dW/dτ
-    satisfy the KKLT stabilization condition.
+    The F-term ∂W/∂τ = 0 gives (for the two leading terms q₁, q₂):
+        (M·q₁)(p·q₁)N_{q₁} × e^{2πiτα} + (M·q₂)(p·q₂)N_{q₂} × e^{2πiτβ} = 0
 
-    In practice, we use the analytical two-term formula as initial guess,
-    then refine to match the observed racetrack structure.
+    This defines δ (eq. 2.25):
+        δ = -[(M·q₁)(p·q₁)N_{q₁}] / [(M·q₂)(p·q₂)N_{q₂}]
+
+    The solution (eq. 2.26) is:
+        ⟨e^{2πiτ}⟩ ≈ δ^{1/ε}  where ε = β - α
+
+    For opposite-sign W coefficients: δ > 0, solution is purely imaginary τ
+    For same-sign W coefficients: δ < 0, solution has Re(τ) = 1/(2ε)
+
+    In both cases:
+        Im(τ) = ln(1/|δ|) / (2πε)
+        g_s = 1/Im(τ)
 
     Returns dict with g_s, W0, and diagnostic info.
     """
@@ -283,96 +321,100 @@ def solve_racetrack(terms: list, verbose: bool = True) -> dict:
         }
 
     # Get the two leading terms
+    # terms contains (exponent, superpotential_coefficient) where coeff = (M·q)×N_q
     alpha, coeff_alpha = terms[0]
     beta, coeff_beta = terms[1]
 
     if verbose:
         print(f"  Racetrack has {len(terms)} unique exponents")
-        print(f"  Leading terms (α=q·p, coeff):")
+        print(f"  Leading terms (α=q·p, coeff=(M·q)×N_q):")
         for e, c in terms[:5]:
-            print(f"    α={e:.6f} ({e * 110:.1f}/110), coeff={int(c)}")
+            print(f"    α={e:.6f}, coeff={int(c)}")
 
-    # Check for racetrack structure (opposite-sign coefficients)
-    if coeff_alpha * coeff_beta > 0:
+    # Compute ε = β - α (exponent gap)
+    epsilon = beta - alpha
+
+    if epsilon <= 0:
+        return {
+            "success": False,
+            "error": f"Invalid exponent ordering: α={alpha}, β={beta}",
+        }
+
+    # Compute δ from eq. 2.25:
+    # δ = -[(M·q₁)(p·q₁)N_{q₁}] / [(M·q₂)(p·q₂)N_{q₂}]
+    #   = -(coeff_alpha × α) / (coeff_beta × β)
+    # Note: coeff = (M·q)×N_q, so coeff×α = (M·q)×(p·q)×N_q
+    derivative_coeff_1 = coeff_alpha * alpha  # (M·q₁)(p·q₁)N_{q₁}
+    derivative_coeff_2 = coeff_beta * beta    # (M·q₂)(p·q₂)N_{q₂}
+
+    if abs(derivative_coeff_2) < 1e-10:
+        return {
+            "success": False,
+            "error": f"Second term has zero derivative coefficient",
+        }
+
+    delta = -derivative_coeff_1 / derivative_coeff_2
+
+    if verbose:
+        print(f"\n  Racetrack parameters:")
+        print(f"    α = {alpha:.6f}, β = {beta:.6f}")
+        print(f"    ε = β - α = {epsilon:.6f}")
+        print(f"    derivative coeff₁ = {derivative_coeff_1:.2f}")
+        print(f"    derivative coeff₂ = {derivative_coeff_2:.2f}")
+        print(f"    δ = {delta:.6f}")
+
+    # Check |δ| < 1 (eq. 2.25 requirement)
+    if abs(delta) >= 1:
         if verbose:
-            print(f"  WARNING: Leading terms have same sign - not a typical racetrack")
-        # Fall back to numerical search for zero crossing
-        from scipy.optimize import brentq
+            print(f"  WARNING: |δ| = {abs(delta):.4f} >= 1, racetrack may not work well")
 
-        def W_func(Im_tau_val):
-            if Im_tau_val <= 0:
-                return float('inf')
-            return float(compute_W_at_Im_tau(terms, Im_tau_val))
+    # From eq. 2.26: ⟨e^{2πiτ}⟩ ≈ δ^{1/ε}
+    # Taking log: 2πiτ = (1/ε) × ln(δ)
+    # For δ < 0: ln(δ) = ln|δ| + iπ
+    # So: τ = [ln|δ| + iπ] / (2πiε) = 1/(2ε) - i×ln|δ|/(2πε)
+    # Therefore: Im(τ) = -ln|δ|/(2πε) = ln(1/|δ|)/(2πε)
 
-        try:
-            W_50 = W_func(50)
-            W_200 = W_func(200)
-            if W_50 * W_200 < 0:
-                Im_tau_min = brentq(W_func, 50, 200)
-            else:
-                result = minimize_scalar(lambda x: abs(W_func(x)), bounds=(50, 200), method='bounded')
-                Im_tau_min = result.x
-        except Exception as e:
-            return {"success": False, "error": f"Root finding failed: {e}"}
-    else:
-        # Two-term racetrack formula as starting point
-        ratio = abs(coeff_beta / coeff_alpha)
-        delta = beta - alpha
+    abs_delta = abs(delta)
+    if abs_delta <= 0:
+        return {
+            "success": False,
+            "error": f"δ = 0, cannot solve racetrack",
+        }
 
-        # Simple analytical estimate: τ = ln(|B/A|) / (2π(β-α))
-        Im_tau_simple = np.log(ratio) / (2 * np.pi * delta)
+    Im_tau = np.log(1.0 / abs_delta) / (2 * np.pi * epsilon)
 
-        if verbose:
-            print(f"  Two-term formula: τ = ln({ratio:.1f}) / (2π × {delta:.6f})")
-            print(f"  Initial estimate Im(τ) = {Im_tau_simple:.4f}")
+    if verbose:
+        if delta < 0:
+            print(f"  Same-sign coefficients: δ < 0")
+            print(f"    Re(τ) = 1/(2ε) = {1/(2*epsilon):.4f}")
+        else:
+            print(f"  Opposite-sign coefficients: δ > 0")
+            print(f"    Re(τ) = 0")
+        print(f"  Im(τ) = ln(1/|δ|)/(2πε) = {Im_tau:.4f}")
 
-        # For KKLT-style stabilization, we need a slightly larger τ
-        # The exact value depends on the F-term balance
-        # McAllister's formula (eq 6.60): g_s ≈ 2π / (Q_D3 × ln(hierarchy))
-        # where Q_D3 is the tadpole and hierarchy ≈ 2×|N_q| + 24
+    if Im_tau <= 0:
+        return {
+            "success": False,
+            "error": f"Im(τ) = {Im_tau:.4f} <= 0, no valid stabilization",
+        }
 
-        # Use numerical refinement to find where W is at a local extremum
-        # in the region near the analytical estimate
-        from scipy.optimize import brentq
-
-        def W_signed(Im_tau_val):
-            return float(compute_W_at_Im_tau(terms, Im_tau_val))
-
-        # Find the zero crossing of W (where two leading terms cancel)
-        try:
-            # W typically changes sign near the analytical estimate
-            low = Im_tau_simple * 0.8
-            high = Im_tau_simple * 1.2
-            W_low = W_signed(low)
-            W_high = W_signed(high)
-
-            if W_low * W_high < 0:
-                Im_tau_zero = brentq(W_signed, low, high)
-                if verbose:
-                    print(f"  Zero crossing at Im(τ) = {Im_tau_zero:.4f}")
-            else:
-                Im_tau_zero = Im_tau_simple
-
-            # The KKLT stabilization is slightly above the zero crossing
-            # Empirically, τ_KKLT ≈ τ_zero × (1 + small correction)
-            # From McAllister data: 109.76/109.21 ≈ 1.005
-            Im_tau_min = Im_tau_zero * 1.005
-
-            if verbose:
-                print(f"  KKLT-corrected Im(τ) = {Im_tau_min:.4f}")
-
-        except Exception as e:
-            Im_tau_min = Im_tau_simple
-            if verbose:
-                print(f"  Using simple estimate (refinement failed: {e})")
-
-    g_s = 1.0 / Im_tau_min
+    g_s = 1.0 / Im_tau
 
     if verbose:
         print(f"  g_s = 1/Im(τ) = {g_s:.6f}")
 
     # Compute W₀ at the stabilization point
-    W0 = abs(compute_W_at_Im_tau(terms, Im_tau_min))
+    # For δ < 0 (same-sign coefficients), τ has a non-zero real part
+    if delta < 0:
+        Re_tau = 1.0 / (2 * epsilon)
+        W0 = abs(compute_W_at_complex_tau(terms, Re_tau, Im_tau))
+        if verbose:
+            print(f"  Computing W₀ at complex τ = {Re_tau:.4f} + {Im_tau:.4f}i")
+    else:
+        Re_tau = 0.0
+        W0 = abs(compute_W_at_Im_tau(terms, Im_tau))
+        if verbose:
+            print(f"  Computing W₀ at τ = {Im_tau:.4f}i")
 
     if verbose:
         print(f"  W₀ = |W(τ)| = {float(W0):.2e}")
@@ -381,7 +423,10 @@ def solve_racetrack(terms: list, verbose: bool = True) -> dict:
         "success": True,
         "g_s": g_s,
         "W0": W0,
-        "Im_tau": Im_tau_min,
+        "Re_tau": Re_tau,
+        "Im_tau": Im_tau,
+        "delta": delta,
+        "epsilon": epsilon,
         "n_terms": len(terms),
         "leading_exponents": [e for e, c in terms[:3]],
     }

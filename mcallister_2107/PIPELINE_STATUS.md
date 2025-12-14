@@ -19,7 +19,7 @@ This document tracks the validation status of each pipeline step against McAllis
 | `compute_target_tau.py` | ✅ | 5/5 | eq 2.29, 5.12 | |
 | `compute_chi_divisor.py` | ✅ | 4/5 | 12×χ(O_D)-D³ | ~3% error = GV corrections |
 | `compute_gv_invariants.py` | ✅ | 5/5 | - | min_points=20000 |
-| `compute_derived_racetrack.py` | ⚠️ | 2/5 | eq 5.x | 4-214-647 ✅, 5-113-main ✅, others fail (no racetrack structure) |
+| `compute_derived_racetrack.py` | ✅ | 5/5 | eq 2.22-2.26 | **FIXED 2024-12-14**: same-sign coefficient case |
 | `compute_kklt_iterative.py` | ✅ | 4/5 | eq 4.12 | V_string validated, needs actual t solver |
 | `compute_divisor_cohomology.py` | ⚠️ | ? | Koszul | Requires cohomCalg |
 
@@ -73,26 +73,24 @@ V₀ = -3 × e^{K₀} × (g_s⁷/(4×V_string)²) × W₀²
 
 ## Remaining Issues
 
-### 1. compute_derived_racetrack.py - PARTIAL (2/5 pass)
+### 1. ✅ RESOLVED: compute_derived_racetrack.py - NOW 5/5 pass
+
+**Fixed 2024-12-14.** All 5 examples now pass.
+
+**Root cause was:** The original solver only handled opposite-sign coefficient racetracks.
+For 3 examples, the two leading terms have **same-sign coefficients** (δ < 0).
+
+**The fix:**
+1. Use correct δ formula from eq. 2.25: `δ = -[(M·q₁)(p·q₁)N_{q₁}] / [(M·q₂)(p·q₂)N_{q₂}]`
+2. For same-sign case (δ < 0), τ has non-zero real part: `Re(τ) = 1/(2ε)`
+3. Compute W₀ using `compute_W_at_complex_tau()` which handles complex τ
 
 **Results:**
-- ✅ 4-214-647: g_s=0.009111, W₀~10⁻⁹⁰ (exact match)
-- ✅ 5-113-4627-main: g_s=0.011144, W₀~10⁻⁶¹ (~6% W₀ error)
-- ❌ 5-113-4627-alternative: Leading terms have same sign
-- ❌ 5-81-3213: Leading terms have same sign
-- ❌ 7-51-13590: Leading terms have same sign
-
-**Root cause:** The racetrack solver assumes a two-term structure with opposite-sign coefficients:
-```
-W ≈ A × e^{2πiτα} + B × e^{2πiτβ}  with A × B < 0
-```
-This enables an analytical solution. But some examples don't have this structure.
-
-**Fix needed:** Implement numerical F-term solver for general cases:
-```python
-# Instead of analytical two-term formula:
-# Solve: ∂W/∂τ + W × ∂K/∂τ = 0 numerically
-```
+- ✅ 4-214-647: g_s=0.009111, W₀~10⁻⁹⁰ (ratio=1.000)
+- ✅ 5-113-4627-main: g_s=0.011119, W₀~10⁻⁶¹ (ratio=1.000)
+- ✅ 5-113-4627-alternative: g_s=0.003589, W₀~10⁻⁹⁵ (ratio=1.000)
+- ✅ 5-81-3213: g_s=0.050414, W₀~10⁻²³ (ratio=1.000)
+- ✅ 7-51-13590: g_s=0.040331, W₀~10⁻²⁰ (ratio=1.022)
 
 ### 2. GV corrections in KKLT solver
 The τ_target formula has ~3% residual error because we haven't added GV corrections to the iterative solver.
