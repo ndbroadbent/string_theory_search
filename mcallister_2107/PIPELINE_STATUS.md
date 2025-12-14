@@ -62,7 +62,25 @@ T_i(t) = (1/2) κ_ijk t^j t^k - χ(D_i)/24 + (GV sum)
 - Classical term validated
 - GV corrections NOT yet integrated into solver
 
-### 6. Final V₀ (eq 6.24)
+### 6. Racetrack Stabilization (eq 2.22-2.26)
+```
+W_flux(τ) = -ζ Σ_q (M·q) N_q Li₂(e^{2πiτ(q·p)})
+
+δ = -[(M·q₁)(p·q₁)N_{q₁}] / [(M·q₂)(p·q₂)N_{q₂}]
+ε = (p·q₂) - (p·q₁)
+
+⟨e^{2πiτ}⟩ ≈ δ^{1/ε}
+
+For δ > 0 (opposite-sign): τ = i × ln(1/δ)/(2πε)
+For δ < 0 (same-sign):     τ = 1/(2ε) + i × ln(1/|δ|)/(2πε)
+
+g_s = 1/Im(τ)
+W₀ = |W_flux(τ)|
+```
+- **Validated:** All 5 examples match g_s exactly, W₀ within 2.2%
+- **Key insight:** Same-sign coefficient case requires complex τ with Re(τ) ≠ 0
+
+### 7. Final V₀ (eq 6.24)
 ```
 V₀ = -3 × e^{K₀} × (g_s⁷/(4×V_string)²) × W₀²
 ```
@@ -131,7 +149,7 @@ This is NOT a bug - the polytope genuinely doesn't have a favorable triangulatio
 
 ## Next Steps
 
-1. **Fix racetrack script** - resolve import issue
+1. ~~**Fix racetrack script**~~ ✅ DONE (2024-12-14)
 2. **Test KKLT iterative solver** - verify against `corrected_kahler_param.dat`
 3. **Add GV corrections** - to τ_target and T_i solver
 4. **End-to-end test** - compute V₀ = -5.5e-203 for 4-214-647
@@ -142,14 +160,12 @@ This is NOT a bug - the polytope genuinely doesn't have a favorable triangulatio
 ## Test Commands
 
 ```bash
-# Run all validated scripts
+# Run all validated scripts (all should PASS)
 uv run python mcallister_2107/2021_cytools/compute_V_string.py
 uv run python mcallister_2107/2021_cytools/compute_c_i.py
 uv run python mcallister_2107/2021_cytools/compute_rigidity_combinatorial.py
 uv run python mcallister_2107/2021_cytools/compute_target_tau.py
 uv run python mcallister_2107/2021_cytools/compute_chi_divisor.py
 uv run python mcallister_2107/2021_cytools/compute_gv_invariants.py  # slow, ~2min
-
-# Broken (needs fixing)
-uv run python mcallister_2107/2021_cytools/compute_derived_racetrack.py
+uv run python mcallister_2107/2021_cytools/compute_derived_racetrack.py  # 5/5 PASS
 ```
