@@ -343,7 +343,7 @@ If we can't compute something ourselves, we don't understand it well enough.
 
 ## Genome Structure (Compactification)
 
-The GA genome consists of **discrete choices only** - no continuous parameters to search:
+The GA genome consists of discrete choices plus a **branch selection parameter**:
 
 ```python
 genome = {
@@ -352,12 +352,30 @@ genome = {
     "K": [int] * h21,             # Flux vector K (h21 integers)
     "M": [int] * h21,             # Flux vector M (h21 integers)
     "orientifold_mask": [bool],   # Which coordinates to negate (determines O7-planes)
+    "t_init": [float] * h11,      # Starting point in Kähler cone (selects branch)
 }
 ```
 
-### Key Insight: Everything is Computed from (K, M, orientifold)
+### CRITICAL: Multiple Solution Branches
 
-**There are NO continuous parameters to search.** All physics is deterministically computed:
+**The KKLT equation τ(t) = c_i has MULTIPLE valid solutions (branches).**
+
+Discovery (Dec 2024): For 5-81-3213, we found **16 distinct branches** in 5 minutes,
+with V_string ranging from 143 to 1538 and |V₀| varying by 115×.
+
+The starting point `t_init` determines which branch the solver converges to:
+- Different t_init → different branch → different V_string → different V₀
+- All branches satisfy τ = c_i exactly and have V > 0
+- Larger V_string means smaller |V₀| (closer to observed Λ)
+
+See `mcallister_2107/2021_cytools/BRANCH_DISCOVERY_NOTES.md` for full details.
+
+**For validation**: Use McAllister's t_expected as t_init to find their specific branch.
+**For GA search**: Either explore random t_inits or evolve t_init as part of genome.
+
+### Key Insight: Everything is Computed from (K, M, orientifold, t_init)
+
+All physics is deterministically computed (t_init selects the branch):
 
 ```
 (K, M) ──────────────────────────────────────────────────────────────┐
@@ -381,8 +399,8 @@ orientifold ──► c_i values (1 for D3-instanton, 6 for O7-plane)      │
 τ_i = (c_i / 2π) × ln(W₀⁻¹)  (KKLT target divisor volumes)           │
    │                                                                  │
    ▼                                                                  │
-Solve: T_i(t) = τ_i  for t^i  (WITH instanton corrections, eq. 4.12) │
-   │            ↑ includes GV invariants, not just classical!         │
+t_init ──► Solve: T_i(t) = τ_i  (t_init selects WHICH BRANCH!)       │
+   │            ↑ Multiple valid solutions exist - t_init picks one   │
    ▼                                                                  │
 V_string = (1/6) κ_ijk t^i t^j t^k - ζ(3)χ/(4(2π)³)  (BBHL corrected)│
    │                                                                  │
