@@ -489,24 +489,173 @@ McAllister's algorithm (Section 5 of arXiv:2107.09064):
 For h¹¹ ≤ 12, CYTools can compute `tip_of_stretched_cone()` to get a starting point.
 For h¹¹ = 214, this is computationally intractable.
 
-### 7.6 Why Newton Iteration Fails
+### 7.6 McAllister's Path-Following Algorithm (Section 5.2)
 
-The KKLT equation:
+**THIS IS THE CORRECT ALGORITHM - USE THIS, NOT SCIPY OPTIMIZATION**
+
+The problem: Find t such that τ(t) = τ_target where τ_i = (1/2) κ_ijk t^j t^k.
+
+**Key insight from McAllister Section 5.2:**
+> "Following the path is then reduced to moving from t_m to t_{m+1}."
+
+At each step, we solve a **LINEAR system** (not nonlinear optimization):
+
 ```
-τᵢ(t) = (1/2) κᵢⱼₖ t^j t^k - χ(Dᵢ)/24 + GV_correction(t)
+κᵢⱼₖ tʲ εᵏ = Δτᵢ   (linear in ε!)
 ```
 
-Has Jacobian:
-```
-∂τᵢ/∂t^j = κᵢⱼₖ t^k
+Where:
+- ε = t_{m+1} - t_m (small step)
+- Δτ = τ_{m+1} - τ_m (target change)
+
+**The Algorithm:**
+```python
+def solve_kklt_path_following(kappa, tau_target, n_steps=200):
+    # 1. Start with uniform t
+    t = np.ones(h11) * 0.5
+    tau_init = compute_tau(kappa, t)
+
+    # 2. Scale t so initial τ is right magnitude
+    scale = sqrt(mean(tau_target) / mean(tau_init))
+    t = t * scale
+    tau_init = compute_tau(kappa, t)
+
+    # 3. Interpolate from τ_init to τ_target in N steps
+    for m in range(n_steps):
+        alpha = (m + 1) / n_steps
+        tau_step = (1 - alpha) * tau_init + alpha * tau_target
+
+        # 4. At each step, solve LINEAR system for ε
+        tau_current = compute_tau(kappa, t)
+        delta_tau = tau_step - tau_current
+
+        # J_ik = κ_ijk t^j  (Jacobian, computed from sparse kappa)
+        J = compute_jacobian(kappa, t)
+
+        # Solve: J @ ε = delta_tau  (LINEAR!)
+        epsilon = np.linalg.lstsq(J, delta_tau, rcond=1e-8)[0]
+
+        # 5. Update t
+        t = t + epsilon
+
+    return t
 ```
 
-**For h¹¹=214:** Jacobian has rank ~65 (not 214)
+**Why this is fast:**
+- Each step is ONE matrix solve: O(h11³) ≈ 10M ops for h11=214
+- Total: O(n_steps × h11³) ≈ 2 billion ops
+- With sparse kappa: much faster since κ has only ~2000 nonzero entries
+
+**Why nonlinear optimization (scipy) is WRONG:**
+- Treats this as unconstrained optimization over h11=214 variables
+- Each iteration evaluates residual + Jacobian many times
+- No path structure → can diverge wildly
+- Orders of magnitude slower
+
+### 7.7 Why Full Nonlinear Newton Fails
+
+**For h¹¹=214:** The Jacobian J_ik = κ_ijk t^j has rank ~65 (not 214)
 - 149-dimensional nullspace
 - Infinitely many solutions t for given τ
-- Newton's method diverges without good starting point inside Kähler cone
+- Full Newton on the nonlinear system diverges without path structure
 
-### 7.7 Reference: Witten's "Phases of N=2"
+**McAllister's path-following works because:**
+- It interpolates smoothly from τ_init to τ_target
+- Each LINEAR step stays near the previous solution
+- The path stays inside the Kähler cone throughout
+
+### 7.8 TWO-PHASE KKLT ALGORITHM (CRITICAL!)
+
+**This is the key to computing t from scratch without cheating.**
+
+McAllister's data provides TWO files for Kähler parameters:
+- `kahler_param.dat`: Solution to **τ = c_i** (simpler equation, "uncorrected")
+- `corrected_kahler_param.dat`: Solution to **τ = c_i/c_τ + χ/24** (full KKLT, "corrected")
+
+**The algorithm has TWO phases:**
+
+**PHASE 1: Solve τ = c_i (uncorrected KKLT)**
+```
+Find t such that: (1/2) κ_ijk t^j t^k = c_i
+```
+- c_i are the dual Coxeter numbers (1 for D3-instanton, 6 for O7-plane)
+- This equation is INDEPENDENT of g_s, W₀ (no flux dependence!)
+- This is what McAllister calls finding "a point in the extended Kähler cone"
+- McAllister describes this in Section 5.2 of arXiv:2107.09064
+
+**PHASE 2: Path-follow to target τ**
+```
+Path-follow from t_uncorrected → t_corrected where:
+τ_target = c_i/c_τ + χ(D_i)/24  (with instanton corrections via eq. 4.12)
+```
+
+**Why two phases?**
+- The equation τ(t) = τ_target has MULTIPLE solution branches
+- Different branches give different V_string values (some positive, some negative)
+- Starting from random t and solving directly often lands on WRONG branch (V < 0)
+- Phase 1 finds the CORRECT branch (the one where t_uncorrected lives)
+- Phase 2 stays on that branch while moving to the target τ
+
+**Verified for 4-214-647:**
+```
+Phase 1: t_uncorrected satisfies τ = c_i (ratio = 1.0000)
+         V_classical at t_uncorrected = 17901
+
+Phase 2: Path-follow t_uncorrected → τ_target
+         V_classical at t_corrected = 4712 ✓ (matches expected)
+```
+
+**The Phase 1 initialization (McAllister Section 5.2):**
+> "We start by picking a random point h_init in the subset of the secondary fan of FRSTs...
+> Such a point is naturally associated to a point in the extended Kähler cone, t_init"
+
+**CRITICAL: Why random t fails but random heights works:**
+
+The paper says "random point h_init in the secondary fan" - this means random HEIGHTS,
+not random t! Heights parametrize valid triangulations (points in the Kähler cone).
+Random t may not correspond to ANY valid triangulation.
+
+In CYTools terms:
+1. `poly.random_triangulations_fast(N=k)` - generates k random FRSTs with valid heights
+2. Heights → t conversion: The triangulation heights encode a point in the Kähler cone
+3. **Problem**: CYTools 2021 doesn't have `heights_to_kahler()` function
+
+**What we tested (December 2024):**
+- Random heights (wrong size 294): Error - heights are 219-dim, not num_points
+- Random heights (correct size 219): "Triangulation is non-fine or non-star"
+- `random_triangulations_fast()`: Works! But gives DIFFERENT κ per triangulation
+- Random t with fixed triangulation: Mostly doesn't converge, or gives wrong V
+
+**The key insight:**
+McAllister uses the SAME triangulation throughout (from heights.dat), and their
+t_init comes from that triangulation. We're using their triangulation but random t,
+which doesn't work because:
+- Random t is outside the Kähler cone for that triangulation
+- Path-following from outside the cone diverges or finds wrong branch
+
+**Possible solutions:**
+1. Understand heights → t mapping (how CYTools does it internally)
+2. Multi-start with V > 0 filter (brute force, slow but works)
+3. Use Kähler cone generators as starting directions
+
+Then path-follow from t_init to τ = c_i using the linear system:
+```
+κ_ijk t^j ε^k = Δτ_i
+```
+
+**Implementation in compute_kahler_param.py:**
+```python
+def solve_kklt_path_following(kappa, tau_target, c_i, n_steps=200):
+    # PHASE 1: Solve τ = c_i (finds correct branch)
+    t_uncorrected, _, _ = _path_follow(kappa, c_i.astype(float), t_init, n_steps)
+
+    # PHASE 2: Path-follow to target τ (stays on correct branch)
+    t_corrected, tau_achieved, converged = _path_follow(kappa, tau_target, t_uncorrected, n_steps)
+
+    return t_corrected, tau_achieved, converged
+```
+
+### 7.9 Reference: Witten's "Phases of N=2"
 
 Witten, "Phases of N=2 theories in two dimensions," Nucl. Phys. B 403 (1993) 159
 

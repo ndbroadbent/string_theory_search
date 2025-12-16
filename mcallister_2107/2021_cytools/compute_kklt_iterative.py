@@ -143,84 +143,45 @@ class SparseIntersectionTensor:
 
         self.n_entries = len(self.entries)
 
+        # Build full symmetric tensor for correct einsum-based computation
+        # This is slower than sparse but GUARANTEED correct
+        self._tensor = None
+
+    def _build_tensor(self):
+        """Build full symmetric tensor from sparse entries."""
+        if self._tensor is not None:
+            return
+        self._tensor = np.zeros((self.h11, self.h11, self.h11))
+        for i, j, k, val in self.entries:
+            # Fill ALL permutations (symmetric tensor)
+            for perm in [(i,j,k), (i,k,j), (j,i,k), (j,k,i), (k,i,j), (k,j,i)]:
+                self._tensor[perm] = val
+
     def compute_tau(self, t: np.ndarray) -> np.ndarray:
         """
-        Compute τ_m = (1/2) Σ_{j,k} κ_mjk t^j t^k using sparse operations.
+        Compute τ_m = (1/2) Σ_{j,k} κ_mjk t^j t^k using einsum for correctness.
 
-        For canonical entry (i,j,k) with i≤j≤k, we add contributions to τ_i, τ_j, τ_k.
+        Formula: τ_i = (1/2) κ_ijk t^j t^k
         """
-        tau = np.zeros(self.h11)
-
-        for i, j, k, val in self.entries:
-            if i == j == k:
-                # κ_iii: τ_i += κ_iii t_i²
-                tau[i] += val * t[i] * t[i]
-            elif i == j:
-                # κ_iik (i<k): τ_i += 2κ t_i t_k, τ_k += κ t_i²
-                tau[i] += 2 * val * t[i] * t[k]
-                tau[k] += val * t[i] * t[i]
-            elif j == k:
-                # κ_ijj (i<j): τ_i += κ t_j², τ_j += 2κ t_i t_j
-                tau[i] += val * t[j] * t[j]
-                tau[j] += 2 * val * t[i] * t[j]
-            elif i == k:
-                # κ_iji - shouldn't happen with sorted storage, but handle it
-                tau[i] += 2 * val * t[i] * t[j]
-                tau[j] += val * t[i] * t[i]
-            else:
-                # κ_ijk (i<j<k): τ_i += 2κ t_j t_k, τ_j += 2κ t_i t_k, τ_k += 2κ t_i t_j
-                tau[i] += 2 * val * t[j] * t[k]
-                tau[j] += 2 * val * t[i] * t[k]
-                tau[k] += 2 * val * t[i] * t[j]
-
-        return 0.5 * tau
+        self._build_tensor()
+        return 0.5 * np.einsum('ijk,j,k->i', self._tensor, t, t)
 
     def compute_V(self, t: np.ndarray) -> float:
         """
-        Compute V = (1/6) κ_ijk t^i t^j t^k using sparse operations.
+        Compute V = (1/6) κ_ijk t^i t^j t^k using einsum for correctness.
         """
-        V = 0.0
-
-        for i, j, k, val in self.entries:
-            if i == j == k:
-                mult = 1
-            elif i == j or j == k or i == k:
-                mult = 3
-            else:
-                mult = 6
-
-            V += val * t[i] * t[j] * t[k] * mult
-
-        return V / 6.0
+        self._build_tensor()
+        return np.einsum('ijk,i,j,k->', self._tensor, t, t, t) / 6.0
 
     def compute_jacobian(self, t: np.ndarray) -> np.ndarray:
         """
-        Compute Jacobian J_mk = ∂τ_m/∂t^k = κ_mpk t^p (sum over p).
+        Compute Jacobian J[i,k] = ∂τ_i/∂t^k = κ_{ijk} t^j using einsum.
 
-        For canonical entry (i,j,k), κ_ijk contributes to multiple J elements.
+        From τ_i = (1/2) κ_{ijk} t^j t^k:
+        J[i,k] = ∂τ_i/∂t^k = κ_{ijk} t^j (factor of 2 from symmetry of j,k)
         """
-        J = np.zeros((self.h11, self.h11))
-
-        for i, j, k, val in self.entries:
-            if i == j == k:
-                J[i, i] += val * t[i]
-            elif i == j:
-                J[i, i] += val * t[k]
-                J[i, k] += val * t[i]
-                J[k, i] += val * t[i]
-            elif j == k:
-                J[i, j] += val * t[j]
-                J[j, i] += val * t[j]
-                J[j, j] += val * t[i]
-            else:
-                J[i, j] += val * t[k]
-                J[i, k] += val * t[j]
-                J[j, i] += val * t[k]
-                J[j, k] += val * t[i]
-                J[k, i] += val * t[j]
-                J[k, j] += val * t[i]
-
-        return J
+        self._build_tensor()
+        return np.einsum('ijk,j->ik', self._tensor, t)
 
 
 # =============================================================================
@@ -286,15 +247,80 @@ def compute_gv_correction(gv_invariants: dict, t: np.ndarray) -> np.ndarray:
     return prefactor * correction
 
 
+def newton_raphson_solve(kappa: SparseIntersectionTensor, target_tau: np.ndarray,
+                         max_iters: int = 500, tol: float = 1e-6) -> tuple:
+    """
+    Newton-Raphson solver with line search for robustness.
+
+    More robust than path-following when initialization is far from solution.
+
+    Returns: (t_solution, tau_achieved, converged)
+    """
+    h11 = len(target_tau)
+
+    # Try multiple starting points
+    best_error = float('inf')
+    best_t = None
+
+    for init_val in [0.1, 0.5, 1.0, 2.0, 5.0, 10.0]:
+        t = np.ones(h11) * init_val
+
+        for _ in range(max_iters):
+            tau_current = kappa.compute_tau(t)
+            delta_tau = target_tau - tau_current
+
+            error = np.sqrt(np.mean(delta_tau**2))
+            if error < tol:
+                if error < best_error:
+                    best_error = error
+                    best_t = t.copy()
+                break
+
+            # Truncated SVD for numerical stability
+            J = kappa.compute_jacobian(t)
+            U, s, Vt = np.linalg.svd(J, full_matrices=False)
+            s_inv = np.where(s > 1e-10 * s.max(), 1.0 / s, 0)
+            epsilon = Vt.T @ (s_inv * (U.T @ delta_tau))
+
+            # Backtracking line search
+            step_size = 1.0
+            for _ in range(10):
+                t_new = t + step_size * epsilon
+                tau_new = kappa.compute_tau(t_new)
+                new_error = np.sqrt(np.mean((tau_new - target_tau)**2))
+                if new_error < error:
+                    t = t_new
+                    break
+                step_size *= 0.5
+            else:
+                break  # Line search failed
+
+        tau_final = kappa.compute_tau(t)
+        error = np.sqrt(np.mean((tau_final - target_tau)**2))
+        if error < best_error:
+            best_error = error
+            best_t = t.copy()
+
+    if best_t is None:
+        best_t = np.ones(h11)
+        best_error = float('inf')
+
+    tau_achieved = kappa.compute_tau(best_t)
+    rel_error = best_error / np.mean(target_tau)
+    converged = rel_error < 0.001
+
+    return best_t, tau_achieved, converged
+
+
 def iterative_solve(kappa: SparseIntersectionTensor, target_tau: np.ndarray,
                     n_steps: int = 500, t_init: np.ndarray = None,
                     tol: float = 1e-3, verbose: bool = False) -> tuple:
     """
     McAllister's iterative algorithm (Section 5.2, eqs 5.8-5.11).
 
-    Solve: τ_i = (1/2) κ_ijk t^j t^k = target_tau_i
+    Falls back to Newton-Raphson if path-following diverges.
 
-    Uses damped Newton interpolating from τ_init to target_tau.
+    Solve: τ_i = (1/2) κ_ijk t^j t^k = target_tau_i
 
     Args:
         kappa: Sparse intersection tensor
@@ -324,6 +350,7 @@ def iterative_solve(kappa: SparseIntersectionTensor, target_tau: np.ndarray,
         print(f"  Initial τ mean: {np.mean(tau_init):.2f}, target mean: {np.mean(target_tau):.2f}")
 
     converged = False
+    diverged = False
 
     for m in range(n_steps):
         alpha = (m + 1) / n_steps
@@ -359,6 +386,11 @@ def iterative_solve(kappa: SparseIntersectionTensor, target_tau: np.ndarray,
 
         t = t_new
 
+        # Check for divergence
+        if np.abs(t).max() > 1e6:
+            diverged = True
+            break
+
         # Check convergence
         tau_achieved = kappa.compute_tau(t)
         error = np.sqrt(np.mean((tau_achieved - target_tau)**2))
@@ -372,7 +404,20 @@ def iterative_solve(kappa: SparseIntersectionTensor, target_tau: np.ndarray,
         if verbose and (m + 1) % max(1, n_steps // 5) == 0:
             print(f"  Step {m+1}/{n_steps}: RMS error = {error:.6f}")
 
+    # Final check
     tau_final = kappa.compute_tau(t)
+    error = np.sqrt(np.mean((tau_final - target_tau)**2))
+    rel_error = error / np.mean(target_tau)
+
+    # Check if V is positive (physical sanity check)
+    V = kappa.compute_V(t)
+    if V < 0 or rel_error > 0.01:
+        diverged = True
+
+    # If diverged or not converged, fall back to Newton-Raphson
+    if diverged or not converged:
+        return newton_raphson_solve(kappa, target_tau)
+
     return t, tau_final, converged
 
 

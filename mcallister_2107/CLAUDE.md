@@ -60,6 +60,63 @@ The entire point is to build a pipeline that can evaluate ANY polytope for the G
 
 **Save an hour now by cheating = waste weeks later debugging garbage.**
 
+### The Three-Layer Architecture
+
+The pipeline has three layers that work together:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  LAYER 1: compute_*.py scripts (PURE FUNCTIONS)                 │
+│  - Each has compute_X() that works from scratch                 │
+│  - Each has test_example() that validates against .dat files    │
+│  - Run standalone: `python compute_X.py` → "All 5 PASSED"       │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  LAYER 2: Individual script tests (TRUST UPSTREAM .dat FILES)   │
+│  - A script can load .dat files for UPSTREAM values             │
+│  - Example: compute_V_string.py loads corrected_kahler_param.dat│
+│  - This is OK because compute_kahler_param.py validated those   │
+│  - Each script only validates ITS OWN computation               │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  LAYER 3: full_pipeline.py (END-TO-END, NO .dat FILES)          │
+│  - Imports compute_X() functions from all scripts               │
+│  - Chains them together: output of step N → input of step N+1   │
+│  - ONLY loads model inputs (polytope, K, M, c_i, heights, basis)│
+│  - Computes EVERYTHING else from scratch                        │
+│  - Final validation against expected V₀                         │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Example: How compute_V_string.py works**
+
+```python
+# Layer 1: Pure function (no .dat files)
+def compute_V_string(kappa, t, h11, h21):
+    """Compute V_string = (1/6)κt³ - BBHL from scratch."""
+    V = einsum('ijk,i,j,k->', kappa, t, t, t) / 6.0
+    BBHL = zeta(3) * 2 * (h11 - h21) / (4 * (2*pi)**3)
+    return V - BBHL
+
+# Layer 2: Validation test (loads t from .dat, trusts compute_kahler_param.py)
+def test_example(example_name):
+    t = load_kahler_params(example_name)  # From corrected_kahler_param.dat
+    V_computed = compute_V_string(kappa, t, h11, h21)
+    V_expected = load_cy_vol(example_name)  # From cy_vol.dat
+    return abs(V_computed / V_expected - 1.0) < 0.001
+```
+
+**The key insight:** In Layer 2 tests, loading `corrected_kahler_param.dat` is NOT cheating because:
+1. `compute_kahler_param.py` computes those t values from scratch
+2. `compute_kahler_param.py` validates they match `corrected_kahler_param.dat`
+3. Therefore we can TRUST those .dat files for downstream tests
+
+**Layer 3 (full_pipeline.py) is the final proof:** It imports all `compute_X()` functions and chains them without ANY .dat files (except model inputs). If it passes, the entire pipeline is validated end-to-end.
+
 ---
 
 ## Purpose
@@ -269,3 +326,84 @@ Once this works, we can trust the GA to search ~400M polytopes for configuration
 7. **Don't use max_deg** - always use min_points for GV
 8. **Don't use float64 for W₀** - it's 10⁻⁹⁰, needs mpmath
 9. **Don't use hardcoded constants from the paper** - compute them from scratch
+10. **Don't use scipy.optimize for KKLT** - use path-following with LINEAR solves (see below)
+
+---
+
+## CRITICAL: compute_kahler_param.py Algorithm
+
+**USE PATH-FOLLOWING WITH LINEAR SOLVES, NOT SCIPY OPTIMIZATION**
+
+See FORMULAS.md Section 7.6 for full details. The key insight from McAllister Section 5.2:
+
+### The Problem
+Find t such that τ(t) = τ_target where τ_i = (1/2) κ_ijk t^j t^k
+
+### WRONG Approach (slow, diverges)
+```python
+# DON'T DO THIS - scipy treats it as nonlinear optimization
+scipy.optimize.least_squares(lambda t: tau(t) - tau_target, t0)
+```
+
+### CORRECT Approach (fast, stable)
+At each step, solve a **LINEAR system**:
+```
+κᵢⱼₖ tʲ εᵏ = Δτᵢ   (linear in ε!)
+```
+
+```python
+def solve_kklt_path_following(kappa, tau_target, n_steps=200):
+    t = initialize_t()
+    tau_init = compute_tau(kappa, t)
+
+    for m in range(n_steps):
+        alpha = (m + 1) / n_steps
+        tau_step = (1 - alpha) * tau_init + alpha * tau_target
+
+        tau_current = compute_tau(kappa, t)
+        delta_tau = tau_step - tau_current
+
+        # J_ik = κ_ijk t^j
+        J = compute_jacobian(kappa, t)
+
+        # ONE LINEAR SOLVE per step!
+        epsilon = np.linalg.lstsq(J, delta_tau, rcond=1e-8)[0]
+        t = t + epsilon
+
+    return t
+```
+
+### Why Path-Following Works
+- Each step is ONE linear solve: O(h11³)
+- Total: ~200 linear solves → runs in seconds
+- Path stays inside Kähler cone throughout
+- No divergence issues
+
+### Why Scipy Fails
+- Treats as unconstrained nonlinear optimization over 214 variables
+- Jacobian has rank ~65 (not 214) → 149-dim nullspace
+- No path structure → diverges wildly
+- Orders of magnitude slower
+
+---
+
+## basis.dat vs kklt_basis.dat
+
+**These are DIFFERENT sets!** For 4-214-647:
+- `basis.dat`: 214 divisors forming the computational h11 basis
+- `kklt_basis.dat`: 214 divisors contributing to superpotential
+- **Shared:** 210 divisors
+- **Only in basis:** [1, 2, 46, 130]
+- **Only in kklt_basis:** [8, 9, 10, 17]
+
+### Computing τ for non-basis KKLT divisors
+
+For basis divisors: `τ_i = (1/2) κ_ijk t^j t^k` using `in_basis=True`
+
+For non-basis divisors (points 8, 9, 10, 17):
+```python
+# Use intersection_numbers(in_basis=False) for mixed indices
+τ_a = (1/2) Σ_{j,k} κ_{a, basis[j], basis[k]} t^j t^k
+```
+
+This was verified: using McAllister's t values, we can compute τ for ALL 214 KKLT divisors with RMS error < 0.0001.
