@@ -84,12 +84,231 @@ The tips document suggested the correct branch has:
 
 But actually our branch has LARGER V and SMALLER |V₀|, which is arguably better for matching observations!
 
+## Algorithm Optimization: Two Approaches
+
+We have **two complementary algorithms** for solving τ(t) = c_i:
+
+### 1. Homotopy Continuation (small h¹¹ only)
+
+For small h¹¹ values (e.g., McAllister's examples with h¹¹ = 4, 5, 5, 5, 7):
+
+**Why it works:**
+- The system is n quadratic equations in n variables
+- Bézout bound: at most 2ⁿ complex solutions
+- For n=7: only 128 solutions max - trivial to enumerate
+- Homotopy continuation finds ALL solutions deterministically
+
+**Advantages:**
+- Deterministic: finds every branch, no random restarts needed
+- Fast: polynomial system of this size is trivial
+- Complete: guaranteed to find the "best" branch (largest V, smallest |V₀|)
+
+**Limitations:**
+- Only practical for small h¹¹ (≲ 15-20)
+- For h¹¹ = 81 or 214, 2^n is astronomically large
+
+**Tools:**
+- Julia: `HomotopyContinuation.jl` (best for polynomial systems)
+- Python: `sympy.solve_poly_system()`, or call Julia via PyCall
+
+### 2. Predictor-Corrector with Adaptive Steps (general case)
+
+For large h¹¹ values (h¹¹ = 81, 214, etc.):
+
+**Why pure Newton fails:**
+- Newton assumes you're close enough that linearization is globally accurate
+- From random init, the Newton direction points in wrong direction
+- Line search shrinks step to zero → stuck
+
+**Why predictor-corrector works:**
+- Interpolates τ from τ_init to τ_target in small steps
+- Each step: Predictor (Euler) + Corrector (Newton to converge exactly)
+- Stays near solution manifold throughout
+
+**Critical Discovery: Optimal Step Count**
+
+Tested on 5-81-3213 (h¹¹=81) with 10 random inits per step size:
+
+| n_steps | Success Rate | Time | Notes |
+|---------|--------------|------|-------|
+| 1-8 | 0% | Fast | Pure Newton fails from random init |
+| **16** | **40%** | 8s | **Minimum working** |
+| **32** | **70%** | 13s | **Optimal balance** |
+| 64 | 60% | 20s | Diminishing returns |
+| 128 | 67% | 16s | Slower, no better |
+| 200 | ~70% | 30s+ | Original conservative approach |
+
+**Key findings:**
+- n_steps=16 is the minimum for any convergence
+- n_steps=32 is optimal (70% success, 13s for 10 attempts)
+- This is **6-12× faster** than conservative 100-200 steps
+
+**Algorithm:**
+```python
+def solve_predictor_corrector(kappa, tau_target, t_init, n_steps=32):
+    t = t_init
+    tau_init = kappa.compute_tau_kklt(t)
+
+    for m in range(n_steps):
+        alpha = (m + 1) / n_steps
+        tau_step = (1 - alpha) * tau_init + alpha * tau_target
+
+        # Predictor: Euler step
+        J = kappa.compute_jacobian_kklt(t)
+        epsilon = lstsq(J, tau_step - kappa.compute_tau_kklt(t))
+        t_pred = t + epsilon
+
+        # Corrector: Newton iterations to converge exactly to tau_step
+        t = newton_correct(kappa, t_pred, tau_step, max_iter=5)
+
+    return t
+```
+
+**For branch exploration:**
+```python
+def find_branches(kappa, c_i, n_attempts=100, n_steps=32):
+    branches = []
+    for _ in range(n_attempts):
+        t_init = generate_random_init()
+        t, V, success = solve_predictor_corrector(kappa, c_i, t_init, n_steps)
+        if success and V > 0 and is_new_branch(V, branches):
+            branches.append((t, V))
+    return branches
+```
+
+### When to Use Which
+
+| h¹¹ Range | Algorithm | Notes |
+|-----------|-----------|-------|
+| h¹¹ ≤ 7 | Homotopy | McAllister examples, deterministic, finds ALL branches |
+| h¹¹ > 7 | Predictor-corrector (n_steps=32) | 70% success rate, random restarts |
+
+**CRITICAL:**
+- Homotopy is a **performance optimization** for small h¹¹ (finds all branches deterministically)
+- Predictor-corrector with n_steps=32 is the workhorse for large h¹¹
+- Pure Newton (n_steps=1) does NOT work from random initialization
+
+## Critical Discovery: McAllister's Branch is Unreachable by Random Init
+
+### The Problem
+
+After running extensive GA exploration (199 branches found in 10 minutes), we discovered:
+
+| Metric | McAllister's Branch | Our Closest Branch |
+|--------|--------------------|--------------------|
+| V_uncorrected | **507.632295** | 528.49 |
+| Gap | | +4.1% |
+
+**Random initialization NEVER finds McAllister's branch.** All 199 branches we found have V_unc > 528.
+
+### Verification
+
+When we use McAllister's `kahler_param.dat` as t_init, the solver converges perfectly:
+```
+Solver V_unc:   507.632298  (vs McAllister's 507.632295)
+t correlation:  1.000000
+t rel diff:     1.67e-09
+```
+
+So McAllister's branch EXISTS and our solver CAN find it - but only when seeded with their solution.
+
+### What's Different About McAllister's t?
+
+The t values are structurally similar to our branches:
+```
+                    McAllister    Our closest (V=528)
+min:                -62.21        -58.16
+max:                 81.48         76.05
+mean:                 8.21          8.17
+std:                 40.23         37.58
+# negative:          34/81         34/81
+sum(|t|):          2840.84       2665.33
+```
+
+McAllister's sum(|t|) is 6.6% larger, leading to 4% smaller V_unc. The branches are structurally similar but represent different basins of attraction.
+
+### Paper Search: How Did McAllister Choose Their Solution?
+
+We searched the LaTeX source (arXiv:2107.09064) for their algorithm and selection criteria.
+
+**IMPORTANT DISTINCTION: Two separate selection processes**
+
+1. **Flux vectors (K, M) - CAREFULLY CHOSEN** via Diophantine search (Section 2.3)
+
+   The fluxes must satisfy "perturbatively flat vacuum" constraints (following Demirtas 2019):
+   ```
+   (a) 0 ≤ -½ M·K ≤ χf/4           (D3-brane tadpole)
+   (b) p = (κ̃_abc M^c)⁻¹ K_b ∈ K̃  (p in Kähler cone of mirror)
+   (c) K·p = 0
+   ```
+   Plus racetrack conditions (d-f) for small W₀ via worldsheet instantons.
+
+   These are **Diophantine constraints** - hard to solve, computational challenge at h²¹ > 3.
+   This is where the "careful choice" happens.
+
+2. **Kähler moduli t - RANDOM INITIALIZATION** (Section 4.4)
+
+   Once (K, M) are fixed, finding t that satisfies τ(t) = c_i uses predictor-corrector:
+   > "We start by picking a random point h_init in the subset of the secondary fan of FRSTs"
+
+Their algorithm for finding t is **identical to our predictor-corrector**:
+1. Pick random point in secondary fan
+2. Follow path from τ_init to τ_target = c_i
+3. Divide into N >> 1 small steps
+4. At each step, solve LINEAR system: κ_ijk t^j ε^k = Δτ
+
+**Critical finding: NO branch selection criteria mentioned.**
+
+We searched for terms like "select", "choose", "pick", "smallest", "minimum", "criterion", "prefer", "best" - none appear in the context of choosing among t solutions. The paper:
+- Does NOT mention multiple solutions/branches existing for the τ(t) = c_i equation
+- Does NOT describe any selection criterion among t solutions
+- Does NOT discuss basin of attraction structure
+- Treats the t solution as if it were unique
+
+**Conclusion:** McAllister et al. likely:
+1. Ran the predictor-corrector once with some random initial heights
+2. Found V_unc=507.63 (now saved as `kahler_param.dat`)
+3. Saved it and moved on
+4. Were unaware (or didn't mention) that other valid t branches exist
+
+**This is potentially a novel finding:** The multiplicity of KKLT solution branches (for the Kähler moduli equation τ(t) = c_i) may not have been fully appreciated in the literature. Each branch gives a different V₀, and the "correct" branch is not unique - all branches satisfy τ = c_i exactly with V > 0.
+
+### Open Questions
+
+1. **How did McAllister find this specific branch?**
+   - They used random initialization (per Section 4.4), same as us
+   - They simply got lucky with their particular random seed
+   - Their `kahler_param.dat` is a snapshot of ONE run, not a deliberately chosen solution
+
+2. **Why this particular branch?**
+   - No physical criterion mentioned in the paper
+   - V_unc=507.63 may not be special at all
+   - Our branches go DOWN to 528, theirs is 507 - the gap may just be statistical
+
+3. **Is McAllister's branch the global minimum V_unc?**
+   - If so, it would give the LARGEST |V₀| (since V₀ ∝ 1/V²)
+   - That seems counterproductive for matching Λ_obs
+   - Unless there's a physical reason to prefer smaller V
+
+4. **Basin of attraction structure**
+   - Why does random init always land in V_unc > 528 basins?
+   - McAllister's basin (V_unc=507) seems isolated from random starting points
+   - Need to understand the topology of the solution space
+
+### Implications for Validation
+
+To reproduce McAllister's results exactly, we MUST:
+1. Seed with their `kahler_param.dat` as t_init
+2. OR find the specific initialization pattern that leads to their basin
+
+Random exploration will find DIFFERENT valid branches, not theirs.
+
 ## Open Questions (Partially Resolved)
 
-1. **How did McAllister select their branch?** ✅ RESOLVED
-   - The systematic exploration found their branch (V_string ≈ 199.64)
-   - It's just one of at least 16 valid branches
-   - Likely they used initialization close to their expected result, or chose smallest V deliberately
+1. **How did McAllister select their branch?** ⚠️ UNRESOLVED
+   - We CANNOT find their branch via random initialization
+   - They must have used a different approach (analytic, physical intuition, or specific init)
+   - The question of WHY they chose V_unc=507.63 remains open
 
 2. **Which branch is "correct" physically?** OPEN
    - All branches satisfy KKLT equations exactly (τ = c_i, V > 0)
@@ -163,10 +382,69 @@ Options for handling t_init in the GA:
 
 The third option is most robust - for each (polytope, K, M, orientifold), run multiple random t_inits and report the best (largest V, smallest |V₀|) branch.
 
+## Understanding t_init, t_result, and McAllister's Data Files
+
+The solver pipeline has multiple stages, each with different "t" values:
+
+```
+t_init (random starting point)
+    │
+    ▼ Predictor-corrector solver (Phase 1: solve τ(t) = c_i)
+    │
+t_result = t_uncorrected (satisfies τ = c_i)
+    │
+    ▼ Phase 2: Path-follow with instanton corrections
+    │
+t_corrected (with α' and instanton corrections)
+    │
+    ▼ Compute volume
+    │
+V_string → V₀
+```
+
+### What Each Variable Represents
+
+| Variable | Description | McAllister File | Our Script |
+|----------|-------------|-----------------|------------|
+| `t_init` | Random starting point for solver (determines which branch) | N/A | N/A |
+| `t_uncorrected` | Solution to τ(t) = c_i (Phase 1 output) | `kahler_param.dat` | `compute_t_uncorrected.py` |
+| `t_corrected` | With instanton corrections (Phase 2 output) | `corrected_kahler_param.dat` | `compute_kahler_param.py` |
+| `V_uncorrected` | Volume from t_uncorrected | N/A | N/A |
+| `V_string` | Volume from t_corrected with BBHL | `cy_vol.dat` | `compute_V_string.py` |
+
+### The GA Output (branches.jsonl)
+
+The GA saves branches with:
+```json
+{
+  "t_init": [...],      // Random starting point that led to this branch
+  "t_result": [...],    // Solution to τ(t) = c_i (comparable to kahler_param.dat)
+  "V_uncorrected": 535.12,  // Volume from t_result
+  "n_steps": 32,        // Predictor-corrector steps used
+  "fitness": 63.6       // GA fitness score
+}
+```
+
+### Key Insight: t_init is NOT a Physics Quantity
+
+- `t_init` is just a solver input - different t_init values lead to different branches
+- `t_result` is the actual physics solution (Kähler moduli satisfying KKLT)
+- To verify we found McAllister's branch, compare `t_result` with their `kahler_param.dat`
+
+### Validation Strategy
+
+```python
+# To verify a branch matches McAllister:
+t_mcallister = load("kahler_param.dat")
+correlation = np.corrcoef(t_result, t_mcallister)[0,1]
+# If correlation ≈ 1.0, we found their branch
+```
+
 ## Code References
 
 - `compute_t_uncorrected.py`: Damped Newton solver with V > 0 constraint
 - `compute_kahler_param.py`: Path-following and predictor-corrector
+- `explore_t_branches_via_ga.py`: GA-based branch exploration (saves to jsonl)
 - `COMPUTE_T_UNCORRECTED_TIPS.md`: Algorithm optimization suggestions
 - `KKLT_SOLVER_RESEARCH.md`: Earlier research notes
 

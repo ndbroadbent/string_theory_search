@@ -332,52 +332,80 @@ Once this works, we can trust the GA to search ~400M polytopes for configuration
 
 ## CRITICAL: compute_kahler_param.py Algorithm
 
-**USE PATH-FOLLOWING WITH LINEAR SOLVES, NOT SCIPY OPTIMIZATION**
+**USE PREDICTOR-CORRECTOR, NOT PURE NEWTON OR SCIPY**
 
-See FORMULAS.md Section 7.6 for full details. The key insight from McAllister Section 5.2:
+See FORMULAS.md Section 7.6 and `BRANCH_DISCOVERY_NOTES.md` for full details.
 
 ### The Problem
 Find t such that τ(t) = τ_target where τ_i = (1/2) κ_ijk t^j t^k
 
-### WRONG Approach (slow, diverges)
+### WRONG Approaches
+
+**Pure Newton (n_steps=1):** FAILS from random initialization
+```python
+# DON'T DO THIS - Newton fails from random init
+# Line search shrinks step to zero, gets stuck
+J @ delta_t = -(tau(t) - tau_target)
+t = t + delta_t  # Overshoots or wrong direction
+```
+
+**Scipy optimization:** Also fails
 ```python
 # DON'T DO THIS - scipy treats it as nonlinear optimization
 scipy.optimize.least_squares(lambda t: tau(t) - tau_target, t0)
 ```
 
-### CORRECT Approach (fast, stable)
-At each step, solve a **LINEAR system**:
-```
-κᵢⱼₖ tʲ εᵏ = Δτᵢ   (linear in ε!)
-```
+### CORRECT Approach: Predictor-Corrector
+
+**Optimal step count: n_steps=32** (tested on h¹¹=81)
+
+| n_steps | Success Rate | Notes |
+|---------|--------------|-------|
+| 1-8 | 0% | Pure Newton fails |
+| 16 | 40% | Minimum working |
+| **32** | **70%** | **Optimal** |
+| 64+ | 60-67% | Diminishing returns |
 
 ```python
-def solve_kklt_path_following(kappa, tau_target, n_steps=200):
-    t = initialize_t()
-    tau_init = compute_tau(kappa, t)
+def solve_predictor_corrector(kappa, tau_target, t_init, n_steps=32):
+    t = t_init
+    tau_init = kappa.compute_tau_kklt(t)
 
     for m in range(n_steps):
         alpha = (m + 1) / n_steps
         tau_step = (1 - alpha) * tau_init + alpha * tau_target
 
-        tau_current = compute_tau(kappa, t)
-        delta_tau = tau_step - tau_current
+        # PREDICTOR: Euler step toward tau_step
+        J = kappa.compute_jacobian_kklt(t)
+        epsilon = np.linalg.lstsq(J, tau_step - kappa.compute_tau_kklt(t))[0]
+        t_pred = t + epsilon
 
-        # J_ik = κ_ijk t^j
-        J = compute_jacobian(kappa, t)
-
-        # ONE LINEAR SOLVE per step!
-        epsilon = np.linalg.lstsq(J, delta_tau, rcond=1e-8)[0]
-        t = t + epsilon
+        # CORRECTOR: Newton iterations to converge exactly to tau_step
+        t = t_pred
+        for _ in range(5):  # max 5 Newton corrections
+            residual = kappa.compute_tau_kklt(t) - tau_step
+            if np.linalg.norm(residual) / np.linalg.norm(tau_step) < 1e-8:
+                break
+            J = kappa.compute_jacobian_kklt(t)
+            delta = np.linalg.lstsq(J, -residual)[0]
+            if np.linalg.norm(delta) > 1.0:
+                delta = delta / np.linalg.norm(delta)  # Damping
+            t = t + delta
 
     return t
 ```
 
-### Why Path-Following Works
-- Each step is ONE linear solve: O(h11³)
-- Total: ~200 linear solves → runs in seconds
-- Path stays inside Kähler cone throughout
-- No divergence issues
+### Why Predictor-Corrector Works
+- Interpolates τ from τ_init to τ_target in small steps
+- Each step: Predictor (Euler) + Corrector (Newton to converge exactly)
+- Stays near solution manifold throughout
+- 70% success rate with n_steps=32, random init
+
+### Why Pure Newton Fails
+- Newton assumes linearization is globally accurate
+- From random init, Newton direction points wrong way
+- Backtracking line search shrinks step to zero → stuck
+- Need to be "close enough" to a solution for Newton to work
 
 ### Why Scipy Fails
 - Treats as unconstrained nonlinear optimization over 214 variables

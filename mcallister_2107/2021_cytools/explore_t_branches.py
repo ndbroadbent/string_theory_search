@@ -22,7 +22,11 @@ sys.path.insert(0, str(CYTOOLS_2021))
 
 from cytools import Polytope
 from compute_kahler_param import SparseKappa, _path_follow
-from compute_t_uncorrected import _compute_V_from_kappa, _predictor_corrector
+from compute_t_uncorrected import (
+    _compute_V_from_kappa,
+    _newton_step,
+    _backtracking_line_search,
+)
 
 
 # Constants
@@ -110,10 +114,10 @@ def run_full_pipeline(kappa: SparseKappa, t_uncorrected: np.ndarray,
 
 
 def find_t_uncorrected(kappa: SparseKappa, c_i: np.ndarray,
-                       t_init: np.ndarray, n_steps: int = 100,
-                       scale_init: bool = True) -> tuple:
+                       t_init: np.ndarray, max_iter: int = 50,
+                       tol: float = 1e-6, scale_init: bool = True) -> tuple:
     """
-    Try to find t_uncorrected from a given initialization.
+    Try to find t_uncorrected from a given initialization using damped Newton.
 
     The starting point t_init determines which BRANCH of solutions we find.
     See BRANCH_DISCOVERY_NOTES.md for details on multiple solution branches.
@@ -122,31 +126,46 @@ def find_t_uncorrected(kappa: SparseKappa, c_i: np.ndarray,
         kappa: SparseKappa with intersection numbers
         c_i: Target divisor volumes (dual Coxeter numbers)
         t_init: Starting point in Kähler cone. Determines which branch.
-        n_steps: Number of predictor-corrector steps
+        max_iter: Maximum Newton iterations
+        tol: Convergence tolerance
         scale_init: If True, scale t_init to match τ magnitude (for random search).
-                    If False, use t_init exactly (for fixed/deterministic init).
 
     Returns (t, V, success)
     """
     tau_target = c_i.astype(float)
-    t_start = t_init.copy()
+    tau_target_norm = np.linalg.norm(tau_target)
+    t = t_init.copy()
 
     if scale_init:
         # Scale initialization to match τ magnitude
-        tau_init = kappa.compute_tau_kklt(t_start)
+        tau_init = kappa.compute_tau_kklt(t)
         if np.mean(tau_init) > 0:
             scale = np.sqrt(np.mean(tau_target) / np.mean(tau_init))
             if 0.01 < scale < 100:
-                t_start = t_start * scale
+                t = t * scale
 
-    # Use predictor-corrector
-    t_result, tau_result, conv = _predictor_corrector(kappa, tau_target, t_start, n_steps=n_steps)
+    # Damped Newton iteration
+    for iteration in range(max_iter):
+        delta_t, residual_norm, tau_current = _newton_step(kappa, t, tau_target)
+        rel_residual = residual_norm / tau_target_norm
 
-    if not conv or t_result is None:
-        return None, None, False
+        # Check convergence
+        if rel_residual < tol:
+            V = _compute_V_from_kappa(kappa, t)
+            return t, V, True
 
-    V = _compute_V_from_kappa(kappa, t_result)
-    return t_result, V, True
+        # Backtracking line search
+        t_new, alpha, ls_success = _backtracking_line_search(
+            kappa, t, delta_t, tau_target, residual_norm
+        )
+
+        if not ls_success:
+            return None, None, False
+
+        t = t_new
+
+    # Did not converge
+    return None, None, False
 
 
 def explore_branches(example_name: str = "5-81-3213",
@@ -217,7 +236,7 @@ def explore_branches(example_name: str = "5-81-3213",
         t_init_saved = t_init.copy()
 
         # Try to find t_uncorrected
-        t_unc, V_unc, success = find_t_uncorrected(kappa, c_i, t_init, n_steps=150)
+        t_unc, V_unc, success = find_t_uncorrected(kappa, c_i, t_init)
 
         if not success:
             continue
