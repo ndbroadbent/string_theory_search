@@ -196,6 +196,85 @@ All arXiv papers have been converted to `.tex` for accurate formula reading. Maj
 - `candelas_COGP_mirror_symmetry_1991.txt` - 1991 paper, predates arXiv electronic submission
 - `rpp2024-rev-cosmological-parameters.txt` - PDG review, not on arXiv
 
+### Navigating Large Documents (.tex files)
+
+**Problem:** Large `.tex` files (>25k tokens) can't be read in full.
+
+**Solution:** Use `rg` to find section structure on demand, then `Read(file, offset=LINE, limit=N)`.
+
+**Quick commands to find sections:**
+```bash
+# Get all sections with line numbers
+rg -n "section\{|subsection\{" resources/paper.tex
+
+# Get all labeled equations
+rg -n "\\label\{eq:" resources/paper.tex
+
+# Search for specific term with context
+rg -n -C3 "predictor-corrector" resources/paper.tex
+```
+
+**Workflow:**
+1. Check quick reference tables below first (curated key sections)
+2. If not listed, run `rg` to find the section
+3. Use `Read(file, offset=LINE, limit=N)` to read that section
+
+**Quick Reference - Most Used Sections:**
+
+**McAllister 2107.09064 (Small CC / AdS vacua):**
+| What | Lines | Description |
+|------|-------|-------------|
+| Flux conditions (a)-(c) | 460-465 | Perturbatively flat vacuum constraints |
+| Racetrack conditions (d)-(f) | 478-494 | Small W₀ requirements |
+| W₀ formula | 502-504 | eq 2.15 |
+| Predictor-corrector algorithm | 927-950 | How to solve τ(t) = c_i |
+| F-flatness equation | 861-890 | D_i W = 0, Re(T_i) ≈ (c_i/2π)ln(W₀⁻¹) |
+| Kähler potential | 778-790 | V^[0] with worldsheet instantons |
+| Example (h²¹=4, h¹¹=214) | 1529-1608 | Primary test case |
+| K, M vectors (4-214) | 1540-1546 | K=[-3,-5,8,6], M=[10,11,-11,-5] |
+| Example (h²¹=5, h¹¹=81) | 1454-1528 | 5-81-3213 |
+
+**Toric Geometry Intro 0901.3695:**
+| What | Lines | Description |
+|------|-------|-------------|
+| Affine varieties | 231-318 | Basic algebraic geometry |
+| Projective varieties | 319-381 | Projective spaces |
+| Calabi-Yau condition | 402-578 | CY definition, Kähler/complex moduli |
+| Divisors and line bundles | 539-578 | Key for physics |
+| Cones and fans | 601-705 | Toric geometry basics |
+| Homogeneous coordinates | 601-705 | GLSM coordinates |
+| CY toric varieties | 843-929 | How to build CY from toric |
+| GLSM | 1239-1446 | Gauged linear sigma model |
+| Kähler quotient | 1254-1308 | Moment maps |
+
+**CYTools Paper 2211.03823:**
+| What | Lines | Description |
+|------|-------|-------------|
+| Getting started | 402-428 | Quick tutorial |
+| Polytopes | 475-541 | Polytope class usage |
+| Kreuzer-Skarke database | 542-562 | Loading KS polytopes |
+| Triangulations | 563-703 | Getting triangulations |
+| CY manifolds | 720-781 | CY class, intersection numbers |
+| Intersection numbers algorithm | 1749-1782 | How κ_ijk computed |
+| Mori/Kähler cones | 1788-1812 | Cone algorithms |
+
+**Demirtas Small W₀ 1912.10047:**
+| What | Lines | Description |
+|------|-------|-------------|
+| Construction | 80-166 | How to find small W₀ |
+| Example | 167-237 | Worked example |
+| Statistics | 238-250 | Distribution of W₀ values |
+| Full stabilization | 251-275 | Toward KKLT |
+
+**Systematic Kähler Stabilization 2005.11329:**
+| What | Lines | Description |
+|------|-------|-------------|
+| Type IIB conventions | 238-295 | Notation and setup |
+| Scalar potential master formula | 349-417 | V = e^K(...) |
+| KKLT single modulus | 568-639 | Classic KKLT example |
+| LVS examples | 640-990 | Large volume scenario |
+| GA/Clustering algorithm | 1306-1354 | Finding all minima |
+
 ### First-time setup:
 ```bash
 # Create venv with homebrew Python 3.11

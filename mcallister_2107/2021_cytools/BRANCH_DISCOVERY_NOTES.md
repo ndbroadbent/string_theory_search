@@ -52,6 +52,44 @@ Since V₀ ∝ 1/V², a larger volume V means a smaller |V₀|:
 ### Geometric interpretation
 The Kähler cone is a complex high-dimensional space. The constraint τ = c_i defines a hypersurface, and this hypersurface can intersect the V > 0 region in multiple disconnected components.
 
+### Physical interpretation: Same compactification, different vacua
+
+Each branch represents:
+- **Same** polytope (CY topology)
+- **Same** fluxes (K, M)
+- **Same** orientifold
+- **Different** Kähler moduli t^i (sizes of internal 2-cycles and 4-cycles)
+
+The Kähler moduli parameterize the *geometry* (sizes and shapes) of the internal 6D space. Multiple t solutions mean the KKLT potential has **multiple local minima**.
+
+The F-flatness equation τ(t) = c_i comes from minimizing:
+```
+V = e^K (|D_i W|² - 3|W|²)
+```
+Where:
+- W = W₀ + Σ A_i exp(-2πT_i/c_i) — sum of exponentials
+- K = -2 ln(V) — logarithm of volume
+
+The interplay of exponentials and logarithms creates a **multi-valley potential landscape**. Each valley is a valid KKLT vacuum with different V₀.
+
+**Analogy:** A ball rolling on a hilly landscape. Same hills (same potential from same compactification), but multiple valleys where the ball can settle. Each valley is a different stable configuration with different potential energy (V₀).
+
+### String landscape implications
+
+This **multiplies** the number of string vacua:
+
+| Property | Branch 1 | Branch 2 | Branch N |
+|----------|----------|----------|----------|
+| CY topology | Same | Same | Same |
+| Fluxes (K, M) | Same | Same | Same |
+| Cycle volumes τ_i | Different | Different | Different |
+| Total volume V | Different | Different | Different |
+| Vacuum energy V₀ | Different | Different | Different |
+
+Instead of one vacuum per (polytope, K, M, orientifold), there can be many - each a distinct point in the string landscape with different cosmological constant.
+
+For the GA search, this is good news: we're searching not just over discrete choices, but also over which basin of attraction to land in. More chances to find small |V₀|.
+
 ### The Jacobian insight
 From McAllister's paper and our debugging:
 - At uniform t: Jacobian rank = 65/214, condition number = 5.4×10¹¹
