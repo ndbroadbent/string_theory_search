@@ -702,6 +702,157 @@ See **docs/TORIC_GEOMETRY.md** for comprehensive documentation on:
 
 ---
 
+## Part 8: Quintessence & Time-Varying Dark Energy (NEW - DESI 2024/2025)
+
+**CRITICAL UPDATE:** Recent DESI results suggest dark energy may NOT be a cosmological constant.
+See `research/DESI_DARK_ENERGY_IMPLICATIONS.md` for full analysis.
+
+### 8.1 The DESI Result
+
+DESI 2024/2025 BAO data combined with CMB and supernovae suggest:
+- **w₀ ≈ -0.7 to -0.8** (not -1)
+- **wₐ ≈ -0.8 to -1.3** (not 0)
+- ~2.5-3σ preference for dynamical dark energy
+
+The CPL (Chevallier-Polarski-Linder) parameterization:
+```
+w(a) = w₀ + wₐ(1 - a)
+```
+Where a = scale factor (a=1 today).
+
+For cosmological constant: w₀ = -1, wₐ = 0 (constant w = -1).
+
+### 8.2 Quintessence Basics
+
+For a canonical scalar field φ with potential V(φ):
+```
+w_φ = (φ̇²/2 - V) / (φ̇²/2 + V)
+```
+
+For slow-roll (φ̇² << V):
+```
+w ≈ -1 + (2/3)ε
+```
+Where ε = (M_pl²/2)(V'/V)² is the slow-roll parameter.
+
+**Key constraint:** For canonical kinetic terms, -1 ≤ w ≤ 1 (no phantom!).
+
+### 8.3 The Phantom Crossing Problem
+
+DESI data suggests w crossed -1 from below (phantom) to above (quintessence).
+But canonical quintessence CANNOT cross w = -1.
+
+**Two explanations:**
+1. **True phantom:** Requires exotic physics (ghost instabilities)
+2. **Apparent phantom:** Multi-field effects create illusion of phantom crossing
+
+### 8.4 The KMIX Model (String-Motivated Solution!)
+
+From arXiv:2511.23463 (MIT, Nov 2025):
+
+**Kinetically Mixed Axion-Dilaton Quintessence:**
+```
+L = -½(∂φ)² - ½e^(αφ)(∂θ)² - V(φ,θ)
+```
+
+Where:
+- φ = dilaton-like modulus field
+- θ = axion-like field (periodic potential)
+- α = kinetic coupling (from string Kähler potential)
+
+**Key insight:** The exponential kinetic coupling e^(αφ) is EXACTLY what appears
+in string compactifications from the Kähler potential!
+
+**Result:** KMIX can appear to have w < -1 in CPL fits while remaining completely
+stable (no ghosts). The "phantom crossing" is an artifact of the parameterization.
+
+### 8.5 Quintessence from String Moduli
+
+From Cicoli et al. arXiv:2112.10779:
+
+**NO-GO THEOREM:** Slow-roll quintessence is NOT possible in any parametrically
+controlled regime of moduli space (large volume, weak coupling limits).
+
+**Implication:** Must work in the INTERIOR of moduli space where numerical
+(but not parametric) control is possible.
+
+### 8.6 Connecting to Our CY Search
+
+**Old target (static Λ):**
+```
+V₀ = -3 eᴷ |W|² ≈ 2.888 × 10⁻¹²² M_pl⁴
+```
+
+**New target (dynamical w):**
+Instead of matching a single number Λ, we need configurations where:
+
+1. **Complex structure moduli:** Fully stabilized (as before)
+2. **Most Kähler moduli:** Stabilized (as in KKLT)
+3. **One or more moduli/axions:** Rolling slowly → quintessence
+4. **The rolling gives:** Correct (w₀, wₐ) values
+
+### 8.7 Computing w from a Rolling Modulus
+
+For a Kähler modulus T with potential V(T):
+```
+w₀ = -1 + (2/3) × (∂V/∂T / V)² |_{T=T₀}
+
+wₐ = (rate of change of slow-roll parameter ε)
+```
+
+The full computation requires solving the cosmological evolution:
+```
+T̈ + 3HṪ + ∂V/∂T = 0
+H² = (Ṫ²/2 + V) / (3M_pl²)
+```
+
+### 8.8 What Changes in the Pipeline
+
+**Current fitness function:**
+```python
+fitness = Σ (physics_target - physics_computed)² / σ²
+# with targets: α_em, α_s, sin²θ_W, N_gen, Λ
+```
+
+**Updated fitness function (for DESI):**
+```python
+fitness = Σ (physics_target - physics_computed)² / σ²
+# with targets: α_em, α_s, sin²θ_W, N_gen, w₀, wₐ
+# plus: stability_check (other moduli stabilized)
+```
+
+**New observables to compute:**
+- w₀ from potential shape at "today"
+- wₐ from potential curvature / field velocity
+- Stability eigenvalues for non-rolling moduli
+
+### 8.9 DESI Target Values
+
+From DESI DR2 + Planck + SNe (varies by dataset combination):
+```
+w₀ = -0.7 ± 0.15  (approximate, depends on analysis)
+wₐ = -1.0 ± 0.4   (approximate, depends on analysis)
+```
+
+Compare to Λ:
+```
+w₀ = -1.0
+wₐ = 0.0
+```
+
+### 8.10 Key Papers
+
+**Quintessence in String Theory:**
+- arXiv:2112.10779 - Cicoli et al., "Quintessence and the Swampland" (no-go in asymptotic regions)
+- arXiv:2206.10649 - Brinkmann et al., "Stringy Quintessence Constructions"
+- arXiv:1808.02877 - Heisenberg et al., DESI predictions and swampland
+
+**DESI Results & KMIX:**
+- arXiv:2511.23463 - Toomey et al., "KMIX: Kinetically Mixed Axion-Dilaton Quintessence"
+- DESI Collaboration DR1/DR2 cosmological results (2024-2025)
+
+---
+
 ## BOTTOM LINE
 
 **To compute V₀ from first principles, we need periods.**
