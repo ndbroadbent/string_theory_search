@@ -45,7 +45,7 @@ LIMIT 20;
 
 You access everything via HTTP APIs. You do NOT have direct database access.
 
-**Setup**: Your API key should be in `.env`. Load it before making requests:
+**Setup**: Your API key is in `.env`. Load it before making requests:
 ```bash
 set -a && source .env && set +a
 ```

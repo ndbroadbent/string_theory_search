@@ -3,6 +3,59 @@
 ## CRITICAL: Read FORMULAS.md First
 **ALWAYS read `FORMULAS.md` before beginning any physics-related task.** It contains the complete formula reference with warnings about common pitfalls (e.g., classical vs instanton-corrected volumes).
 
+## CRITICAL: Read EXOPRIORS_PROMPT.txt Before Research
+**ALWAYS read `EXOPRIORS_PROMPT.txt` before doing any research.** ExoPriors is a research corpus API with:
+- 60M+ documents (arXiv, LessWrong, HN, Wikipedia, Twitter, etc.)
+- Semantic search with vector mixing and debiasing
+- BM25 full-text search via `alignment.search()`
+- API key in `.env` (load with `set -a && source .env && set +a`)
+
+**Key endpoints:**
+- `POST /v1/alignment/query` - SQL queries (always include LIMIT)
+- `POST /v1/alignment/embed` - Store concept vectors as @handles
+- `alignment.search('query', kinds => ARRAY['paper'])` - Fast lexical search
+
+**Workflow:**
+1. Load API key: `set -a && source .env && set +a`
+2. Store concept embeddings for semantic search
+3. Use `alignment.search()` for lexical queries
+4. Combine lexical + semantic for best results
+5. Always LIMIT results and filter by `kinds` when possible
+
+See `EXOPRIORS_PROMPT.txt` for full API documentation and example queries.
+
+## Project Management: Central Knowledge Base
+
+**All project documentation, research notes, and task tracking lives in `/Users/ndbroadbent/code/string_theory_project`.**
+
+This is an **additive-only** knowledge base - nothing is archived or deleted. Every thought, bug fix, research insight, and AI chat is recorded for comprehensive RAG-ready search.
+
+### Structure
+- `project/` - Symlink to `string_theory_project` (shared across all worktrees)
+- `project/todo/` - Task tracking and roadmaps
+- `project/research/` - Deep-dive research notes and paper summaries
+- `project/prds/` - Product Requirements Documents
+- `project/feedback/` - Triage for bugs and ideas
+- `project/ai_chats/` - Significant AI interaction logs
+- `project/project_docs/` - General documentation
+
+### Semantic Search
+```bash
+# Search the entire knowledge base
+project/bin/semgrep "KKLT stabilization algorithm"
+
+# Reindex after adding documents
+project/bin/semgrep-index
+```
+
+### Related Repos
+- **string_theory** (this repo): Python pipeline, CYTools, GA search
+- **cyrus** (`/Users/ndbroadbent/code/cyrus`): Rust toolkit for CY computations
+- **string_theory_project**: Central knowledge base (symlinked as `./project/`)
+
+### Formal Verification
+See `docs/FORMAL_VERIFICATION.md` for the Aeneas/Lean verification strategy for cyrus-core.
+
 ## What This Does
 Genetic algorithm searching through Calabi-Yau compactifications to find configurations that reproduce Standard Model physics (gauge couplings, generations, cosmological constant).
 
