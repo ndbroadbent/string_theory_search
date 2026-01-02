@@ -8,5 +8,6 @@ pub mod db;
 pub mod heuristics;
 pub mod meta_ga;
 pub mod physics;
+pub mod physics_old;
 pub mod searcher;
 pub mod vector_index;

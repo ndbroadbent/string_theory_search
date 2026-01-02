@@ -25,6 +25,8 @@ nalgebra = "0.33"
 flate2 = "1.0"
 usearch = "2"
 memmap2 = "0.9"
+cyrus-core = { path = "../cyrus/crates/cyrus-core" }
+malachite = "0.4"
 
 [[bin]]
 name = "heuristics"
