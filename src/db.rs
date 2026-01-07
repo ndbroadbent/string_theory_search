@@ -132,11 +132,8 @@ pub fn insert_evaluation(
     physics: &PhysicsOutput,
     fitness: f64,
 ) -> Result<i64> {
-    // Serialize genome fields to JSON
-    let kahler_json = serde_json::to_string(&genome.kahler_moduli).unwrap_or_default();
-    let complex_json = serde_json::to_string(&genome.complex_moduli).unwrap_or_default();
-    let flux_f_json = serde_json::to_string(&genome.flux_f).unwrap_or_default();
-    let flux_h_json = serde_json::to_string(&genome.flux_h).unwrap_or_default();
+    let flux_f_json = serde_json::to_string(&genome.k).unwrap_or_default();
+    let flux_h_json = serde_json::to_string(&genome.m).unwrap_or_default();
 
     conn.execute(
         "INSERT INTO evaluations (
@@ -149,9 +146,9 @@ pub fn insert_evaluation(
             polytope_id,
             run_id,
             generation,
-            genome.g_s,
-            kahler_json,
-            complex_json,
+            physics.string_coupling, // g_s comes from physics output now
+            "[]", // kahler_moduli no longer in genome
+            "[]", // complex_moduli no longer in genome
             flux_f_json,
             flux_h_json,
             fitness,

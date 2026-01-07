@@ -14,7 +14,7 @@ use crate::db::HeuristicsData;
 
 /// Compute all heuristics for a polytope's vertices
 pub fn compute_heuristics(
-    polytope_id: i64,
+    _polytope_id: i64,
     h11: i32,
     h21: i32,
     vertices: &[i32],

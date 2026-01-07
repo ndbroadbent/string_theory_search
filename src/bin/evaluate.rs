@@ -1,19 +1,16 @@
 //! Evaluate specific compactification configurations
-//!
+//! 
 //! This binary allows evaluating:
 //! 1. Custom configurations from command line arguments (for playground)
 //! 2. Custom configurations from JSON files
-//!
+//! 
 //! Usage:
 //!   # Evaluate with specific parameters (playground mode)
 //!   ./evaluate --vertices "[[0,0,0,0],[-1,2,-1,-1],...]" \
-//!              --g-s 0.0091 \
 //!              --flux-k "[-3,-5,8,6]" \
 //!              --flux-m "[10,11,-11,-5]" \
-//!              --kahler "[1.0, 2.0]" \
-//!              --complex "[1.0]" \
 //!              --json --save --source playground
-//!
+//! 
 //!   # Evaluate from JSON file
 //!   ./evaluate --file config.json
 
@@ -23,7 +20,7 @@ use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
 use string_theory::physics::{
-    init_physics_bridge, compute_physics, Compactification, PhysicsOutput,
+    init_physics_bridge, compute_physics, Compactification, PhysicsOutput, Polytope
 };
 use string_theory::constants;
 
@@ -43,10 +40,6 @@ struct Args {
     #[arg(long)]
     vertices: Option<String>,
 
-    /// String coupling g_s
-    #[arg(long)]
-    g_s: Option<f64>,
-
     /// K flux vector as JSON array (F_3 flux)
     #[arg(long)]
     flux_k: Option<String>,
@@ -54,14 +47,6 @@ struct Args {
     /// M flux vector as JSON array (H_3 flux)
     #[arg(long)]
     flux_m: Option<String>,
-
-    /// Kahler moduli as JSON array
-    #[arg(long)]
-    kahler: Option<String>,
-
-    /// Complex structure moduli as JSON array
-    #[arg(long)]
-    complex: Option<String>,
 
     /// Hodge number h11 (for external polytopes)
     #[arg(long)]
@@ -107,11 +92,8 @@ struct Args {
 #[derive(Debug, Serialize, Deserialize)]
 struct CustomConfig {
     vertices: Vec<Vec<i32>>,
-    g_s: f64,
-    kahler_moduli: Vec<f64>,
-    complex_moduli: Vec<f64>,
-    flux_f: Vec<i32>,
-    flux_h: Vec<i32>,
+    k: Vec<i64>,
+    m: Vec<i64>,
 }
 
 #[derive(Debug, Serialize)]
@@ -134,9 +116,9 @@ fn main() {
         println!();
     }
 
-    // Initialize Python bridge
+    // Initialize Python bridge (no-op now but keeps API consistent)
     if !args.json {
-        println!("Initializing physics bridge...");
+        println!("Initializing physics engine...");
     }
     if let Err(e) = init_physics_bridge() {
         if args.json {
@@ -144,17 +126,16 @@ fn main() {
                 success: false,
                 evaluation_id: None,
                 cached: false,
-                error: Some(format!("Failed to initialize physics bridge: {}", e)),
+                error: Some(format!("Failed to initialize physics engine: {}", e)),
             };
             println!("{}", serde_json::to_string(&output).unwrap());
         } else {
-            eprintln!("Failed to initialize physics bridge: {}", e);
-            eprintln!("Make sure CYTools and cymyc are installed.");
+            eprintln!("Failed to initialize physics engine: {}", e);
         }
         std::process::exit(1);
     }
     if !args.json {
-        println!("Physics bridge ready.");
+        println!("Physics engine ready.");
         println!();
         print_target_constants();
     }
@@ -226,26 +207,34 @@ fn evaluate_from_file(args: &Args, file: &PathBuf) {
         }
     };
 
-    let h11 = config.kahler_moduli.len() as i32;
-    let h21 = config.complex_moduli.len() as i32;
+    let h11 = config.k.len() as i32;
+    let h21 = config.m.len() as i32; // This is a guess if not provided, usually h21 != h11
 
     let genome = Compactification {
         polytope_id: usize::MAX, // External polytope (sentinel value)
-        kahler_moduli: config.kahler_moduli,
-        complex_moduli: config.complex_moduli,
-        flux_f: config.flux_f,
-        flux_h: config.flux_h,
-        g_s: config.g_s,
+        triangulation_id: 0,
+        k: config.k,
+        m: config.m,
         h11,
         h21,
     };
 
     if !args.json {
         println!("Evaluating custom configuration from {:?}", file);
-        println!("  h11 = {}, h21 = {}", h11, h21);
+        println!("  h11 = {}, h21 = 2{}", h11, h21);
     }
 
-    let result = compute_physics(&genome, &config.vertices);
+    // Construct a Polytope object for compute_physics
+    let polytope = Polytope {
+        vertices: config.vertices.clone(),
+        h11,
+        h12: h21,
+        euler: 2 * (h11 - h21),
+        point_count: config.vertices.len() as i32,
+        dual_point_count: 0,
+    };
+
+    let result = compute_physics(&genome, &polytope);
     handle_result(args, &genome, &config.vertices, &result);
 }
 
@@ -269,32 +258,22 @@ fn evaluate_custom(args: &Args) {
         }
     };
 
-    let g_s = args.g_s.unwrap_or(0.01);
-
-    let flux_k: Vec<i32> = args.flux_k.as_ref()
+    let flux_k: Vec<i64> = args.flux_k.as_ref()
         .map(|s| serde_json::from_str(s).expect("Invalid flux_k JSON"))
         .unwrap_or_default();
-    let flux_m: Vec<i32> = args.flux_m.as_ref()
+    let flux_m: Vec<i64> = args.flux_m.as_ref()
         .map(|s| serde_json::from_str(s).expect("Invalid flux_m JSON"))
         .unwrap_or_default();
-    let kahler: Vec<f64> = args.kahler.as_ref()
-        .map(|s| serde_json::from_str(s).expect("Invalid kahler JSON"))
-        .unwrap_or_else(|| vec![1.0; 4]);
-    let complex: Vec<f64> = args.complex.as_ref()
-        .map(|s| serde_json::from_str(s).expect("Invalid complex JSON"))
-        .unwrap_or_else(|| vec![1.0; 4]);
 
-    // Use explicit h11/h21 if provided, otherwise infer from moduli lengths
-    let h11 = args.h11.unwrap_or(kahler.len() as i32);
-    let h21 = args.h21.unwrap_or(complex.len() as i32);
+    // Use explicit h11/h21 if provided, otherwise infer from fluxes
+    let h11 = args.h11.unwrap_or(flux_k.len() as i32);
+    let h21 = args.h21.unwrap_or(flux_m.len() as i32);
 
     let genome = Compactification {
         polytope_id: usize::MAX, // External polytope (sentinel value)
-        kahler_moduli: kahler,
-        complex_moduli: complex,
-        flux_f: flux_k,
-        flux_h: flux_m,
-        g_s,
+        triangulation_id: 0,
+        k: flux_k,
+        m: flux_m,
         h11,
         h21,
     };
@@ -302,10 +281,19 @@ fn evaluate_custom(args: &Args) {
     if !args.json {
         println!("Evaluating custom configuration");
         println!("  h11 = {}, h21 = {}", h11, h21);
-        println!("  g_s = {}", g_s);
     }
 
-    let result = compute_physics(&genome, &vertices);
+    // Construct a Polytope object for compute_physics
+    let polytope = Polytope {
+        vertices: vertices.clone(),
+        h11,
+        h12: h21,
+        euler: 2 * (h11 - h21),
+        point_count: vertices.len() as i32,
+        dual_point_count: 0,
+    };
+
+    let result = compute_physics(&genome, &polytope);
     handle_result(args, &genome, &vertices, &result);
 }
 
@@ -450,11 +438,11 @@ fn save_evaluation(
         )",
         rusqlite::params![
             db_polytope_id,
-            genome.g_s,
-            serde_json::to_string(&genome.kahler_moduli).unwrap(),
-            serde_json::to_string(&genome.complex_moduli).unwrap(),
-            serde_json::to_string(&genome.flux_f).unwrap(),
-            serde_json::to_string(&genome.flux_h).unwrap(),
+            result.string_coupling, // g_s comes from physics
+            "[]", // obsolete kahler
+            "[]", // obsolete complex
+            serde_json::to_string(&genome.k).unwrap(), // flux_f -> k
+            serde_json::to_string(&genome.m).unwrap(), // flux_h -> m
             fitness,
             result.alpha_em,
             result.alpha_s,

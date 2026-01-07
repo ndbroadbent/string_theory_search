@@ -705,12 +705,15 @@ impl Individual {
             panic!("Physics bridge not available! Cannot run without real physics.");
         }
 
-        let vertices = polytope_data
-            .get(self.genome.polytope_id)
-            .map(|p| p.vertices)
-            .unwrap_or_default();
-
-        let physics = compute_physics(&self.genome, &vertices);
+        let physics = if let Some(polytope) = polytope_data.get(self.genome.polytope_id) {
+            compute_physics(&self.genome, &polytope)
+        } else {
+            PhysicsOutput {
+                success: false,
+                error: Some("Polytope not found".to_string()),
+                ..Default::default()
+            }
+        };
 
         if physics.success {
             self.fitness = compute_fitness(&physics);
@@ -1169,9 +1172,10 @@ impl LandscapeSearcher {
         // Check if this is unique enough
         let dominated = self.hall_of_fame.iter()
             .any(|existing| {
-                // Simple uniqueness check based on polytope and moduli
+                // Simple uniqueness check based on polytope and fluxes
                 existing.genome.polytope_id == candidate.genome.polytope_id &&
-                (existing.genome.g_s - candidate.genome.g_s).abs() < 0.01
+                existing.genome.k == candidate.genome.k &&
+                existing.genome.m == candidate.genome.m
             });
 
         if !dominated {
@@ -1669,12 +1673,13 @@ pub fn format_fitness_report(individual: &Individual) -> String {
     report.push_str(&format!("\nGenome:\n"));
     report.push_str(&format!("  Polytope ID: {}\n", individual.genome.polytope_id));
     report.push_str(&format!("  h11 = {}, h21 = {}\n", individual.genome.h11, individual.genome.h21));
-    report.push_str(&format!("  Kähler moduli: {:?}\n", individual.genome.kahler_moduli));
-    report.push_str(&format!("  String coupling g_s = {:.4}\n", individual.genome.g_s));
+    report.push_str(&format!("  Flux K: {:?}\n", individual.genome.k));
+    report.push_str(&format!("  Flux M: {:?}\n", individual.genome.m));
 
     if let Some(ref physics) = individual.physics {
         report.push_str(&format!("\nPhysics output:\n"));
         if physics.success {
+            report.push_str(&format!("  g_s  = {:.4}\n", physics.string_coupling));
             report.push_str(&format!("  α_em = {:.6e}  (target: {:.6e})\n", physics.alpha_em, constants::ALPHA_EM));
             report.push_str(&format!("  α_s  = {:.6}  (target: {:.4})\n", physics.alpha_s, constants::ALPHA_STRONG));
             report.push_str(&format!("  sin²θ_W = {:.6}  (target: {:.5})\n", physics.sin2_theta_w, constants::SIN2_THETA_W));

@@ -3,20 +3,20 @@
 //! This module integrates exact geometry from cyrus-core with
 //! high-level search logic.
 
-use crate::db::Polytope;
 use cyrus_core::{
-    evaluate_vacuum, build_racetrack_terms, compute_flat_direction,
-    EvaluationRequest, EvaluationResult, GvInvariant, Intersection, MoriCone,
+    evaluate_vacuum,
+    compute_glsm_charge_matrix, compute_intersection_numbers, compute_mori_generators,
+    compute_regular_triangulation,
+    EvaluationRequest, GvInvariant, Intersection, MoriCone, Point,
 };
-use malachite::Rational;
 use pyo3::prelude::*;
-use pyo3::types::{PyDict, PyList};
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
-use std::sync::{Arc, OnceLock};
-
-/// Cached Python physics bridge instance
-static PHYSICS_BRIDGE: OnceLock<Py<PyAny>> = OnceLock::new();
+use std::sync::OnceLock;
+use rand::prelude::*;
+use rand::rngs::StdRng;
+use std::hash::{Hash, Hasher};
+use std::collections::hash_map::DefaultHasher;
+use std::io::{BufRead, BufReader, Seek, SeekFrom, Write};
 
 /// Physical observables computed from a compactification
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -181,30 +181,159 @@ impl Compactification {
     }
 }
 
-/// Helper struct for indexed polytope data
+/// A polytope from the Kreuzer-Skarke database
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Polytope {
+    pub vertices: Vec<Vec<i32>>,
+    pub h11: i32,
+    pub h12: i32,  // = h21 for CY3
+    pub euler: i32,
+    pub point_count: i32,
+    pub dual_point_count: i32,
+}
+
+/// JSONL format polytope (flat vertices array)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct JsonlPolytope {
+    vertices: Vec<i32>,
+    h11: i32,
+    h21: i32,
+    vertex_count: i32,
+}
+
+impl From<JsonlPolytope> for Polytope {
+    fn from(j: JsonlPolytope) -> Self {
+        // Reshape flat vertices array into Vec<Vec<i32>>
+        let vertices: Vec<Vec<i32>> = j.vertices
+            .chunks(4)
+            .map(|chunk| chunk.to_vec())
+            .collect();
+        Polytope {
+            vertices,
+            h11: j.h11,
+            h12: j.h21,  // h12 = h21 for CY3
+            euler: 2 * (j.h11 - j.h21),
+            point_count: j.vertex_count,
+            dual_point_count: 0,  // Not available in JSONL format
+        }
+    }
+}
+
+/// Indexed polytope database - stores byte offsets, loads on demand
 pub struct PolytopeData {
-    pub inner: crate::physics_old::PolytopeData,
+    offsets: Vec<u64>,
+    file: std::sync::Mutex<std::io::BufReader<std::fs::File>>,
 }
 
 impl PolytopeData {
+    /// Load or build index for JSONL file
     pub fn load(path: &str) -> Result<Self, Box<dyn std::error::Error>> {
-        let inner = crate::physics_old::PolytopeData::load(path)?;
-        Ok(Self { inner })
+        let index_path = format!("{}.idx", path);
+        let file = std::fs::File::open(path)?;
+        let file_len = file.metadata()?.len();
+
+        // Try to load existing index
+        let offsets = if let Ok(index_data) = std::fs::read(&index_path) {
+            // Validate: first 8 bytes = file length, rest = offsets
+            if index_data.len() >= 8 {
+                let stored_len = u64::from_le_bytes(index_data[0..8].try_into().unwrap());
+                if stored_len == file_len {
+                    let offsets: Vec<u64> = index_data[8..]
+                        .chunks_exact(8)
+                        .map(|b| u64::from_le_bytes(b.try_into().unwrap()))
+                        .collect();
+                    println!("Loaded index: {} polytopes from {}", offsets.len(), index_path);
+                    offsets
+                } else {
+                    println!("Index stale (file size changed), rebuilding...");
+                    Self::build_index(path, &index_path)?
+                }
+            } else {
+                Self::build_index(path, &index_path)?
+            }
+        } else {
+            println!("Building index for {}...", path);
+            Self::build_index(path, &index_path)?
+        };
+
+        let file = std::fs::File::open(path)?;
+        Ok(Self {
+            offsets,
+            file: std::sync::Mutex::new(BufReader::new(file)),
+        })
     }
-    
-    pub fn get(&self, index: usize) -> Option<crate::physics_old::Polytope> {
-        self.inner.get(index)
+
+    fn build_index(path: &str, index_path: &str) -> Result<Vec<u64>, Box<dyn std::error::Error>> {
+        let file = std::fs::File::open(path)?;
+        let file_len = file.metadata()?.len();
+        let mut reader = BufReader::new(file);
+        let mut offsets = Vec::new();
+        let mut pos: u64 = 0;
+        let mut line = String::new();
+        let mut last_percent = 0;
+
+        loop {
+            let start = pos;
+            let bytes_read = reader.read_line(&mut line)?;
+            if bytes_read == 0 {
+                break;
+            }
+            if !line.trim().is_empty() {
+                offsets.push(start);
+            }
+            pos += bytes_read as u64;
+            line.clear();
+
+            let percent = (pos * 100 / file_len) as u32;
+            if percent > last_percent {
+                last_percent = percent;
+                if percent % 10 == 0 {
+                    print!("  {}%", percent);
+                    std::io::stdout().flush().ok();
+                }
+            }
+        }
+        println!();
+
+        // Save index: file_len (8 bytes) + offsets
+        let mut index_file = std::fs::File::create(index_path)?;
+        index_file.write_all(&file_len.to_le_bytes())?;
+        for offset in &offsets {
+            index_file.write_all(&offset.to_le_bytes())?;
+        }
+        println!("Saved index: {} entries to {}", offsets.len(), index_path);
+
+        Ok(offsets)
     }
-    
+
+    /// Get polytope by index (reads from file on demand)
+    pub fn get(&self, index: usize) -> Option<Polytope> {
+        let offset = *self.offsets.get(index)?;
+        let mut file = self.file.lock().ok()?;
+        file.seek(SeekFrom::Start(offset)).ok()?;
+
+        let mut line = String::new();
+        file.read_line(&mut line).ok()?;
+
+        serde_json::from_str::<JsonlPolytope>(&line)
+            .ok()
+            .map(|j| j.into())
+    }
+
+    /// Number of polytopes
     pub fn len(&self) -> usize {
-        self.inner.len()
+        self.offsets.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.offsets.is_empty()
     }
 }
 
 /// Compute physics from a compactification genome using cyrus-core
 pub fn compute_physics(
     genome: &Compactification,
-    polytope: &crate::physics_old::Polytope,
+    polytope: &Polytope,
 ) -> PhysicsOutput {
     // 1. Get Geometry (from cache or Python)
     let (kappa, mori, gv) = match get_geometry(genome.polytope_id, &polytope.vertices) {
@@ -245,7 +374,8 @@ pub fn compute_physics(
 
     // 3. Map Results
     let vac = res.vacuum.unwrap();
-    let rt = res.racetrack.unwrap();
+    // racetrack might be None if GV invariants are empty
+    let g_s = vac.g_s; // evaluate_vacuum populates vac from rt_res if successful
     
     PhysicsOutput {
         success: true,
@@ -258,7 +388,7 @@ pub fn compute_physics(
         m_e_planck_ratio: 0.0,
         m_p_planck_ratio: 0.0,
         cy_volume: vac.v_string,
-        string_coupling: vac.g_s,
+        string_coupling: g_s,
         flux_tadpole: res.q_flux,
         superpotential_abs: vac.w0,
     }
@@ -267,11 +397,38 @@ pub fn compute_physics(
 /// Fetch geometry for a polytope (Intersections, Mori cone, GV)
 fn get_geometry(
     _id: usize,
-    _vertices: &[Vec<i32>],
+    vertices: &[Vec<i32>],
 ) -> Result<(Intersection, MoriCone, Vec<GvInvariant>), Box<dyn std::error::Error>> {
-    // TODO: Implement caching and Python bridge call
-    // For now, return error if not McAllister
-    Err("Geometry fetching not implemented yet".into())
+    // Convert vertices to cyrus-core Points
+    let points: Vec<Point> = vertices
+        .iter()
+        .map(|v| Point::new(v.iter().map(|&x| x as i64).collect()))
+        .collect();
+
+    // 1. GLSM
+    let glsm = compute_glsm_charge_matrix(&points, true).map_err(|e| format!("GLSM failed: {}", e))?;
+
+    // 2. Triangulation
+    // Use deterministic heights derived from vertices hash
+    let mut hasher = DefaultHasher::new();
+    vertices.hash(&mut hasher);
+    let seed = hasher.finish();
+    let mut rng = StdRng::seed_from_u64(seed);
+    
+    let heights: Vec<f64> = (0..points.len()).map(|_| rng.gen::<f64>()).collect();
+    let tri = compute_regular_triangulation(&points, &heights).map_err(|e| format!("Triangulation failed: {}", e))?;
+
+    // 3. Intersection Numbers
+    let kappa = compute_intersection_numbers(&tri, &points, &glsm).map_err(|e| format!("Intersections failed: {}", e))?;
+
+    // 4. Mori Cone
+    let mori = compute_mori_generators(&tri, &points).map_err(|e| format!("Mori cone failed: {}", e))?;
+
+    // 5. GV Invariants
+    // TODO: Implement GV computation or loading
+    let gv = Vec::new();
+
+    Ok((kappa, mori, gv))
 }
 
 pub fn is_physics_available() -> bool {
@@ -279,6 +436,10 @@ pub fn is_physics_available() -> bool {
 }
 
 pub fn init_physics_bridge() -> PyResult<()> {
-    // Still needed for geometry fetching
+    // No-op
     Ok(())
+}
+
+pub fn clear_physics_cache() {
+    // No-op for now
 }
