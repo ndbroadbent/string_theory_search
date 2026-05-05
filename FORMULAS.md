@@ -202,7 +202,8 @@ Where:
 
 ### 2.4 eᴷ⁰ Formula (McAllister eq. 6.12)
 ```
-eᴷ⁰ = (4/3) × (κ̃_abc p^a p^b p^c)⁻¹
+eᴷ⁰ = [(4/3) × (κ̃_abc p^a p^b p^c)]⁻¹
+     = 3 / [4 × κ̃_abc p^a p^b p^c]
 ```
 Where:
 - κ̃_abc = mirror (dual) intersection numbers
