@@ -1,0 +1,81 @@
+{"h11": 3, "h21": 63, "favorable": true, "n_points": 8, "outcome": "CYRUS_FAIL", "detail": "thread 'main' panicked at crates/cyrus-core/src/bin/landscape_smoke.rs:133:14: | failed intersection numbers: SingularMatrix(\"intersection-number least-squares residual NaN exceeds 1e-4\")", "seconds": 0.0, "tier_h11": 3, "index": 0}
+{"h11": 3, "h21": 63, "favorable": true, "n_points": 8, "outcome": "CYRUS_FAIL", "detail": "thread 'main' panicked at crates/cyrus-core/src/bin/landscape_smoke.rs:133:14: | failed intersection numbers: SingularMatrix(\"intersection-number least-squares residual NaN exceeds 1e-4\")", "seconds": 0.0, "tier_h11": 3, "index": 1}
+{"h11": 3, "h21": 69, "favorable": true, "n_points": 8, "outcome": "CYRUS_FAIL", "detail": "thread 'main' panicked at crates/cyrus-core/src/bin/landscape_smoke.rs:133:14: | failed intersection numbers: SingularMatrix(\"intersection-number least-squares residual NaN exceeds 1e-4\")", "seconds": 0.0, "tier_h11": 3, "index": 2}
+{"h11": 3, "h21": 57, "favorable": true, "n_points": 8, "outcome": "CYRUS_FAIL", "detail": "thread 'main' panicked at crates/cyrus-core/src/bin/landscape_smoke.rs:133:14: | failed intersection numbers: SingularMatrix(\"intersection-number least-squares residual NaN exceeds 1e-4\")", "seconds": 0.0, "tier_h11": 3, "index": 3}
+{"h11": 3, "h21": 59, "favorable": true, "n_points": 9, "outcome": "CYRUS_FAIL", "detail": "thread 'main' panicked at crates/cyrus-core/src/bin/landscape_smoke.rs:133:14: | failed intersection numbers: SingularMatrix(\"intersection-number least-squares residual NaN exceeds 1e-4\")", "seconds": 0.0, "tier_h11": 3, "index": 4}
+{"h11": 3, "h21": 45, "favorable": true, "n_points": 8, "outcome": "CYRUS_FAIL", "detail": "thread 'main' panicked at crates/cyrus-core/src/bin/landscape_smoke.rs:133:14: | failed intersection numbers: SingularMatrix(\"intersection-number least-squares residual NaN exceeds 1e-4\")", "seconds": 0.0, "tier_h11": 3, "index": 5}
+{"h11": 3, "h21": 57, "favorable": true, "n_points": 8, "outcome": "CYRUS_FAIL", "detail": "thread 'main' panicked at crates/cyrus-core/src/bin/landscape_smoke.rs:133:14: | failed intersection numbers: SingularMatrix(\"intersection-number least-squares residual NaN exceeds 1e-4\")", "seconds": 0.0, "tier_h11": 3, "index": 6}
+{"h11": 3, "h21": 67, "favorable": true, "n_points": 8, "outcome": "CYRUS_FAIL", "detail": "thread 'main' panicked at crates/cyrus-core/src/bin/landscape_smoke.rs:133:14: | failed intersection numbers: SingularMatrix(\"intersection-number least-squares residual NaN exceeds 1e-4\")", "seconds": 0.0, "tier_h11": 3, "index": 7}
+{"h11": 4, "h21": 49, "favorable": true, "n_points": 9, "chamber_agrees": true, "outcome": "MATCH", "seconds": 0.0, "tier_h11": 4, "index": 0}
+{"h11": 4, "h21": 44, "favorable": true, "n_points": 9, "chamber_agrees": false, "outcome": "MISMATCH", "detail": "simplices(0 vs 16);kappa(7 of 7 entries)", "seconds": 0.0, "tier_h11": 4, "index": 1}
+{"h11": 4, "h21": 52, "favorable": true, "n_points": 9, "chamber_agrees": true, "outcome": "MATCH", "seconds": 0.0, "tier_h11": 4, "index": 2}
+{"h11": 4, "h21": 46, "favorable": true, "n_points": 9, "chamber_agrees": true, "outcome": "MATCH", "seconds": 0.0, "tier_h11": 4, "index": 3}
+{"h11": 4, "h21": 40, "favorable": true, "n_points": 9, "chamber_agrees": true, "outcome": "MATCH", "seconds": 0.0, "tier_h11": 4, "index": 4}
+{"h11": 4, "h21": 46, "favorable": true, "n_points": 9, "chamber_agrees": true, "outcome": "MATCH", "seconds": 0.0, "tier_h11": 4, "index": 5}
+{"h11": 4, "h21": 50, "favorable": true, "n_points": 9, "chamber_agrees": true, "outcome": "MATCH", "seconds": 0.0, "tier_h11": 4, "index": 6}
+{"h11": 4, "h21": 28, "favorable": true, "n_points": 9, "chamber_agrees": true, "outcome": "MATCH", "seconds": 0.0, "tier_h11": 4, "index": 7}
+{"h11": 5, "h21": 35, "favorable": true, "n_points": 10, "chamber_agrees": true, "outcome": "MATCH", "seconds": 0.0, "tier_h11": 5, "index": 0}
+{"h11": 5, "h21": 29, "favorable": true, "n_points": 10, "chamber_agrees": true, "outcome": "MATCH", "seconds": 0.0, "tier_h11": 5, "index": 1}
+{"h11": 5, "h21": 31, "favorable": true, "n_points": 10, "chamber_agrees": false, "outcome": "MATCH", "seconds": 0.0, "tier_h11": 5, "index": 2}
+{"h11": 5, "h21": 35, "favorable": true, "n_points": 10, "chamber_agrees": true, "outcome": "MATCH", "seconds": 0.0, "tier_h11": 5, "index": 3}
+{"h11": 5, "h21": 29, "favorable": false, "n_points": 9, "chamber_agrees": true, "outcome": "MATCH", "seconds": 0.0, "tier_h11": 5, "index": 4}
+{"h11": 5, "h21": 35, "favorable": true, "n_points": 10, "chamber_agrees": false, "outcome": "MATCH", "seconds": 0.0, "tier_h11": 5, "index": 5}
+{"h11": 5, "h21": 39, "favorable": true, "n_points": 10, "chamber_agrees": true, "outcome": "MATCH", "seconds": 0.0, "tier_h11": 5, "index": 6}
+{"h11": 5, "h21": 35, "favorable": true, "n_points": 10, "chamber_agrees": true, "outcome": "MATCH", "seconds": 0.0, "tier_h11": 5, "index": 7}
+{"h11": 6, "h21": 33, "favorable": true, "n_points": 11, "chamber_agrees": true, "outcome": "MATCH", "seconds": 0.0, "tier_h11": 6, "index": 0}
+{"h11": 6, "h21": 33, "favorable": true, "n_points": 11, "chamber_agrees": false, "outcome": "MATCH", "seconds": 0.0, "tier_h11": 6, "index": 1}
+{"h11": 6, "h21": 30, "favorable": true, "n_points": 11, "chamber_agrees": true, "outcome": "MATCH", "seconds": 0.0, "tier_h11": 6, "index": 2}
+{"h11": 6, "h21": 30, "favorable": true, "n_points": 11, "chamber_agrees": true, "outcome": "MATCH", "seconds": 0.0, "tier_h11": 6, "index": 3}
+{"h11": 6, "h21": 26, "favorable": true, "n_points": 11, "chamber_agrees": false, "outcome": "MATCH", "seconds": 0.0, "tier_h11": 6, "index": 4}
+{"h11": 6, "h21": 27, "favorable": true, "n_points": 11, "chamber_agrees": true, "outcome": "MATCH", "seconds": 0.0, "tier_h11": 6, "index": 5}
+{"h11": 6, "h21": 30, "favorable": true, "n_points": 11, "chamber_agrees": true, "outcome": "MATCH", "seconds": 0.0, "tier_h11": 6, "index": 6}
+{"h11": 6, "h21": 34, "favorable": true, "n_points": 11, "chamber_agrees": false, "outcome": "MATCH", "seconds": 0.0, "tier_h11": 6, "index": 7}
+{"h11": 8, "h21": 26, "favorable": true, "n_points": 13, "chamber_agrees": false, "outcome": "MATCH", "seconds": 0.0, "tier_h11": 8, "index": 0}
+{"h11": 8, "h21": 26, "favorable": false, "n_points": 12, "chamber_agrees": false, "outcome": "MATCH", "seconds": 0.0, "tier_h11": 8, "index": 1}
+{"h11": 8, "h21": 26, "favorable": false, "n_points": 12, "chamber_agrees": false, "outcome": "MATCH", "seconds": 0.0, "tier_h11": 8, "index": 2}
+{"h11": 8, "h21": 26, "favorable": true, "n_points": 13, "chamber_agrees": false, "outcome": "MATCH", "seconds": 0.0, "tier_h11": 8, "index": 3}
+{"h11": 8, "h21": 24, "favorable": true, "n_points": 13, "chamber_agrees": false, "outcome": "MATCH", "seconds": 0.0, "tier_h11": 8, "index": 4}
+{"h11": 8, "h21": 26, "favorable": false, "n_points": 12, "chamber_agrees": false, "outcome": "MATCH", "seconds": 0.0, "tier_h11": 8, "index": 5}
+{"h11": 8, "h21": 26, "favorable": true, "n_points": 13, "chamber_agrees": true, "outcome": "MATCH", "seconds": 0.0, "tier_h11": 8, "index": 6}
+{"h11": 8, "h21": 24, "favorable": true, "n_points": 13, "chamber_agrees": false, "outcome": "MATCH", "seconds": 0.0, "tier_h11": 8, "index": 7}
+{"h11": 8, "h21": 26, "favorable": true, "n_points": 13, "chamber_agrees": true, "outcome": "MATCH", "seconds": 0.0, "tier_h11": 8, "index": 8}
+{"h11": 8, "h21": 26, "favorable": true, "n_points": 13, "chamber_agrees": false, "outcome": "MATCH", "seconds": 0.0, "tier_h11": 8, "index": 9}
+{"h11": 12, "h21": 20, "favorable": true, "n_points": 17, "chamber_agrees": false, "outcome": "MATCH", "seconds": 0.1, "tier_h11": 12, "index": 0}
+{"h11": 12, "h21": 18, "favorable": true, "n_points": 17, "chamber_agrees": false, "outcome": "MATCH", "seconds": 0.0, "tier_h11": 12, "index": 1}
+{"h11": 12, "h21": 18, "favorable": false, "n_points": 16, "chamber_agrees": true, "outcome": "MATCH", "seconds": 0.0, "tier_h11": 12, "index": 2}
+{"h11": 12, "h21": 18, "favorable": false, "n_points": 16, "chamber_agrees": false, "outcome": "MATCH", "seconds": 0.0, "tier_h11": 12, "index": 3}
+{"h11": 12, "h21": 18, "favorable": false, "n_points": 14, "chamber_agrees": false, "outcome": "MATCH", "seconds": 0.0, "tier_h11": 12, "index": 4}
+{"h11": 12, "h21": 20, "favorable": false, "n_points": 16, "chamber_agrees": true, "outcome": "MATCH", "seconds": 0.0, "tier_h11": 12, "index": 5}
+{"h11": 12, "h21": 18, "favorable": false, "n_points": 16, "chamber_agrees": true, "outcome": "MATCH", "seconds": 0.0, "tier_h11": 12, "index": 6}
+{"h11": 12, "h21": 18, "favorable": false, "n_points": 16, "chamber_agrees": false, "outcome": "MATCH", "seconds": 0.0, "tier_h11": 12, "index": 7}
+{"h11": 12, "h21": 20, "favorable": false, "n_points": 15, "chamber_agrees": true, "outcome": "MATCH", "seconds": 0.0, "tier_h11": 12, "index": 8}
+{"h11": 12, "h21": 20, "favorable": false, "n_points": 15, "chamber_agrees": false, "outcome": "MATCH", "seconds": 0.1, "tier_h11": 12, "index": 9}
+{"h11": 20, "h21": 12, "favorable": false, "n_points": 21, "chamber_agrees": false, "outcome": "MATCH", "seconds": 0.1, "tier_h11": 20, "index": 0}
+{"h11": 20, "h21": 5, "favorable": true, "n_points": 25, "chamber_agrees": false, "outcome": "MATCH", "seconds": 0.1, "tier_h11": 20, "index": 1}
+{"h11": 20, "h21": 12, "favorable": false, "n_points": 22, "chamber_agrees": false, "outcome": "MATCH", "seconds": 0.1, "tier_h11": 20, "index": 2}
+{"h11": 20, "h21": 10, "favorable": true, "n_points": 25, "chamber_agrees": false, "outcome": "MATCH", "seconds": 0.1, "tier_h11": 20, "index": 3}
+{"h11": 20, "h21": 12, "favorable": false, "n_points": 22, "chamber_agrees": false, "outcome": "MATCH", "seconds": 0.1, "tier_h11": 20, "index": 4}
+{"h11": 20, "h21": 12, "favorable": false, "n_points": 24, "chamber_agrees": false, "outcome": "MATCH", "seconds": 0.1, "tier_h11": 20, "index": 5}
+{"h11": 20, "h21": 11, "favorable": true, "n_points": 25, "chamber_agrees": false, "outcome": "MATCH", "seconds": 0.1, "tier_h11": 20, "index": 6}
+{"h11": 20, "h21": 11, "favorable": true, "n_points": 25, "chamber_agrees": false, "outcome": "MATCH", "seconds": 0.1, "tier_h11": 20, "index": 7}
+{"h11": 20, "h21": 12, "favorable": true, "n_points": 27, "chamber_agrees": false, "outcome": "MATCH", "seconds": 0.1, "tier_h11": 20, "index": 8}
+{"h11": 20, "h21": 11, "favorable": false, "n_points": 25, "chamber_agrees": false, "outcome": "MATCH", "seconds": 0.1, "tier_h11": 20, "index": 9}
+{"h11": 35, "h21": 5, "favorable": false, "n_points": 38, "chamber_agrees": false, "outcome": "MATCH", "seconds": 0.1, "tier_h11": 35, "index": 0}
+{"h11": 35, "h21": 7, "favorable": false, "n_points": 38, "chamber_agrees": false, "outcome": "MATCH", "seconds": 0.1, "tier_h11": 35, "index": 1}
+{"h11": 35, "h21": 5, "favorable": true, "n_points": 40, "chamber_agrees": false, "outcome": "MATCH", "seconds": 0.1, "tier_h11": 35, "index": 2}
+{"h11": 35, "h21": 5, "favorable": false, "n_points": 38, "chamber_agrees": false, "outcome": "MATCH", "seconds": 0.1, "tier_h11": 35, "index": 3}
+{"h11": 35, "h21": 5, "favorable": false, "n_points": 38, "chamber_agrees": false, "outcome": "MATCH", "seconds": 0.1, "tier_h11": 35, "index": 4}
+{"h11": 35, "h21": 5, "favorable": false, "n_points": 41, "chamber_agrees": false, "outcome": "MISMATCH", "detail": "simplices(0 vs 170);kappa(288 of 288 entries)", "seconds": 0.1, "tier_h11": 35, "index": 5}
+{"h11": 35, "h21": 7, "favorable": false, "n_points": 41, "chamber_agrees": false, "outcome": "MATCH", "seconds": 0.1, "tier_h11": 35, "index": 6}
+{"h11": 35, "h21": 7, "favorable": false, "n_points": 38, "chamber_agrees": false, "outcome": "MATCH", "seconds": 0.1, "tier_h11": 35, "index": 7}
+{"h11": 60, "h21": 4, "favorable": true, "n_points": 70, "chamber_agrees": false, "outcome": "MISMATCH", "detail": "simplices(0 vs 304);kappa(580 of 580 entries)", "seconds": 0.2, "tier_h11": 60, "index": 0}
+{"h11": 60, "h21": 4, "favorable": true, "n_points": 69, "chamber_agrees": false, "outcome": "MATCH", "seconds": 0.2, "tier_h11": 60, "index": 1}
+{"h11": 60, "h21": 4, "favorable": false, "n_points": 69, "chamber_agrees": false, "outcome": "MATCH", "seconds": 0.2, "tier_h11": 60, "index": 2}
+{"h11": 60, "h21": 4, "favorable": false, "n_points": 70, "chamber_agrees": false, "outcome": "MATCH", "seconds": 0.2, "tier_h11": 60, "index": 3}
+{"h11": 60, "h21": 4, "favorable": true, "n_points": 70, "chamber_agrees": false, "outcome": "MATCH", "seconds": 0.2, "tier_h11": 60, "index": 4}
+{"h11": 60, "h21": 4, "favorable": false, "n_points": 69, "chamber_agrees": false, "outcome": "MATCH", "seconds": 0.2, "tier_h11": 60, "index": 5}
+{"h11": 100, "h21": 4, "favorable": true, "n_points": 129, "chamber_agrees": false, "outcome": "MATCH", "seconds": 0.6, "tier_h11": 100, "index": 0}
+{"h11": 100, "h21": 4, "favorable": false, "n_points": 119, "chamber_agrees": false, "outcome": "MATCH", "seconds": 0.5, "tier_h11": 100, "index": 1}
+{"h11": 100, "h21": 4, "favorable": false, "n_points": 119, "chamber_agrees": false, "outcome": "MATCH", "seconds": 0.5, "tier_h11": 100, "index": 2}
+{"h11": 100, "h21": 4, "favorable": true, "n_points": 129, "chamber_agrees": false, "outcome": "MATCH", "seconds": 0.7, "tier_h11": 100, "index": 3}
+{"h11": 100, "h21": 4, "favorable": false, "n_points": 119, "chamber_agrees": false, "outcome": "MATCH", "seconds": 0.5, "tier_h11": 100, "index": 4}
