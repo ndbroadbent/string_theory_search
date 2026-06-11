@@ -8,7 +8,7 @@ import { OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
 
 import { useVisualizationStore } from '../../stores/visualization';
-import type { Vec4, Vec3, Rotation4DAngles } from '../../three/rotation4d';
+import type { Vec4, Vec3 } from '../../three/rotation4d';
 import { composeRotation4D, transform4 } from '../../three/rotation4d';
 import {
   stereographicProject,
@@ -67,7 +67,7 @@ function PolytopeGeometry({ vertices4d }: { vertices4d: Vec4[] }) {
   });
 
   // Compute projected positions and colors
-  const { positions3d, colors, wRange } = useMemo(() => {
+  const { positions3d, colors } = useMemo(() => {
     const rotationMatrix = composeRotation4D(rotation);
     const rotated = normalizedVertices.map((v) => transform4(rotationMatrix, v));
 

@@ -12,12 +12,9 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as PolytopesRouteImport } from './routes/polytopes'
 import { Route as PlaygroundRouteImport } from './routes/playground'
 import { Route as HeuristicsRouteImport } from './routes/heuristics'
+import { Route as CorrelationsRouteImport } from './routes/correlations'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as MetaIndexRouteImport } from './routes/meta/index'
 import { Route as PolytopeIdRouteImport } from './routes/polytope.$id'
-import { Route as MetaGenGenIndexRouteImport } from './routes/meta/gen.$gen/index'
-import { Route as MetaGenGenAlgoAlgoIndexRouteImport } from './routes/meta/gen.$gen/algo.$algo/index'
-import { Route as MetaGenGenAlgoAlgoRunRunRouteImport } from './routes/meta/gen.$gen/algo.$algo/run.$run'
 
 const PolytopesRoute = PolytopesRouteImport.update({
   id: '/polytopes',
@@ -34,14 +31,14 @@ const HeuristicsRoute = HeuristicsRouteImport.update({
   path: '/heuristics',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CorrelationsRoute = CorrelationsRouteImport.update({
+  id: '/correlations',
+  path: '/correlations',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MetaIndexRoute = MetaIndexRouteImport.update({
-  id: '/meta/',
-  path: '/meta/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PolytopeIdRoute = PolytopeIdRouteImport.update({
@@ -49,103 +46,66 @@ const PolytopeIdRoute = PolytopeIdRouteImport.update({
   path: '/polytope/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
-const MetaGenGenIndexRoute = MetaGenGenIndexRouteImport.update({
-  id: '/meta/gen/$gen/',
-  path: '/meta/gen/$gen/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MetaGenGenAlgoAlgoIndexRoute = MetaGenGenAlgoAlgoIndexRouteImport.update({
-  id: '/meta/gen/$gen/algo/$algo/',
-  path: '/meta/gen/$gen/algo/$algo/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MetaGenGenAlgoAlgoRunRunRoute =
-  MetaGenGenAlgoAlgoRunRunRouteImport.update({
-    id: '/meta/gen/$gen/algo/$algo/run/$run',
-    path: '/meta/gen/$gen/algo/$algo/run/$run',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/correlations': typeof CorrelationsRoute
   '/heuristics': typeof HeuristicsRoute
   '/playground': typeof PlaygroundRoute
   '/polytopes': typeof PolytopesRoute
   '/polytope/$id': typeof PolytopeIdRoute
-  '/meta': typeof MetaIndexRoute
-  '/meta/gen/$gen': typeof MetaGenGenIndexRoute
-  '/meta/gen/$gen/algo/$algo': typeof MetaGenGenAlgoAlgoIndexRoute
-  '/meta/gen/$gen/algo/$algo/run/$run': typeof MetaGenGenAlgoAlgoRunRunRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/correlations': typeof CorrelationsRoute
   '/heuristics': typeof HeuristicsRoute
   '/playground': typeof PlaygroundRoute
   '/polytopes': typeof PolytopesRoute
   '/polytope/$id': typeof PolytopeIdRoute
-  '/meta': typeof MetaIndexRoute
-  '/meta/gen/$gen': typeof MetaGenGenIndexRoute
-  '/meta/gen/$gen/algo/$algo': typeof MetaGenGenAlgoAlgoIndexRoute
-  '/meta/gen/$gen/algo/$algo/run/$run': typeof MetaGenGenAlgoAlgoRunRunRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/correlations': typeof CorrelationsRoute
   '/heuristics': typeof HeuristicsRoute
   '/playground': typeof PlaygroundRoute
   '/polytopes': typeof PolytopesRoute
   '/polytope/$id': typeof PolytopeIdRoute
-  '/meta/': typeof MetaIndexRoute
-  '/meta/gen/$gen/': typeof MetaGenGenIndexRoute
-  '/meta/gen/$gen/algo/$algo/': typeof MetaGenGenAlgoAlgoIndexRoute
-  '/meta/gen/$gen/algo/$algo/run/$run': typeof MetaGenGenAlgoAlgoRunRunRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/correlations'
     | '/heuristics'
     | '/playground'
     | '/polytopes'
     | '/polytope/$id'
-    | '/meta'
-    | '/meta/gen/$gen'
-    | '/meta/gen/$gen/algo/$algo'
-    | '/meta/gen/$gen/algo/$algo/run/$run'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/correlations'
     | '/heuristics'
     | '/playground'
     | '/polytopes'
     | '/polytope/$id'
-    | '/meta'
-    | '/meta/gen/$gen'
-    | '/meta/gen/$gen/algo/$algo'
-    | '/meta/gen/$gen/algo/$algo/run/$run'
   id:
     | '__root__'
     | '/'
+    | '/correlations'
     | '/heuristics'
     | '/playground'
     | '/polytopes'
     | '/polytope/$id'
-    | '/meta/'
-    | '/meta/gen/$gen/'
-    | '/meta/gen/$gen/algo/$algo/'
-    | '/meta/gen/$gen/algo/$algo/run/$run'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CorrelationsRoute: typeof CorrelationsRoute
   HeuristicsRoute: typeof HeuristicsRoute
   PlaygroundRoute: typeof PlaygroundRoute
   PolytopesRoute: typeof PolytopesRoute
   PolytopeIdRoute: typeof PolytopeIdRoute
-  MetaIndexRoute: typeof MetaIndexRoute
-  MetaGenGenIndexRoute: typeof MetaGenGenIndexRoute
-  MetaGenGenAlgoAlgoIndexRoute: typeof MetaGenGenAlgoAlgoIndexRoute
-  MetaGenGenAlgoAlgoRunRunRoute: typeof MetaGenGenAlgoAlgoRunRunRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -171,18 +131,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HeuristicsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/correlations': {
+      id: '/correlations'
+      path: '/correlations'
+      fullPath: '/correlations'
+      preLoaderRoute: typeof CorrelationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/meta/': {
-      id: '/meta/'
-      path: '/meta'
-      fullPath: '/meta'
-      preLoaderRoute: typeof MetaIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/polytope/$id': {
@@ -192,40 +152,16 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PolytopeIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/meta/gen/$gen/': {
-      id: '/meta/gen/$gen/'
-      path: '/meta/gen/$gen'
-      fullPath: '/meta/gen/$gen'
-      preLoaderRoute: typeof MetaGenGenIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/meta/gen/$gen/algo/$algo/': {
-      id: '/meta/gen/$gen/algo/$algo/'
-      path: '/meta/gen/$gen/algo/$algo'
-      fullPath: '/meta/gen/$gen/algo/$algo'
-      preLoaderRoute: typeof MetaGenGenAlgoAlgoIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/meta/gen/$gen/algo/$algo/run/$run': {
-      id: '/meta/gen/$gen/algo/$algo/run/$run'
-      path: '/meta/gen/$gen/algo/$algo/run/$run'
-      fullPath: '/meta/gen/$gen/algo/$algo/run/$run'
-      preLoaderRoute: typeof MetaGenGenAlgoAlgoRunRunRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CorrelationsRoute: CorrelationsRoute,
   HeuristicsRoute: HeuristicsRoute,
   PlaygroundRoute: PlaygroundRoute,
   PolytopesRoute: PolytopesRoute,
   PolytopeIdRoute: PolytopeIdRoute,
-  MetaIndexRoute: MetaIndexRoute,
-  MetaGenGenIndexRoute: MetaGenGenIndexRoute,
-  MetaGenGenAlgoAlgoIndexRoute: MetaGenGenAlgoAlgoIndexRoute,
-  MetaGenGenAlgoAlgoRunRunRoute: MetaGenGenAlgoAlgoRunRunRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

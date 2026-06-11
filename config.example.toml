@@ -1,17 +1,9 @@
 [paths]
-polytopes = "polytopes_three_gen.jsonl"
-output_dir = "results"
+# cyrus-ga pool file (JSONL, one polytope per line keyed by "name")
+pool = "/data/cyrus/pools/h21_4-7.jsonl"
 
-[search]
-population_size = 500
-elite_count = 20
-tournament_size = 5
-crossover_rate = 0.85
-mutation_rate = 0.4
-mutation_strength = 0.35
-collapse_threshold = 1000
-hall_of_fame_size = 100
+# cyrus-ga run directory (rounds.jsonl / candidates.jsonl event streams)
+run_dir = "/data/cyrus/runs/landscape"
 
-[limits]
-max_time = 86400
-max_generations = 100000
+# SQLite database for the dashboard
+database = "data/string_theory.db"

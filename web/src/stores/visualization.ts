@@ -1,21 +1,12 @@
 /**
- * Zustand store for visualization state
+ * Zustand store for 4D polytope visualization state
  */
 
 import { create } from 'zustand';
-import type { GenomeResult, RunInfo } from '../types';
 import type { Rotation4DAngles } from '../three/rotation4d';
 import { DEFAULT_ROTATION_SPEEDS } from '../three/rotation4d';
 
 interface VisualizationState {
-  // Current selection
-  selectedRunId: string | null;
-  selectedGenome: GenomeResult | null;
-  allGenomes: GenomeResult[];
-
-  // Run info
-  runs: RunInfo[];
-
   // 4D rotation state
   rotation: Rotation4DAngles;
   rotationSpeeds: Rotation4DAngles;
@@ -29,12 +20,6 @@ interface VisualizationState {
   showEdges: boolean;
   vertexSize: number;
   zoom: number;
-
-  // Actions
-  setSelectedRunId: (runId: string | null) => void;
-  setSelectedGenome: (genome: GenomeResult | null) => void;
-  setAllGenomes: (genomes: GenomeResult[]) => void;
-  setRuns: (runs: RunInfo[]) => void;
 
   // Rotation actions
   setRotation: (rotation: Partial<Rotation4DAngles>) => void;
@@ -63,11 +48,6 @@ const initialRotation: Rotation4DAngles = {
 
 export const useVisualizationStore = create<VisualizationState>((set) => ({
   // Initial state
-  selectedRunId: null,
-  selectedGenome: null,
-  allGenomes: [],
-  runs: [],
-
   rotation: { ...initialRotation },
   rotationSpeeds: { ...DEFAULT_ROTATION_SPEEDS },
   isAutoRotating: true,
@@ -78,12 +58,6 @@ export const useVisualizationStore = create<VisualizationState>((set) => ({
   showEdges: true,
   vertexSize: 0.03,
   zoom: 2.0, // 2x default zoom
-
-  // Actions
-  setSelectedRunId: (runId) => set({ selectedRunId: runId }),
-  setSelectedGenome: (genome) => set({ selectedGenome: genome }),
-  setAllGenomes: (genomes) => set({ allGenomes: genomes }),
-  setRuns: (runs) => set({ runs }),
 
   setRotation: (rotation) =>
     set((state) => ({

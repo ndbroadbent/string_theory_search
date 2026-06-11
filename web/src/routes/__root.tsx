@@ -34,7 +34,7 @@ function RootDocument() {
               to="/"
               className="text-gray-300 hover:text-white text-sm font-medium transition-colors [&.active]:text-cyan-400"
             >
-              Overview
+              Dashboard
             </Link>
             <Link
               to="/polytopes"
@@ -46,13 +46,13 @@ function RootDocument() {
               to="/heuristics"
               className="text-gray-300 hover:text-white text-sm font-medium transition-colors [&.active]:text-cyan-400"
             >
-              Heuristics Explorer
+              Heuristics
             </Link>
             <Link
-              to="/meta"
+              to="/correlations"
               className="text-gray-300 hover:text-white text-sm font-medium transition-colors [&.active]:text-cyan-400"
             >
-              Meta-GA
+              Correlations
             </Link>
             <Link
               to="/playground"

@@ -1,8 +1,8 @@
 //! Heuristics computation for polytopes
 //!
 //! Computes ~40 shape and statistical metrics for each polytope.
-//! These are used by the Meta-GA to learn which polytope features
-//! correlate with good physics outcomes.
+//! These are correlated against cyrus-ga search outcomes on the
+//! dashboard's Correlations page.
 
 use flate2::write::ZlibEncoder;
 use flate2::Compression;
@@ -14,7 +14,6 @@ use crate::db::HeuristicsData;
 
 /// Compute all heuristics for a polytope's vertices
 pub fn compute_heuristics(
-    _polytope_id: i64,
     h11: i32,
     h21: i32,
     vertices: &[i32],
@@ -708,7 +707,7 @@ mod tests {
             1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1,
         ];
 
-        let h = compute_heuristics(1, 3, 6, &vertices);
+        let h = compute_heuristics(3, 6, &vertices);
 
         assert_eq!(h.vertex_count, Some(4));
         assert_eq!(h.h11, Some(3));
@@ -718,7 +717,7 @@ mod tests {
 
     #[test]
     fn test_empty_vertices() {
-        let h = compute_heuristics(1, 3, 6, &[]);
+        let h = compute_heuristics(3, 6, &[]);
         assert_eq!(h.vertex_count, Some(0));
     }
 
@@ -737,7 +736,7 @@ mod tests {
 
     #[test]
     fn test_cross_polytope_is_symmetric() {
-        let h = compute_heuristics(1, 5, 8, CROSS_POLYTOPE_4D);
+        let h = compute_heuristics(5, 8, CROSS_POLYTOPE_4D);
 
         // Perfect symmetry on all axes
         assert_eq!(h.symmetry_x.unwrap(), 1.0, "symmetry_x should be 1.0");
@@ -757,7 +756,7 @@ mod tests {
             ("cross_polytope", CROSS_POLYTOPE_4D, 5, 8),
             ("asymmetric_simplex", ASYMMETRIC_SIMPLEX, 10, 7),
         ] {
-            let h = compute_heuristics(1, h11, h21, vertices);
+            let h = compute_heuristics(h11, h21, vertices);
             let s = h.sphericity.unwrap();
             assert!(s >= 0.0 && s <= 1.0, "{}: sphericity={} out of bounds", name, s);
         }
@@ -769,7 +768,7 @@ mod tests {
             ("cross_polytope", CROSS_POLYTOPE_4D, 5, 8),
             ("asymmetric_simplex", ASYMMETRIC_SIMPLEX, 10, 7),
         ] {
-            let h = compute_heuristics(1, h11, h21, vertices);
+            let h = compute_heuristics(h11, h21, vertices);
             for (axis, val) in [
                 ("x", h.symmetry_x.unwrap()),
                 ("y", h.symmetry_y.unwrap()),
@@ -783,16 +782,16 @@ mod tests {
 
     #[test]
     fn test_vertex_count_matches() {
-        let h1 = compute_heuristics(1, 5, 8, CROSS_POLYTOPE_4D);
+        let h1 = compute_heuristics(5, 8, CROSS_POLYTOPE_4D);
         assert_eq!(h1.vertex_count.unwrap(), 8);
 
-        let h2 = compute_heuristics(2, 10, 7, ASYMMETRIC_SIMPLEX);
+        let h2 = compute_heuristics(10, 7, ASYMMETRIC_SIMPLEX);
         assert_eq!(h2.vertex_count.unwrap(), 5);
     }
 
     #[test]
     fn test_chirality_differs_for_asymmetric() {
-        let h = compute_heuristics(1, 10, 7, ASYMMETRIC_SIMPLEX);
+        let h = compute_heuristics(10, 7, ASYMMETRIC_SIMPLEX);
 
         let chiralities = [
             h.chirality_x.unwrap(),
@@ -813,7 +812,7 @@ mod tests {
 
     #[test]
     fn test_hodge_numbers_stored() {
-        let h = compute_heuristics(42, 24, 21, CROSS_POLYTOPE_4D);
+        let h = compute_heuristics(24, 21, CROSS_POLYTOPE_4D);
         assert_eq!(h.h11, Some(24));
         assert_eq!(h.h21, Some(21));
     }

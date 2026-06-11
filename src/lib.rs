@@ -1,12 +1,9 @@
 //! String Theory Landscape Explorer
 //!
-//! Search through the string theory landscape using genetic algorithms
-//! to find Calabi-Yau compactifications that reproduce Standard Model physics.
+//! Support crate for the cyrus-ga dashboard pipeline: SQLite schema setup and
+//! geometric heuristics computed per polytope. The GA itself lives in the
+//! cyrus repository (cyrus-ga); this crate only computes polytope heuristics
+//! into the shared dashboard database.
 
-pub mod constants;
 pub mod db;
 pub mod heuristics;
-pub mod meta_ga;
-pub mod physics;
-pub mod searcher;
-pub mod vector_index;
