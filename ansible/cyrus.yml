@@ -1,0 +1,258 @@
+---
+# Cyrus landscape search deployment: replaces the legacy pipeline
+# (playbook.yml, kept for reference) with the cyrus-ga DESI-window search.
+#
+# Architecture:
+#   cyrus-ga.service        Rust GA over the KS pool, 8 threads, resumable
+#   cyrus-ingest.service    Bun daemon tailing run-dir event streams -> SQLite
+#   string-theory-web.service  dashboard (DESI leaderboard, heuristics, viewer)
+#   cyrus-heuristics.service   oneshot: geometric features over the pool
+#
+# Run: ansible-playbook -i inventory.yml cyrus.yml
+- name: Deploy Cyrus DESI landscape search
+  hosts: string_theory
+  become: yes
+  vars:
+    cyrus_src: "{{ lookup('env', 'HOME') }}/code/cyrus/"
+    cyrus_dir: /root/cyrus
+    st_dir: /root/string_theory
+    data_dir: /data/cyrus
+    pool_file: "{{ data_dir }}/pools/h21_4-7.jsonl"
+    run_dir: "{{ data_dir }}/runs/landscape"
+    db_file: "{{ data_dir }}/cyrus.db"
+    web_port: 3000
+    ga_threads: 8
+    ga_population: 256
+    ga_gens_per_round: 8
+    ga_flux_range: 15
+    ga_seed: 20260612
+
+  tasks:
+    # ============================================
+    # System dependencies
+    # ============================================
+    - name: Install system dependencies
+      apt:
+        name:
+          - build-essential
+          - pkg-config
+          - git
+          - curl
+          - python3-pip
+          - sqlite3
+          - libclang-dev
+          - clang
+        state: present
+        update_cache: yes
+
+    # Ubuntu 22.04's apt cmake (3.22) is too old for the highs-sys crate;
+    # pip ships a modern prebuilt cmake into /usr/local/bin.
+    - name: Install modern cmake via pip
+      pip:
+        name: cmake>=3.28
+        executable: pip3
+
+    - name: Check Rust toolchain
+      stat:
+        path: /root/.cargo/bin/cargo
+      register: cargo_bin
+
+    - name: Install Rust (if missing)
+      shell: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+      when: not cargo_bin.stat.exists
+
+    - name: Check Bun runtime
+      stat:
+        path: /root/.bun/bin/bun
+      register: bun_bin
+
+    - name: Install Bun (if missing)
+      shell: curl -fsSL https://bun.sh/install | bash
+      when: not bun_bin.stat.exists
+
+    # ============================================
+    # Directories
+    # ============================================
+    - name: Create cyrus data directories
+      file:
+        path: "{{ item }}"
+        state: directory
+      loop:
+        - "{{ data_dir }}/pools"
+        - "{{ data_dir }}/runs"
+        - "{{ cyrus_dir }}"
+
+    # ============================================
+    # Code sync + builds
+    # ============================================
+    - name: Sync cyrus source to server
+      synchronize:
+        src: "{{ cyrus_src }}"
+        dest: "{{ cyrus_dir }}"
+        delete: yes
+        rsync_opts:
+          - "--exclude=.git"
+          - "--exclude=target"
+          - "--exclude=runs"
+          - "--exclude=reference"
+
+    - name: Sync string_theory source to server (web + heuristics)
+      synchronize:
+        src: "{{ playbook_dir }}/../"
+        dest: "{{ st_dir }}"
+        delete: yes
+        rsync_opts:
+          - "--exclude=.git"
+          - "--exclude=.venv"
+          - "--exclude=venv"
+          - "--exclude=node_modules"
+          - "--exclude=target"
+          - "--exclude=data"
+          - "--exclude=results"
+          - "--exclude=logs"
+          - "--exclude=*.db"
+          - "--exclude=__pycache__"
+
+    - name: Build cyrus-ga (release)
+      shell: . /root/.cargo/env && cargo build --release -p cyrus-ga
+      args:
+        chdir: "{{ cyrus_dir }}"
+      register: cyrus_build
+      changed_when: "'Compiling' in cyrus_build.stderr"
+
+    - name: Build heuristics binary (release)
+      shell: . /root/.cargo/env && cargo build --release --bin heuristics
+      args:
+        chdir: "{{ st_dir }}"
+      register: heur_build
+      changed_when: "'Compiling' in heur_build.stderr"
+
+    - name: Install web dependencies and build
+      shell: /root/.bun/bin/bun install && /root/.bun/bin/bun run build
+      args:
+        chdir: "{{ st_dir }}/web"
+
+    # ============================================
+    # Polytope pool (from the local KS parquet database)
+    # ============================================
+    - name: Install pool builder script
+      copy:
+        src: "{{ playbook_dir }}/files/make_pool.py"
+        dest: "{{ data_dir }}/make_pool.py"
+        mode: "0755"
+
+    - name: Generate KS pool h21=4..7 (skipped if present)
+      shell: >-
+        /root/string_theory/venv/bin/python {{ data_dir }}/make_pool.py
+        4 7 {{ pool_file }}
+      args:
+        creates: "{{ pool_file }}"
+
+    # ============================================
+    # systemd units
+    # ============================================
+    - name: Create cyrus-ga service
+      copy:
+        dest: /etc/systemd/system/cyrus-ga.service
+        content: |
+          [Unit]
+          Description=Cyrus DESI landscape GA (resumable)
+          After=network.target
+
+          [Service]
+          Type=simple
+          User=root
+          WorkingDirectory={{ cyrus_dir }}
+          Environment=RAYON_NUM_THREADS={{ ga_threads }}
+          ExecStart={{ cyrus_dir }}/target/release/cyrus-ga \
+            --polytope-file {{ pool_file }} \
+            --run-dir {{ run_dir }} \
+            --population {{ ga_population }} \
+            --gens-per-round {{ ga_gens_per_round }} \
+            --flux-range {{ ga_flux_range }} \
+            --seed {{ ga_seed }} \
+            --prep-timeout-secs 45
+          Restart=always
+          RestartSec=10
+          CPUQuota={{ ga_threads * 100 }}%
+          StandardOutput=append:{{ data_dir }}/cyrus-ga.log
+          StandardError=append:{{ data_dir }}/cyrus-ga.log
+
+          [Install]
+          WantedBy=multi-user.target
+
+    - name: Create cyrus-ingest service
+      copy:
+        dest: /etc/systemd/system/cyrus-ingest.service
+        content: |
+          [Unit]
+          Description=Cyrus run-dir to SQLite ingester
+          After=network.target
+
+          [Service]
+          Type=simple
+          User=root
+          WorkingDirectory={{ st_dir }}/web
+          ExecStart=/root/.bun/bin/bun scripts/ingest.ts \
+            --run-dir {{ run_dir }} \
+            --pool {{ pool_file }} \
+            --db {{ db_file }}
+          Restart=always
+          RestartSec=15
+          StandardOutput=append:{{ data_dir }}/ingest.log
+          StandardError=append:{{ data_dir }}/ingest.log
+
+          [Install]
+          WantedBy=multi-user.target
+
+    - name: Create web service
+      copy:
+        dest: /etc/systemd/system/string-theory-web.service
+        content: |
+          [Unit]
+          Description=String Theory Web Dashboard (cyrus)
+          After=network.target cyrus-ingest.service
+
+          [Service]
+          Type=simple
+          User=root
+          WorkingDirectory={{ st_dir }}/web
+          Environment=PORT={{ web_port }}
+          Environment=NODE_ENV=production
+          Environment=STRING_THEORY_DB={{ db_file }}
+          ExecStart=/root/.bun/bin/bun run .output/server/index.mjs
+          Restart=always
+          RestartSec=10
+          StandardOutput=append:{{ data_dir }}/web.log
+          StandardError=append:{{ data_dir }}/web.log
+
+          [Install]
+          WantedBy=multi-user.target
+
+    - name: Create heuristics oneshot service
+      copy:
+        dest: /etc/systemd/system/cyrus-heuristics.service
+        content: |
+          [Unit]
+          Description=Geometric heuristics over the cyrus pool (oneshot)
+
+          [Service]
+          Type=oneshot
+          User=root
+          WorkingDirectory={{ st_dir }}
+          ExecStart={{ st_dir }}/target/release/heuristics \
+            --pool {{ pool_file }} --db {{ db_file }}
+          TimeoutStartSec=86400
+          StandardOutput=append:{{ data_dir }}/heuristics.log
+          StandardError=append:{{ data_dir }}/heuristics.log
+
+    - name: Enable and start services
+      systemd:
+        name: "{{ item }}"
+        daemon_reload: yes
+        enabled: yes
+        state: started
+      loop:
+        - cyrus-ga
+        - cyrus-ingest
+        - string-theory-web
