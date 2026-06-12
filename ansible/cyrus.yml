@@ -21,11 +21,12 @@
     run_dir: "{{ data_dir }}/runs/landscape"
     db_file: "{{ data_dir }}/cyrus.db"
     web_port: 3000
-    ga_threads: 8
+    ga_threads: 16
     ga_population: 256
     ga_gens_per_round: 8
     ga_flux_range: 15
     ga_seed: 20260612
+    ga_chambers_per_polytope: 3
 
   tasks:
     # ============================================
@@ -171,6 +172,7 @@
             --gens-per-round {{ ga_gens_per_round }} \
             --flux-range {{ ga_flux_range }} \
             --seed {{ ga_seed }} \
+            --chambers-per-polytope {{ ga_chambers_per_polytope }} \
             --prep-timeout-secs 45
           Restart=always
           RestartSec=10

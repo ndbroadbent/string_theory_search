@@ -321,7 +321,9 @@ function ensurePolytope(db: Database, pool: PoolIndex, name: string) {
     db.prepare('INSERT OR IGNORE INTO polytopes (id) VALUES (?1)').run(name);
   }
 
-  const record = readPoolRecord(pool, name);
+  // Chamber arms ("ks_4_11#2") share the base polytope's pool record.
+  const baseName = name.split('#')[0];
+  const record = readPoolRecord(pool, baseName);
   if (!record) {
     console.warn(`[ingest] polytope ${name} not found in pool file`);
     return;
