@@ -26,7 +26,7 @@
     ga_gens_per_round: 8
     ga_flux_range: 15
     ga_seed: 20260612
-    ga_chambers_per_polytope: 3
+    ga_chambers_per_polytope: 1
 
   tasks:
     # ============================================
