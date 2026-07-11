@@ -107,7 +107,15 @@ function Dashboard() {
 
         {/* Status strip */}
         <div className="mb-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-          <StatusCard label="Rounds" value={fmtInt(status.totalRounds)} />
+          <StatusCard
+            label="Rounds"
+            value={fmtInt(status.totalRounds)}
+            sub={
+              status.topArm
+                ? `top arm ${status.topArm.polytope} · ${(status.topArm.share * 100).toFixed(1)}% of 10 min`
+                : undefined
+            }
+          />
           <StatusCard label="Evaluations" value={fmtInt(status.totalEvals)} />
           <StatusCard
             label="Valid candidates"
@@ -124,7 +132,15 @@ function Dashboard() {
             value={status.evalsPerSec == null ? '–' : status.evalsPerSec.toFixed(1)}
             sub={status.lastRoundTs ? `last round ${fmtAgo(status.lastRoundTs)}` : undefined}
           />
-          <StatusCard label="Global best fitness" value={fmtNum(status.globalBest, 2)} />
+          <StatusCard
+            label="Global best fitness"
+            value={fmtNum(status.globalBest, 2)}
+            sub={
+              status.lastImprovementTs
+                ? `improved ${fmtAgo(status.lastImprovementTs)}`
+                : undefined
+            }
+          />
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">

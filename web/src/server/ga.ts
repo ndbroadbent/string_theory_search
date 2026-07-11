@@ -57,16 +57,20 @@ const EMPTY_STATUS: RunStatus = {
   evalsPerSec: null,
   lastRoundTs: null,
   lastIngestTs: null,
+  lastImprovementTs: null,
+  topArm: null,
 };
 
 /** Aggregate run status for the dashboard status strip */
 export const getRunStatus = createServerFn({ method: 'GET' }).handler(
   async (): Promise<RunStatus> => {
     return withDb((db) => {
+      // rounds is append-only (ingest never deletes), so MAX(id) == COUNT(*)
+      // but is O(1) instead of a 34M-row B-tree walk.
       const totals = db
         .prepare(
           `SELECT
-            (SELECT COUNT(*) FROM rounds) AS total_rounds,
+            (SELECT MAX(id) FROM rounds) AS total_rounds,
             (SELECT COALESCE(SUM(evals), 0) FROM polytopes) AS total_evals,
             (SELECT COALESCE(SUM(valid_seen), 0) FROM polytopes) AS valid_seen,
             (SELECT COUNT(*) FROM candidates WHERE tier = 'valid') AS valid_candidates,
@@ -89,8 +93,11 @@ export const getRunStatus = createServerFn({ method: 'GET' }).handler(
       const lastIngestTs = metaMap.last_ingest_ts ? Number(metaMap.last_ingest_ts) : null;
 
       // evals/sec over the last 10 minutes of round events. `evals` is
-      // cumulative per polytope, so the rate is the change in the per-polytope
-      // maxima across the window.
+      // cumulative per polytope, so the rate is the per-polytope spread
+      // (max - min) summed over rounds INSIDE the window. Everything here
+      // is bounded by idx_rounds_ts: the old form ran two unbounded
+      // GROUP BY polytope_id scans over the whole table (34M rows / 3.2 GB
+      // after a month), which took the dashboard from instant to minutes.
       let evalsPerSec: number | null = null;
       const lastRoundTs = totals.last_round_ts;
       if (lastRoundTs != null) {
@@ -99,15 +106,52 @@ export const getRunStatus = createServerFn({ method: 'GET' }).handler(
         const win = db
           .prepare(
             `SELECT
-              (SELECT COALESCE(SUM(emax), 0) FROM
-                (SELECT MAX(evals) AS emax FROM rounds GROUP BY polytope_id)) AS now_total,
-              (SELECT COALESCE(SUM(emax), 0) FROM
-                (SELECT MAX(evals) AS emax FROM rounds WHERE ts < ?1 GROUP BY polytope_id)) AS cutoff_total,
-              (SELECT MIN(ts) FROM rounds) AS min_ts`
+              COALESCE(SUM(emax - emin), 0) AS delta,
+              MIN(tmin) AS min_ts
+             FROM (
+               SELECT MAX(evals) AS emax, MIN(evals) AS emin, MIN(ts) AS tmin
+               FROM rounds INDEXED BY idx_rounds_ts
+               WHERE ts >= ?1 GROUP BY polytope_id
+             )`
           )
-          .get(cutoff) as { now_total: number; cutoff_total: number; min_ts: number };
-        const span = Math.max(1, Math.min(windowSecs, lastRoundTs - win.min_ts));
-        evalsPerSec = (win.now_total - win.cutoff_total) / span;
+          .get(cutoff) as { delta: number; min_ts: number | null };
+        const span = Math.max(1, lastRoundTs - Math.max(cutoff, win.min_ts ?? cutoff));
+        evalsPerSec = win.delta / span;
+      }
+
+      // When the current global best first appeared. The global best is by
+      // construction some arm's best, and every arm-best improvement is a
+      // candidates row - so the earliest max-fitness candidate answers this
+      // from a ~1e3-row table instead of scanning rounds.
+      const imp = db
+        .prepare(
+          `SELECT ts FROM candidates
+           WHERE ts IS NOT NULL AND fitness IS NOT NULL
+           ORDER BY fitness DESC, ts ASC LIMIT 1`
+        )
+        .get() as { ts: number | null } | null;
+      const lastImprovementTs = imp?.ts ?? null;
+
+      // Scheduler-collapse canary: the busiest polytope's share of the
+      // last 10 minutes of rounds (healthy searches spread; the June 2026
+      // stall showed one arm at >99.9% for weeks).
+      let topArm: { polytope: string; share: number } | null = null;
+      if (lastRoundTs != null) {
+        const cutoff = lastRoundTs - 600;
+        // INDEXED BY: without it the planner satisfies GROUP BY via
+        // idx_rounds_polytope and walks all 34M rows instead of the window.
+        const windowTotal = db
+          .prepare('SELECT COUNT(*) AS c FROM rounds INDEXED BY idx_rounds_ts WHERE ts >= ?1')
+          .get(cutoff) as { c: number };
+        const top = db
+          .prepare(
+            `SELECT polytope_id, COUNT(*) AS c FROM rounds INDEXED BY idx_rounds_ts
+             WHERE ts >= ?1 GROUP BY polytope_id ORDER BY c DESC LIMIT 1`
+          )
+          .get(cutoff) as { polytope_id: string; c: number } | null;
+        if (top && windowTotal.c > 0) {
+          topArm = { polytope: top.polytope_id, share: top.c / windowTotal.c };
+        }
       }
 
       const live = latest?.live ?? null;
@@ -124,6 +168,8 @@ export const getRunStatus = createServerFn({ method: 'GET' }).handler(
         evalsPerSec,
         lastRoundTs,
         lastIngestTs,
+        lastImprovementTs,
+        topArm,
       };
     }, EMPTY_STATUS);
   }

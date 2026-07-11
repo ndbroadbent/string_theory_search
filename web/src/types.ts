@@ -31,6 +31,12 @@ export interface RunStatus {
   lastRoundTs: number | null;
   /** Unix ts of the last ingester cycle */
   lastIngestTs: number | null;
+  /** Unix ts of the round that set the current global best */
+  lastImprovementTs: number | null;
+  /** The polytope with the most rounds in the last 10 minutes, and its share
+   * of that window's rounds (0..1). A share near 1 means the bandit has
+   * collapsed onto a single arm. */
+  topArm: { polytope: string; share: number } | null;
 }
 
 /** A candidate row (best-improvement events from candidates.jsonl) */
