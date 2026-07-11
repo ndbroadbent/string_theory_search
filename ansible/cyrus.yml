@@ -27,6 +27,22 @@
     ga_flux_range: 15
     ga_seed: 20260612
     ga_chambers_per_polytope: 1
+    # Inline primal deep-verify fires only on valid candidates whose proxy
+    # (w0, wa) is within this many DESI sigma on both parameters - the physical
+    # "worth verifying" gate. Bounded by the per-polytope coverage cache (one
+    # admissible-basis scan per polytope, ever), so it never stalls the search.
+    # 2.0 (not 1.0): the closest candidate in the whole June run was 1.39 sigma
+    # (the v1 thawing-axion model cannot reach wa <= -1.2, so a 1-sigma gate
+    # never fired once in 70B evaluations).
+    ga_deep_verify_desi_sigma: 2.0
+    # Rounds without a per-arm best improvement before the scheduler parks the
+    # arm (see select_next staleness cutoff): 500 rounds = ~1M improvement-free
+    # evals. Prevents the June collapse where one exhausted polytope took
+    # >99.9% of 34M rounds.
+    ga_stale_after_rounds: 500
+    # 45s killed viable geometries during the startup thundering herd; the
+    # cyrus code default is 120s.
+    ga_prep_timeout_secs: 120
 
   tasks:
     # ============================================
@@ -150,6 +166,25 @@
         creates: "{{ pool_file }}"
 
     # ============================================
+    # Log hygiene: the GA and ingest logs are append-only and unbounded
+    # (3.9 GB after four weeks pre-rotation, on a 64 GB root disk).
+    # copytruncate keeps the services' append FDs valid.
+    # ============================================
+    - name: Install logrotate config for cyrus logs
+      copy:
+        dest: /etc/logrotate.d/cyrus
+        content: |
+          /data/cyrus/*.log {
+              weekly
+              maxsize 500M
+              rotate 4
+              compress
+              missingok
+              notifempty
+              copytruncate
+          }
+
+    # ============================================
     # systemd units
     # ============================================
     - name: Create cyrus-ga service
@@ -173,7 +208,9 @@
             --flux-range {{ ga_flux_range }} \
             --seed {{ ga_seed }} \
             --chambers-per-polytope {{ ga_chambers_per_polytope }} \
-            --prep-timeout-secs 45
+            --deep-verify-desi-sigma {{ ga_deep_verify_desi_sigma }} \
+            --stale-after-rounds {{ ga_stale_after_rounds }} \
+            --prep-timeout-secs {{ ga_prep_timeout_secs }}
           Restart=always
           RestartSec=10
           CPUQuota={{ ga_threads * 100 }}%
